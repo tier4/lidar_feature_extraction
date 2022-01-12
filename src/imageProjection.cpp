@@ -238,7 +238,7 @@ const float map_surface_leaf_size = 0.2;
 const int n_cores = 2;
 
 
-class ImageProjection : public rclcpp::Node
+class FeatureExtraction : public rclcpp::Node
 {
 private:
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
@@ -248,12 +248,12 @@ private:
   std::deque<sensor_msgs::msg::PointCloud2> cloudQueue;
 
 public:
-  ImageProjection()
-  : Node("image_projection")
+  FeatureExtraction()
+  : Node("feature_extraction")
   {
     cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
         pointCloudTopic, 5,
-        std::bind(&ImageProjection::cloudHandler, this, std::placeholders::_1));
+        std::bind(&FeatureExtraction::cloudHandler, this, std::placeholders::_1));
     edge_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("lio_sam/feature/cloud_edge", 1);
     surface_publisher_ =
@@ -262,7 +262,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "Feature extraction node created");
   }
 
-  ~ImageProjection() {}
+  ~FeatureExtraction() {}
 
   void cloudHandler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr laserCloudMsg)
   {
@@ -432,7 +432,7 @@ public:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ImageProjection>());
+  rclcpp::spin(std::make_shared<FeatureExtraction>());
   rclcpp::shutdown();
   return 0;
 }
