@@ -15,12 +15,12 @@ find_package(range-v3 REQUIRED)
 find_package(fmt REQUIRED)
 
 ament_auto_find_build_dependencies()
-ament_auto_add_executable(${PROJECT_NAME}_imageProjection
-  src/imageProjection.cpp
+ament_auto_add_executable(${PROJECT_NAME}_feature_extraction
+  src/feature_extraction.cpp
   include/utility.hpp
 )
 
-ament_target_dependencies(${PROJECT_NAME}_imageProjection
+ament_target_dependencies(${PROJECT_NAME}_feature_extraction
   geometry_msgs
   GTSAM
   nav_msgs
