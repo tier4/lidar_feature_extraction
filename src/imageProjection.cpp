@@ -241,9 +241,9 @@ const int n_cores = 2;
 class ImageProjection : public rclcpp::Node
 {
 private:
-  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subLaserCloud;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubEdgePoints;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubSurfacePoints;
+  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
 
   std::deque<sensor_msgs::msg::PointCloud2> cloudQueue;
 
@@ -251,17 +251,12 @@ public:
   ImageProjection()
   : Node("image_projection")
   {
-    rclcpp::CallbackGroup::SharedPtr initial_pose_callback_group;
-    initial_pose_callback_group =
-      this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    auto initial_pose_sub_opt = rclcpp::SubscriptionOptions();
-    initial_pose_sub_opt.callback_group = initial_pose_callback_group;
-    subLaserCloud = this->create_subscription<sensor_msgs::msg::PointCloud2>(
+    cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
         pointCloudTopic, 5,
         std::bind(&ImageProjection::cloudHandler, this, std::placeholders::_1));
-    pubEdgePoints =
+    edge_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("lio_sam/feature/cloud_edge", 1);
-    pubSurfacePoints =
+    surface_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("lio_sam/feature/cloud_surface", 1);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
     RCLCPP_INFO(this->get_logger(), "Feature extraction node created");
@@ -429,8 +424,8 @@ public:
     // save newly extracted features
     const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg.header.stamp, lidarFrame);
     const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg.header.stamp, lidarFrame);
-    pubEdgePoints->publish(cloud_edge);
-    pubSurfacePoints->publish(cloud_surface);
+    edge_publisher_->publish(cloud_edge);
+    surface_publisher_->publish(cloud_surface);
   }
 };
 
