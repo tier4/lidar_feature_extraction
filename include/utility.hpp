@@ -91,14 +91,6 @@ typename pcl::PointCloud<T>::Ptr getPointCloud(const sensor_msgs::msg::PointClou
 }
 
 template<typename T>
-pcl::KdTreeFLANN<T> makeKDTree(const typename pcl::PointCloud<T>::Ptr & pointcloud)
-{
-  pcl::KdTreeFLANN<T> kdtree;
-  kdtree.setInputCloud(pointcloud);
-  return kdtree;
-}
-
-template<typename T>
 typename pcl::PointCloud<T>::Ptr downsample(
   const typename pcl::PointCloud<T>::Ptr & input_cloud, const float leaf_size)
 {
