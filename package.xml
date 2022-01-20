@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>lio_sam</name>
+  <name>lidar_feature_extraction</name>
   <version>1.0.0</version>
   <description>Lidar Odometry</description>
 
