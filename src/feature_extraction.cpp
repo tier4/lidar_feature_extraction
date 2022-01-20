@@ -246,7 +246,7 @@ private:
 
 public:
   FeatureExtraction()
-  : Node("feature_extraction")
+  : Node("lidar_feature_extraction")
   {
     cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "points_raw", 5,
