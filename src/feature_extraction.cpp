@@ -252,9 +252,9 @@ public:
         "points_raw", 5,
         std::bind(&FeatureExtraction::cloudHandler, this, std::placeholders::_1));
     edge_publisher_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("lio_sam/feature/cloud_edge", 1);
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1);
     surface_publisher_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("lio_sam/feature/cloud_surface", 1);
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
     RCLCPP_INFO(this->get_logger(), "Feature extraction node created");
   }
