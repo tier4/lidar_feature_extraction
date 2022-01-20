@@ -48,11 +48,11 @@ float rad2deg(const float rad)
   return rad * 180 / M_PI;
 }
 
-int calcColumnIndex(const int Horizon_SCAN, const double x, const double y)
+int calcColumnIndex(const int horizontal_size, const double x, const double y)
 {
   const double angle = rad2deg(atan2(y, x));  // [-180 ~ 180]
-  const double k = Horizon_SCAN * angle / (180.0 * 2.0);  // [-Horizon_SCAN / 2 ~ Horizon_SCAN / 2]
-  const double u = k + Horizon_SCAN / 2.0;
+  const double k = horizontal_size * angle / (180.0 * 2.0);  // [-horizontal_size / 2 ~ horizontal_size / 2]
+  const double u = k + horizontal_size / 2.0;
   return static_cast<int>(u);
 }
 
@@ -60,12 +60,12 @@ std::tuple<std::vector<int>, std::vector<double>, std::vector<Eigen::Vector3d>>
 extractElements(
   const pcl::PointCloud<PointXYZIRT> & input_points,
   const float range_min, const float range_max,
-  const int Horizon_SCAN)
+  const int horizontal_size)
 {
   const auto f = [&](const PointXYZIRT & p) {
       const int row_index = p.ring;
-      const int column_index = calcColumnIndex(Horizon_SCAN, p.x, p.y);
-      const int index = column_index + row_index * Horizon_SCAN;
+      const int column_index = calcColumnIndex(horizontal_size, p.x, p.y);
+      const int index = column_index + row_index * horizontal_size;
       const Eigen::Vector3d q(p.x, p.y, p.z);
       return std::make_tuple(index, p.time, q);
     };
@@ -168,10 +168,10 @@ calcCurvature(
   const pcl::PointCloud<pcl::PointXYZ> & points,
   const std::vector<float> & range,
   const int N_SCAN,
-  const int Horizon_SCAN)
+  const int horizontal_size)
 {
-  std::vector<float> curvature(N_SCAN * Horizon_SCAN);
-  std::vector<int> indices(N_SCAN * Horizon_SCAN, -1);
+  std::vector<float> curvature(N_SCAN * horizontal_size);
+  std::vector<int> indices(N_SCAN * horizontal_size, -1);
   for (unsigned int i = 5; i < points.size() - 5; i++) {
     const float d =
       range[i - 5] + range[i - 4] + range[i - 3] + range[i - 2] + range[i - 1] -
@@ -213,15 +213,12 @@ private:
   const double n_blocks_;
 };
 
-//Topics
-const std::string pointCloudTopic = "points_raw";
-
 //Frames
 const std::string lidarFrame = "base_link";
 
 // Lidar Sensor Configuration
 const int N_SCAN = 16;
-const int Horizon_SCAN = 1800;
+const int HORIZONTAL_SIZE = 1800;
 const float range_min = 1.0;
 const float range_max = 1000.0;
 
@@ -245,14 +242,14 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
 
-  std::deque<sensor_msgs::msg::PointCloud2> cloudQueue;
+  std::deque<sensor_msgs::msg::PointCloud2> cloud_queue_;
 
 public:
   FeatureExtraction()
   : Node("feature_extraction")
   {
     cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        pointCloudTopic, 5,
+        "points_raw", 5,
         std::bind(&FeatureExtraction::cloudHandler, this, std::placeholders::_1));
     edge_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("lio_sam/feature/cloud_edge", 1);
@@ -266,13 +263,13 @@ public:
 
   void cloudHandler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr laserCloudMsg)
   {
-    cloudQueue.push_back(*laserCloudMsg);
-    if (cloudQueue.size() <= 2) {
+    cloud_queue_.push_back(*laserCloudMsg);
+    if (cloud_queue_.size() <= 2) {
       return;
     }
 
-    const sensor_msgs::msg::PointCloud2 cloud_msg = cloudQueue.front();
-    cloudQueue.pop_front();
+    const sensor_msgs::msg::PointCloud2 cloud_msg = cloud_queue_.front();
+    cloud_queue_.pop_front();
 
     const pcl::PointCloud<PointXYZIRT> input_points = *getPointCloud<PointXYZIRT>(cloud_msg);
 
@@ -292,15 +289,15 @@ public:
     }
 
     const auto [indices, times, points] = extractElements(
-      input_points, range_min, range_max, Horizon_SCAN
+      input_points, range_min, range_max, HORIZONTAL_SIZE
     );
     std::unordered_map<int, Eigen::Vector3d> output_points = projectWithoutImu(indices, points);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
     std::vector<int> end_ring_indices(N_SCAN, 0);
 
-    std::vector<int> column_indices(N_SCAN * Horizon_SCAN, 0);
-    std::vector<float> range(N_SCAN * Horizon_SCAN, 0);
+    std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
+    std::vector<float> range(N_SCAN * HORIZONTAL_SIZE, 0);
 
     const auto range_map = makeRangeMatrix(indices, points);
     pcl::PointCloud<pcl::PointXYZ> cloud;
@@ -309,8 +306,8 @@ public:
     for (int row_index = 0; row_index < N_SCAN; ++row_index) {
       start_ring_indices[row_index] = count + 5;
 
-      for (int column_index = 0; column_index < Horizon_SCAN; ++column_index) {
-        const int index = column_index + row_index * Horizon_SCAN;
+      for (int column_index = 0; column_index < HORIZONTAL_SIZE; ++column_index) {
+        const int index = column_index + row_index * HORIZONTAL_SIZE;
         if (output_points.find(index) == output_points.end()) {
           continue;
         }
@@ -325,7 +322,7 @@ public:
     }
 
     // used to prevent from labeling a neighbor as surface or edge
-    std::vector<bool> mask(N_SCAN * Horizon_SCAN);
+    std::vector<bool> mask(N_SCAN * HORIZONTAL_SIZE);
 
     for (unsigned int i = 5; i < cloud.size() - 5; i++) {
       mask[i] = false;
@@ -360,14 +357,14 @@ public:
       }
     }
 
-    auto [curvature, inds] = calcCurvature(cloud, range, N_SCAN, Horizon_SCAN);
+    auto [curvature, inds] = calcCurvature(cloud, range, N_SCAN, HORIZONTAL_SIZE);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
 
     const int N_BLOCKS = 6;
 
-    std::vector<CurvatureLabel> label(N_SCAN * Horizon_SCAN, CurvatureLabel::Default);
+    std::vector<CurvatureLabel> label(N_SCAN * HORIZONTAL_SIZE, CurvatureLabel::Default);
 
     for (int i = 0; i < N_SCAN; i++) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
