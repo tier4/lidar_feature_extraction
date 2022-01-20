@@ -43,11 +43,6 @@ sensor_msgs::msg::PointCloud2 toRosMsg(
   return msg;
 }
 
-inline double timeInSec(const std_msgs::msg::Header & header)
-{
-  return header.stamp.sec;
-}
-
 inline pcl::PointXYZ makePointXYZ(const Eigen::Vector3d & v)
 {
   return pcl::PointXYZ(v(0), v(1), v(2));
