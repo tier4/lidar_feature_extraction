@@ -14,4 +14,24 @@ ament_auto_add_executable(${PROJECT_NAME}
   include/utility.hpp
 )
 
+if (BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE
+    ament_cmake_cpplint
+    ament_cmake_uncrustify
+  )
+
+  ament_lint_auto_find_test_dependencies()
+
+  set(TEST_FILES src/feature_extraction.cpp include/utility.hpp)
+
+  find_package(ament_cmake_cpplint)
+  ament_cpplint(${TEST_FILES})
+
+  find_package(ament_cmake_uncrustify)
+  ament_uncrustify(${TEST_FILES})
+
+endif()
+
 ament_auto_package(INSTALL_TO_SHARE launch)

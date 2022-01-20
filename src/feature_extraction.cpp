@@ -1,10 +1,17 @@
-#include <pcl/filters/voxel_grid.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "utility.hpp"
 
 #include <range/v3/all.hpp>
 
+#include <algorithm>
+#include <deque>
 #include <functional>
+#include <memory>
+#include <set>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
 
 struct VelodynePointXYZIRT
 {
@@ -50,8 +57,8 @@ float rad2deg(const float rad)
 
 int calcColumnIndex(const int horizontal_size, const double x, const double y)
 {
-  const double angle = rad2deg(atan2(y, x));  // [-180 ~ 180]
-  const double k = horizontal_size * angle / (180.0 * 2.0);  // [-horizontal_size / 2 ~ horizontal_size / 2]
+  const double angle = rad2deg(atan2(y, x));
+  const double k = horizontal_size * angle / (180.0 * 2.0);
   const double u = k + horizontal_size / 2.0;
   return static_cast<int>(u);
 }
@@ -120,7 +127,7 @@ std::unordered_map<int, Eigen::Vector3d> projectWithoutImu(
 class by_value
 {
 public:
-  by_value(const std::vector<float> & values)
+  explicit by_value(const std::vector<float> & values)
   : values_(values) {}
   bool operator()(const int & left, const int & right)
   {
@@ -213,25 +220,22 @@ private:
   const double n_blocks_;
 };
 
-//Frames
-const std::string lidarFrame = "base_link";
-
-// Lidar Sensor Configuration
+//  Lidar Sensor Configuration
 const int N_SCAN = 16;
 const int HORIZONTAL_SIZE = 1800;
 const float range_min = 1.0;
 const float range_max = 1000.0;
 
-// LOAM
+//  LOAM
 const float edgeThreshold = 0.1;
 const float surfThreshold = 0.1;
 
-// voxel filter paprams
+//  voxel filter paprams
 const float surface_leaf_size = 0.2;
 const float map_edge_leaf_size = 0.2;
 const float map_surface_leaf_size = 0.2;
 
-// CPU Params
+//  CPU Params
 const int n_cores = 2;
 
 
@@ -249,8 +253,8 @@ public:
   : Node("lidar_feature_extraction")
   {
     cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "points_raw", 5,
-        std::bind(&FeatureExtraction::cloudHandler, this, std::placeholders::_1));
+      "points_raw", 5,
+      std::bind(&FeatureExtraction::cloudHandler, this, std::placeholders::_1));
     edge_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1);
     surface_publisher_ =
@@ -274,12 +278,16 @@ public:
     const pcl::PointCloud<PointXYZIRT> input_points = *getPointCloud<PointXYZIRT>(cloud_msg);
 
     if (!input_points.is_dense) {
-      RCLCPP_ERROR(this->get_logger(), "Point cloud is not in dense format, please remove NaN points first!");
+      RCLCPP_ERROR(
+        this->get_logger(),
+        "Point cloud is not in dense format, please remove NaN points first!");
       rclcpp::shutdown();
     }
 
     if (!ringIsAvailable(cloud_msg)) {
-      RCLCPP_ERROR(this->get_logger(), "Point cloud ring channel could not be found");
+      RCLCPP_ERROR(
+        this->get_logger(),
+        "Point cloud ring channel could not be found");
       rclcpp::shutdown();
     }
 
@@ -418,9 +426,9 @@ public:
     const auto edge_downsampled = downsample<pcl::PointXYZ>(edge, map_edge_leaf_size);
     const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);
 
-    // save newly extracted features
-    const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg.header.stamp, lidarFrame);
-    const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg.header.stamp, lidarFrame);
+    const std::string lidar_frame = "base_link";
+    const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg.header.stamp, lidar_frame);
+    const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg.header.stamp, lidar_frame);
     edge_publisher_->publish(cloud_edge);
     surface_publisher_->publish(cloud_surface);
   }
