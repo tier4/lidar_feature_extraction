@@ -4,10 +4,10 @@
   <version>1.0.0</version>
   <description>Lidar Odometry</description>
 
-  <maintainer email="shant@mit.edu">Tixiao Shan</maintainer>
-
-  <license>TODO</license>
+  <license>BSD-3 Close</license>
+  <maintainer email="takeshi.ishita@tier4.jp">Takeshi Ishita</maintainer>
   <author>Tixiao Shan</author>
+  <author email="shant@mit.edu">Tixiao Shan</author>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>eigen3_cmake_module</buildtool_depend>
