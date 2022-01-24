@@ -241,33 +241,33 @@ const int n_cores = 2;
 
 class FeatureExtraction : public rclcpp::Node
 {
-private:
-  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
-
-  std::deque<sensor_msgs::msg::PointCloud2> cloud_queue_;
-
 public:
   FeatureExtraction()
   : Node("lidar_feature_extraction")
   {
+    rclcpp::CallbackGroup::SharedPtr main_callback_group;
+    main_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
+    auto main_sub_opt = rclcpp::SubscriptionOptions();
+    main_sub_opt.callback_group = main_callback_group;
+
     cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-      "points_raw", 5,
-      std::bind(&FeatureExtraction::cloudHandler, this, std::placeholders::_1));
+    "points_raw", rclcpp::SensorDataQoS().keep_last(1),
+    std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1), main_sub_opt);
     edge_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1);
     surface_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
-    RCLCPP_INFO(this->get_logger(), "Feature extraction node created");
   }
 
   ~FeatureExtraction() {}
 
-  void cloudHandler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr laserCloudMsg)
+private:
+  void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg)
   {
-    cloud_queue_.push_back(*laserCloudMsg);
+    RCLCPP_INFO(this->get_logger(), "Recieved pointcloud '%d'", msg->header.stamp.sec);
+    cloud_queue_.push_back(*msg);
     if (cloud_queue_.size() <= 2) {
       return;
     }
@@ -432,9 +432,15 @@ public:
     edge_publisher_->publish(cloud_edge);
     surface_publisher_->publish(cloud_surface);
   }
+
+  std::deque<sensor_msgs::msg::PointCloud2> cloud_queue_;
+  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
+
 };
 
-int main(int argc, char ** argv)
+int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<FeatureExtraction>());
