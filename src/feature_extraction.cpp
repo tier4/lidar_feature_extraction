@@ -40,16 +40,6 @@ bool ringIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
   return false;
 }
 
-bool timeStampIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
-{
-  for (auto & field : pointcloud.fields) {
-    if (field.name == "time" || field.name == "t" || field.name == "time_stamp") {
-      return true;
-    }
-  }
-  return false;
-}
-
 float rad2deg(const float rad)
 {
   return rad * 180 / M_PI;
@@ -63,7 +53,7 @@ int calcColumnIndex(const int horizontal_size, const double x, const double y)
   return static_cast<int>(u);
 }
 
-std::tuple<std::vector<int>, std::vector<double>, std::vector<Eigen::Vector3d>>
+std::tuple<std::vector<int>, std::vector<Eigen::Vector3d>>
 extractElements(
   const pcl::PointCloud<PointXYZIRT> & input_points,
   const float range_min, const float range_max,
@@ -74,16 +64,15 @@ extractElements(
       const int column_index = calcColumnIndex(horizontal_size, p.x, p.y);
       const int index = column_index + row_index * horizontal_size;
       const Eigen::Vector3d q(p.x, p.y, p.z);
-      return std::make_tuple(index, p.time, q);
+      return std::make_tuple(index, q);
     };
 
   std::set<int> unique_indices;
   std::vector<int> indices;
-  std::vector<double> times;
   std::vector<Eigen::Vector3d> points;
 
   const auto iterator = input_points | ranges::views::transform(f);
-  for (const auto & [index, time, point] : iterator) {
+  for (const auto & [index, point] : iterator) {
     const double range = point.norm();
     if (range < range_min || range_max < range) {
       continue;
@@ -95,11 +84,10 @@ extractElements(
 
     unique_indices.insert(index);
     indices.push_back(index);
-    times.push_back(time);
     points.push_back(point);
   }
 
-  return {indices, times, points};
+  return {indices, points};
 }
 
 std::unordered_map<int, double> makeRangeMatrix(
@@ -284,12 +272,7 @@ private:
       rclcpp::shutdown();
     }
 
-    if (!timeStampIsAvailable(*cloud_msg)) {
-      RCLCPP_ERROR(this->get_logger(), "Point cloud timestamp not available");
-      rclcpp::shutdown();
-    }
-
-    const auto [indices, times, points] = extractElements(
+    const auto [indices, points] = extractElements(
       input_points, range_min, range_max, HORIZONTAL_SIZE
     );
     std::unordered_map<int, Eigen::Vector3d> output_points = projectWithoutImu(indices, points);
