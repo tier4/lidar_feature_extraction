@@ -30,7 +30,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 // Use the Velodyne point format as a common representation
 using PointXYZIRT = VelodynePointXYZIRT;
 
-bool ringIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
+bool RingIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
 {
   for (const auto & field : pointcloud.fields) {
     if (field.name == "ring") {
@@ -40,28 +40,28 @@ bool ringIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
   return false;
 }
 
-float rad2deg(const float rad)
+float RadianToDegree(const float rad)
 {
   return rad * 180 / M_PI;
 }
 
-int calcColumnIndex(const int horizontal_size, const double x, const double y)
+int ColumnIndex(const int horizontal_size, const double x, const double y)
 {
-  const double angle = rad2deg(atan2(y, x));
+  const double angle = RadianToDegree(atan2(y, x));
   const double k = horizontal_size * angle / (180.0 * 2.0);
   const double u = k + horizontal_size / 2.0;
   return static_cast<int>(u);
 }
 
 std::tuple<std::vector<int>, std::vector<Eigen::Vector3d>>
-extractElements(
+ExtractElements(
   const pcl::PointCloud<PointXYZIRT> & input_points,
   const float range_min, const float range_max,
   const int horizontal_size)
 {
   const auto f = [&](const PointXYZIRT & p) {
       const int row_index = p.ring;
-      const int column_index = calcColumnIndex(horizontal_size, p.x, p.y);
+      const int column_index = ColumnIndex(horizontal_size, p.x, p.y);
       const int index = column_index + row_index * horizontal_size;
       const Eigen::Vector3d q(p.x, p.y, p.z);
       return std::make_tuple(index, q);
@@ -90,7 +90,7 @@ extractElements(
   return {indices, points};
 }
 
-std::unordered_map<int, double> makeRangeMatrix(
+std::unordered_map<int, double> MakeRangeMatrix(
   const std::vector<int> & indices,
   const std::vector<Eigen::Vector3d> & points)
 {
@@ -101,7 +101,7 @@ std::unordered_map<int, double> makeRangeMatrix(
   return range_map;
 }
 
-std::unordered_map<int, Eigen::Vector3d> projectWithoutImu(
+std::unordered_map<int, Eigen::Vector3d> Projection(
   const std::vector<int> & indices,
   const std::vector<Eigen::Vector3d> points)
 {
@@ -133,25 +133,25 @@ enum class CurvatureLabel
   Surface = -1
 };
 
-bool isNeighbor(const std::vector<int> & column_indices, const int index1, const int index2)
+bool IsNeighbor(const std::vector<int> & column_indices, const int index1, const int index2)
 {
   return std::abs(column_indices[index1] - column_indices[index2]) <= 10;
 }
 
-void neighborPicked(
+void NeighborPicked(
   const std::vector<int> & column_indices,
   const int index,
   std::vector<bool> & mask)
 {
   mask[index] = true;
   for (int l = 1; l <= 5; l++) {
-    if (!isNeighbor(column_indices, index + l, index + l - 1)) {
+    if (!IsNeighbor(column_indices, index + l, index + l - 1)) {
       break;
     }
     mask[index + l] = true;
   }
   for (int l = -1; l >= -5; l--) {
-    if (!isNeighbor(column_indices, index + l, index + l + 1)) {
+    if (!IsNeighbor(column_indices, index + l, index + l + 1)) {
       break;
     }
     mask[index + l] = true;
@@ -159,7 +159,7 @@ void neighborPicked(
 }
 
 std::tuple<std::vector<float>, std::vector<int>>
-calcCurvature(
+CalcCurvature(
   const pcl::PointCloud<pcl::PointXYZ> & points,
   const std::vector<float> & range,
   const int N_SCAN,
@@ -189,13 +189,13 @@ public:
   {
   }
 
-  int begin(const int j) const
+  int Begin(const int j) const
   {
     const double n = n_blocks_;
     return static_cast<int>(start_index_ * (1. - j / n) + end_index_ * j / n);
   }
 
-  int end(const int j) const
+  int End(const int j) const
   {
     const double n = n_blocks_;
     const int k = j + 1;
@@ -265,17 +265,17 @@ private:
       rclcpp::shutdown();
     }
 
-    if (!ringIsAvailable(*cloud_msg)) {
+    if (!RingIsAvailable(*cloud_msg)) {
       RCLCPP_ERROR(
         this->get_logger(),
         "Point cloud ring channel could not be found");
       rclcpp::shutdown();
     }
 
-    const auto [indices, points] = extractElements(
+    const auto [indices, points] = ExtractElements(
       input_points, range_min, range_max, HORIZONTAL_SIZE
     );
-    std::unordered_map<int, Eigen::Vector3d> output_points = projectWithoutImu(indices, points);
+    std::unordered_map<int, Eigen::Vector3d> output_points = Projection(indices, points);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
     std::vector<int> end_ring_indices(N_SCAN, 0);
@@ -283,7 +283,7 @@ private:
     std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
     std::vector<float> range(N_SCAN * HORIZONTAL_SIZE, 0);
 
-    const auto range_map = makeRangeMatrix(indices, points);
+    const auto range_map = MakeRangeMatrix(indices, points);
     pcl::PointCloud<pcl::PointXYZ> cloud;
 
     int count = 0;
@@ -314,7 +314,7 @@ private:
 
     // mark occluded points and parallel beam points
     for (unsigned int i = 5; i < cloud.size() - 6; ++i) {
-      if (!isNeighbor(column_indices, i + 1, i)) {
+      if (!IsNeighbor(column_indices, i + 1, i)) {
         continue;
       }
 
@@ -341,7 +341,7 @@ private:
       }
     }
 
-    auto [curvature, inds] = calcCurvature(cloud, range, N_SCAN, HORIZONTAL_SIZE);
+    auto [curvature, inds] = CalcCurvature(cloud, range, N_SCAN, HORIZONTAL_SIZE);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
@@ -355,8 +355,8 @@ private:
 
       const IndexRange index_range(start_ring_indices[i], end_ring_indices[i], N_BLOCKS);
       for (int j = 0; j < N_BLOCKS; j++) {
-        const int sp = index_range.begin(j);
-        const int ep = index_range.end(j);
+        const int sp = index_range.Begin(j);
+        const int ep = index_range.End(j);
         std::sort(inds.begin() + sp, inds.begin() + ep, by_value(curvature));
 
         int n_picked = 0;
@@ -375,7 +375,7 @@ private:
           edge->push_back(cloud.at(index));
           label[index] = CurvatureLabel::Edge;
 
-          neighborPicked(column_indices, index, mask);
+          NeighborPicked(column_indices, index, mask);
         }
 
         for (int k = sp; k <= ep; k++) {
@@ -386,7 +386,7 @@ private:
 
           label[index] = CurvatureLabel::Surface;
 
-          neighborPicked(column_indices, index, mask);
+          NeighborPicked(column_indices, index, mask);
         }
 
         for (int k = sp; k <= ep; k++) {
