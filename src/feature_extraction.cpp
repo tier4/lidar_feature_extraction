@@ -13,22 +13,20 @@
 #include <unordered_map>
 #include <vector>
 
-struct VelodynePointXYZIRT
+struct PointXYZIR
 {
   PCL_ADD_POINT4D PCL_ADD_INTENSITY;
   std::uint16_t ring;
-  float time;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  VelodynePointXYZIRT,
-  (float, x, x)(float, y, y) (float, z, z) (float, intensity, intensity)(
-    std::uint16_t, ring,
-    ring) (float, time, time)
+  PointXYZIR,
+  (float, x, x)
+  (float, y, y)
+  (float, z, z)
+  (float, intensity, intensity)
+  (std::uint16_t, ring, ring)
 )
-
-// Use the Velodyne point format as a common representation
-using PointXYZIRT = VelodynePointXYZIRT;
 
 bool RingIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
 {
@@ -55,11 +53,11 @@ int ColumnIndex(const int horizontal_size, const double x, const double y)
 
 std::tuple<std::vector<int>, std::vector<Eigen::Vector3d>>
 ExtractElements(
-  const pcl::PointCloud<PointXYZIRT> & input_points,
+  const pcl::PointCloud<PointXYZIR> & input_points,
   const float range_min, const float range_max,
   const int horizontal_size)
 {
-  const auto f = [&](const PointXYZIRT & p) {
+  const auto f = [&](const PointXYZIR & p) {
       const int row_index = p.ring;
       const int column_index = ColumnIndex(horizontal_size, p.x, p.y);
       const int index = column_index + row_index * horizontal_size;
@@ -254,9 +252,14 @@ public:
 private:
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg)
   {
-    RCLCPP_INFO(this->get_logger(), "Recieved pointcloud '%d'", cloud_msg->header.stamp.sec);
-
-    const pcl::PointCloud<PointXYZIRT> input_points = *getPointCloud<PointXYZIRT>(*cloud_msg);
+    const pcl::PointCloud<PointXYZIR> input_points = *getPointCloud<PointXYZIR>(*cloud_msg);
+    RCLCPP_INFO(this->get_logger(),
+                "x = %f,  y = %f,  z = %f,  intensity = %f,  ring = %lu",
+                input_points.at(0).x,
+                input_points.at(0).y,
+                input_points.at(0).z,
+                input_points.at(0).intensity,
+                static_cast<unsigned int>(input_points.at(0).ring));
 
     if (!input_points.is_dense) {
       RCLCPP_ERROR(
