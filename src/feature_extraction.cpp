@@ -264,18 +264,11 @@ public:
   ~FeatureExtraction() {}
 
 private:
-  void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg)
+  void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg)
   {
-    RCLCPP_INFO(this->get_logger(), "Recieved pointcloud '%d'", msg->header.stamp.sec);
-    cloud_queue_.push_back(*msg);
-    if (cloud_queue_.size() <= 2) {
-      return;
-    }
+    RCLCPP_INFO(this->get_logger(), "Recieved pointcloud '%d'", cloud_msg->header.stamp.sec);
 
-    const sensor_msgs::msg::PointCloud2 cloud_msg = cloud_queue_.front();
-    cloud_queue_.pop_front();
-
-    const pcl::PointCloud<PointXYZIRT> input_points = *getPointCloud<PointXYZIRT>(cloud_msg);
+    const pcl::PointCloud<PointXYZIRT> input_points = *getPointCloud<PointXYZIRT>(*cloud_msg);
 
     if (!input_points.is_dense) {
       RCLCPP_ERROR(
@@ -284,14 +277,14 @@ private:
       rclcpp::shutdown();
     }
 
-    if (!ringIsAvailable(cloud_msg)) {
+    if (!ringIsAvailable(*cloud_msg)) {
       RCLCPP_ERROR(
         this->get_logger(),
         "Point cloud ring channel could not be found");
       rclcpp::shutdown();
     }
 
-    if (!timeStampIsAvailable(cloud_msg)) {
+    if (!timeStampIsAvailable(*cloud_msg)) {
       RCLCPP_ERROR(this->get_logger(), "Point cloud timestamp not available");
       rclcpp::shutdown();
     }
@@ -427,13 +420,12 @@ private:
     const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);
 
     const std::string lidar_frame = "base_link";
-    const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg.header.stamp, lidar_frame);
-    const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg.header.stamp, lidar_frame);
+    const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg->header.stamp, lidar_frame);
+    const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg->header.stamp, lidar_frame);
     edge_publisher_->publish(cloud_edge);
     surface_publisher_->publish(cloud_surface);
   }
 
-  std::deque<sensor_msgs::msg::PointCloud2> cloud_queue_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
