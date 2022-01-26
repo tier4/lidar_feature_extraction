@@ -9,10 +9,7 @@ find_package(ament_cmake_auto REQUIRED)
 
 ament_auto_find_build_dependencies()
 
-ament_auto_add_executable(${PROJECT_NAME}
-  src/feature_extraction.cpp
-  include/utility.hpp
-)
+ament_auto_add_executable(${PROJECT_NAME} DIRECTORY src)
 
 if (BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -31,6 +28,11 @@ if (BUILD_TESTING)
 
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${TEST_FILES})
+
+  ament_add_gtest(test_utility test/test_utility.cpp)
+  target_include_directories(test_utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  ament_target_dependencies(test_utility ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+
 
 endif()
 

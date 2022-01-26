@@ -87,9 +87,9 @@ typename pcl::PointCloud<T>::Ptr downsample(
   return downsampled;
 }
 
-bool RingIsAvailable(const sensor_msgs::msg::PointCloud2 & pointcloud)
+bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
 {
-  for (const auto & field : pointcloud.fields) {
+  for (const auto & field : fields) {
     if (field.name == "ring") {
       return true;
     }

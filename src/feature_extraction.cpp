@@ -73,7 +73,7 @@ private:
       rclcpp::shutdown();
     }
 
-    if (!RingIsAvailable(*cloud_msg)) {
+    if (!RingIsAvailable(cloud_msg->fields)) {
       RCLCPP_ERROR(
         this->get_logger(),
         "Point cloud ring channel could not be found");
