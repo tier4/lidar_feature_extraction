@@ -94,7 +94,7 @@ std::unordered_map<int, double> MakeRangeMatrix(
 {
   std::unordered_map<int, double> range_map;
   for (const auto & [index, point] : ranges::views::zip(indices, points)) {
-    range_map[index] = point.norm();
+    range_map.at(index) = point.norm();
   }
   return range_map;
 }
@@ -105,7 +105,7 @@ std::unordered_map<int, Eigen::Vector3d> Projection(
 {
   std::unordered_map<int, Eigen::Vector3d> output_points;
   for (const auto & [index, q] : ranges::views::zip(indices, points)) {
-    output_points[index] = q;
+    output_points.at(index) = q;
   }
   return output_points;
 }
@@ -117,7 +117,7 @@ public:
   : values_(values) {}
   bool operator()(const int & left, const int & right)
   {
-    return values_[left] < values_[right];
+    return values_.at(left) < values_.at(right);
   }
 
 private:
@@ -133,7 +133,7 @@ enum class CurvatureLabel
 
 bool IsNeighbor(const std::vector<int> & column_indices, const int index1, const int index2)
 {
-  return std::abs(column_indices[index1] - column_indices[index2]) <= 10;
+  return std::abs(column_indices.at(index1) - column_indices.at(index2)) <= 10;
 }
 
 void NeighborPicked(
@@ -141,18 +141,18 @@ void NeighborPicked(
   const int index,
   std::vector<bool> & mask)
 {
-  mask[index] = true;
+  mask.at(index) = true;
   for (int l = 1; l <= 5; l++) {
     if (!IsNeighbor(column_indices, index + l, index + l - 1)) {
       break;
     }
-    mask[index + l] = true;
+    mask.at(index + l) = true;
   }
   for (int l = -1; l >= -5; l--) {
     if (!IsNeighbor(column_indices, index + l, index + l + 1)) {
       break;
     }
-    mask[index + l] = true;
+    mask.at(index + l) = true;
   }
 }
 
@@ -167,12 +167,12 @@ CalcCurvature(
   std::vector<int> indices(N_SCAN * horizontal_size, -1);
   for (unsigned int i = 5; i < points.size() - 5; i++) {
     const float d =
-      range[i - 5] + range[i - 4] + range[i - 3] + range[i - 2] + range[i - 1] -
-      range[i] * 10 +
-      range[i + 1] + range[i + 2] + range[i + 3] + range[i + 4] + range[i + 5];
+      range.at(i - 5) + range.at(i - 4) + range.at(i - 3) + range.at(i - 2) + range.at(i - 1) -
+      range.at(i) * 10 +
+      range.at(i + 1) + range.at(i + 2) + range.at(i + 3) + range.at(i + 4) + range.at(i + 5);
 
-    curvature[i] = d * d;
-    indices[i] = i;
+    curvature.at(i) = d * d;
+    indices.at(i) = i;
   }
   return {curvature, indices};
 }
@@ -206,8 +206,8 @@ private:
   const double n_blocks_;
 };
 
-//  Lidar Sensor Configuration
-const int N_SCAN = 16;
+//  VLS-128 Lidar Sensor Configuration
+const int N_SCAN = 128;
 const int HORIZONTAL_SIZE = 1800;
 const float range_min = 1.0;
 const float range_max = 1000.0;
@@ -254,7 +254,7 @@ private:
   {
     const pcl::PointCloud<PointXYZIR> input_points = *getPointCloud<PointXYZIR>(*cloud_msg);
     RCLCPP_INFO(this->get_logger(),
-                "x = %f,  y = %f,  z = %f,  intensity = %f,  ring = %lu",
+                "x = %f,  y = %f,  z = %f,  intensity = %f,  ring = %u",
                 input_points.at(0).x,
                 input_points.at(0).y,
                 input_points.at(0).z,
@@ -278,6 +278,7 @@ private:
     const auto [indices, points] = ExtractElements(
       input_points, range_min, range_max, HORIZONTAL_SIZE
     );
+
     std::unordered_map<int, Eigen::Vector3d> output_points = Projection(indices, points);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
@@ -291,7 +292,7 @@ private:
 
     int count = 0;
     for (int row_index = 0; row_index < N_SCAN; ++row_index) {
-      start_ring_indices[row_index] = count + 5;
+      start_ring_indices.at(row_index) = count + 5;
 
       for (int column_index = 0; column_index < HORIZONTAL_SIZE; ++column_index) {
         const int index = column_index + row_index * HORIZONTAL_SIZE;
@@ -299,20 +300,20 @@ private:
           continue;
         }
 
-        column_indices[count] = column_index;
-        range[count] = range_map.at(index);
-        cloud.push_back(makePointXYZ(output_points[index]));
+        column_indices.at(count) = column_index;
+        range.at(count) = range_map.at(index);
+        cloud.push_back(makePointXYZ(output_points.at(index)));
         count += 1;
       }
 
-      end_ring_indices[row_index] = count - 5;
+      end_ring_indices.at(row_index) = count - 5;
     }
 
     // used to prevent from labeling a neighbor as surface or edge
     std::vector<bool> mask(N_SCAN * HORIZONTAL_SIZE);
 
     for (unsigned int i = 5; i < cloud.size() - 5; i++) {
-      mask[i] = false;
+      mask.at(i) = false;
     }
 
     // mark occluded points and parallel beam points
@@ -321,26 +322,26 @@ private:
         continue;
       }
 
-      if (range[i] > range[i + 1] + 0.3) {
+      if (range.at(i) > range.at(i + 1) + 0.3) {
         for (int j = 0; j <= 5; j++) {
-          mask[i - j] = true;
+          mask.at(i - j) = true;
         }
       }
 
-      if (range[i + 1] > range[i] + 0.3) {
+      if (range.at(i + 1) > range.at(i) + 0.3) {
         for (int j = 1; j <= 6; j++) {
-          mask[i + j] = true;
+          mask.at(i + j) = true;
         }
       }
     }
 
     for (unsigned int i = 5; i < cloud.size() - 6; ++i) {
       // parallel beam
-      const float ratio1 = std::abs(range[i - 1] - range[i]) / range[i];
-      const float ratio2 = std::abs(range[i + 1] - range[i]) / range[i];
+      const float ratio1 = std::abs(range.at(i - 1) - range.at(i)) / range.at(i);
+      const float ratio2 = std::abs(range.at(i + 1) - range.at(i)) / range.at(i);
 
       if (ratio1 > 0.02 && ratio2 > 0.02) {
-        mask[i] = true;
+        mask.at(i) = true;
       }
     }
 
@@ -356,7 +357,7 @@ private:
     for (int i = 0; i < N_SCAN; i++) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
 
-      const IndexRange index_range(start_ring_indices[i], end_ring_indices[i], N_BLOCKS);
+      const IndexRange index_range(start_ring_indices.at(i), end_ring_indices.at(i), N_BLOCKS);
       for (int j = 0; j < N_BLOCKS; j++) {
         const int sp = index_range.Begin(j);
         const int ep = index_range.End(j);
@@ -364,8 +365,8 @@ private:
 
         int n_picked = 0;
         for (int k = ep; k >= sp; k--) {
-          const int index = inds[k];
-          if (mask[index] || curvature[index] <= edgeThreshold) {
+          const int index = inds.at(k);
+          if (mask.at(index) || curvature.at(index) <= edgeThreshold) {
             continue;
           }
 
@@ -376,24 +377,24 @@ private:
           n_picked++;
 
           edge->push_back(cloud.at(index));
-          label[index] = CurvatureLabel::Edge;
+          label.at(index) = CurvatureLabel::Edge;
 
           NeighborPicked(column_indices, index, mask);
         }
 
         for (int k = sp; k <= ep; k++) {
-          const int index = inds[k];
-          if (mask[index] || curvature[index] >= surfThreshold) {
+          const int index = inds.at(k);
+          if (mask.at(index) || curvature.at(index) >= surfThreshold) {
             continue;
           }
 
-          label[index] = CurvatureLabel::Surface;
+          label.at(index) = CurvatureLabel::Surface;
 
           NeighborPicked(column_indices, index, mask);
         }
 
         for (int k = sp; k <= ep; k++) {
-          if (label[k] == CurvatureLabel::Default || label[k] == CurvatureLabel::Edge) {
+          if (label.at(k) == CurvatureLabel::Default || label.at(k) == CurvatureLabel::Edge) {
             surface_scan->push_back(cloud.at(k));
           }
         }
