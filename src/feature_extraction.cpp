@@ -83,16 +83,14 @@ private:
     const auto [indices, points] = ExtractElements(
       input_points, range_min, range_max, HORIZONTAL_SIZE
     );
-
-    std::unordered_map<int, Eigen::Vector3d> output_points = Projection(indices, points);
+    const std::unordered_map<int, Eigen::Vector3d> output_points = Projection(indices, points);
+    const auto range_map = MakeRangeMatrix(indices, points);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
     std::vector<int> end_ring_indices(N_SCAN, 0);
 
     std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
     std::vector<float> range(N_SCAN * HORIZONTAL_SIZE, 0);
-
-    const auto range_map = MakeRangeMatrix(indices, points);
     pcl::PointCloud<pcl::PointXYZ> cloud;
 
     int count = 0;
