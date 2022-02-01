@@ -141,17 +141,6 @@ ExtractElements(
   return {indices, points};
 }
 
-std::unordered_map<int, double> MakeRangeMatrix(
-  const std::vector<int> & indices,
-  const std::vector<Eigen::Vector3d> & points)
-{
-  std::unordered_map<int, double> range_map;
-  for (const auto & [index, point] : ranges::views::zip(indices, points)) {
-    range_map.at(index) = point.norm();
-  }
-  return range_map;
-}
-
 std::unordered_map<int, Eigen::Vector3d> Projection(
   const std::vector<int> & indices,
   const std::vector<Eigen::Vector3d> points)

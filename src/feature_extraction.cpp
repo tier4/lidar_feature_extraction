@@ -84,7 +84,6 @@ private:
       input_points, range_min, range_max, HORIZONTAL_SIZE
     );
     const std::unordered_map<int, Eigen::Vector3d> output_points = Projection(indices, points);
-    const auto range_map = MakeRangeMatrix(indices, points);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
     std::vector<int> end_ring_indices(N_SCAN, 0);
@@ -104,7 +103,7 @@ private:
         }
 
         column_indices.at(count) = column_index;
-        range.at(count) = range_map.at(index);
+        range.at(count) = output_points.at(index).norm();
         cloud.push_back(MakePointXYZ(output_points.at(index)));
         count += 1;
       }
