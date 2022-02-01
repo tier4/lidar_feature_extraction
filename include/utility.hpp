@@ -97,15 +97,9 @@ bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
   return false;
 }
 
-float RadianToDegree(const float rad)
-{
-  return rad * 180 / M_PI;
-}
-
 int ColumnIndex(const int horizontal_size, const double x, const double y)
 {
-  const double angle = RadianToDegree(atan2(y, x));
-  const double k = horizontal_size * angle / (180.0 * 2.0);
+  const double k = horizontal_size * atan2(y, x) / (M_PI * 2.0);
   const double u = k + horizontal_size / 2.0;
   return static_cast<int>(u);
 }
