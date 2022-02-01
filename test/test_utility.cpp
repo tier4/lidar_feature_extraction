@@ -16,3 +16,11 @@ TEST(Utility, RingIsAvailable)
   };
   EXPECT_FALSE(RingIsAvailable(without_ring));
 }
+
+TEST(Utility, ColumnIndex)
+{
+  EXPECT_EQ(ColumnIndex(100, 0, -1), 25);
+  EXPECT_EQ(ColumnIndex(100, 1, 0), 50);
+  EXPECT_EQ(ColumnIndex(100, 0, 1), 75);
+  EXPECT_EQ(ColumnIndex(100, -1, 0), 100);
+}
