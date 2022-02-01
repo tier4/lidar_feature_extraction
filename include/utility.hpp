@@ -60,7 +60,7 @@ sensor_msgs::msg::PointCloud2 toRosMsg(
   return msg;
 }
 
-inline pcl::PointXYZ makePointXYZ(const Eigen::Vector3d & v)
+inline pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v)
 {
   return pcl::PointXYZ(v(0), v(1), v(2));
 }

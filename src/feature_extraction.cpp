@@ -105,7 +105,7 @@ private:
 
         column_indices.at(count) = column_index;
         range.at(count) = range_map.at(index);
-        cloud.push_back(makePointXYZ(output_points.at(index)));
+        cloud.push_back(MakePointXYZ(output_points.at(index)));
         count += 1;
       }
 
