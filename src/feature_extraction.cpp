@@ -80,10 +80,9 @@ private:
       rclcpp::shutdown();
     }
 
-    const auto [indices, points] = ExtractElements(
+    const auto output_points = ExtractElements(
       input_points, range_min, range_max, HORIZONTAL_SIZE
     );
-    const std::unordered_map<int, Eigen::Vector3d> output_points = Projection(indices, points);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
     std::vector<int> end_ring_indices(N_SCAN, 0);

@@ -104,7 +104,7 @@ int ColumnIndex(const int horizontal_size, const double x, const double y)
   return static_cast<int>(u);
 }
 
-std::tuple<std::vector<int>, std::vector<Eigen::Vector3d>>
+std::unordered_map<int, Eigen::Vector3d>
 ExtractElements(
   const pcl::PointCloud<PointXYZIR> & input_points,
   const float range_min, const float range_max,
@@ -118,9 +118,7 @@ ExtractElements(
       return std::make_tuple(index, q);
     };
 
-  std::set<int> unique_indices;
-  std::vector<int> indices;
-  std::vector<Eigen::Vector3d> points;
+  std::unordered_map<int, Eigen::Vector3d> output_points;
 
   const auto iterator = input_points | ranges::views::transform(f);
   for (const auto & [index, point] : iterator) {
@@ -129,26 +127,13 @@ ExtractElements(
       continue;
     }
 
-    if (unique_indices.find(index) != unique_indices.end()) {
+    if (output_points.find(index) != output_points.end()) {
       continue;
     }
 
-    unique_indices.insert(index);
-    indices.push_back(index);
-    points.push_back(point);
+    output_points.at(index) = point;
   }
 
-  return {indices, points};
-}
-
-std::unordered_map<int, Eigen::Vector3d> Projection(
-  const std::vector<int> & indices,
-  const std::vector<Eigen::Vector3d> points)
-{
-  std::unordered_map<int, Eigen::Vector3d> output_points;
-  for (const auto & [index, q] : ranges::views::zip(indices, points)) {
-    output_points.at(index) = q;
-  }
   return output_points;
 }
 
