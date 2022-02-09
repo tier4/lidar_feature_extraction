@@ -5,6 +5,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "utility.hpp"
 
+#include <range/v3/all.hpp>
+
 #include <algorithm>
 #include <deque>
 #include <functional>
@@ -97,7 +99,6 @@ private:
     std::vector<int> end_ring_indices(N_SCAN, 0);
 
     std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
-    std::vector<float> range(N_SCAN * HORIZONTAL_SIZE, 0);
     pcl::PointCloud<pcl::PointXYZ> cloud;
 
     int count = 0;
@@ -112,13 +113,20 @@ private:
 
         column_indices.at(count) = column_index;
         const PointXYZIR & p = output_points.at(index);
-        range.at(count) = Eigen::Vector3d(p.x, p.y, p.z).norm();
         cloud.push_back(pcl::PointXYZ(p.x, p.y, p.z));
         count += 1;
       }
 
       end_ring_indices.at(row_index) = count - 5;
     }
+
+    auto calc_norm = [](const pcl::PointXYZ & p) {
+        return Eigen::Vector3d(p.x, p.y, p.z).norm();
+      };
+
+    const std::vector<double> range = cloud |
+      ranges::views::transform(calc_norm) |
+      ranges::to_vector;
 
     // used to prevent from labeling a neighbor as surface or edge
     std::vector<bool> mask(N_SCAN * HORIZONTAL_SIZE);

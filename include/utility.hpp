@@ -155,7 +155,7 @@ ExtractElements(
 class by_value
 {
 public:
-  explicit by_value(const std::vector<float> & values)
+  explicit by_value(const std::vector<double> & values)
   : values_(values) {}
   bool operator()(const int & left, const int & right)
   {
@@ -163,7 +163,7 @@ public:
   }
 
 private:
-  std::vector<float> values_;
+  std::vector<double> values_;
 };
 
 enum class CurvatureLabel
@@ -198,17 +198,17 @@ void NeighborPicked(
   }
 }
 
-std::tuple<std::vector<float>, std::vector<int>>
+std::tuple<std::vector<double>, std::vector<int>>
 CalcCurvature(
   const pcl::PointCloud<pcl::PointXYZ> & points,
-  const std::vector<float> & range,
+  const std::vector<double> & range,
   const int N_SCAN,
   const int horizontal_size)
 {
-  std::vector<float> curvature(N_SCAN * horizontal_size);
+  std::vector<double> curvature(N_SCAN * horizontal_size);
   std::vector<int> indices(N_SCAN * horizontal_size, -1);
   for (unsigned int i = 5; i < points.size() - 5; i++) {
-    const float d =
+    const double d =
       range.at(i - 5) + range.at(i - 4) + range.at(i - 3) + range.at(i - 2) + range.at(i - 1) -
       range.at(i) * 10 +
       range.at(i + 1) + range.at(i + 2) + range.at(i + 3) + range.at(i + 4) + range.at(i + 5);
