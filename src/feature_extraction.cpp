@@ -80,9 +80,13 @@ private:
       rclcpp::shutdown();
     }
 
-    const auto output_points = ExtractElements(
-      input_points, range_min, range_max, HORIZONTAL_SIZE
-    );
+    auto point_to_index = [&] (const PointXYZIR & p) {
+      const int column_index = ColumnIndex(HORIZONTAL_SIZE, p.x, p.y);
+      return CalcIndex(HORIZONTAL_SIZE, p.ring, column_index);
+    };
+
+    const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
+    const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
 
     std::vector<int> start_ring_indices(N_SCAN, 0);
     std::vector<int> end_ring_indices(N_SCAN, 0);
@@ -102,8 +106,9 @@ private:
         }
 
         column_indices.at(count) = column_index;
-        range.at(count) = output_points.at(index).norm();
-        cloud.push_back(MakePointXYZ(output_points.at(index)));
+        const PointXYZIR & p = output_points.at(index);
+        range.at(count) = Eigen::Vector3d(p.x, p.y, p.z).norm();
+        cloud.push_back(pcl::PointXYZ(p.x, p.y, p.z));
         count += 1;
       }
 

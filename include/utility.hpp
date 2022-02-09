@@ -97,41 +97,51 @@ bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
   return false;
 }
 
+bool IsInInclusiveRange(const double v, const double min, const double max) {
+  return min <= v && v <= max;
+}
+
+template <typename T>
+pcl::PointCloud<T> FilterByRange(
+  const pcl::PointCloud<T> & points,
+  const double range_min,
+  const double range_max)
+{
+  pcl::PointCloud<T> result;
+  for (const T & p : points) {
+    const double norm = Eigen::Vector3d(p.x, p.y, p.z).norm();
+    if (IsInInclusiveRange(norm, range_min, range_max)) {
+      result.push_back(p);
+    }
+  }
+  return result;
+}
+
 int ColumnIndex(const int horizontal_size, const double x, const double y)
 {
-  const double k = horizontal_size * atan2(y, x) / (M_PI * 2.0);
-  const double u = k + horizontal_size / 2.0;
+  const double k = horizontal_size * atan2(y, x) / M_PI;
+  const double u = (k + horizontal_size) / 2.0;
   return static_cast<int>(u);
 }
 
-std::unordered_map<int, Eigen::Vector3d>
+int CalcIndex(const int horizontal_size, const int row_index, const int column_index) {
+  return column_index + row_index * horizontal_size;
+}
+
+template <typename T>
+std::unordered_map<int, T>
 ExtractElements(
-  const pcl::PointCloud<PointXYZIR> & input_points,
-  const float range_min, const float range_max,
-  const int horizontal_size)
+  const std::function<int(T)> & point_to_index,
+  const pcl::PointCloud<T> & input_points)
 {
-  const auto f = [&](const PointXYZIR & p) {
-      const int row_index = p.ring;
-      const int column_index = ColumnIndex(horizontal_size, p.x, p.y);
-      const int index = column_index + row_index * horizontal_size;
-      const Eigen::Vector3d q(p.x, p.y, p.z);
-      return std::make_tuple(index, q);
-    };
-
-  std::unordered_map<int, Eigen::Vector3d> output_points;
-
-  const auto iterator = input_points | ranges::views::transform(f);
-  for (const auto & [index, point] : iterator) {
-    const double range = point.norm();
-    if (range < range_min || range_max < range) {
-      continue;
-    }
-
+  std::unordered_map<int, T> output_points;
+  for (const T & p : input_points) {
+    const int index = point_to_index(p);
     if (output_points.find(index) != output_points.end()) {
       continue;
     }
 
-    output_points.at(index) = point;
+    output_points[index] = p;
   }
 
   return output_points;
