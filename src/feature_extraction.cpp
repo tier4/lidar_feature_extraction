@@ -98,7 +98,7 @@ private:
     const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
 
     std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
-    pcl::PointCloud<pcl::PointXYZ> cloud;
+    pcl::PointCloud<pcl::PointXYZ> cloud(output_points.size(), 1);
     std::vector<IndexRange> index_ranges(N_SCAN);
 
     int count = 0;
@@ -113,7 +113,7 @@ private:
 
         column_indices.at(count) = column_index;
         const PointXYZIR & p = output_points.at(index);
-        cloud.push_back(pcl::PointXYZ(p.x, p.y, p.z));
+        cloud.at(count) = pcl::PointXYZ(p.x, p.y, p.z);
         count += 1;
       }
 
