@@ -32,6 +32,8 @@ const float surface_leaf_size = 0.2;
 const float map_edge_leaf_size = 0.2;
 const float map_surface_leaf_size = 0.2;
 
+const int N_BLOCKS = 6;
+
 //  CPU Params
 const int n_cores = 2;
 
@@ -95,15 +97,13 @@ private:
     const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
     const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
 
-    std::vector<int> start_ring_indices(N_SCAN, 0);
-    std::vector<int> end_ring_indices(N_SCAN, 0);
-
     std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
     pcl::PointCloud<pcl::PointXYZ> cloud;
+    std::vector<IndexRange> index_ranges(N_SCAN);
 
     int count = 0;
     for (int row_index = 0; row_index < N_SCAN; ++row_index) {
-      start_ring_indices.at(row_index) = count + 5;
+      const int start_index = count + 5;
 
       for (int column_index = 0; column_index < HORIZONTAL_SIZE; ++column_index) {
         const int index = column_index + row_index * HORIZONTAL_SIZE;
@@ -117,7 +117,10 @@ private:
         count += 1;
       }
 
-      end_ring_indices.at(row_index) = count - 5;
+      const int end_index = count - 5;
+
+      const IndexRange index_range(start_index, end_index, N_BLOCKS);
+      index_ranges.push_back(index_range);
     }
 
     auto calc_norm = [](const pcl::PointXYZ & p) {
@@ -169,14 +172,12 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
 
-    const int N_BLOCKS = 6;
-
     std::vector<CurvatureLabel> label(N_SCAN * HORIZONTAL_SIZE, CurvatureLabel::Default);
 
     for (int i = 0; i < N_SCAN; i++) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
 
-      const IndexRange index_range(start_ring_indices.at(i), end_ring_indices.at(i), N_BLOCKS);
+      const IndexRange & index_range = index_ranges.at(i);
       for (int j = 0; j < N_BLOCKS; j++) {
         const int sp = index_range.Begin(j);
         const int ep = index_range.End(j);

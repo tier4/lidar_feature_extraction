@@ -221,6 +221,11 @@ CalcCurvature(
 class IndexRange
 {
 public:
+  IndexRange()
+  : start_index_(-1.),
+    end_index_(-1.),
+    n_blocks_(-1.) {}
+
   IndexRange(const int start_index, const int end_index, const int n_blocks)
   : start_index_(static_cast<double>(start_index)),
     end_index_(static_cast<double>(end_index)),
