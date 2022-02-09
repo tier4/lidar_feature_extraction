@@ -1,3 +1,7 @@
+// BSD 3-Clause License
+// Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
+// All rights reserved.
+
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "utility.hpp"
 
@@ -43,8 +47,8 @@ public:
     main_sub_opt.callback_group = main_callback_group;
 
     cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-    "points_raw", rclcpp::SensorDataQoS().keep_last(1),
-    std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1), main_sub_opt);
+      "points_raw", rclcpp::SensorDataQoS().keep_last(1),
+      std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1), main_sub_opt);
     edge_publisher_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1);
     surface_publisher_ =
@@ -58,13 +62,14 @@ private:
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg)
   {
     const pcl::PointCloud<PointXYZIR> input_points = *getPointCloud<PointXYZIR>(*cloud_msg);
-    RCLCPP_INFO(this->get_logger(),
-                "x = %f,  y = %f,  z = %f,  intensity = %f,  ring = %u",
-                input_points.at(0).x,
-                input_points.at(0).y,
-                input_points.at(0).z,
-                input_points.at(0).intensity,
-                static_cast<unsigned int>(input_points.at(0).ring));
+    RCLCPP_INFO(
+      this->get_logger(),
+      "x = %f,  y = %f,  z = %f,  intensity = %f,  ring = %u",
+      input_points.at(0).x,
+      input_points.at(0).y,
+      input_points.at(0).z,
+      input_points.at(0).intensity,
+      static_cast<unsigned int>(input_points.at(0).ring));
 
     if (!input_points.is_dense) {
       RCLCPP_ERROR(
@@ -80,10 +85,10 @@ private:
       rclcpp::shutdown();
     }
 
-    auto point_to_index = [&] (const PointXYZIR & p) {
-      const int column_index = ColumnIndex(HORIZONTAL_SIZE, p.x, p.y);
-      return CalcIndex(HORIZONTAL_SIZE, p.ring, column_index);
-    };
+    auto point_to_index = [&](const PointXYZIR & p) {
+        const int column_index = ColumnIndex(HORIZONTAL_SIZE, p.x, p.y);
+        return CalcIndex(HORIZONTAL_SIZE, p.ring, column_index);
+      };
 
     const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
     const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
@@ -222,7 +227,6 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
-
 };
 
 int main(int argc, char * argv[])

@@ -1,3 +1,7 @@
+// BSD 3-Clause License
+// Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
+// All rights reserved.
+
 #include <gtest/gtest.h>
 #include "utility.hpp"
 

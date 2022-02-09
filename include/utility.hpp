@@ -1,3 +1,7 @@
+// BSD 3-Clause License
+// Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
+// All rights reserved.
+
 #ifndef _UTILITY_LIDAR_ODOMETRY_H_
 #define _UTILITY_LIDAR_ODOMETRY_H_
 
@@ -24,6 +28,9 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <string>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
 
 struct PointXYZIR
 {
@@ -33,11 +40,7 @@ struct PointXYZIR
 } EIGEN_ALIGN16;
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   PointXYZIR,
-  (float, x, x)
-  (float, y, y)
-  (float, z, z)
-  (float, intensity, intensity)
-  (std::uint16_t, ring, ring)
+  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
 )
 
 template<typename T>
@@ -97,11 +100,12 @@ bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
   return false;
 }
 
-bool IsInInclusiveRange(const double v, const double min, const double max) {
+bool IsInInclusiveRange(const double v, const double min, const double max)
+{
   return min <= v && v <= max;
 }
 
-template <typename T>
+template<typename T>
 pcl::PointCloud<T> FilterByRange(
   const pcl::PointCloud<T> & points,
   const double range_min,
@@ -124,11 +128,12 @@ int ColumnIndex(const int horizontal_size, const double x, const double y)
   return static_cast<int>(u);
 }
 
-int CalcIndex(const int horizontal_size, const int row_index, const int column_index) {
+int CalcIndex(const int horizontal_size, const int row_index, const int column_index)
+{
   return column_index + row_index * horizontal_size;
 }
 
-template <typename T>
+template<typename T>
 std::unordered_map<int, T>
 ExtractElements(
   const std::function<int(T)> & point_to_index,
