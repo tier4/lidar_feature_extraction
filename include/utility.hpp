@@ -200,14 +200,13 @@ void NeighborPicked(
 
 std::tuple<std::vector<double>, std::vector<int>>
 CalcCurvature(
-  const pcl::PointCloud<pcl::PointXYZ> & points,
   const std::vector<double> & range,
   const int N_SCAN,
   const int horizontal_size)
 {
   std::vector<double> curvature(N_SCAN * horizontal_size);
   std::vector<int> indices(N_SCAN * horizontal_size, -1);
-  for (unsigned int i = 5; i < points.size() - 5; i++) {
+  for (unsigned int i = 5; i < range.size() - 5; i++) {
     const double d =
       range.at(i - 5) + range.at(i - 4) + range.at(i - 3) + range.at(i - 2) + range.at(i - 1) -
       range.at(i) * 10 +

@@ -164,7 +164,7 @@ private:
       }
     }
 
-    auto [curvature, inds] = CalcCurvature(cloud, range, N_SCAN, HORIZONTAL_SIZE);
+    auto [curvature, inds] = CalcCurvature(range, N_SCAN, HORIZONTAL_SIZE);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
