@@ -44,6 +44,12 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 )
 
 template<typename T>
+pcl::PointXYZ MakePointXYZ(const T & input)
+{
+  return pcl::PointXYZ(input.x, input.y, input.z);
+}
+
+template<typename T>
 sensor_msgs::msg::PointCloud2 toRosMsg(const pcl::PointCloud<T> & pointcloud)
 {
   sensor_msgs::msg::PointCloud2 msg;

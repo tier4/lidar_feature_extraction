@@ -112,8 +112,7 @@ private:
         }
 
         column_indices.at(count) = column_index;
-        const PointXYZIR & p = output_points.at(index);
-        cloud.at(count) = pcl::PointXYZ(p.x, p.y, p.z);
+        cloud.at(count) = MakePointXYZ(output_points.at(index));
         count += 1;
       }
 
