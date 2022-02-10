@@ -158,19 +158,6 @@ ExtractElements(
   return output_points;
 }
 
-void MaskParallelBeamPoints(const std::vector<double> & range, std::vector<bool> & mask)
-{
-  for (unsigned int i = 5; i < range.size() - 6; ++i) {
-    // parallel beam
-    const float ratio1 = std::abs(range.at(i - 1) - range.at(i)) / range.at(i);
-    const float ratio2 = std::abs(range.at(i + 1) - range.at(i)) / range.at(i);
-
-    if (ratio1 > 0.02 && ratio2 > 0.02) {
-      mask.at(i) = true;
-    }
-  }
-}
-
 class by_value
 {
 public:
@@ -195,6 +182,43 @@ enum class CurvatureLabel
 bool IsNeighbor(const std::vector<int> & column_indices, const int index1, const int index2)
 {
   return std::abs(column_indices.at(index1) - column_indices.at(index2)) <= 10;
+}
+
+void MaskOccludedPoints(
+  const std::vector<int> & column_indices,
+  const std::vector<double> & range,
+  std::vector<bool> & mask)
+{
+  for (unsigned int i = 5; i < range.size() - 6; ++i) {
+    if (!IsNeighbor(column_indices, i + 1, i)) {
+      continue;
+    }
+
+    if (range.at(i) > range.at(i + 1) + 0.3) {
+      for (int j = 0; j <= 5; j++) {
+        mask.at(i - j) = true;
+      }
+    }
+
+    if (range.at(i + 1) > range.at(i) + 0.3) {
+      for (int j = 1; j <= 6; j++) {
+        mask.at(i + j) = true;
+      }
+    }
+  }
+}
+
+void MaskParallelBeamPoints(const std::vector<double> & range, std::vector<bool> & mask)
+{
+  for (unsigned int i = 5; i < range.size() - 6; ++i) {
+    // parallel beam
+    const float ratio1 = std::abs(range.at(i - 1) - range.at(i)) / range.at(i);
+    const float ratio2 = std::abs(range.at(i + 1) - range.at(i)) / range.at(i);
+
+    if (ratio1 > 0.02 && ratio2 > 0.02) {
+      mask.at(i) = true;
+    }
+  }
 }
 
 void NeighborPicked(

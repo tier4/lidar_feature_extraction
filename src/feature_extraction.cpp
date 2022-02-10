@@ -137,25 +137,7 @@ private:
       mask.at(i) = false;
     }
 
-    // mark occluded points and parallel beam points
-    for (unsigned int i = 5; i < cloud.size() - 6; ++i) {
-      if (!IsNeighbor(column_indices, i + 1, i)) {
-        continue;
-      }
-
-      if (range.at(i) > range.at(i + 1) + 0.3) {
-        for (int j = 0; j <= 5; j++) {
-          mask.at(i - j) = true;
-        }
-      }
-
-      if (range.at(i + 1) > range.at(i) + 0.3) {
-        for (int j = 1; j <= 6; j++) {
-          mask.at(i + j) = true;
-        }
-      }
-    }
-
+    MaskOccludedPoints(column_indices, range, mask);
     MaskParallelBeamPoints(range, mask);
 
     auto [curvature, inds] = CalcCurvature(range, N_SCAN, HORIZONTAL_SIZE);
