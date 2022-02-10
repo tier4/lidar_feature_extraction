@@ -24,8 +24,8 @@ const float range_min = 1.0;
 const float range_max = 1000.0;
 
 //  LOAM
-const float edgeThreshold = 0.1;
-const float surfThreshold = 0.1;
+const float edge_threshold = 0.1;
+const float surface_threshold = 0.1;
 
 //  voxel filter paprams
 const float surface_leaf_size = 0.2;
@@ -158,7 +158,7 @@ private:
         int n_picked = 0;
         for (int k = ep; k >= sp; k--) {
           const int index = inds.at(k);
-          if (mask.at(index) || curvature.at(index) <= edgeThreshold) {
+          if (mask.at(index) || curvature.at(index) <= edge_threshold) {
             continue;
           }
 
@@ -176,7 +176,7 @@ private:
 
         for (int k = sp; k <= ep; k++) {
           const int index = inds.at(k);
-          if (mask.at(index) || curvature.at(index) >= surfThreshold) {
+          if (mask.at(index) || curvature.at(index) >= surface_threshold) {
             continue;
           }
 
