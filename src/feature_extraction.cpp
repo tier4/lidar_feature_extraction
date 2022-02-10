@@ -156,15 +156,7 @@ private:
       }
     }
 
-    for (unsigned int i = 5; i < cloud.size() - 6; ++i) {
-      // parallel beam
-      const float ratio1 = std::abs(range.at(i - 1) - range.at(i)) / range.at(i);
-      const float ratio2 = std::abs(range.at(i + 1) - range.at(i)) / range.at(i);
-
-      if (ratio1 > 0.02 && ratio2 > 0.02) {
-        mask.at(i) = true;
-      }
-    }
+    MaskParallelBeamPoints(range, mask);
 
     auto [curvature, inds] = CalcCurvature(range, N_SCAN, HORIZONTAL_SIZE);
 

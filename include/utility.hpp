@@ -158,6 +158,19 @@ ExtractElements(
   return output_points;
 }
 
+void MaskParallelBeamPoints(const std::vector<double> & range, std::vector<bool> & mask)
+{
+  for (unsigned int i = 5; i < range.size() - 6; ++i) {
+    // parallel beam
+    const float ratio1 = std::abs(range.at(i - 1) - range.at(i)) / range.at(i);
+    const float ratio2 = std::abs(range.at(i + 1) - range.at(i)) / range.at(i);
+
+    if (ratio1 > 0.02 && ratio2 > 0.02) {
+      mask.at(i) = true;
+    }
+  }
+}
+
 class by_value
 {
 public:
