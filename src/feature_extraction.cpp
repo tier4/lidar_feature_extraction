@@ -99,7 +99,7 @@ private:
 
     std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
     pcl::PointCloud<pcl::PointXYZ> cloud(output_points.size(), 1);
-    std::vector<IndexRange> index_ranges(N_SCAN);
+    std::vector<IndexRange> index_ranges;
 
     int count = 0;
     for (int row_index = 0; row_index < N_SCAN; ++row_index) {
