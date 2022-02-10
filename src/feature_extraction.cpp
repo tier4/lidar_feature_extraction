@@ -173,10 +173,9 @@ private:
 
     std::vector<CurvatureLabel> label(N_SCAN * HORIZONTAL_SIZE, CurvatureLabel::Default);
 
-    for (int i = 0; i < N_SCAN; i++) {
+    for (const IndexRange & index_range : index_ranges) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
 
-      const IndexRange & index_range = index_ranges.at(i);
       for (int j = 0; j < N_BLOCKS; j++) {
         const int sp = index_range.Begin(j);
         const int ep = index_range.End(j);
