@@ -29,6 +29,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+#include <algorithm>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -243,20 +244,39 @@ void NeighborPicked(
   }
 }
 
-std::tuple<std::vector<double>, std::vector<int>> CalcCurvature(const std::vector<double> & range)
+template<typename T1, typename T2>
+double InnerProduct(T1 first1, T1 last1, T2 first2)
 {
-  std::vector<double> curvature(range.size());
-  std::vector<int> indices(range.size(), -1);
-  for (unsigned int i = 5; i < range.size() - 5; i++) {
-    const double d =
-      range.at(i - 5) + range.at(i - 4) + range.at(i - 3) + range.at(i - 2) + range.at(i - 1) -
-      range.at(i) * 10 +
-      range.at(i + 1) + range.at(i + 2) + range.at(i + 3) + range.at(i + 4) + range.at(i + 5);
-
-    curvature.at(i) = d * d;
-    indices.at(i) = i;
+  double sum = 0.;
+  while (first1 != last1) {
+    sum += (*first1) * (*first2);
+    first1++;
+    first2++;
   }
-  return {curvature, indices};
+  return sum;
+}
+
+template<typename T1, typename T2>
+std::vector<double> Convolution1D(
+  const T1 input_begin, const T1 input_end,
+  const T2 weight_begin, const T2 weight_end)
+{
+  const int input_size = input_end - input_begin;
+  const int weight_size = weight_end - weight_begin;
+  std::vector<double> result(input_size - weight_size + 1);
+  for (unsigned int i = 0; i < result.size(); i++) {
+    auto iter = input_begin + i;
+    result[i] = InnerProduct(iter, iter + weight_size, weight_begin);
+  }
+  return result;
+}
+
+std::vector<double> CalcCurvature(const std::vector<double> & range)
+{
+  const std::vector<double> weight{1., 1., 1., 1., 1., -10., 1., 1., 1., 1., 1.};
+  auto f = [](const double v) {return v * v;};
+  const auto weighted = Convolution1D(range.begin(), range.end(), weight.begin(), weight.end());
+  return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
 template<typename T>

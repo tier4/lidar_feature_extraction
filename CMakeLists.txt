@@ -32,7 +32,7 @@ if (BUILD_TESTING)
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${TEST_FILES})
 
-  ament_add_gtest(test_utility test/test_utility.cpp)
+  ament_add_gmock(test_utility test/test_utility.cpp)
   target_include_directories(test_utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(test_utility fmt)
   ament_target_dependencies(test_utility ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})

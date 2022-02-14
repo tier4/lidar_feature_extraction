@@ -2,7 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "utility.hpp"
 
 using PointField = sensor_msgs::msg::PointField;
@@ -112,6 +113,14 @@ TEST(Utility, IndexRange) {
       },
       std::out_of_range);
   }
+}
+
+TEST(Utility, Convolution1D) {
+  std::vector<double> input{1., -1, 2., 0., 1};
+  std::vector<double> weight{1., 0, -1};
+
+  const auto result = Convolution1D(input.begin(), input.end(), weight.begin(), weight.end());
+  EXPECT_THAT(result, testing::ElementsAre(-1., -1., 1.));
 }
 
 TEST(Utility, FilterByRange) {

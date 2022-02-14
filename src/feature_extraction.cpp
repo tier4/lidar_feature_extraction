@@ -2,9 +2,9 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "utility.hpp"
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <range/v3/all.hpp>
 
 #include <algorithm>
@@ -101,9 +101,10 @@ private:
     pcl::PointCloud<pcl::PointXYZ> cloud(output_points.size(), 1);
     std::vector<IndexRange> index_ranges;
 
+    int padding = 5;
     int count = 0;
     for (int row_index = 0; row_index < N_SCAN; ++row_index) {
-      const int start_index = count + 5;
+      const int start_index = count + padding;
 
       for (int column_index = 0; column_index < HORIZONTAL_SIZE; ++column_index) {
         const int index = column_index + row_index * HORIZONTAL_SIZE;
@@ -116,7 +117,7 @@ private:
         count += 1;
       }
 
-      const int end_index = count - 5;
+      const int end_index = count - padding;
 
       const IndexRange index_range(start_index, end_index, N_BLOCKS);
       index_ranges.push_back(index_range);
@@ -140,12 +141,8 @@ private:
     MaskOccludedPoints(column_indices, range, mask);
     MaskParallelBeamPoints(range, mask);
 
-    auto [curvature, inds] = CalcCurvature(range);
-
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
-
-    std::vector<CurvatureLabel> label(range.size(), CurvatureLabel::Default);
 
     for (const IndexRange & index_range : index_ranges) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
@@ -153,6 +150,15 @@ private:
       for (int j = 0; j < N_BLOCKS; j++) {
         const int sp = index_range.Begin(j);
         const int ep = index_range.End(j);
+
+        const std::vector<double> subrange(
+          range.begin() + sp - padding,
+          range.begin() + ep + padding);
+        const auto curvature = CalcCurvature(subrange);
+        std::vector<CurvatureLabel> label(curvature.size(), CurvatureLabel::Default);
+
+        const int size = static_cast<int>(curvature.size());
+        std::vector<int> inds = ranges::views::ints(0, size) | ranges::to_vector;
         std::sort(inds.begin() + sp, inds.begin() + ep, by_value(curvature));
 
         int n_picked = 0;
