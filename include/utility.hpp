@@ -287,9 +287,7 @@ class IndexRange
 {
 public:
   IndexRange()
-  : start_index_(-1.),
-    end_index_(-1.),
-    n_blocks_(-1) {}
+  : start_index_(-1), end_index_(-1), n_blocks_(-1) {}
 
   IndexRange(const int start_index, const int end_index, const int n_blocks)
   : start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
@@ -299,25 +297,24 @@ public:
   int Begin(const int j) const
   {
     ThrowExceptionIfOutOfRange(j);
+    return this->Boundary(j);
+  }
 
+  int End(const int j) const
+  {
+    ThrowExceptionIfOutOfRange(j);
+    return this->Boundary(j + 1);
+  }
+
+private:
+  int Boundary(const int j) const
+  {
     const double s = static_cast<double>(start_index_);
     const double e = static_cast<double>(end_index_);
     const double n = static_cast<double>(n_blocks_);
     return static_cast<int>(s * (1. - j / n) + e * j / n);
   }
 
-  int End(const int j) const
-  {
-    ThrowExceptionIfOutOfRange(j);
-
-    const double s = static_cast<double>(start_index_);
-    const double e = static_cast<double>(end_index_);
-    const double n = static_cast<double>(n_blocks_);
-    const int k = j + 1;
-    return static_cast<int>(s * (1. - k / n) + e * k / n - 1.);
-  }
-
-private:
   void ThrowExceptionIfOutOfRange(const int j) const
   {
     if (j >= n_blocks_) {
