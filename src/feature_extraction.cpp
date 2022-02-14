@@ -131,7 +131,7 @@ private:
       ranges::to_vector;
 
     // used to prevent from labeling a neighbor as surface or edge
-    std::vector<bool> mask(N_SCAN * HORIZONTAL_SIZE);
+    std::vector<bool> mask(range.size());
 
     for (unsigned int i = 5; i < cloud.size() - 5; i++) {
       mask.at(i) = false;
@@ -145,7 +145,7 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
 
-    std::vector<CurvatureLabel> label(N_SCAN * HORIZONTAL_SIZE, CurvatureLabel::Default);
+    std::vector<CurvatureLabel> label(range.size(), CurvatureLabel::Default);
 
     for (const IndexRange & index_range : index_ranges) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
