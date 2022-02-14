@@ -11,6 +11,9 @@ ament_auto_find_build_dependencies()
 
 ament_auto_add_executable(${PROJECT_NAME} DIRECTORY src)
 
+find_package(fmt REQUIRED)
+target_link_libraries(${PROJECT_NAME} fmt)
+
 if (BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
 
@@ -31,9 +34,8 @@ if (BUILD_TESTING)
 
   ament_add_gtest(test_utility test/test_utility.cpp)
   target_include_directories(test_utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test_utility fmt)
   ament_target_dependencies(test_utility ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
-
-
 endif()
 
 ament_auto_package(INSTALL_TO_SHARE launch)

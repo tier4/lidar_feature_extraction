@@ -5,6 +5,8 @@
 #ifndef _UTILITY_LIDAR_ODOMETRY_H_
 #define _UTILITY_LIDAR_ODOMETRY_H_
 
+#include <fmt/core.h>
+
 #include <std_msgs/msg/header.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -257,38 +259,81 @@ std::tuple<std::vector<double>, std::vector<int>> CalcCurvature(const std::vecto
   return {curvature, indices};
 }
 
+template<typename T>
+std::string RangeMessageLargerOrEqualTo(
+  const std::string & value_name,
+  const std::string & range_name,
+  const T value,
+  const T range_max)
+{
+  return fmt::format(
+    "{} (which is {}) >= {} (which is {})",
+    value_name, value, range_name, range_max);
+}
+
+template<typename T>
+std::string RangeMessageSmallerThan(
+  const std::string & value_name,
+  const std::string & range_name,
+  const T value,
+  const T range_max)
+{
+  return fmt::format(
+    "{} (which is {}) < {} (which is {})",
+    value_name, value, range_name, range_max);
+}
+
 class IndexRange
 {
 public:
   IndexRange()
   : start_index_(-1.),
     end_index_(-1.),
-    n_blocks_(-1.) {}
+    n_blocks_(-1) {}
 
   IndexRange(const int start_index, const int end_index, const int n_blocks)
-  : start_index_(static_cast<double>(start_index)),
-    end_index_(static_cast<double>(end_index)),
-    n_blocks_(static_cast<double>(n_blocks))
+  : start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
   {
   }
 
   int Begin(const int j) const
   {
-    const double n = n_blocks_;
-    return static_cast<int>(start_index_ * (1. - j / n) + end_index_ * j / n);
+    ThrowExceptionIfOutOfRange(j);
+
+    const double s = static_cast<double>(start_index_);
+    const double e = static_cast<double>(end_index_);
+    const double n = static_cast<double>(n_blocks_);
+    return static_cast<int>(s * (1. - j / n) + e * j / n);
   }
 
   int End(const int j) const
   {
-    const double n = n_blocks_;
+    ThrowExceptionIfOutOfRange(j);
+
+    const double s = static_cast<double>(start_index_);
+    const double e = static_cast<double>(end_index_);
+    const double n = static_cast<double>(n_blocks_);
     const int k = j + 1;
-    return static_cast<int>(start_index_ * (1. - k / n) + end_index_ * k / n - 1.);
+    return static_cast<int>(s * (1. - k / n) + e * k / n - 1.);
   }
 
 private:
-  const double start_index_;
-  const double end_index_;
-  const double n_blocks_;
+  void ThrowExceptionIfOutOfRange(const int j) const
+  {
+    if (j >= n_blocks_) {
+      auto s = RangeMessageLargerOrEqualTo("j", "n_blocks", j, n_blocks_);
+      throw std::out_of_range(s);
+    }
+
+    if (j < 0) {
+      auto s = RangeMessageSmallerThan("j", "0", j, 0);
+      throw std::out_of_range(s);
+    }
+  }
+
+  const int start_index_;
+  const int end_index_;
+  const int n_blocks_;
 };
 
 #endif  // _UTILITY_LIDAR_ODOMETRY_H_

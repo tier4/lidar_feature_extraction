@@ -13,6 +13,7 @@
   <buildtool_depend>eigen3_cmake_module</buildtool_depend>
 
   <depend>eigen</depend>
+  <depend>fmt</depend>
   <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
   <depend>pcl_ros</depend>

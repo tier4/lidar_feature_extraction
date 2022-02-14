@@ -43,6 +43,55 @@ TEST(Utility, IsInInclusiveRange) {
   EXPECT_FALSE(IsInInclusiveRange(6., 1., 5.));
 }
 
+TEST(Utility, IndexRange) {
+  const IndexRange index_range(0, 12, 3);
+
+  EXPECT_EQ(index_range.Begin(0), 0);
+  EXPECT_EQ(index_range.End(0), 3);
+
+  EXPECT_EQ(index_range.Begin(1), 4);
+  EXPECT_EQ(index_range.End(1), 7);
+
+  EXPECT_EQ(index_range.Begin(2), 8);
+  EXPECT_EQ(index_range.End(2), 11);
+
+  EXPECT_THROW(
+    try {
+      index_range.Begin(-1);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is -1) < 0 (which is 0)", e.what());
+      throw e;
+    },
+    std::out_of_range);
+
+  EXPECT_THROW(
+    try {
+      index_range.End(-1);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is -1) < 0 (which is 0)", e.what());
+      throw e;
+    },
+    std::out_of_range);
+
+  EXPECT_THROW(
+    try {
+      index_range.Begin(3);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is 3) >= n_blocks (which is 3)", e.what());
+      throw e;
+    },
+    std::out_of_range);
+
+  EXPECT_THROW(
+    try {
+      index_range.End(3);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is 3) >= n_blocks (which is 3)", e.what());
+      throw e;
+    },
+    std::out_of_range);
+}
+
 TEST(Utility, FilterByRange) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   cloud.push_back(pcl::PointXYZ(0., 0., 0));
