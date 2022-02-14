@@ -241,14 +241,10 @@ void NeighborPicked(
   }
 }
 
-std::tuple<std::vector<double>, std::vector<int>>
-CalcCurvature(
-  const std::vector<double> & range,
-  const int N_SCAN,
-  const int horizontal_size)
+std::tuple<std::vector<double>, std::vector<int>> CalcCurvature(const std::vector<double> & range)
 {
-  std::vector<double> curvature(N_SCAN * horizontal_size);
-  std::vector<int> indices(N_SCAN * horizontal_size, -1);
+  std::vector<double> curvature(range.size());
+  std::vector<int> indices(range.size(), -1);
   for (unsigned int i = 5; i < range.size() - 5; i++) {
     const double d =
       range.at(i - 5) + range.at(i - 4) + range.at(i - 3) + range.at(i - 2) + range.at(i - 1) -

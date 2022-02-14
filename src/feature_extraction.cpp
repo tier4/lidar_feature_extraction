@@ -140,7 +140,7 @@ private:
     MaskOccludedPoints(column_indices, range, mask);
     MaskParallelBeamPoints(range, mask);
 
-    auto [curvature, inds] = CalcCurvature(range, N_SCAN, HORIZONTAL_SIZE);
+    auto [curvature, inds] = CalcCurvature(range);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
