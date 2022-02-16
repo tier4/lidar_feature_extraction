@@ -179,9 +179,9 @@ TEST(Utility, FillFromRight)
 
 TEST(Utility, FillNeighbors)
 {
-  {
-    const double radian_threshold = 0.2;
+  const double radian_threshold = 0.2;
 
+  {
     pcl::PointCloud<pcl::PointXYZ> cloud;
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
@@ -191,8 +191,24 @@ TEST(Utility, FillNeighbors)
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     std::vector<bool> mask(cloud.size());
-    FillNeighbors<pcl::PointXYZ>(mask, cloud.begin(), 3, 1, radian_threshold);
-    EXPECT_THAT(mask, testing::ElementsAre(false, false, true, true, true, false));
+    FillNeighbors<pcl::PointXYZ>(mask, cloud.begin(), 3, 2, radian_threshold);
+    EXPECT_THAT(mask, testing::ElementsAre(false, true, true, true, true, true));
+  }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(2.00, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(2.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(6.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(6.02, 1.0, 0.0));
+
+    std::vector<bool> mask(cloud.size());
+    FillNeighbors<pcl::PointXYZ>(mask, cloud.begin(), 3, 2, radian_threshold);
+    EXPECT_THAT(mask, testing::ElementsAre(false, false, true, true, true, true, false, false));
   }
 }
 

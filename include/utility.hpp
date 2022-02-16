@@ -416,22 +416,8 @@ void FillNeighbors(
   const double radian_threshold)
 {
   mask.at(index) = true;
-  for (int l = 1; l <= padding; l++) {
-    const auto p0 = cloud_begin + index + l - 0;
-    const auto p1 = cloud_begin + index + l - 1;
-    if (!IsNeighbor(p0, p1, radian_threshold)) {
-      break;
-    }
-    mask.at(index + l) = true;
-  }
-  for (int l = -1; l >= -padding; l--) {
-    const auto p0 = cloud_begin + index + l + 0;
-    const auto p1 = cloud_begin + index + l + 1;
-    if (!IsNeighbor(p0, p1, radian_threshold)) {
-      break;
-    }
-    mask.at(index + l) = true;
-  }
+  FillFromLeft<PointT>(mask, cloud_begin, radian_threshold, index + 1, index + 1 + padding, true);
+  FillFromRight<PointT>(mask, cloud_begin, radian_threshold, index - padding, index, true);
 }
 
 std::vector<int> SortedIndices(const std::vector<double> & values)
