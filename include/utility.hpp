@@ -354,14 +354,14 @@ void MaskOccludedPoints(
   std::vector<bool> & mask,
   const CloudConstIterator<PointT> & cloud_begin,
   const CloudConstIterator<PointT> & cloud_end,
-  const int fill_size,
+  const int padding,
   const double distance_diff_threshold,
   const double radian_threshold)
 {
   const int cloud_size = cloud_end - cloud_begin;
   assert(static_cast<std::uint32_t>(cloud_size) == mask.size());
 
-  for (int i = fill_size; i < cloud_size - fill_size - 1; i++) {
+  for (int i = 0; i < cloud_size - 1; i++) {
     const auto p0 = cloud_begin + i + 0;
     const auto p1 = cloud_begin + i + 1;
 
@@ -373,18 +373,11 @@ void MaskOccludedPoints(
     const double range1 = XYNorm(p1->x, p1->y);
 
     if (range0 > range1 + distance_diff_threshold) {
-      FillFromLeft<PointT>(mask, cloud_begin, radian_threshold, i - fill_size, i, true);
-      for (int j = 0; j <= fill_size; j++) {
-        mask.at(i - j) = true;
-      }
+      FillFromRight<PointT>(mask, cloud_begin, radian_threshold, i - padding, i + 1, true);
     }
 
     if (range1 > range0 + distance_diff_threshold) {
-      FillFromRight<PointT>(mask, cloud_begin, radian_threshold, i + 1, i + fill_size + 1, true);
-
-      for (int j = 1; j <= fill_size + 1; j++) {
-        mask.at(i + j) = true;
-      }
+      FillFromLeft<PointT>(mask, cloud_begin, radian_threshold, i + 1, i + padding + 2, true);
     }
   }
 }
@@ -622,17 +615,17 @@ AssignLabelToPoints(
 
       labels.at(offset + index) = CurvatureLabel::Edge;
 
-      FillNeighbors<PointT>(mask, cloud_begin, index, padding, radian_threshold);
+      FillNeighbors<PointT>(mask, cloud_begin, offset + index, padding, radian_threshold);
     }
 
     for (const int index : indices) {
-      if (mask.at(index) || curvature.at(index) >= surface_threshold) {
+      if (mask.at(offset + index) || curvature.at(index) >= surface_threshold) {
         continue;
       }
 
-      labels.at(index) = CurvatureLabel::Surface;
+      labels.at(offset + index) = CurvatureLabel::Surface;
 
-      FillNeighbors<PointT>(mask, cloud_begin, index, padding, radian_threshold);
+      FillNeighbors<PointT>(mask, cloud_begin, offset + index, padding, radian_threshold);
     }
   }
   return labels;

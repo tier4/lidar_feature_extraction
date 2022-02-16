@@ -214,15 +214,62 @@ TEST(Utility, FillNeighbors)
 
 TEST(Utility, MaskOccludedPoints)
 {
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  std::vector<bool> mask(cloud.size());
-  // MaskOccludedPoints(mask, cloud.begin(), cloud.end(), fill_size, );
+  const double radian_threshold = 0.2;
+  const double distance_threshold = 2.0;
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.02, 2.0, 0.0));  // occlusion
+    cloud.push_back(pcl::PointXYZ(8.03, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.05, 8.0, 0.0));  // discontinuity
+    cloud.push_back(pcl::PointXYZ(8.06, 8.0, 0.0));
+
+    {
+      std::vector<bool> mask(cloud.size());
+      MaskOccludedPoints<pcl::PointXYZ>(
+        mask, cloud.begin(), cloud.end(),
+        1, distance_threshold, radian_threshold);
+      EXPECT_THAT(mask, testing::ElementsAre(false, false, true, true, false, false, false));
+    }
+
+    {
+      std::vector<bool> mask(cloud.size());
+      MaskOccludedPoints<pcl::PointXYZ>(
+        mask, cloud.begin(), cloud.end(),
+        3, distance_threshold, radian_threshold);
+      EXPECT_THAT(mask, testing::ElementsAre(false, false, true, true, true, false, false));
+    }
+  }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(8.00, 8.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.01, 8.0, 0.0));  // discontinuity
+    cloud.push_back(pcl::PointXYZ(8.02, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.03, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));  // occlusion
+    cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+
+    {
+      std::vector<bool> mask(cloud.size());
+      MaskOccludedPoints<pcl::PointXYZ>(
+        mask, cloud.begin(), cloud.end(),
+        1, distance_threshold, radian_threshold);
+      EXPECT_THAT(mask, testing::ElementsAre(false, false, false, true, true, false, false));
+    }
+
+    {
+      std::vector<bool> mask(cloud.size());
+      MaskOccludedPoints<pcl::PointXYZ>(
+        mask, cloud.begin(), cloud.end(),
+        4, distance_threshold, radian_threshold);
+      EXPECT_THAT(mask, testing::ElementsAre(false, false, true, true, true, false, false));
+    }
+  }
 }
 
 TEST(Utility, IndexRange)
