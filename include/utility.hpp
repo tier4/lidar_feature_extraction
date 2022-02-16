@@ -5,6 +5,8 @@
 #ifndef _UTILITY_LIDAR_ODOMETRY_H_
 #define _UTILITY_LIDAR_ODOMETRY_H_
 
+#include <boost/range/adaptor/reversed.hpp>
+
 #include <fmt/core.h>
 
 #include <std_msgs/msg/header.hpp>
@@ -30,9 +32,11 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <algorithm>
+#include <set>
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 struct PointXYZIR
@@ -41,6 +45,7 @@ struct PointXYZIR
   std::uint16_t ring;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
+
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   PointXYZIR,
   (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
@@ -122,7 +127,7 @@ pcl::PointCloud<T> FilterByRange(
 {
   pcl::PointCloud<T> result;
   for (const T & p : points) {
-    const double norm = Eigen::Vector3d(p.x, p.y, p.z).norm();
+    const double norm = Eigen::Vector2d(p.x, p.y).norm();
     if (IsInInclusiveRange(norm, range_min, range_max)) {
       result.push_back(p);
     }
@@ -179,70 +184,363 @@ enum class CurvatureLabel
 {
   Default = 0,
   Edge = 1,
-  Surface = -1
+  Surface = 2,
+  OutOfRange = 3
 };
 
-bool IsNeighbor(const std::vector<int> & column_indices, const int index1, const int index2)
+inline double XYNorm(const double x, const double y)
 {
-  return std::abs(column_indices.at(index1) - column_indices.at(index2)) <= 10;
+  return std::sqrt(x * x + y * y);
 }
 
-void MaskOccludedPoints(
-  const std::vector<int> & column_indices,
-  const std::vector<double> & range,
-  std::vector<bool> & mask)
+double CalcRadian(const double x1, const double y1, const double x2, const double y2)
 {
-  for (unsigned int i = 5; i < range.size() - 6; ++i) {
-    if (!IsNeighbor(column_indices, i + 1, i)) {
+  const double dot = x1 * x2 + y1 * y2;
+  const double norm1 = XYNorm(x1, y1);
+  const double norm2 = XYNorm(x2, y2);
+  const double cos_angle = dot / (norm1 * norm2);
+  return std::acos(cos_angle);
+}
+
+template<typename PointT>
+bool IsNeighbor(const PointT & p1, const PointT & p2, const double radian_threshold)
+{
+  return CalcRadian(p1->x, p1->y, p2->x, p2->y) <= radian_threshold;
+}
+
+template<typename PointT>
+using CloudIterator = typename pcl::PointCloud<PointT>::iterator;
+
+template<typename PointT>
+using CloudConstIterator = typename pcl::PointCloud<PointT>::const_iterator;
+
+template<typename PointT>
+pcl::PointCloud<PointT> ExtractEdge(
+  const CloudConstIterator<PointT> cloud_begin,
+  const std::vector<CurvatureLabel> & labels)
+{
+  typename pcl::PointCloud<PointT>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
+  for (unsigned int i = 0; i < labels.size(); i++) {
+    if (labels[i] == CurvatureLabel::Edge) {
+      const PointT point = *(cloud_begin + i);
+      edge->push_back(point);
+    }
+  }
+  return edge;
+}
+
+template<typename PointT>
+std::vector<std::pair<CloudConstIterator<PointT>, CloudConstIterator<PointT>>>
+ExtractSectionsByRing(const typename pcl::PointCloud<PointT>::Ptr & cloud)
+{
+  const auto & points = cloud->points;
+
+  if (points.size() == 0) {
+    return {};
+  }
+
+  using T = CloudConstIterator<PointT>;
+
+  const T cloud_begin = points.begin();
+
+  std::set<std::uint16_t> rings;
+  std::vector<std::pair<T, T>> sections;
+
+  T begin = cloud_begin;
+  std::uint16_t prev_ring = points.at(0).ring;
+
+  for (unsigned int i = 1; i < points.size(); i++) {
+    const T p = cloud_begin + i;
+    if (p->ring == prev_ring) {
       continue;
     }
 
-    if (range.at(i) > range.at(i + 1) + 0.3) {
-      for (int j = 0; j <= 5; j++) {
+    if (rings.find(p->ring) != rings.end()) {
+      auto s = fmt::format("Ring {} has already appeared", p->ring);
+      throw std::invalid_argument(s);
+    }
+
+    rings.insert(p->ring);
+
+    sections.push_back(std::make_pair(begin, p));
+
+    begin = p;
+    prev_ring = p->ring;
+  }
+
+  sections.push_back(std::make_pair(begin, points.end()));
+
+  return sections;
+}
+
+template<typename PointT>
+std::pair<CloudConstIterator<PointT>, CloudConstIterator<PointT>>
+PointRingIterator(
+  const typename pcl::PointCloud<PointT>::Ptr & cloud,
+  const int begin_x, const int begin_y,
+  const int end_x, const int end_y)
+{
+  // if (begin_x >= cloud->width) {
+  //   throw std::out_of_range;
+  // }
+
+  auto f = [&](int x, int y) {
+      const int index = cloud->width * x + y;
+      return cloud->points.begin() + index;
+    };
+
+  const auto begin = f(begin_x, begin_y);
+  const auto end = f(end_x, end_y);
+  return {begin, end};
+}
+
+template<typename PointT>
+std::vector<double> CalcRange(
+  const CloudConstIterator<PointT> cloud_begin,
+  const CloudConstIterator<PointT> cloud_end)
+{
+  std::vector<double> range(cloud_end - cloud_begin);
+  for (unsigned int i = 0; i < range.size(); i++) {
+    const auto p = cloud_begin + i;
+    range[i] = Eigen::Vector2d(p->x, p->y).norm();
+  }
+  return range;
+}
+
+template<typename T>
+void FillFromLeft(
+  std::vector<bool> & mask,
+  const CloudConstIterator<T> & cloud_begin,
+  const double radian_threshold,
+  int begin_index,
+  int end_index,
+  const bool & value)
+{
+  for (int i = begin_index; i < end_index - 1; i++) {
+    mask.at(i) = value;
+
+    auto p0 = cloud_begin + i + 0;
+    auto p1 = cloud_begin + i + 1;
+    if (!IsNeighbor(p0, p1, radian_threshold)) {
+      return;
+    }
+  }
+  mask.at(end_index - 1) = value;
+}
+
+template<typename T>
+void FillFromRight(
+  std::vector<bool> & mask,
+  const CloudConstIterator<T> & cloud_begin,
+  const double radian_threshold,
+  int begin_index,
+  int end_index,
+  const bool & value)
+{
+  for (int i = end_index - 1; i > begin_index; i--) {
+    mask.at(i) = value;
+
+    auto p0 = cloud_begin + i - 0;
+    auto p1 = cloud_begin + i - 1;
+    if (!IsNeighbor(p0, p1, radian_threshold)) {
+      return;
+    }
+  }
+  mask.at(begin_index) = value;
+}
+
+template<typename PointT>
+void MaskOccludedPoints(
+  std::vector<bool> & mask,
+  const CloudConstIterator<PointT> & cloud_begin,
+  const CloudConstIterator<PointT> & cloud_end,
+  const int fill_size,
+  const double distance_diff_threshold,
+  const double radian_threshold)
+{
+  const int cloud_size = cloud_end - cloud_begin;
+  assert(static_cast<std::uint32_t>(cloud_size) == mask.size());
+
+  for (int i = fill_size; i < cloud_size - fill_size - 1; i++) {
+    const auto p0 = cloud_begin + i + 0;
+    const auto p1 = cloud_begin + i + 1;
+
+    if (!IsNeighbor(p0, p1, radian_threshold)) {
+      continue;
+    }
+
+    const double range0 = XYNorm(p0->x, p0->y);
+    const double range1 = XYNorm(p1->x, p1->y);
+
+    if (range0 > range1 + distance_diff_threshold) {
+      FillFromLeft<PointT>(mask, cloud_begin, radian_threshold, i - fill_size, i, true);
+      for (int j = 0; j <= fill_size; j++) {
         mask.at(i - j) = true;
       }
     }
 
-    if (range.at(i + 1) > range.at(i) + 0.3) {
-      for (int j = 1; j <= 6; j++) {
+    if (range1 > range0 + distance_diff_threshold) {
+      FillFromRight<PointT>(mask, cloud_begin, radian_threshold, i + 1, i + fill_size + 1, true);
+
+      for (int j = 1; j <= fill_size + 1; j++) {
         mask.at(i + j) = true;
       }
     }
   }
 }
 
-void MaskParallelBeamPoints(const std::vector<double> & range, std::vector<bool> & mask)
+template<typename PointT>
+void MaskParallelBeamPoints(
+  std::vector<bool> & mask,
+  const CloudConstIterator<PointT> & cloud_begin,
+  const CloudConstIterator<PointT> & cloud_end,
+  const double range_ratio_threshold)
 {
-  for (unsigned int i = 5; i < range.size() - 6; ++i) {
-    // parallel beam
-    const float ratio1 = std::abs(range.at(i - 1) - range.at(i)) / range.at(i);
-    const float ratio2 = std::abs(range.at(i + 1) - range.at(i)) / range.at(i);
+  const std::vector<double> ranges = CalcRange<PointT>(cloud_begin, cloud_end);
+  for (unsigned int i = 1; i < ranges.size() - 1; ++i) {
+    const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
+    const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
 
-    if (ratio1 > 0.02 && ratio2 > 0.02) {
+    if (ratio1 > range_ratio_threshold && ratio2 > range_ratio_threshold) {
       mask.at(i) = true;
     }
   }
 }
 
-void NeighborPicked(
-  const std::vector<int> & column_indices,
+template<typename PointT>
+void FillNeighbors(
+  std::vector<bool> & mask,
+  const CloudConstIterator<PointT> & cloud_begin,
   const int index,
-  std::vector<bool> & mask)
+  const int padding,
+  const double radian_threshold)
 {
   mask.at(index) = true;
-  for (int l = 1; l <= 5; l++) {
-    if (!IsNeighbor(column_indices, index + l, index + l - 1)) {
+  for (int l = 1; l <= padding; l++) {
+    const auto p0 = cloud_begin + index + l - 0;
+    const auto p1 = cloud_begin + index + l - 1;
+    if (!IsNeighbor(p0, p1, radian_threshold)) {
       break;
     }
     mask.at(index + l) = true;
   }
-  for (int l = -1; l >= -5; l--) {
-    if (!IsNeighbor(column_indices, index + l, index + l + 1)) {
+  for (int l = -1; l >= -padding; l--) {
+    const auto p0 = cloud_begin + index + l + 0;
+    const auto p1 = cloud_begin + index + l + 1;
+    if (!IsNeighbor(p0, p1, radian_threshold)) {
       break;
     }
     mask.at(index + l) = true;
   }
 }
+
+std::vector<int> SortedIndices(const std::vector<double> & values)
+{
+  // auto by_value = [&](const int left, const int right) {
+  //   return values.at(left) < values.at(right);
+  // };
+
+  const int size = static_cast<int>(values.size());
+  std::vector<int> indices = ranges::views::ints(0, size) | ranges::to_vector;
+  std::sort(indices.begin(), indices.end(), by_value(values));
+  return indices;
+}
+
+template<typename T>
+std::string RangeMessageLargerOrEqualTo(
+  const std::string & value_name,
+  const std::string & range_name,
+  const T value,
+  const T range_max)
+{
+  return fmt::format(
+    "{} (which is {}) >= {} (which is {})",
+    value_name, value, range_name, range_max);
+}
+
+template<typename T>
+std::string RangeMessageSmallerThan(
+  const std::string & value_name,
+  const std::string & range_name,
+  const T value,
+  const T range_max)
+{
+  return fmt::format(
+    "{} (which is {}) < {} (which is {})",
+    value_name, value, range_name, range_max);
+}
+
+class IndexRange
+{
+public:
+  IndexRange(const int start_index, const int end_index, const int n_blocks)
+  : start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
+  {
+  }
+
+  int Begin(const int j) const
+  {
+    ThrowExceptionIfOutOfRange(j);
+    return this->Boundary(j);
+  }
+
+  int End(const int j) const
+  {
+    ThrowExceptionIfOutOfRange(j);
+    return this->Boundary(j + 1);
+  }
+
+protected:
+  int Boundary(const int j) const
+  {
+    const double s = static_cast<double>(start_index_);
+    const double e = static_cast<double>(end_index_);
+    const double n = static_cast<double>(n_blocks_);
+    return static_cast<int>(s * (1. - j / n) + e * j / n);
+  }
+
+  void ThrowExceptionIfOutOfRange(const int j) const
+  {
+    if (j >= n_blocks_) {
+      auto s = RangeMessageLargerOrEqualTo("j", "n_blocks", j, n_blocks_);
+      throw std::out_of_range(s);
+    }
+
+    if (j < 0) {
+      auto s = RangeMessageSmallerThan("j", "0", j, 0);
+      throw std::out_of_range(s);
+    }
+  }
+
+private:
+  const int start_index_;
+  const int end_index_;
+  const int n_blocks_;
+};
+
+class PaddedIndexRange : public IndexRange
+{
+public:
+  PaddedIndexRange(
+    const int start_index, const int end_index, const int n_blocks,
+    const int padding)
+  : IndexRange(start_index + padding, end_index - padding, n_blocks), padding_(padding)
+  {
+  }
+
+  int Begin(const int j) const
+  {
+    return IndexRange::Begin(j) - padding_;
+  }
+
+  int End(const int j) const
+  {
+    return IndexRange::End(j) + padding_;
+  }
+
+private:
+  const int padding_;
+};
 
 template<typename T1, typename T2>
 double InnerProduct(T1 first1, T1 last1, T2 first2)
@@ -287,78 +585,71 @@ std::vector<double> CalcCurvature(const std::vector<double> & range)
   return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
-template<typename T>
-std::string RangeMessageLargerOrEqualTo(
-  const std::string & value_name,
-  const std::string & range_name,
-  const T value,
-  const T range_max)
+template<typename PointT>
+std::vector<CurvatureLabel>
+AssignLabelToPoints(
+  const CloudConstIterator<PointT> cloud_begin,
+  const CloudConstIterator<PointT> cloud_end,
+  const int n_blocks)
 {
-  return fmt::format(
-    "{} (which is {}) >= {} (which is {})",
-    value_name, value, range_name, range_max);
-}
+  const int cloud_size = cloud_end - cloud_begin;
 
-template<typename T>
-std::string RangeMessageSmallerThan(
-  const std::string & value_name,
-  const std::string & range_name,
-  const T value,
-  const T range_max)
-{
-  return fmt::format(
-    "{} (which is {}) < {} (which is {})",
-    value_name, value, range_name, range_max);
-}
+  const int padding = 5;
+  const double radian_threshold = 2.0;
+  const double distance_diff_threshold = 0.3;
+  const double range_ratio_threshold = 0.02;
+  const double edge_threshold = 0.1;
+  const double surface_threshold = 0.1;
+  const PaddedIndexRange index_range(0, cloud_size, n_blocks, padding);
 
-class IndexRange
-{
-public:
-  IndexRange()
-  : start_index_(-1), end_index_(-1), n_blocks_(-1) {}
+  std::vector<bool> mask(cloud_size, false);
+  MaskOccludedPoints<PointT>(
+    mask, cloud_begin, cloud_end, padding,
+    distance_diff_threshold, radian_threshold
+  );
+  MaskParallelBeamPoints<PointT>(mask, cloud_begin, cloud_end, range_ratio_threshold);
+  std::vector<CurvatureLabel> labels(cloud_size, CurvatureLabel::Default);
 
-  IndexRange(const int start_index, const int end_index, const int n_blocks)
-  : start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
-  {
-  }
+  for (int j = 0; j < n_blocks; j++) {
+    const auto block_begin = cloud_begin + index_range.Begin(j);
+    const auto block_end = cloud_begin + index_range.End(j);
 
-  int Begin(const int j) const
-  {
-    ThrowExceptionIfOutOfRange(j);
-    return this->Boundary(j);
-  }
+    const std::vector<double> ranges = CalcRange<PointT>(block_begin, block_end);
+    const std::vector<double> curvature = CalcCurvature(ranges);
+    const std::vector<int> indices = SortedIndices(curvature);
 
-  int End(const int j) const
-  {
-    ThrowExceptionIfOutOfRange(j);
-    return this->Boundary(j + 1);
-  }
+    const int expected_size = index_range.End(j) - index_range.Begin(j) - 2 * padding;
+    assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
 
-private:
-  int Boundary(const int j) const
-  {
-    const double s = static_cast<double>(start_index_);
-    const double e = static_cast<double>(end_index_);
-    const double n = static_cast<double>(n_blocks_);
-    return static_cast<int>(s * (1. - j / n) + e * j / n);
-  }
+    const int offset = index_range.Begin(j) + padding;
+    int n_picked = 0;
+    for (const int index : boost::adaptors::reverse(indices)) {
+      if (mask.at(offset + index) || curvature.at(index) <= edge_threshold) {
+        continue;
+      }
 
-  void ThrowExceptionIfOutOfRange(const int j) const
-  {
-    if (j >= n_blocks_) {
-      auto s = RangeMessageLargerOrEqualTo("j", "n_blocks", j, n_blocks_);
-      throw std::out_of_range(s);
+      if (n_picked >= 20) {
+        break;
+      }
+
+      n_picked++;
+
+      labels.at(offset + index) = CurvatureLabel::Edge;
+
+      FillNeighbors<PointT>(mask, cloud_begin, index, padding, radian_threshold);
     }
 
-    if (j < 0) {
-      auto s = RangeMessageSmallerThan("j", "0", j, 0);
-      throw std::out_of_range(s);
+    for (const int index : indices) {
+      if (mask.at(index) || curvature.at(index) >= surface_threshold) {
+        continue;
+      }
+
+      labels.at(index) = CurvatureLabel::Surface;
+
+      FillNeighbors<PointT>(mask, cloud_begin, index, padding, radian_threshold);
     }
   }
-
-  const int start_index_;
-  const int end_index_;
-  const int n_blocks_;
-};
+  return labels;
+}
 
 #endif  // _UTILITY_LIDAR_ODOMETRY_H_

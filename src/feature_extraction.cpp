@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <deque>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <set>
 #include <string>
@@ -23,16 +24,12 @@ const int HORIZONTAL_SIZE = 1800;
 const float range_min = 1.0;
 const float range_max = 1000.0;
 
-//  LOAM
-const float edge_threshold = 0.1;
-const float surface_threshold = 0.1;
-
 //  voxel filter paprams
 const float surface_leaf_size = 0.2;
 const float map_edge_leaf_size = 0.2;
 const float map_surface_leaf_size = 0.2;
 
-const int N_BLOCKS = 6;
+const int n_blocks = 6;
 
 //  CPU Params
 const int n_cores = 2;
@@ -65,17 +62,13 @@ public:
 private:
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg)
   {
-    const pcl::PointCloud<PointXYZIR> input_points = *getPointCloud<PointXYZIR>(*cloud_msg);
-    RCLCPP_INFO(
-      this->get_logger(),
-      "x = %f,  y = %f,  z = %f,  intensity = %f,  ring = %u",
-      input_points.at(0).x,
-      input_points.at(0).y,
-      input_points.at(0).z,
-      input_points.at(0).intensity,
-      static_cast<unsigned int>(input_points.at(0).ring));
+    const pcl::PointCloud<PointXYZIR>::Ptr input_points = getPointCloud<PointXYZIR>(*cloud_msg);
 
-    if (!input_points.is_dense) {
+    RCLCPP_INFO(
+      this->get_logger(), "width = %d, height = %d",
+      input_points->width, input_points->height);
+
+    if (!input_points->is_dense) {
       RCLCPP_ERROR(
         this->get_logger(),
         "Point cloud is not in dense format, please remove NaN points first!");
@@ -89,117 +82,22 @@ private:
       rclcpp::shutdown();
     }
 
-    auto point_to_index = [&](const PointXYZIR & p) {
-        const int column_index = ColumnIndex(HORIZONTAL_SIZE, p.x, p.y);
-        return CalcIndex(HORIZONTAL_SIZE, p.ring, column_index);
-      };
-
-    const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
-    const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
-
-    std::vector<int> column_indices(N_SCAN * HORIZONTAL_SIZE, 0);
-    pcl::PointCloud<pcl::PointXYZ> cloud(output_points.size(), 1);
-    std::vector<IndexRange> index_ranges;
-
-    int padding = 5;
-    int count = 0;
-    for (int row_index = 0; row_index < N_SCAN; ++row_index) {
-      const int start_index = count + padding;
-
-      for (int column_index = 0; column_index < HORIZONTAL_SIZE; ++column_index) {
-        const int index = column_index + row_index * HORIZONTAL_SIZE;
-        if (output_points.find(index) == output_points.end()) {
-          continue;
-        }
-
-        column_indices.at(count) = column_index;
-        cloud.at(count) = MakePointXYZ(output_points.at(index));
-        count += 1;
-      }
-
-      const int end_index = count - padding;
-
-      const IndexRange index_range(start_index, end_index, N_BLOCKS);
-      index_ranges.push_back(index_range);
-    }
-
-    auto calc_norm = [](const pcl::PointXYZ & p) {
-        return Eigen::Vector3d(p.x, p.y, p.z).norm();
-      };
-
-    const std::vector<double> range = cloud |
-      ranges::views::transform(calc_norm) |
-      ranges::to_vector;
-
-    // used to prevent from labeling a neighbor as surface or edge
-    std::vector<bool> mask(range.size());
-
-    for (unsigned int i = 5; i < cloud.size() - 5; i++) {
-      mask.at(i) = false;
-    }
-
-    MaskOccludedPoints(column_indices, range, mask);
-    MaskParallelBeamPoints(range, mask);
+    const auto sections = ExtractSectionsByRing<PointXYZIR>(input_points);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
 
-    for (const IndexRange & index_range : index_ranges) {
-      pcl::PointCloud<pcl::PointXYZ>::Ptr surface_scan(new pcl::PointCloud<pcl::PointXYZ>());
+    for (auto [points_begin, points_end] : sections) {
+      const auto labels = AssignLabelToPoints<PointXYZIR>(points_begin, points_end, n_blocks);
 
-      for (int j = 0; j < N_BLOCKS; j++) {
-        const int sp = index_range.Begin(j);
-        const int ep = index_range.End(j);
-
-        const std::vector<double> subrange(
-          range.begin() + sp - padding,
-          range.begin() + ep + padding);
-        const auto curvature = CalcCurvature(subrange);
-        std::vector<CurvatureLabel> label(curvature.size(), CurvatureLabel::Default);
-
-        const int size = static_cast<int>(curvature.size());
-        std::vector<int> inds = ranges::views::ints(0, size) | ranges::to_vector;
-        std::sort(inds.begin() + sp, inds.begin() + ep, by_value(curvature));
-
-        int n_picked = 0;
-        for (int k = ep; k >= sp; k--) {
-          const int index = inds.at(k);
-          if (mask.at(index) || curvature.at(index) <= edge_threshold) {
-            continue;
-          }
-
-          if (n_picked >= 20) {
-            break;
-          }
-
-          n_picked++;
-
-          edge->push_back(cloud.at(index));
-          label.at(index) = CurvatureLabel::Edge;
-
-          NeighborPicked(column_indices, index, mask);
-        }
-
-        for (int k = sp; k <= ep; k++) {
-          const int index = inds.at(k);
-          if (mask.at(index) || curvature.at(index) >= surface_threshold) {
-            continue;
-          }
-
-          label.at(index) = CurvatureLabel::Surface;
-
-          NeighborPicked(column_indices, index, mask);
-        }
-
-        for (int k = sp; k <= ep; k++) {
-          if (label.at(k) == CurvatureLabel::Default || label.at(k) == CurvatureLabel::Edge) {
-            surface_scan->push_back(cloud.at(k));
-          }
-        }
-      }
-
-      *surface += *downsample<pcl::PointXYZ>(surface_scan, surface_leaf_size);
+      // *edge += ExtractEdge(input_points->begin(), labels);
+      // *surface += ExtractSurface(input_points->begin(), surface_leaf_size, labels);
     }
+
+    /*
+    const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
+    const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
+    */
 
     const auto edge_downsampled = downsample<pcl::PointXYZ>(edge, map_edge_leaf_size);
     const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);

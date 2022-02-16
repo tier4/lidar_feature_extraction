@@ -27,6 +27,13 @@ TEST(Utility, RingIsAvailable)
   EXPECT_FALSE(RingIsAvailable(without_ring));
 }
 
+TEST(Utility, XYNorm)
+{
+  EXPECT_EQ(XYNorm(0., 0.), 0.);
+  EXPECT_EQ(XYNorm(-1., 0.), 1.);
+  EXPECT_EQ(XYNorm(3., 4.), 5.);
+}
+
 TEST(Utility, ColumnIndex)
 {
   EXPECT_EQ(ColumnIndex(100, 0, -1), 25);
@@ -44,7 +51,166 @@ TEST(Utility, IsInInclusiveRange) {
   EXPECT_FALSE(IsInInclusiveRange(6., 1., 5.));
 }
 
-TEST(Utility, IndexRange) {
+TEST(Utility, ExtractSectionsByRing) {
+  {
+    pcl::PointCloud<PointXYZIR>::Ptr cloud(new pcl::PointCloud<PointXYZIR>());
+    const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
+
+    EXPECT_EQ(sections.size(), static_cast<long unsigned int>(0));
+  }
+
+  {
+    pcl::PointCloud<PointXYZIR>::Ptr cloud(new pcl::PointCloud<PointXYZIR>());
+    cloud->push_back(PointXYZIR{1., 0., 1., 0., 1., 3});
+    cloud->push_back(PointXYZIR{2., 0., 1., 0., 1., 3});
+
+    const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
+
+    EXPECT_EQ(sections.size(), static_cast<long unsigned int>(1));
+
+    EXPECT_EQ(sections.at(0).first, cloud->begin() + 0);
+    EXPECT_EQ(sections.at(0).second, cloud->begin() + 2);
+
+    const auto [begin, end] = sections.at(0);
+    std::vector<PointXYZIR> points(begin, end);
+    EXPECT_EQ(points.at(0).x, 1.);
+    EXPECT_EQ(points.at(1).x, 2.);
+  }
+
+  {
+    pcl::PointCloud<PointXYZIR>::Ptr cloud(new pcl::PointCloud<PointXYZIR>());
+    cloud->push_back(PointXYZIR{0., 0., 1., 0., 1., 0});
+    cloud->push_back(PointXYZIR{0., 1., 1., 0., 1., 0});
+    cloud->push_back(PointXYZIR{0., 0., 2., 0., 1., 1});
+    cloud->push_back(PointXYZIR{0., 1., 2., 0., 1., 1});
+    cloud->push_back(PointXYZIR{0., 0., 3., 0., 1., 2});
+    cloud->push_back(PointXYZIR{0., 1., 3., 0., 1., 2});
+    cloud->push_back(PointXYZIR{1., 1., 3., 0., 1., 2});
+
+    const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
+
+    EXPECT_EQ(sections.size(), static_cast<long unsigned int>(3));
+
+    EXPECT_EQ(sections.at(0).first, cloud->begin() + 0);
+    EXPECT_EQ(sections.at(0).second, cloud->begin() + 2);
+
+    EXPECT_EQ(sections.at(1).first, cloud->begin() + 2);
+    EXPECT_EQ(sections.at(1).second, cloud->begin() + 4);
+
+    EXPECT_EQ(sections.at(2).first, cloud->begin() + 4);
+    EXPECT_EQ(sections.at(2).second, cloud->begin() + 7);
+  }
+
+  {
+    pcl::PointCloud<PointXYZIR>::Ptr cloud(new pcl::PointCloud<PointXYZIR>());
+    cloud->push_back(PointXYZIR{0., 0., 1., 0., 1., 0});
+    cloud->push_back(PointXYZIR{0., 0., 2., 0., 1., 1});
+    cloud->push_back(PointXYZIR{0., 1., 1., 0., 1., 2});
+    cloud->push_back(PointXYZIR{0., 1., 2., 0., 1., 1});
+
+    EXPECT_THROW(
+      try {
+        const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
+      } catch (const std::invalid_argument & e) {
+        EXPECT_STREQ("Ring 1 has already appeared", e.what());
+        throw e;
+      },
+      std::invalid_argument);
+  }
+}
+
+TEST(Utility, FillFromLeft)
+{
+  const double radian_threshold = 0.2;
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    std::vector<bool> mask(cloud.size());
+    FillFromLeft<pcl::PointXYZ>(mask, cloud.begin(), radian_threshold, 1, 4, true);
+    EXPECT_THAT(mask, testing::ElementsAre(false, true, true, true, false));
+  }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(1.00, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(1.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(1.02, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    std::vector<bool> mask(cloud.size());
+    FillFromLeft<pcl::PointXYZ>(mask, cloud.begin(), radian_threshold, 1, 5, true);
+    EXPECT_THAT(mask, testing::ElementsAre(false, true, true, false, false));
+  }
+}
+
+TEST(Utility, FillFromRight)
+{
+  const double radian_threshold = 0.2;
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    std::vector<bool> mask(cloud.size());
+    FillFromRight<pcl::PointXYZ>(mask, cloud.begin(), radian_threshold, 1, 4, true);
+    EXPECT_THAT(mask, testing::ElementsAre(false, true, true, true, false));
+  }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(1.00, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(1.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(1.02, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    std::vector<bool> mask(cloud.size());
+    FillFromRight<pcl::PointXYZ>(mask, cloud.begin(), radian_threshold, 1, 5, true);
+    EXPECT_THAT(mask, testing::ElementsAre(false, false, false, true, true));
+  }
+}
+
+TEST(Utility, FillNeighbors)
+{
+  {
+    const double radian_threshold = 0.2;
+
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+
+    std::vector<bool> mask(cloud.size());
+    FillNeighbors<pcl::PointXYZ>(mask, cloud.begin(), 3, 1, radian_threshold);
+    EXPECT_THAT(mask, testing::ElementsAre(false, false, true, true, true, false));
+  }
+}
+
+TEST(Utility, MaskOccludedPoints)
+{
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  std::vector<bool> mask(cloud.size());
+  // MaskOccludedPoints(mask, cloud.begin(), cloud.end(), fill_size, );
+}
+
+TEST(Utility, IndexRange)
+{
   {
     const IndexRange index_range(0, 12, 3);
 
@@ -112,6 +278,34 @@ TEST(Utility, IndexRange) {
         throw e;
       },
       std::out_of_range);
+  }
+}
+
+TEST(Utility, PaddedIndexRange) {
+  {
+    const PaddedIndexRange index_range(0, 17, 3, 1);
+
+    EXPECT_EQ(index_range.Begin(0), 0);
+    EXPECT_EQ(index_range.End(0), 7);
+
+    EXPECT_EQ(index_range.Begin(1), 5);
+    EXPECT_EQ(index_range.End(1), 12);
+
+    EXPECT_EQ(index_range.Begin(2), 10);
+    EXPECT_EQ(index_range.End(2), 17);
+  }
+
+  {
+    const PaddedIndexRange index_range(1, 20, 3, 2);
+
+    EXPECT_EQ(index_range.Begin(0), 1);
+    EXPECT_EQ(index_range.End(0), 10);
+
+    EXPECT_EQ(index_range.Begin(1), 6);
+    EXPECT_EQ(index_range.End(1), 15);
+
+    EXPECT_EQ(index_range.Begin(2), 11);
+    EXPECT_EQ(index_range.End(2), 20);
   }
 }
 
