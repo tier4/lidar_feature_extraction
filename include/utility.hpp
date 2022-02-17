@@ -382,7 +382,7 @@ void FillNeighbors(
 }
 
 template<typename T>
-std::vector<int> SortedIndices(const std::vector<T> & values)
+std::vector<int> Argsort(const std::vector<T> & values)
 {
   // auto by_value = [&](const int left, const int right) {
   //   return values.at(left) < values.at(right);
@@ -564,7 +564,7 @@ AssignLabelToPoints(
 
     const std::vector<double> ranges = CalcRange<PointT>(block_begin, block_end);
     const std::vector<double> curvature = CalcCurvature(ranges);
-    const std::vector<int> indices = SortedIndices(curvature);
+    const std::vector<int> indices = Argsort(curvature);
 
     const int expected_size = index_range.End(j) - index_range.Begin(j) - 2 * padding;
     assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
