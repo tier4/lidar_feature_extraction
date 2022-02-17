@@ -132,7 +132,7 @@ pcl::PointCloud<T> FilterByRange(
 {
   pcl::PointCloud<T> result;
   for (const T & p : points) {
-    const double norm = Eigen::Vector2d(p.x, p.y).norm();
+    const double norm = XYNorm(p.x, p.y);
     if (IsInInclusiveRange(norm, range_min, range_max)) {
       result.push_back(p);
     }
@@ -249,7 +249,7 @@ std::vector<double> CalcRange(
   std::vector<double> range(cloud_end - cloud_begin);
   for (unsigned int i = 0; i < range.size(); i++) {
     const auto p = cloud_begin + i;
-    range[i] = Eigen::Vector2d(p->x, p->y).norm();
+    range[i] = XYNorm(p->x, p->y);
   }
   return range;
 }
