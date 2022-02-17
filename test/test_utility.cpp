@@ -464,6 +464,31 @@ TEST(Utility, CalcCurvature)
   EXPECT_THAT(result, testing::ElementsAre(e0 * e0, e1 * e1, e2 * e2));
 }
 
+TEST(Utility, Curvature)
+{
+  const double edge_threshold = 0.3;
+  const double surface_threshold = 0.2;
+
+  const std::vector<double> curvature_values{0.0, 0.1, 0.2, 0.3, 0.4, 0.5};
+  const Curvature curvature(curvature_values, edge_threshold, surface_threshold);
+
+  ASSERT_THAT(curvature.Size(), curvature_values.size());
+
+  std::vector<bool> is_edge(curvature.Size());
+  for (int i = 0; i < curvature.Size(); i++) {
+    is_edge[i] = curvature.IsEdge(i);
+  }
+
+  std::vector<bool> is_surface(curvature.Size());
+  for (int i = 0; i < curvature.Size(); i++) {
+    is_surface[i] = curvature.IsSurface(i);
+  }
+
+  EXPECT_THAT(is_edge, testing::ElementsAre(false, false, false, true, true, true));
+
+  EXPECT_THAT(is_surface, testing::ElementsAre(true, true, true, false, false, false));
+}
+
 TEST(Utility, FilterByRange) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   cloud.push_back(pcl::PointXYZ(0., 0., 0));
