@@ -40,6 +40,7 @@
 #include <vector>
 
 #include "cloud_iterator.hpp"
+#include "curvature_label.hpp"
 #include "mask.hpp"
 #include "math.hpp"
 #include "neighbor.hpp"
@@ -173,14 +174,6 @@ public:
 
 private:
   const std::vector<T> & values_;
-};
-
-enum class CurvatureLabel
-{
-  Default = 0,
-  Edge = 1,
-  Surface = 2,
-  OutOfRange = 3
 };
 
 template<typename PointT>
