@@ -288,7 +288,7 @@ void MaskParallelBeamPoints(
   const double range_ratio_threshold)
 {
   const std::vector<double> ranges = range(0, mask.Size());
-  for (unsigned int i = 1; i < mask.Size() - 1; ++i) {
+  for (int i = 1; i < mask.Size() - 1; ++i) {
     const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
     const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
 
@@ -450,35 +450,6 @@ std::vector<double> CalcCurvature(const std::vector<double> & range)
   return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
-/*
-void LabelEdges(
-  std::vector<CurvatureLabel>::iterator & label_begin,
-  std::vector<bool>::iterator & mask_begin,
-  const std::vector<double>::const_iterator & curvature_begin,
-  const CloudConstIterator<PointT> & cloud_begin,
-  const std::vector<int> & indices,
-  const int n_max_edges,
-  const double edge_threshold)
-{
-  int n_picked = 0;
-  for (const int index : boost::adaptors::reverse(indices)) {
-    if (*(mask_begin + index) || *(curvature_begin + index) <= edge_threshold) {
-      continue;
-    }
-
-    if (n_picked >= n_max_edges) {
-      break;
-    }
-
-    n_picked++;
-
-    *(label_begin + index) = CurvatureLabel::Edge;
-
-    FillNeighbors<PointT>(mask, cloud_begin, offset + index, padding, radian_threshold);
-  }
-}
-*/
-
 template<typename PointT>
 std::vector<CurvatureLabel>
 AssignLabelToPoints(
@@ -486,15 +457,12 @@ AssignLabelToPoints(
   const CloudConstIterator<PointT> cloud_end,
   const int n_blocks)
 {
-  const int cloud_size = cloud_end - cloud_begin;
-
   const int padding = 5;
   const double radian_threshold = 2.0;
   const double distance_diff_threshold = 0.3;
   const double range_ratio_threshold = 0.02;
   const double edge_threshold = 0.1;
   const double surface_threshold = 0.1;
-  const PaddedIndexRange index_range(0, cloud_size, n_blocks, padding);
 
   Mask<PointT> mask(cloud_begin, cloud_end, radian_threshold);
   const Neighbor<PointT> neighbor(cloud_begin, radian_threshold);
@@ -503,13 +471,11 @@ AssignLabelToPoints(
   MaskOccludedPoints<PointT>(mask, neighbor, range, padding, distance_diff_threshold);
   MaskParallelBeamPoints<PointT>(mask, range, range_ratio_threshold);
 
-  std::vector<CurvatureLabel> labels(cloud_size, CurvatureLabel::Default);
+  std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
 
+  const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
   for (int j = 0; j < n_blocks; j++) {
-    const auto block_begin = cloud_begin + index_range.Begin(j);
-    const auto block_end = cloud_begin + index_range.End(j);
-
-    const std::vector<double> ranges = CalcRange<PointT>(block_begin, block_end);
+    const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
     const std::vector<double> curvature = CalcCurvature(ranges);
     const std::vector<int> indices = Argsort(curvature);
 
@@ -517,9 +483,7 @@ AssignLabelToPoints(
     assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
 
     const int offset = index_range.Begin(j) + padding;
-    // LabelEdges(
-    //   labels.begin() + offset, mask.begin() + offset, curvature.begin(),
-    //   indices, n_max_edges, edge_threshold, radian_threshold);
+
     int n_picked = 0;
     for (const int index : boost::adaptors::reverse(indices)) {
       if (mask.At(offset + index) || curvature.at(index) <= edge_threshold) {
