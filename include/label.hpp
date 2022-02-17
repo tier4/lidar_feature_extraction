@@ -16,7 +16,7 @@ std::vector<CurvatureLabel> Label(
   const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
   for (int j = 0; j < n_blocks; j++) {
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
-    const std::vector<double> curvature = CalcCurvature(ranges);
+    const std::vector<double> curvature = CalcCurvature(ranges, padding);
     const std::vector<int> indices = Argsort(curvature);
 
     const int expected_size = index_range.End(j) - index_range.Begin(j) - 2 * padding;
