@@ -1,3 +1,4 @@
+#include "algorithm.hpp"
 #include "curvature_label.hpp"
 #include "index_range.hpp"
 

@@ -163,21 +163,6 @@ ExtractElements(
   return output_points;
 }
 
-template<typename T>
-class by_value
-{
-public:
-  explicit by_value(const std::vector<T> & values)
-  : values_(values) {}
-  bool operator()(const int & left, const int & right)
-  {
-    return values_.at(left) < values_.at(right);
-  }
-
-private:
-  const std::vector<T> & values_;
-};
-
 template<typename PointT>
 pcl::PointCloud<PointT> ExtractEdge(
   const CloudConstIterator<PointT> cloud_begin,
@@ -291,19 +276,6 @@ void MaskParallelBeamPoints(
       mask.Fill(i);
     }
   }
-}
-
-template<typename T>
-std::vector<int> Argsort(const std::vector<T> & values)
-{
-  // auto by_value = [&](const int left, const int right) {
-  //   return values.at(left) < values.at(right);
-  // };
-
-  const int size = static_cast<int>(values.size());
-  std::vector<int> indices = ranges::views::ints(0, size) | ranges::to_vector;
-  std::sort(indices.begin(), indices.end(), by_value(values));
-  return indices;
 }
 
 template<typename PointT>
