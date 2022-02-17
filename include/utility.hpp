@@ -43,6 +43,7 @@
 #include "mask.hpp"
 #include "math.hpp"
 #include "neighbor.hpp"
+#include "range.hpp"
 
 struct PointXYZIR
 {
@@ -258,7 +259,7 @@ template<typename PointT>
 void MaskOccludedPoints(
   Mask<PointT> & mask,
   const Neighbor<PointT> & is_neighbor,
-  const CloudConstIterator<PointT> & cloud_begin,
+  const Range<PointT> & range,
   const int padding,
   const double distance_diff_threshold)
 {
@@ -267,11 +268,8 @@ void MaskOccludedPoints(
       continue;
     }
 
-    const auto p0 = cloud_begin + i + 0;
-    const auto p1 = cloud_begin + i + 1;
-
-    const double range0 = XYNorm(p0->x, p0->y);
-    const double range1 = XYNorm(p1->x, p1->y);
+    const double range0 = range(i + 0);
+    const double range1 = range(i + 1);
 
     if (range0 > range1 + distance_diff_threshold) {
       mask.FillFromRight(i - padding, i + 1);
@@ -286,12 +284,11 @@ void MaskOccludedPoints(
 template<typename PointT>
 void MaskParallelBeamPoints(
   Mask<PointT> & mask,
-  const CloudConstIterator<PointT> & cloud_begin,
-  const CloudConstIterator<PointT> & cloud_end,
+  const Range<PointT> & range,
   const double range_ratio_threshold)
 {
-  const std::vector<double> ranges = CalcRange<PointT>(cloud_begin, cloud_end);
-  for (unsigned int i = 1; i < ranges.size() - 1; ++i) {
+  const std::vector<double> ranges = range(0, mask.Size());
+  for (unsigned int i = 1; i < mask.Size() - 1; ++i) {
     const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
     const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
 
@@ -501,9 +498,11 @@ AssignLabelToPoints(
 
   Mask<PointT> mask(cloud_begin, cloud_end, radian_threshold);
   const Neighbor<PointT> neighbor(cloud_begin, radian_threshold);
-  MaskOccludedPoints<PointT>(
-    mask, neighbor, cloud_begin, padding, distance_diff_threshold);
-  MaskParallelBeamPoints<PointT>(mask, cloud_begin, cloud_end, range_ratio_threshold);
+  const Range<PointT> range(cloud_begin);
+
+  MaskOccludedPoints<PointT>(mask, neighbor, range, padding, distance_diff_threshold);
+  MaskParallelBeamPoints<PointT>(mask, range, range_ratio_threshold);
+
   std::vector<CurvatureLabel> labels(cloud_size, CurvatureLabel::Default);
 
   for (int j = 0; j < n_blocks; j++) {
