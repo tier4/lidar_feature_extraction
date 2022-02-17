@@ -154,10 +154,11 @@ ExtractElements(
   return output_points;
 }
 
+template<typename T>
 class by_value
 {
 public:
-  explicit by_value(const std::vector<double> & values)
+  explicit by_value(const std::vector<T> & values)
   : values_(values) {}
   bool operator()(const int & left, const int & right)
   {
@@ -165,7 +166,7 @@ public:
   }
 
 private:
-  std::vector<double> values_;
+  const std::vector<T> & values_;
 };
 
 enum class CurvatureLabel
@@ -380,7 +381,8 @@ void FillNeighbors(
   FillFromRight<PointT>(mask, cloud_begin, radian_threshold, index - padding, index, true);
 }
 
-std::vector<int> SortedIndices(const std::vector<double> & values)
+template<typename T>
+std::vector<int> SortedIndices(const std::vector<T> & values)
 {
   // auto by_value = [&](const int left, const int right) {
   //   return values.at(left) < values.at(right);

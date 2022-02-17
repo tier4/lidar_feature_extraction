@@ -204,6 +204,21 @@ TEST(Utility, FillNeighbors)
   }
 }
 
+TEST(Utility, SortedIndices)
+{
+  {
+    const std::vector<double> curvature{0.3, 0.2, 1.0, 0.2, 0.0, 0.1};
+    const std::vector<int> indices = SortedIndices(curvature);
+    EXPECT_THAT(indices, testing::ElementsAre(4, 5, 1, 3, 0, 2));
+  }
+
+  {
+    const std::vector<double> curvature{0.0, 0.0, 0.0, 0.0, 0.0};
+    const std::vector<int> indices = SortedIndices(curvature);
+    EXPECT_THAT(indices, testing::ElementsAre(0, 1, 2, 3, 4));
+  }
+}
+
 TEST(Utility, MaskOccludedPoints)
 {
   const double radian_threshold = 0.2;
