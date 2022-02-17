@@ -19,6 +19,13 @@ public:
   {
   }
 
+  Mask(const Mask & mask)
+  : mask_(mask.mask_),
+    cloud_begin_(mask.cloud_begin_),
+    radian_threshold_(mask.radian_threshold_)
+  {
+  }
+
   void Fill(const int index)
   {
     mask_.at(index) = true;

@@ -41,6 +41,8 @@
 
 #include "cloud_iterator.hpp"
 #include "curvature_label.hpp"
+#include "curvature.hpp"
+#include "index_range.hpp"
 #include "mask.hpp"
 #include "math.hpp"
 #include "neighbor.hpp"
@@ -302,145 +304,6 @@ std::vector<int> Argsort(const std::vector<T> & values)
   std::vector<int> indices = ranges::views::ints(0, size) | ranges::to_vector;
   std::sort(indices.begin(), indices.end(), by_value(values));
   return indices;
-}
-
-template<typename T>
-std::string RangeMessageLargerOrEqualTo(
-  const std::string & value_name,
-  const std::string & range_name,
-  const T value,
-  const T range_max)
-{
-  return fmt::format(
-    "{} (which is {}) >= {} (which is {})",
-    value_name, value, range_name, range_max);
-}
-
-template<typename T>
-std::string RangeMessageSmallerThan(
-  const std::string & value_name,
-  const std::string & range_name,
-  const T value,
-  const T range_max)
-{
-  return fmt::format(
-    "{} (which is {}) < {} (which is {})",
-    value_name, value, range_name, range_max);
-}
-
-class IndexRange
-{
-public:
-  IndexRange(const int start_index, const int end_index, const int n_blocks)
-  : start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
-  {
-  }
-
-  int Begin(const int j) const
-  {
-    ThrowExceptionIfOutOfRange(j);
-    return this->Boundary(j);
-  }
-
-  int End(const int j) const
-  {
-    ThrowExceptionIfOutOfRange(j);
-    return this->Boundary(j + 1);
-  }
-
-protected:
-  int Boundary(const int j) const
-  {
-    const double s = static_cast<double>(start_index_);
-    const double e = static_cast<double>(end_index_);
-    const double n = static_cast<double>(n_blocks_);
-    return static_cast<int>(s * (1. - j / n) + e * j / n);
-  }
-
-  void ThrowExceptionIfOutOfRange(const int j) const
-  {
-    if (j >= n_blocks_) {
-      auto s = RangeMessageLargerOrEqualTo("j", "n_blocks", j, n_blocks_);
-      throw std::out_of_range(s);
-    }
-
-    if (j < 0) {
-      auto s = RangeMessageSmallerThan("j", "0", j, 0);
-      throw std::out_of_range(s);
-    }
-  }
-
-private:
-  const int start_index_;
-  const int end_index_;
-  const int n_blocks_;
-};
-
-class PaddedIndexRange : public IndexRange
-{
-public:
-  PaddedIndexRange(
-    const int start_index, const int end_index, const int n_blocks,
-    const int padding)
-  : IndexRange(start_index + padding, end_index - padding, n_blocks), padding_(padding)
-  {
-  }
-
-  int Begin(const int j) const
-  {
-    return IndexRange::Begin(j) - padding_;
-  }
-
-  int End(const int j) const
-  {
-    return IndexRange::End(j) + padding_;
-  }
-
-private:
-  const int padding_;
-};
-
-template<typename T1, typename T2>
-double InnerProduct(T1 first1, T1 last1, T2 first2)
-{
-  double sum = 0.;
-  while (first1 != last1) {
-    sum += (*first1) * (*first2);
-    first1++;
-    first2++;
-  }
-  return sum;
-}
-
-template<typename T1, typename T2>
-std::vector<double> Convolution1D(
-  const T1 input_begin, const T1 input_end,
-  const T2 weight_begin, const T2 weight_end)
-{
-  const int input_size = input_end - input_begin;
-  const int weight_size = weight_end - weight_begin;
-
-  if (input_size < weight_size) {
-    auto s = fmt::format(
-      "Input array size {} cannot be smaller than weight size {}",
-      input_size, weight_size);
-    throw std::invalid_argument(s);
-  }
-
-  std::vector<double> result(input_size - weight_size + 1);
-  for (unsigned int i = 0; i < result.size(); i++) {
-    auto iter = input_begin + i;
-    result[i] = InnerProduct(iter, iter + weight_size, weight_begin);
-  }
-  return result;
-}
-
-std::vector<double> CalcCurvature(const std::vector<double> & range)
-{
-  const std::vector<double> weight{1., 1., 1., 1., 1., -10., 1., 1., 1., 1., 1.};
-  auto f = [](const double v) {return v * v;};
-  const auto weighted = Convolution1D(range.begin(), range.end(), weight.begin(), weight.end());
-  return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
 template<typename PointT>

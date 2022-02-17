@@ -19,4 +19,16 @@ double CalcRadian(const double x1, const double y1, const double x2, const doubl
   return std::acos(cos_angle);
 }
 
+template<typename T1, typename T2>
+double InnerProduct(T1 first1, T1 last1, T2 first2)
+{
+  double sum = 0.;
+  while (first1 != last1) {
+    sum += (*first1) * (*first2);
+    first1++;
+    first2++;
+  }
+  return sum;
+}
+
 #endif  /* _MATH_LIDAR_ODOMETRY_H_ */
