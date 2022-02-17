@@ -257,21 +257,20 @@ std::vector<double> CalcRange(
 template<typename PointT>
 void MaskOccludedPoints(
   Mask<PointT> & mask,
+  const Neighbor<PointT> & is_neighbor,
   const CloudConstIterator<PointT> & cloud_begin,
   const CloudConstIterator<PointT> & cloud_end,
   const int padding,
-  const double distance_diff_threshold,
-  const double radian_threshold)
+  const double distance_diff_threshold)
 {
   const int cloud_size = cloud_end - cloud_begin;
-
   for (int i = 0; i < cloud_size - 1; i++) {
-    const auto p0 = cloud_begin + i + 0;
-    const auto p1 = cloud_begin + i + 1;
-
-    if (!IsNeighbor(p0, p1, radian_threshold)) {
+    if (!is_neighbor(i + 0, i + 1)) {
       continue;
     }
+
+    const auto p0 = cloud_begin + i + 0;
+    const auto p1 = cloud_begin + i + 1;
 
     const double range0 = XYNorm(p0->x, p0->y);
     const double range1 = XYNorm(p1->x, p1->y);
@@ -503,10 +502,9 @@ AssignLabelToPoints(
   const PaddedIndexRange index_range(0, cloud_size, n_blocks, padding);
 
   Mask<PointT> mask(cloud_begin, cloud_end, radian_threshold);
+  const Neighbor<PointT> neighbor(cloud_begin, radian_threshold);
   MaskOccludedPoints<PointT>(
-    mask, cloud_begin, cloud_end, padding,
-    distance_diff_threshold, radian_threshold
-  );
+    mask, neighbor, cloud_begin, cloud_end, padding, distance_diff_threshold);
   MaskParallelBeamPoints<PointT>(mask, cloud_begin, cloud_end, range_ratio_threshold);
   std::vector<CurvatureLabel> labels(cloud_size, CurvatureLabel::Default);
 

@@ -248,18 +248,20 @@ TEST(Utility, MaskOccludedPoints)
 
     {
       Mask<pcl::PointXYZ> mask(cloud.begin(), cloud.end(), radian_threshold);
+      const Neighbor<pcl::PointXYZ> neighbor(cloud.begin(), radian_threshold);
       MaskOccludedPoints<pcl::PointXYZ>(
-        mask, cloud.begin(), cloud.end(),
-        1, distance_threshold, radian_threshold);
+        mask, neighbor, cloud.begin(), cloud.end(),
+        1, distance_threshold);
 
       EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, false, false, false));
     }
 
     {
       Mask<pcl::PointXYZ> mask(cloud.begin(), cloud.end(), radian_threshold);
+      const Neighbor<pcl::PointXYZ> neighbor(cloud.begin(), radian_threshold);
       MaskOccludedPoints<pcl::PointXYZ>(
-        mask, cloud.begin(), cloud.end(),
-        3, distance_threshold, radian_threshold);
+        mask, neighbor, cloud.begin(), cloud.end(),
+        3, distance_threshold);
 
       EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, true, false, false));
     }
@@ -277,17 +279,19 @@ TEST(Utility, MaskOccludedPoints)
 
     {
       Mask<pcl::PointXYZ> mask(cloud.begin(), cloud.end(), radian_threshold);
+      const Neighbor<pcl::PointXYZ> neighbor(cloud.begin(), radian_threshold);
       MaskOccludedPoints<pcl::PointXYZ>(
-        mask, cloud.begin(), cloud.end(),
-        1, distance_threshold, radian_threshold);
+        mask, neighbor, cloud.begin(), cloud.end(),
+        1, distance_threshold);
       EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, true, true, false, false));
     }
 
     {
       Mask<pcl::PointXYZ> mask(cloud.begin(), cloud.end(), radian_threshold);
+      const Neighbor<pcl::PointXYZ> neighbor(cloud.begin(), radian_threshold);
       MaskOccludedPoints<pcl::PointXYZ>(
-        mask, cloud.begin(), cloud.end(),
-        4, distance_threshold, radian_threshold);
+        mask, neighbor, cloud.begin(), cloud.end(),
+        4, distance_threshold);
       EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, true, false, false));
     }
   }
