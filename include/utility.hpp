@@ -39,6 +39,11 @@
 #include <utility>
 #include <vector>
 
+#include "cloud_iterator.hpp"
+#include "mask.hpp"
+#include "math.hpp"
+#include "neighbor.hpp"
+
 struct PointXYZIR
 {
   PCL_ADD_POINT4D PCL_ADD_INTENSITY;
@@ -177,32 +182,6 @@ enum class CurvatureLabel
   OutOfRange = 3
 };
 
-inline double XYNorm(const double x, const double y)
-{
-  return std::sqrt(x * x + y * y);
-}
-
-double CalcRadian(const double x1, const double y1, const double x2, const double y2)
-{
-  const double dot = x1 * x2 + y1 * y2;
-  const double norm1 = XYNorm(x1, y1);
-  const double norm2 = XYNorm(x2, y2);
-  const double cos_angle = dot / (norm1 * norm2);
-  return std::acos(cos_angle);
-}
-
-template<typename PointT>
-bool IsNeighbor(const PointT & p1, const PointT & p2, const double radian_threshold)
-{
-  return CalcRadian(p1->x, p1->y, p2->x, p2->y) <= radian_threshold;
-}
-
-template<typename PointT>
-using CloudIterator = typename pcl::PointCloud<PointT>::iterator;
-
-template<typename PointT>
-using CloudConstIterator = typename pcl::PointCloud<PointT>::const_iterator;
-
 template<typename PointT>
 pcl::PointCloud<PointT> ExtractEdge(
   const CloudConstIterator<PointT> cloud_begin,
@@ -275,51 +254,9 @@ std::vector<double> CalcRange(
   return range;
 }
 
-template<typename T>
-void FillFromLeft(
-  std::vector<bool> & mask,
-  const CloudConstIterator<T> & cloud_begin,
-  const double radian_threshold,
-  int begin_index,
-  int end_index,
-  const bool & value)
-{
-  for (int i = begin_index; i < end_index - 1; i++) {
-    mask.at(i) = value;
-
-    auto p0 = cloud_begin + i + 0;
-    auto p1 = cloud_begin + i + 1;
-    if (!IsNeighbor(p0, p1, radian_threshold)) {
-      return;
-    }
-  }
-  mask.at(end_index - 1) = value;
-}
-
-template<typename T>
-void FillFromRight(
-  std::vector<bool> & mask,
-  const CloudConstIterator<T> & cloud_begin,
-  const double radian_threshold,
-  int begin_index,
-  int end_index,
-  const bool & value)
-{
-  for (int i = end_index - 1; i > begin_index; i--) {
-    mask.at(i) = value;
-
-    auto p0 = cloud_begin + i - 0;
-    auto p1 = cloud_begin + i - 1;
-    if (!IsNeighbor(p0, p1, radian_threshold)) {
-      return;
-    }
-  }
-  mask.at(begin_index) = value;
-}
-
 template<typename PointT>
 void MaskOccludedPoints(
-  std::vector<bool> & mask,
+  Mask<PointT> & mask,
   const CloudConstIterator<PointT> & cloud_begin,
   const CloudConstIterator<PointT> & cloud_end,
   const int padding,
@@ -327,7 +264,6 @@ void MaskOccludedPoints(
   const double radian_threshold)
 {
   const int cloud_size = cloud_end - cloud_begin;
-  assert(static_cast<std::uint32_t>(cloud_size) == mask.size());
 
   for (int i = 0; i < cloud_size - 1; i++) {
     const auto p0 = cloud_begin + i + 0;
@@ -341,18 +277,18 @@ void MaskOccludedPoints(
     const double range1 = XYNorm(p1->x, p1->y);
 
     if (range0 > range1 + distance_diff_threshold) {
-      FillFromRight<PointT>(mask, cloud_begin, radian_threshold, i - padding, i + 1, true);
+      mask.FillFromRight(i - padding, i + 1);
     }
 
     if (range1 > range0 + distance_diff_threshold) {
-      FillFromLeft<PointT>(mask, cloud_begin, radian_threshold, i + 1, i + padding + 2, true);
+      mask.FillFromLeft(i + 1, i + padding + 2);
     }
   }
 }
 
 template<typename PointT>
 void MaskParallelBeamPoints(
-  std::vector<bool> & mask,
+  Mask<PointT> & mask,
   const CloudConstIterator<PointT> & cloud_begin,
   const CloudConstIterator<PointT> & cloud_end,
   const double range_ratio_threshold)
@@ -363,22 +299,9 @@ void MaskParallelBeamPoints(
     const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
 
     if (ratio1 > range_ratio_threshold && ratio2 > range_ratio_threshold) {
-      mask.at(i) = true;
+      mask.Fill(i);
     }
   }
-}
-
-template<typename PointT>
-void FillNeighbors(
-  std::vector<bool> & mask,
-  const CloudConstIterator<PointT> & cloud_begin,
-  const int index,
-  const int padding,
-  const double radian_threshold)
-{
-  mask.at(index) = true;
-  FillFromLeft<PointT>(mask, cloud_begin, radian_threshold, index + 1, index + 1 + padding, true);
-  FillFromRight<PointT>(mask, cloud_begin, radian_threshold, index - padding, index, true);
 }
 
 template<typename T>
@@ -533,6 +456,35 @@ std::vector<double> CalcCurvature(const std::vector<double> & range)
   return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
+/*
+void LabelEdges(
+  std::vector<CurvatureLabel>::iterator & label_begin,
+  std::vector<bool>::iterator & mask_begin,
+  const std::vector<double>::const_iterator & curvature_begin,
+  const CloudConstIterator<PointT> & cloud_begin,
+  const std::vector<int> & indices,
+  const int n_max_edges,
+  const double edge_threshold)
+{
+  int n_picked = 0;
+  for (const int index : boost::adaptors::reverse(indices)) {
+    if (*(mask_begin + index) || *(curvature_begin + index) <= edge_threshold) {
+      continue;
+    }
+
+    if (n_picked >= n_max_edges) {
+      break;
+    }
+
+    n_picked++;
+
+    *(label_begin + index) = CurvatureLabel::Edge;
+
+    FillNeighbors<PointT>(mask, cloud_begin, offset + index, padding, radian_threshold);
+  }
+}
+*/
+
 template<typename PointT>
 std::vector<CurvatureLabel>
 AssignLabelToPoints(
@@ -550,7 +502,7 @@ AssignLabelToPoints(
   const double surface_threshold = 0.1;
   const PaddedIndexRange index_range(0, cloud_size, n_blocks, padding);
 
-  std::vector<bool> mask(cloud_size, false);
+  Mask<PointT> mask(cloud_begin, cloud_end, radian_threshold);
   MaskOccludedPoints<PointT>(
     mask, cloud_begin, cloud_end, padding,
     distance_diff_threshold, radian_threshold
@@ -570,9 +522,12 @@ AssignLabelToPoints(
     assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
 
     const int offset = index_range.Begin(j) + padding;
+    // LabelEdges(
+    //   labels.begin() + offset, mask.begin() + offset, curvature.begin(),
+    //   indices, n_max_edges, edge_threshold, radian_threshold);
     int n_picked = 0;
     for (const int index : boost::adaptors::reverse(indices)) {
-      if (mask.at(offset + index) || curvature.at(index) <= edge_threshold) {
+      if (mask.At(offset + index) || curvature.at(index) <= edge_threshold) {
         continue;
       }
 
@@ -584,17 +539,17 @@ AssignLabelToPoints(
 
       labels.at(offset + index) = CurvatureLabel::Edge;
 
-      FillNeighbors<PointT>(mask, cloud_begin, offset + index, padding, radian_threshold);
+      mask.FillNeighbors(offset + index, padding);
     }
 
     for (const int index : indices) {
-      if (mask.at(offset + index) || curvature.at(index) >= surface_threshold) {
+      if (mask.At(offset + index) || curvature.at(index) >= surface_threshold) {
         continue;
       }
 
       labels.at(offset + index) = CurvatureLabel::Surface;
 
-      FillNeighbors<PointT>(mask, cloud_begin, offset + index, padding, radian_threshold);
+      mask.FillNeighbors(offset + index, padding);
     }
   }
   return labels;
