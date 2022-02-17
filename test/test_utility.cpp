@@ -34,14 +34,6 @@ TEST(Utility, XYNorm)
   EXPECT_EQ(XYNorm(3., 4.), 5.);
 }
 
-TEST(Utility, ColumnIndex)
-{
-  EXPECT_EQ(ColumnIndex(100, 0, -1), 25);
-  EXPECT_EQ(ColumnIndex(100, 1, 0), 50);
-  EXPECT_EQ(ColumnIndex(100, 0, 1), 75);
-  EXPECT_EQ(ColumnIndex(100, -1, 0), 100);
-}
-
 TEST(Utility, IsInInclusiveRange) {
   EXPECT_TRUE(IsInInclusiveRange(3., 1., 5.));
   EXPECT_TRUE(IsInInclusiveRange(1., 1., 5.));

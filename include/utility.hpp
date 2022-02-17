@@ -135,18 +135,6 @@ pcl::PointCloud<T> FilterByRange(
   return result;
 }
 
-int ColumnIndex(const int horizontal_size, const double x, const double y)
-{
-  const double k = horizontal_size * atan2(y, x) / M_PI;
-  const double u = (k + horizontal_size) / 2.0;
-  return static_cast<int>(u);
-}
-
-int CalcIndex(const int horizontal_size, const int row_index, const int column_index)
-{
-  return column_index + row_index * horizontal_size;
-}
-
 template<typename T>
 std::unordered_map<int, T>
 ExtractElements(
@@ -271,27 +259,6 @@ ExtractSectionsByRing(const typename pcl::PointCloud<PointT>::Ptr & cloud)
   sections.push_back(std::make_pair(begin, points.end()));
 
   return sections;
-}
-
-template<typename PointT>
-std::pair<CloudConstIterator<PointT>, CloudConstIterator<PointT>>
-PointRingIterator(
-  const typename pcl::PointCloud<PointT>::Ptr & cloud,
-  const int begin_x, const int begin_y,
-  const int end_x, const int end_y)
-{
-  // if (begin_x >= cloud->width) {
-  //   throw std::out_of_range;
-  // }
-
-  auto f = [&](int x, int y) {
-      const int index = cloud->width * x + y;
-      return cloud->points.begin() + index;
-    };
-
-  const auto begin = f(begin_x, begin_y);
-  const auto end = f(end_x, end_y);
-  return {begin, end};
 }
 
 template<typename PointT>
