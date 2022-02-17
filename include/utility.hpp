@@ -47,6 +47,7 @@
 #include "math.hpp"
 #include "neighbor.hpp"
 #include "range.hpp"
+#include "label.hpp"
 
 struct PointXYZIR
 {
@@ -286,6 +287,7 @@ AssignLabelToPoints(
   const int n_blocks)
 {
   const int padding = 5;
+  const int max_edges_per_block = 20;
   const double radian_threshold = 2.0;
   const double distance_diff_threshold = 0.3;
   const double range_ratio_threshold = 0.02;
@@ -299,47 +301,9 @@ AssignLabelToPoints(
   MaskOccludedPoints<PointT>(mask, neighbor, range, padding, distance_diff_threshold);
   MaskParallelBeamPoints<PointT>(mask, range, range_ratio_threshold);
 
-  std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
-
-  const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
-  for (int j = 0; j < n_blocks; j++) {
-    const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
-    const std::vector<double> curvature = CalcCurvature(ranges);
-    const std::vector<int> indices = Argsort(curvature);
-
-    const int expected_size = index_range.End(j) - index_range.Begin(j) - 2 * padding;
-    assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
-
-    const int offset = index_range.Begin(j) + padding;
-
-    int n_picked = 0;
-    for (const int index : boost::adaptors::reverse(indices)) {
-      if (mask.At(offset + index) || curvature.at(index) <= edge_threshold) {
-        continue;
-      }
-
-      if (n_picked >= 20) {
-        break;
-      }
-
-      n_picked++;
-
-      labels.at(offset + index) = CurvatureLabel::Edge;
-
-      mask.FillNeighbors(offset + index, padding);
-    }
-
-    for (const int index : indices) {
-      if (mask.At(offset + index) || curvature.at(index) >= surface_threshold) {
-        continue;
-      }
-
-      labels.at(offset + index) = CurvatureLabel::Surface;
-
-      mask.FillNeighbors(offset + index, padding);
-    }
-  }
-  return labels;
+  return Label(
+    mask, range, n_blocks, padding,
+    max_edges_per_block, edge_threshold, surface_threshold);
 }
 
 #endif  // _UTILITY_LIDAR_ODOMETRY_H_
