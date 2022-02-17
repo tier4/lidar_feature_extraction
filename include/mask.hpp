@@ -69,6 +69,10 @@ public:
     return mask_;
   }
 
+  int Size() {
+    return mask_.size();
+  }
+
 private:
   std::vector<bool> mask_;
   const CloudConstIterator<PointT> cloud_begin_;

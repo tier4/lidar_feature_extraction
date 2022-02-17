@@ -259,12 +259,10 @@ void MaskOccludedPoints(
   Mask<PointT> & mask,
   const Neighbor<PointT> & is_neighbor,
   const CloudConstIterator<PointT> & cloud_begin,
-  const CloudConstIterator<PointT> & cloud_end,
   const int padding,
   const double distance_diff_threshold)
 {
-  const int cloud_size = cloud_end - cloud_begin;
-  for (int i = 0; i < cloud_size - 1; i++) {
+  for (int i = 0; i < mask.Size() - 1; i++) {
     if (!is_neighbor(i + 0, i + 1)) {
       continue;
     }
@@ -504,7 +502,7 @@ AssignLabelToPoints(
   Mask<PointT> mask(cloud_begin, cloud_end, radian_threshold);
   const Neighbor<PointT> neighbor(cloud_begin, radian_threshold);
   MaskOccludedPoints<PointT>(
-    mask, neighbor, cloud_begin, cloud_end, padding, distance_diff_threshold);
+    mask, neighbor, cloud_begin, padding, distance_diff_threshold);
   MaskParallelBeamPoints<PointT>(mask, cloud_begin, cloud_end, range_ratio_threshold);
   std::vector<CurvatureLabel> labels(cloud_size, CurvatureLabel::Default);
 
