@@ -69,7 +69,7 @@ TEST(Utility, ExtractSectionsByRing) {
     pcl::PointCloud<PointXYZIR>::Ptr cloud(new pcl::PointCloud<PointXYZIR>());
     const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
 
-    EXPECT_EQ(sections.size(), static_cast<long unsigned int>(0));
+    EXPECT_EQ(sections.size(), static_cast<std::uint32_t>(0));
   }
 
   {
@@ -79,7 +79,7 @@ TEST(Utility, ExtractSectionsByRing) {
 
     const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
 
-    EXPECT_EQ(sections.size(), static_cast<long unsigned int>(1));
+    EXPECT_EQ(sections.size(), static_cast<std::uint32_t>(1));
 
     EXPECT_EQ(sections.at(0).first, cloud->begin() + 0);
     EXPECT_EQ(sections.at(0).second, cloud->begin() + 2);
@@ -102,7 +102,7 @@ TEST(Utility, ExtractSectionsByRing) {
 
     const auto sections = ExtractSectionsByRing<PointXYZIR>(cloud);
 
-    EXPECT_EQ(sections.size(), static_cast<long unsigned int>(3));
+    EXPECT_EQ(sections.size(), static_cast<std::uint32_t>(3));
 
     EXPECT_EQ(sections.at(0).first, cloud->begin() + 0);
     EXPECT_EQ(sections.at(0).second, cloud->begin() + 2);
@@ -555,7 +555,7 @@ TEST(Utility, FilterByRange) {
   cloud.push_back(pcl::PointXYZ(2., 2., 0));
 
   const pcl::PointCloud<pcl::PointXYZ> r = FilterByRange(cloud, 1., 2.);
-  EXPECT_EQ(r.size(), static_cast<long unsigned int>(3));
+  EXPECT_EQ(r.size(), static_cast<std::uint32_t>(3));
   EXPECT_TRUE(Equal(r.at(0), cloud.at(1)));
   EXPECT_TRUE(Equal(r.at(1), cloud.at(2)));
   EXPECT_TRUE(Equal(r.at(2), cloud.at(3)));
@@ -575,7 +575,7 @@ TEST(Utility, ExtractElements) {
 
   const auto result = ExtractElements<pcl::PointXYZ>(point_to_index, cloud);
 
-  EXPECT_EQ(result.size(), static_cast<long unsigned int>(4));
+  EXPECT_EQ(result.size(), static_cast<std::uint32_t>(4));
 
   EXPECT_TRUE(result.find(0) != result.end());
   EXPECT_TRUE(result.find(2) != result.end());
