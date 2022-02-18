@@ -11,6 +11,7 @@
 #include "cloud_iterator.hpp"
 #include "neighbor.hpp"
 #include "range.hpp"
+#include "range_message.hpp"
 #include "reference_wrapper.hpp"
 
 template<typename Element>
