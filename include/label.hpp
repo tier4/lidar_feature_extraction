@@ -41,10 +41,6 @@ class Label {
   void Surface(std::vector<CurvatureLabel> & labels, Mask<PointT> & mask) const
   {
     for (const int index : indices_) {
-      std::cerr << "index = " << index << std::endl;
-      std::cerr << "offset_ + index = " << offset_ + index << std::endl;
-      std::cerr << "mask.At(offset_ + index) = " << mask.At(offset_ + index) << std::endl;
-      std::cerr << "curvature_.IsSurface(index) = " << curvature_.IsSurface(index) << std::endl;
       if (mask.At(offset_ + index) || !curvature_.IsSurface(index)) {
         continue;
       }
