@@ -8,7 +8,7 @@
 
 #include "convolution.hpp"
 
-TEST(Utility, Convolution1D) {
+TEST(Convolution, Convolution1D) {
   {
     std::vector<double> input{1., -1, 2., 0., 1};
     std::vector<double> weight{1., 0., -1};

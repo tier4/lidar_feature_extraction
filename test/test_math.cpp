@@ -6,14 +6,14 @@
 
 #include "math.hpp"
 
-TEST(Utility, XYNorm)
+TEST(Math, XYNorm)
 {
   EXPECT_EQ(XYNorm(0., 0.), 0.);
   EXPECT_EQ(XYNorm(-1., 0.), 1.);
   EXPECT_EQ(XYNorm(3., 4.), 5.);
 }
 
-TEST(Utility, CalcRadian)
+TEST(Math, CalcRadian)
 {
   const double threshold = 1e-7;
 
@@ -37,7 +37,7 @@ TEST(Utility, CalcRadian)
     std::invalid_argument);
 }
 
-TEST(Utility, InnerProduct)
+TEST(Math, InnerProduct)
 {
   std::vector<int> a{1, 0, 2, 4};
   std::vector<int> b{3, 1, 0, 2};

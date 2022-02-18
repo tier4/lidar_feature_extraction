@@ -13,7 +13,7 @@ bool Equal(const T & a, const T & b) {
   return a.x == b.x && a.y == b.y && a.z == b.z;
 };
 
-TEST(Utility, IsInInclusiveRange) {
+TEST(Range, IsInInclusiveRange) {
   EXPECT_TRUE(IsInInclusiveRange(3., 1., 5.));
   EXPECT_TRUE(IsInInclusiveRange(1., 1., 5.));
   EXPECT_TRUE(IsInInclusiveRange(5., 1., 5.));
@@ -22,7 +22,7 @@ TEST(Utility, IsInInclusiveRange) {
   EXPECT_FALSE(IsInInclusiveRange(6., 1., 5.));
 }
 
-TEST(Utility, FilterByRange) {
+TEST(Range, FilterByRange) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   cloud.push_back(pcl::PointXYZ(0., 0., 0));
   cloud.push_back(pcl::PointXYZ(0., 1., 0));
@@ -37,7 +37,7 @@ TEST(Utility, FilterByRange) {
   EXPECT_TRUE(Equal(r.at(2), cloud.at(3)));
 }
 
-TEST(Utility, Range) {
+TEST(Range, Range) {
   auto norm = [](const pcl::PointXYZ & p) {
     return std::sqrt(p.x * p.x + p.y * p.y);
   };

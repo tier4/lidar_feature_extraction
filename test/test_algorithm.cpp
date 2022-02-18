@@ -9,7 +9,7 @@
 #include "algorithm.hpp"
 
 
-TEST(Utility, Argsort)
+TEST(Algorithm, Argsort)
 {
   {
     const std::vector<double> curvature{0.3, 0.2, 1.0, 0.2, 0.0, 0.1};

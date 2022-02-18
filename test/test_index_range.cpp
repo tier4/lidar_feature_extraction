@@ -9,7 +9,7 @@
 
 #include "index_range.hpp"
 
-TEST(Utility, IndexRange)
+TEST(IndexRange, IndexRange)
 {
   {
     const IndexRange index_range(0, 12, 3);
@@ -81,7 +81,7 @@ TEST(Utility, IndexRange)
   }
 }
 
-TEST(Utility, PaddedIndexRange) {
+TEST(IndexRange, PaddedIndexRange) {
   {
     const PaddedIndexRange index_range(0, 17, 3, 1);
 

@@ -9,7 +9,7 @@
 
 #include "mask.hpp"
 
-TEST(Utility, FillFromLeft)
+TEST(Mask, FillFromLeft)
 {
   const double radian_threshold = 0.2;
 
@@ -44,7 +44,7 @@ TEST(Utility, FillFromLeft)
   }
 }
 
-TEST(Utility, FillFromRight)
+TEST(Mask, FillFromRight)
 {
   const double radian_threshold = 0.2;
 
@@ -79,7 +79,7 @@ TEST(Utility, FillFromRight)
   }
 }
 
-TEST(Utility, FillNeighbors)
+TEST(Mask, FillNeighbors)
 {
   const double radian_threshold = 0.2;
 
@@ -120,7 +120,7 @@ TEST(Utility, FillNeighbors)
   }
 }
 
-TEST(Utility, MaskOccludedPoints)
+TEST(Mask, MaskOccludedPoints)
 {
   const double radian_threshold = 0.2;
   const double distance_threshold = 2.0;
