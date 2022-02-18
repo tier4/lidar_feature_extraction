@@ -55,7 +55,7 @@ public:
 
   void FillFromRight(const int begin_index, const int end_index)
   {
-    for (int i = end_index - 1; i > begin_index; i--) {
+    for (int i = end_index; i > begin_index + 1; i--) {
       mask_.at(i) = true;
 
       const Element & p0 = ref_points_.at(i - 0).get();
@@ -64,14 +64,14 @@ public:
         return;
       }
     }
-    mask_.at(begin_index) = true;
+    mask_.at(begin_index + 1) = true;
   }
 
   void FillNeighbors(const int index, const int padding)
   {
     this->Fill(index);
     this->FillFromLeft(index + 1, index + 1 + padding);
-    this->FillFromRight(index - padding, index);
+    this->FillFromRight(index - padding - 1, index - 1);
   }
 
   bool At(const int index) const
@@ -127,7 +127,7 @@ void MaskOccludedPoints(
     const double range1 = range(i + 1);
 
     if (range0 > range1 + distance_diff_threshold) {
-      mask.FillFromRight(i - padding, i + 1);
+      mask.FillFromRight(i - padding - 1, i);
     }
 
     if (range1 > range0 + distance_diff_threshold) {

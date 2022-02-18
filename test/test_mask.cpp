@@ -58,9 +58,9 @@ TEST(Mask, FillFromRight)
 
     ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillFromRight(1, 4);
+    mask.FillFromRight(1, 3);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, true, true, true, false));
+    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, false));
   }
 
   {
@@ -73,7 +73,7 @@ TEST(Mask, FillFromRight)
 
     ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillFromRight(1, 5);
+    mask.FillFromRight(1, 4);
 
     EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, true, true));
   }
