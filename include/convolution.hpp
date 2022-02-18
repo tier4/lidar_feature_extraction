@@ -9,6 +9,8 @@
 
 #include <vector>
 
+#include "math.hpp"
+
 template<typename T1, typename T2>
 std::vector<double> Convolution1D(
   const T1 input_begin, const T1 input_end,
