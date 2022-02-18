@@ -38,6 +38,7 @@
 #include "cloud_iterator.hpp"
 #include "curvature_label.hpp"
 #include "curvature.hpp"
+#include "downsample.hpp"
 #include "index_range.hpp"
 #include "mask.hpp"
 #include "math.hpp"
@@ -58,19 +59,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
   (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
 )
 
-template<typename T>
-typename pcl::PointCloud<T>::Ptr downsample(
-  const typename pcl::PointCloud<T>::Ptr & input_cloud, const float leaf_size)
-{
-  pcl::VoxelGrid<T> filter;
-  typename pcl::PointCloud<T>::Ptr downsampled(new pcl::PointCloud<T>());
-
-  filter.setLeafSize(leaf_size, leaf_size, leaf_size);
-  filter.setInputCloud(input_cloud);
-  filter.filter(*downsampled);
-
-  return downsampled;
-}
+#include "point_type.hpp"
 
 template<typename PointT>
 pcl::PointCloud<PointT> ExtractEdge(
