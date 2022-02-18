@@ -193,49 +193,6 @@ std::vector<double> CalcRange(
   return range;
 }
 
-template<typename PointT>
-void MaskOccludedPoints(
-  Mask<PointT> & mask,
-  const Neighbor<PointT> & is_neighbor,
-  const Range<PointT> & range,
-  const int padding,
-  const double distance_diff_threshold)
-{
-  for (int i = 0; i < mask.Size() - 1; i++) {
-    if (!is_neighbor(i + 0, i + 1)) {
-      continue;
-    }
-
-    const double range0 = range(i + 0);
-    const double range1 = range(i + 1);
-
-    if (range0 > range1 + distance_diff_threshold) {
-      mask.FillFromRight(i - padding, i + 1);
-    }
-
-    if (range1 > range0 + distance_diff_threshold) {
-      mask.FillFromLeft(i + 1, i + padding + 2);
-    }
-  }
-}
-
-template<typename PointT>
-void MaskParallelBeamPoints(
-  Mask<PointT> & mask,
-  const Range<PointT> & range,
-  const double range_ratio_threshold)
-{
-  const std::vector<double> ranges = range(0, mask.Size());
-  for (int i = 1; i < mask.Size() - 1; ++i) {
-    const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
-    const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
-
-    if (ratio1 > range_ratio_threshold && ratio2 > range_ratio_threshold) {
-      mask.Fill(i);
-    }
-  }
-}
-
 template<typename Element>
 std::vector<CurvatureLabel> AssignLabels(
   const ConstReferenceVector<Element> & ref_points,
