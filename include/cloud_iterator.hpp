@@ -5,6 +5,9 @@
 #ifndef CLOUD_ITERATOR_HPP_
 #define CLOUD_ITERATOR_HPP_
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 template<typename PointT>
 using CloudIterator = typename pcl::PointCloud<PointT>::iterator;
 

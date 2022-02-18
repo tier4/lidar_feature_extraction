@@ -59,45 +59,6 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 )
 
 template<typename T>
-pcl::PointXYZ MakePointXYZ(const T & input)
-{
-  return pcl::PointXYZ(input.x, input.y, input.z);
-}
-
-template<typename T>
-sensor_msgs::msg::PointCloud2 toRosMsg(const pcl::PointCloud<T> & pointcloud)
-{
-  sensor_msgs::msg::PointCloud2 msg;
-  pcl::toROSMsg(pointcloud, msg);
-  return msg;
-}
-
-template<typename T>
-sensor_msgs::msg::PointCloud2 toRosMsg(
-  const pcl::PointCloud<T> & pointcloud,
-  const rclcpp::Time stamp,
-  const std::string frame)
-{
-  sensor_msgs::msg::PointCloud2 msg = toRosMsg(pointcloud);
-  msg.header.stamp = stamp;
-  msg.header.frame_id = frame;
-  return msg;
-}
-
-inline pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v)
-{
-  return pcl::PointXYZ(v(0), v(1), v(2));
-}
-
-template<typename T>
-typename pcl::PointCloud<T>::Ptr getPointCloud(const sensor_msgs::msg::PointCloud2 & roscloud)
-{
-  typename pcl::PointCloud<T>::Ptr pclcloud(new pcl::PointCloud<T>());
-  pcl::fromROSMsg(roscloud, *pclcloud);
-  return pclcloud;
-}
-
-template<typename T>
 typename pcl::PointCloud<T>::Ptr downsample(
   const typename pcl::PointCloud<T>::Ptr & input_cloud, const float leaf_size)
 {

@@ -5,6 +5,8 @@
 #ifndef CONVOLUTION_HPP_
 #define CONVOLUTION_HPP_
 
+#include <fmt/core.h>
+
 #include <vector>
 
 template<typename T1, typename T2>

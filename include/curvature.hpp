@@ -5,6 +5,8 @@
 #ifndef CURVATURE_HPP_
 #define CURVATURE_HPP_
 
+#include <range/v3/all.hpp>
+
 #include <algorithm>
 #include <vector>
 
