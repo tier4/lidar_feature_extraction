@@ -10,6 +10,7 @@
 #include "algorithm.hpp"
 #include "curvature_label.hpp"
 #include "index_range.hpp"
+#include "reference_wrapper.hpp"
 
 template<typename PointT>
 class Label

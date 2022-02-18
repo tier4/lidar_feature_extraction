@@ -5,26 +5,26 @@
 #include <string>
 #include <vector>
 
-#include "neighbor.hpp"
 #include "cloud_iterator.hpp"
+#include "neighbor.hpp"
+#include "reference_wrapper.hpp"
 
-template<typename PointT>
+template<typename Element>
 class Mask
 {
 public:
   Mask(
-    const CloudConstIterator<PointT> & cloud_begin,
-    const CloudConstIterator<PointT> & cloud_end,
+    const ConstReferenceVector<Element> & ref_points,
     const double radian_threshold)
-  : mask_(std::vector<bool>(cloud_end - cloud_begin, false)),
-    cloud_begin_(cloud_begin),
+  : mask_(std::vector<bool>(ref_points.size(), false)),
+    ref_points_(ref_points),
     radian_threshold_(radian_threshold)
   {
   }
 
   Mask(const Mask & mask)
   : mask_(mask.mask_),
-    cloud_begin_(mask.cloud_begin_),
+    ref_points_(mask.ref_points_),
     radian_threshold_(mask.radian_threshold_)
   {
   }
@@ -39,8 +39,8 @@ public:
     for (int i = begin_index; i < end_index - 1; i++) {
       mask_.at(i) = true;
 
-      auto p0 = cloud_begin_ + i + 0;
-      auto p1 = cloud_begin_ + i + 1;
+      const Element & p0 = ref_points_.at(i + 0).get();
+      const Element & p1 = ref_points_.at(i + 1).get();
       if (!IsNeighbor(p0, p1, radian_threshold_)) {
         return;
       }
@@ -53,8 +53,8 @@ public:
     for (int i = end_index - 1; i > begin_index; i--) {
       mask_.at(i) = true;
 
-      auto p0 = cloud_begin_ + i - 0;
-      auto p1 = cloud_begin_ + i - 1;
+      const Element & p0 = ref_points_.at(i - 0).get();
+      const Element & p1 = ref_points_.at(i - 1).get();
       if (!IsNeighbor(p0, p1, radian_threshold_)) {
         return;
       }
@@ -101,6 +101,6 @@ protected:
 
 private:
   std::vector<bool> mask_;
-  const CloudConstIterator<PointT> cloud_begin_;
+  const ConstReferenceVector<Element> ref_points_;
   const double radian_threshold_;
 };

@@ -82,14 +82,13 @@ private:
       rclcpp::shutdown();
     }
 
-    const auto sections = ExtractSectionsByRing<PointXYZIR>(input_points);
-
     pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
 
-    for (auto [points_begin, points_end] : sections) {
-      const auto labels = AssignLabelToPoints<PointXYZIR>(points_begin, points_end, n_blocks);
+    const auto rings = ExtractAngleSortedRings(*input_points);
 
+    for (const auto & [ring, ref_points] : rings) {
+      const auto labels = AssignLabels<PointXYZIR>(ref_points, n_blocks);
       // *edge += ExtractEdge(input_points->begin(), labels);
       // *surface += ExtractSurface(input_points->begin(), surface_leaf_size, labels);
     }
@@ -99,14 +98,14 @@ private:
     const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
     */
 
-    const auto edge_downsampled = downsample<pcl::PointXYZ>(edge, map_edge_leaf_size);
-    const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);
+    // const auto edge_downsampled = downsample<pcl::PointXYZ>(edge, map_edge_leaf_size);
+    // const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);
 
     const std::string lidar_frame = "base_link";
-    const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg->header.stamp, lidar_frame);
-    const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg->header.stamp, lidar_frame);
-    edge_publisher_->publish(cloud_edge);
-    surface_publisher_->publish(cloud_surface);
+    // const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg->header.stamp, lidar_frame);
+    // const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg->header.stamp, lidar_frame);
+    // edge_publisher_->publish(cloud_edge);
+    // surface_publisher_->publish(cloud_surface);
   }
 
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;

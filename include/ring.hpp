@@ -17,15 +17,9 @@
 #include <pcl/point_cloud.h>
 
 #include "cloud_iterator.hpp"
+#include "iterator.hpp"
+#include "reference_wrapper.hpp"
 
-template<typename Iterator>
-using ElementType = typename std::iterator_traits<typename Iterator::iterator>::value_type;
-
-template<typename Element>
-using ConstReferenceWrapper = std::reference_wrapper<const Element>;
-
-template<typename Element>
-using ConstReferenceVector = std::vector<ConstReferenceWrapper<Element>>;
 
 template<typename Element>
 void SortByAtan2(ConstReferenceVector<Element> & iter)

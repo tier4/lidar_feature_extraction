@@ -8,18 +8,19 @@
 #include <vector>
 
 #include "cloud_iterator.hpp"
+#include "reference_wrapper.hpp"
 
 template<typename PointT>
 class Range
 {
 public:
-  explicit Range(const CloudConstIterator<PointT> & cloud_begin)
-  : cloud_begin_(cloud_begin) {}
+  explicit Range(const ConstReferenceVector<PointT> & ref_points)
+  : ref_points_(ref_points) {}
 
   double operator()(const int index) const
   {
-    const auto p = cloud_begin_ + index;
-    return XYNorm(p->x, p->y);
+    const PointT & p = ref_points_.at(index).get();
+    return XYNorm(p.x, p.y);
   }
 
   std::vector<double> operator()(const int begin, const int end) const
@@ -32,7 +33,7 @@ public:
   }
 
 private:
-  const CloudConstIterator<PointT> cloud_begin_;
+  const ConstReferenceVector<PointT> ref_points_;
 };
 
 #endif /* _RANGE_LIDAR_ODOMETRY_H_ */

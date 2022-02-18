@@ -236,11 +236,9 @@ void MaskParallelBeamPoints(
   }
 }
 
-template<typename PointT>
-std::vector<CurvatureLabel>
-AssignLabelToPoints(
-  const CloudConstIterator<PointT> cloud_begin,
-  const CloudConstIterator<PointT> cloud_end,
+template<typename Element>
+std::vector<CurvatureLabel> AssignLabels(
+  const ConstReferenceVector<Element> & ref_points,
   const int n_blocks)
 {
   const int padding = 5;
@@ -251,12 +249,12 @@ AssignLabelToPoints(
   const double edge_threshold = 0.1;
   const double surface_threshold = 0.1;
 
-  Mask<PointT> mask(cloud_begin, cloud_end, radian_threshold);
-  const Neighbor<PointT> neighbor(cloud_begin, radian_threshold);
-  const Range<PointT> range(cloud_begin);
+  const Neighbor<Element> neighbor(ref_points, radian_threshold);
+  const Range<Element> range(ref_points);
 
-  MaskOccludedPoints<PointT>(mask, neighbor, range, padding, distance_diff_threshold);
-  MaskParallelBeamPoints<PointT>(mask, range, range_ratio_threshold);
+  Mask<Element> mask(ref_points, radian_threshold);
+  MaskOccludedPoints<Element>(mask, neighbor, range, padding, distance_diff_threshold);
+  MaskParallelBeamPoints<Element>(mask, range, range_ratio_threshold);
 
   return AssignLabel(
     mask, range, n_blocks, padding,
