@@ -95,7 +95,6 @@ private:
 
     /*
     const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
-    const auto output_points = ExtractElements<PointXYZIR>(point_to_index, filtered);
     */
 
     // const auto edge_downsampled = downsample<pcl::PointXYZ>(edge, map_edge_leaf_size);

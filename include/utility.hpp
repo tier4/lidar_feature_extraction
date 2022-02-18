@@ -111,25 +111,6 @@ typename pcl::PointCloud<T>::Ptr downsample(
   return downsampled;
 }
 
-template<typename T>
-std::unordered_map<int, T>
-ExtractElements(
-  const std::function<int(T)> & point_to_index,
-  const pcl::PointCloud<T> & input_points)
-{
-  std::unordered_map<int, T> output_points;
-  for (const T & p : input_points) {
-    const int index = point_to_index(p);
-    if (output_points.find(index) != output_points.end()) {
-      continue;
-    }
-
-    output_points[index] = p;
-  }
-
-  return output_points;
-}
-
 template<typename PointT>
 pcl::PointCloud<PointT> ExtractEdge(
   const CloudConstIterator<PointT> cloud_begin,
@@ -143,19 +124,6 @@ pcl::PointCloud<PointT> ExtractEdge(
     }
   }
   return edge;
-}
-
-template<typename PointT>
-std::vector<double> CalcRange(
-  const CloudConstIterator<PointT> cloud_begin,
-  const CloudConstIterator<PointT> cloud_end)
-{
-  std::vector<double> range(cloud_end - cloud_begin);
-  for (unsigned int i = 0; i < range.size(); i++) {
-    const auto p = cloud_begin + i;
-    range[i] = XYNorm(p->x, p->y);
-  }
-  return range;
 }
 
 template<typename Element>
