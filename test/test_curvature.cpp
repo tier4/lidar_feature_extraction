@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "utility.hpp"
+#include "curvature.hpp"
 
 TEST(Utility, MakeWeight)
 {
