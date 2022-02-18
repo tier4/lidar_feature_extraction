@@ -27,38 +27,6 @@ TEST(Utility, RingIsAvailable)
   EXPECT_FALSE(RingIsAvailable(without_ring));
 }
 
-TEST(Utility, IsInInclusiveRange) {
-  EXPECT_TRUE(IsInInclusiveRange(3., 1., 5.));
-  EXPECT_TRUE(IsInInclusiveRange(1., 1., 5.));
-  EXPECT_TRUE(IsInInclusiveRange(5., 1., 5.));
-
-  EXPECT_FALSE(IsInInclusiveRange(0., 1., 5.));
-  EXPECT_FALSE(IsInInclusiveRange(6., 1., 5.));
-}
-
-TEST(Utility, Range) {
-  auto norm = [](const pcl::PointXYZ & p) {
-    return std::sqrt(p.x * p.x + p.y * p.y);
-  };
-
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(3., 4., 0.));
-  cloud.push_back(pcl::PointXYZ(1., 1., 0.));
-  cloud.push_back(pcl::PointXYZ(2., -3., 0.));
-  cloud.push_back(pcl::PointXYZ(-1., 3., 0.));
-
-  ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
-
-  Range<pcl::PointXYZ> range(ref_points);
-  EXPECT_EQ(range(0), norm(cloud.at(0)));
-  EXPECT_EQ(range(0, 4).size(), static_cast<std::uint32_t>(4));
-
-  const std::vector<double> ranges = range(0, 4);
-  for (unsigned int i = 0; i < cloud.size(); i++) {
-    EXPECT_NEAR(ranges.at(i), norm(cloud.at(i)), 1e-7);
-  }
-}
-
 TEST(Utility, ExtractSectionsByRing) {
   {
     pcl::PointCloud<PointXYZIR>::Ptr cloud(new pcl::PointCloud<PointXYZIR>());
@@ -259,21 +227,6 @@ TEST(Utility, Label)
       mask.Get(),
       testing::ElementsAre(false, false, false, false, true, true, true, true, true, false));
   }
-}
-
-TEST(Utility, FilterByRange) {
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(0., 0., 0));
-  cloud.push_back(pcl::PointXYZ(0., 1., 0));
-  cloud.push_back(pcl::PointXYZ(1., 0., 1));
-  cloud.push_back(pcl::PointXYZ(2., 0., 0));
-  cloud.push_back(pcl::PointXYZ(2., 2., 0));
-
-  const pcl::PointCloud<pcl::PointXYZ> r = FilterByRange(cloud, 1., 2.);
-  EXPECT_EQ(r.size(), static_cast<std::uint32_t>(3));
-  EXPECT_TRUE(Equal(r.at(0), cloud.at(1)));
-  EXPECT_TRUE(Equal(r.at(1), cloud.at(2)));
-  EXPECT_TRUE(Equal(r.at(2), cloud.at(3)));
 }
 
 TEST(Utility, ExtractElements) {

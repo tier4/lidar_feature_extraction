@@ -8,7 +8,29 @@
 #include <vector>
 
 #include "cloud_iterator.hpp"
+#include "math.hpp"
 #include "reference_wrapper.hpp"
+
+bool IsInInclusiveRange(const double v, const double min, const double max)
+{
+  return min <= v && v <= max;
+}
+
+template<typename T>
+pcl::PointCloud<T> FilterByRange(
+  const pcl::PointCloud<T> & points,
+  const double range_min,
+  const double range_max)
+{
+  pcl::PointCloud<T> result;
+  for (const T & p : points) {
+    const double norm = XYNorm(p.x, p.y);
+    if (IsInInclusiveRange(norm, range_min, range_max)) {
+      result.push_back(p);
+    }
+  }
+  return result;
+}
 
 template<typename PointT>
 class Range
