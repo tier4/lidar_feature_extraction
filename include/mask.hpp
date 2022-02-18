@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _MASK_LIDAR_ODOMETRY_H_
-#define _MASK_LIDAR_ODOMETRY_H_
+#ifndef MASK_HPP_
+#define MASK_HPP_
 
 #include <string>
 #include <vector>
@@ -153,4 +153,4 @@ void MaskParallelBeamPoints(
   }
 }
 
-#endif  /* _MASK_LIDAR_ODOMETRY_H_ */
+#endif  // MASK_HPP_

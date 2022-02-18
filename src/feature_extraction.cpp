@@ -2,8 +2,6 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#include "utility.hpp"
-
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <range/v3/all.hpp>
 
@@ -17,6 +15,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+
+#include "utility.hpp"
 
 //  VLS-128 Lidar Sensor Configuration
 const int N_SCAN = 128;
@@ -102,8 +102,10 @@ private:
     // const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);
 
     const std::string lidar_frame = "base_link";
-    // const auto cloud_edge = toRosMsg(*edge_downsampled, cloud_msg->header.stamp, lidar_frame);
-    // const auto cloud_surface = toRosMsg(*surface_downsampled, cloud_msg->header.stamp, lidar_frame);
+    // const auto cloud_edge = toRosMsg(
+    //   *edge_downsampled, cloud_msg->header.stamp, lidar_frame);
+    // const auto cloud_surface = toRosMsg(
+    //   *surface_downsampled, cloud_msg->header.stamp, lidar_frame);
     // edge_publisher_->publish(cloud_edge);
     // surface_publisher_->publish(cloud_surface);
   }

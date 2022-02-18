@@ -2,8 +2,11 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _REFERENCE_WRAPPER_LIDAR_ODOMETRY_H_
-#define _REFERENCE_WRAPPER_LIDAR_ODOMETRY_H_
+#ifndef REFERENCE_WRAPPER_HPP_
+#define REFERENCE_WRAPPER_HPP_
+
+#include <functional>
+#include <vector>
 
 template<typename Element>
 using ConstReferenceWrapper = std::reference_wrapper<const Element>;
@@ -11,4 +14,4 @@ using ConstReferenceWrapper = std::reference_wrapper<const Element>;
 template<typename Element>
 using ConstReferenceVector = std::vector<ConstReferenceWrapper<Element>>;
 
-#endif  /* _REFERENCE_WRAPPER_LIDAR_ODOMETRY_H_ */
+#endif  // REFERENCE_WRAPPER_HPP_

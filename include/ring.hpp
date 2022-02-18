@@ -2,8 +2,11 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _RING_LIDAR_ODOMETRY_H_
-#define _RING_LIDAR_ODOMETRY_H_
+#ifndef RING_HPP_
+#define RING_HPP_
+
+#include <fmt/core.h>
+#include <pcl/point_cloud.h>
 
 #include <algorithm>
 #include <utility>
@@ -12,9 +15,6 @@
 #include <iterator>
 #include <unordered_map>
 #include <vector>
-
-#include <fmt/core.h>
-#include <pcl/point_cloud.h>
 
 #include "cloud_iterator.hpp"
 #include "iterator.hpp"
@@ -114,4 +114,4 @@ ExtractSectionsByRing(const typename pcl::PointCloud<PointT>::Ptr & cloud)
   return sections;
 }
 
-#endif  /* _RING_LIDAR_ODOMETRY_H_ */
+#endif  // RING_HPP_

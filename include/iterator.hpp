@@ -2,10 +2,10 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _ITERATOR_LIDAR_ODOMETRY_H_
-#define _ITERATOR_LIDAR_ODOMETRY_H_
+#ifndef ITERATOR_HPP_
+#define ITERATOR_HPP_
 
 template<typename Iterator>
 using ElementType = typename std::iterator_traits<typename Iterator::iterator>::value_type;
 
-#endif   /* _ITERATOR_LIDAR_ODOMETRY_H_ */
+#endif  // ITERATOR_HPP_

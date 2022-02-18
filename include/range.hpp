@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _RANGE_LIDAR_ODOMETRY_H_
-#define _RANGE_LIDAR_ODOMETRY_H_
+#ifndef RANGE_HPP_
+#define RANGE_HPP_
 
 #include <vector>
 
@@ -36,4 +36,4 @@ private:
   const ConstReferenceVector<PointT> ref_points_;
 };
 
-#endif /* _RANGE_LIDAR_ODOMETRY_H_ */
+#endif  // RANGE_HPP_

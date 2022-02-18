@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _NEIGHBOR_LIDAR_ODOMETRY_H_
-#define _NEIGHBOR_LIDAR_ODOMETRY_H_
+#ifndef NEIGHBOR_HPP_
+#define NEIGHBOR_HPP_
 
 #include "math.hpp"
 #include "reference_wrapper.hpp"
@@ -35,4 +35,4 @@ private:
   const double radian_threshold_;
 };
 
-#endif /* _NEIGHBOR_LIDAR_ODOMETRY_H_ */
+#endif  // NEIGHBOR_HPP_

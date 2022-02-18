@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _RANGE_MESSAGE_LIDAR_ODOMETRY_H_
-#define _RANGE_MESSAGE_LIDAR_ODOMETRY_H_
+#ifndef RANGE_MESSAGE_HPP_
+#define RANGE_MESSAGE_HPP_
 
 #include <fmt/core.h>
 
@@ -33,4 +33,4 @@ std::string RangeMessageSmallerThan(
     value_name, value, range_name, range_max);
 }
 
-#endif  /* _RANGE_MESSAGE_LIDAR_ODOMETRY_H_ */
+#endif  // RANGE_MESSAGE_HPP_

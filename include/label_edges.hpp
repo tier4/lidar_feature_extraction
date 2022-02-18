@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _LABEL_EDGES_LIDAR_ODOMETRY_H_
-#define _LABEL_EDGES_LIDAR_ODOMETRY_H_
+#ifndef LABEL_EDGES_HPP_
+#define LABEL_EDGES_HPP_
 
 #include <vector>
 
@@ -34,4 +34,4 @@ void LabelEdges(
   }
 }
 
-#ifndef  /* _LABEL_EDGES_LIDAR_ODOMETRY_H_ */
+#endif  // LABEL_EDGES_HPP_

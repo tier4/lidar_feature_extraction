@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _ALGORITHM_LIDAR_ODOMETRY_H_
-#define _ALGORITHM_LIDAR_ODOMETRY_H_
+#ifndef ALGORITHM_HPP_
+#define ALGORITHM_HPP_
 
 #include <algorithm>
 #include <vector>
@@ -32,4 +32,4 @@ std::vector<int> Argsort(const std::vector<T> & values)
   return indices;
 }
 
-#endif  /* _ALGORITHM_LIDAR_ODOMETRY_H_ */
+#endif  // ALGORITHM_HPP_

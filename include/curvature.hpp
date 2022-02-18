@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _CURVATURE_LIDAR_ODOMETRY_H_
-#define _CURVATURE_LIDAR_ODOMETRY_H_
+#ifndef CURVATURE_HPP_
+#define CURVATURE_HPP_
 
 #include <algorithm>
 #include <vector>
@@ -61,4 +61,4 @@ private:
   const double surface_threshold_;
 };
 
-#endif  /* _CURVATURE_LIDAR_ODOMETRY_H_ */
+#endif  // CURVATURE_HPP_

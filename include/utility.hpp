@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _UTILITY_LIDAR_ODOMETRY_H_
-#define _UTILITY_LIDAR_ODOMETRY_H_
+#ifndef UTILITY_HPP_
+#define UTILITY_HPP_
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -218,4 +218,4 @@ std::vector<CurvatureLabel> AssignLabels(
     max_edges_per_block, edge_threshold, surface_threshold);
 }
 
-#endif  // _UTILITY_LIDAR_ODOMETRY_H_
+#endif  // UTILITY_HPP_

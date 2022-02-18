@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _INDEX_RAGE_LIDAR_ODOMETRY_H_
-#define _INDEX_RAGE_LIDAR_ODOMETRY_H_
+#ifndef INDEX_RANGE_HPP_
+#define INDEX_RANGE_HPP_
 
 #include <fmt/core.h>
 
@@ -81,4 +81,4 @@ private:
   const int padding_;
 };
 
-#endif  /* _INDEX_RAGE_LIDAR_ODOMETRY_H_ */
+#endif  // INDEX_RANGE_HPP_

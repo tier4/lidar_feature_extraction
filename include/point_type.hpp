@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _POINT_TYPE_LIDAR_ODOMETRY_H_
-#define _POINT_TYPE_LIDAR_ODOMETRY_H_
+#ifndef POINT_TYPE_HPP_
+#define POINT_TYPE_HPP_
 
 struct PointXYZIR
 {
@@ -17,4 +17,4 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
   (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
 )
 
-#endif  /* _POINT_TYPE_LIDAR_ODOMETRY_H_ */
+#endif  // POINT_TYPE_HPP_

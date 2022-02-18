@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _CONVOLUTION_LIDAR_ODOMETRY_H_
-#define _CONVOLUTION_LIDAR_ODOMETRY_H_
+#ifndef CONVOLUTION_HPP_
+#define CONVOLUTION_HPP_
 
 #include <vector>
 
@@ -30,4 +30,4 @@ std::vector<double> Convolution1D(
   return result;
 }
 
-#endif  /* _CONVOLUTION_LIDAR_ODOMETRY_H_ */
+#endif  // CONVOLUTION_HPP_

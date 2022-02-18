@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _CURVATURE_LABEL_LIDAR_ODOMETRY_H_
-#define _CURVATURE_LABEL_LIDAR_ODOMETRY_H_
+#ifndef CURVATURE_LABEL_HPP_
+#define CURVATURE_LABEL_HPP_
 
 enum class CurvatureLabel
 {
@@ -13,4 +13,4 @@ enum class CurvatureLabel
   OutOfRange = 3
 };
 
-#endif  /* _CURVATURE_LABEL_LIDAR_ODOMETRY_H_ */
+#endif  // CURVATURE_LABEL_HPP_

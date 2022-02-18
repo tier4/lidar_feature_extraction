@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _LABEL_LIDAR_ODOMETRY_H_
-#define _LABEL_LIDAR_ODOMETRY_H_
+#ifndef LABEL_HPP_
+#define LABEL_HPP_
 
 #include <vector>
 
@@ -101,4 +101,4 @@ std::vector<CurvatureLabel> AssignLabel(
   return labels;
 }
 
-#endif  /* _LABEL_LIDAR_ODOMETRY_H_ */
+#endif  // LABEL_HPP_

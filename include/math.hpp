@@ -2,8 +2,8 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
-#ifndef _MATH_LIDAR_ODOMETRY_H_
-#define _MATH_LIDAR_ODOMETRY_H_
+#ifndef MATH_HPP_
+#define MATH_HPP_
 
 inline double XYNorm(const double x, const double y)
 {
@@ -31,4 +31,4 @@ double InnerProduct(T1 first1, T1 last1, T2 first2)
   return sum;
 }
 
-#endif  /* _MATH_LIDAR_ODOMETRY_H_ */
+#endif  // MATH_HPP_
