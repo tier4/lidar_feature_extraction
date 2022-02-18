@@ -10,10 +10,6 @@
 #include <fmt/core.h>
 
 #include <std_msgs/msg/header.hpp>
-#include <std_msgs/msg/float64_multi_array.hpp>
-#include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <sensor_msgs/msg/nav_sat_fix.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -113,16 +109,6 @@ typename pcl::PointCloud<T>::Ptr downsample(
   filter.filter(*downsampled);
 
   return downsampled;
-}
-
-bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
-{
-  for (const auto & field : fields) {
-    if (field.name == "ring") {
-      return true;
-    }
-  }
-  return false;
 }
 
 template<typename T>

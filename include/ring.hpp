@@ -7,6 +7,8 @@
 
 #include <fmt/core.h>
 #include <pcl/point_cloud.h>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/point_field.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -20,6 +22,16 @@
 #include "iterator.hpp"
 #include "reference_wrapper.hpp"
 
+
+bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
+{
+  for (const auto & field : fields) {
+    if (field.name == "ring") {
+      return true;
+    }
+  }
+  return false;
+}
 
 template<typename Element>
 void SortByAtan2(ConstReferenceVector<Element> & iter)
