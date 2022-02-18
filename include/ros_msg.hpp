@@ -12,6 +12,8 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <string>
+
 template<typename T>
 sensor_msgs::msg::PointCloud2 toRosMsg(const pcl::PointCloud<T> & pointcloud)
 {
