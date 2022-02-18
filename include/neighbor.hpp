@@ -14,7 +14,8 @@ bool IsNeighbor(const PointT & p1, const PointT & p2, const double radian_thresh
 }
 
 template<typename PointT>
-class Neighbor {
+class Neighbor
+{
 public:
   Neighbor(const CloudConstIterator<PointT> & cloud_begin, const double radian_threshold)
   : cloud_begin_(cloud_begin), radian_threshold_(radian_threshold)

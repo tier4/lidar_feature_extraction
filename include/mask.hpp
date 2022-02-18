@@ -2,6 +2,9 @@
 // Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
 // All rights reserved.
 
+#include <string>
+#include <vector>
+
 #include "neighbor.hpp"
 #include "cloud_iterator.hpp"
 

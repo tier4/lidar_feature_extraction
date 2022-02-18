@@ -5,6 +5,9 @@
 #ifndef _ALGORITHM_LIDAR_ODOMETRY_H_
 #define _ALGORITHM_LIDAR_ODOMETRY_H_
 
+#include <algorithm>
+#include <vector>
+
 template<typename T>
 class by_value
 {

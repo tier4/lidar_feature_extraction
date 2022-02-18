@@ -1,10 +1,20 @@
+// BSD 3-Clause License
+// Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
+// All rights reserved.
+
+#ifndef _LABEL_LIDAR_ODOMETRY_H_
+#define _LABEL_LIDAR_ODOMETRY_H_
+
+#include <vector>
+
 #include "algorithm.hpp"
 #include "curvature_label.hpp"
 #include "index_range.hpp"
 
 template<typename PointT>
-class Label {
- public:
+class Label
+{
+public:
   Label(
     const std::vector<double> & curvature,
     const int padding,
@@ -18,8 +28,9 @@ class Label {
   {
   }
 
-  void Edge(std::vector<CurvatureLabel> & labels, Mask<PointT> & mask,
-            const int n_max_edges) const
+  void Edge(
+    std::vector<CurvatureLabel> & labels, Mask<PointT> & mask,
+    const int n_max_edges) const
   {
     int n_picked = 0;
     for (const int index : boost::adaptors::reverse(indices_)) {
@@ -88,3 +99,5 @@ std::vector<CurvatureLabel> AssignLabel(
 
   return labels;
 }
+
+#endif  /* _LABEL_LIDAR_ODOMETRY_H_ */

@@ -5,6 +5,8 @@
 #ifndef _CONVOLUTION_LIDAR_ODOMETRY_H_
 #define _CONVOLUTION_LIDAR_ODOMETRY_H_
 
+#include <vector>
+
 template<typename T1, typename T2>
 std::vector<double> Convolution1D(
   const T1 input_begin, const T1 input_end,

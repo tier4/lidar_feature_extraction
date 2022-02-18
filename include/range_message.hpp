@@ -5,6 +5,8 @@
 #ifndef _RANGE_MESSAGE_LIDAR_ODOMETRY_H_
 #define _RANGE_MESSAGE_LIDAR_ODOMETRY_H_
 
+#include <string>
+
 template<typename T>
 std::string RangeMessageLargerOrEqualTo(
   const std::string & value_name,

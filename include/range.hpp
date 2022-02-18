@@ -5,13 +5,16 @@
 #ifndef _RANGE_LIDAR_ODOMETRY_H_
 #define _RANGE_LIDAR_ODOMETRY_H_
 
+#include <vector>
+
 #include "cloud_iterator.hpp"
 
 template<typename PointT>
 class Range
 {
 public:
-  Range(const CloudConstIterator<PointT> & cloud_begin) : cloud_begin_(cloud_begin) {}
+  explicit Range(const CloudConstIterator<PointT> & cloud_begin)
+  : cloud_begin_(cloud_begin) {}
 
   double operator()(const int index) const
   {

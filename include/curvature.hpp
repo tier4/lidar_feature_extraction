@@ -5,10 +5,14 @@
 #ifndef _CURVATURE_LIDAR_ODOMETRY_H_
 #define _CURVATURE_LIDAR_ODOMETRY_H_
 
+#include <algorithm>
+#include <vector>
+
 #include "math.hpp"
 #include "convolution.hpp"
 
-std::vector<double> MakeWeight(const int padding) {
+std::vector<double> MakeWeight(const int padding)
+{
   assert(padding > 0);
   std::vector<double> weight(padding * 2 + 1, 1.);
   weight.at(padding) = -2. * padding;
@@ -23,7 +27,8 @@ std::vector<double> CalcCurvature(const std::vector<double> & range, int padding
   return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
-class Curvature {
+class Curvature
+{
 public:
   Curvature(
     const std::vector<double> & curvature,

@@ -1,3 +1,11 @@
+// BSD 3-Clause License
+// Copyright (c) 2020, Tixiao Shan, Takeshi Ishita
+// All rights reserved.
+
+#ifndef _LABEL_EDGES_LIDAR_ODOMETRY_H_
+#define _LABEL_EDGES_LIDAR_ODOMETRY_H_
+
+#include <vector>
 
 template<typename PointT>
 void LabelEdges(
@@ -25,3 +33,5 @@ void LabelEdges(
     mask.FillNeighbors(offset + index, padding);
   }
 }
+
+#ifndef  /* _LABEL_EDGES_LIDAR_ODOMETRY_H_ */

@@ -25,7 +25,7 @@ if (BUILD_TESTING)
 
   ament_lint_auto_find_test_dependencies()
 
-  set(TEST_FILES src/feature_extraction.cpp include/utility.hpp)
+  file(GLOB TEST_FILES src/* include/*)
 
   find_package(ament_cmake_cpplint)
   ament_cpplint(${TEST_FILES})
