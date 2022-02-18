@@ -22,14 +22,17 @@ template<typename Iterator>
 using ElementType = typename std::iterator_traits<typename Iterator::iterator>::value_type;
 
 template<typename Element>
-using ConstReferenceVector = std::vector<std::reference_wrapper<const Element>>;
+using ConstReferenceWrapper = std::reference_wrapper<const Element>;
+
+template<typename Element>
+using ConstReferenceVector = std::vector<ConstReferenceWrapper<Element>>;
 
 template<typename Element>
 void SortByAtan2(ConstReferenceVector<Element> & iter)
 {
   auto f = [](
-    const std::reference_wrapper<const Element> & ref_p1,
-    const std::reference_wrapper<const Element> & ref_p2) {
+    const ConstReferenceWrapper<Element> & ref_p1,
+    const ConstReferenceWrapper<Element> & ref_p2) {
       const Element & p1 = ref_p1.get();
       const Element & p2 = ref_p2.get();
       const double angle1 = std::atan2(p1.y, p1.x);
@@ -66,8 +69,10 @@ template<typename Iter>
 std::unordered_map<int, ConstReferenceVector<ElementType<Iter>>>
 ExtractAngleSortedRings(const Iter & iterator)
 {
+  typedef ElementType<Iter> Element;
+
   auto rings = MakeReferenceVectorsPerRing(iterator);
-  SortEachRingByAngle<ElementType<Iter>>(rings);
+  SortEachRingByAngle<Element>(rings);
   return rings;
 }
 
