@@ -5,11 +5,18 @@
 #ifndef LABEL_HPP_
 #define LABEL_HPP_
 
+#include <boost/range/adaptor/reversed.hpp>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <vector>
 
 #include "algorithm.hpp"
+#include "curvature.hpp"
 #include "curvature_label.hpp"
 #include "index_range.hpp"
+#include "mask.hpp"
+#include "point_type.hpp"
 #include "reference_wrapper.hpp"
 
 template<typename PointT>

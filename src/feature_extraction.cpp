@@ -27,7 +27,6 @@
 #include "range.hpp"
 #include "ros_msg.hpp"
 #include "ring.hpp"
-#include "utility.hpp"
 #include "label.hpp"
 
 //  VLS-128 Lidar Sensor Configuration
