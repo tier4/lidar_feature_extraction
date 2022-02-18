@@ -48,19 +48,4 @@
 #include "label.hpp"
 #include "point_type.hpp"
 
-template<typename PointT>
-pcl::PointCloud<PointT> ExtractEdge(
-  const CloudConstIterator<PointT> cloud_begin,
-  const std::vector<CurvatureLabel> & labels)
-{
-  typename pcl::PointCloud<PointT>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
-  for (unsigned int i = 0; i < labels.size(); i++) {
-    if (labels[i] == CurvatureLabel::Edge) {
-      const PointT point = *(cloud_begin + i);
-      edge->push_back(point);
-    }
-  }
-  return edge;
-}
-
 #endif  // UTILITY_HPP_

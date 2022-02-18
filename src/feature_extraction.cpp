@@ -16,7 +16,19 @@
 #include <unordered_map>
 #include <vector>
 
+#include "cloud_iterator.hpp"
+#include "curvature_label.hpp"
+#include "curvature.hpp"
+#include "extraction.hpp"
+#include "index_range.hpp"
+#include "mask.hpp"
+#include "math.hpp"
+#include "neighbor.hpp"
+#include "range.hpp"
+#include "ros_msg.hpp"
+#include "ring.hpp"
 #include "utility.hpp"
+#include "label.hpp"
 
 //  VLS-128 Lidar Sensor Configuration
 const int N_SCAN = 128;
@@ -82,14 +94,15 @@ private:
       rclcpp::shutdown();
     }
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr edge(new pcl::PointCloud<pcl::PointXYZ>());
-    pcl::PointCloud<pcl::PointXYZ>::Ptr surface(new pcl::PointCloud<pcl::PointXYZ>());
+    pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
+    pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
 
     const auto rings = ExtractAngleSortedRings(*input_points);
 
     for (const auto & [ring, ref_points] : rings) {
       const auto labels = AssignLabels<PointXYZIR>(ref_points, n_blocks);
-      // *edge += ExtractEdge(input_points->begin(), labels);
+      ExtractByLabel(edge, ref_points, labels, CurvatureLabel::Edge);
+      ExtractByLabel(surface, ref_points, labels, CurvatureLabel::Surface);
       // *surface += ExtractSurface(input_points->begin(), surface_leaf_size, labels);
     }
 

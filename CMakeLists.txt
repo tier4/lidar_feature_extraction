@@ -41,6 +41,7 @@ if (BUILD_TESTING)
   ament_uncrustify(${TEST_FILES})
 
   add_testcase(test_algorithm)
+  add_testcase(test_extraction)
   add_testcase(test_index_range)
   add_testcase(test_mask)
   add_testcase(test_math)
