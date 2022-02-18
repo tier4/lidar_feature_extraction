@@ -9,28 +9,28 @@
 
 TEST(RangeMessage, RangeMessageLargerThanOrEqualTo)
 {
-  EXPECT_STREQ(
+  EXPECT_EQ(
     RangeMessageLargerThanOrEqualTo("i", "max", 39, 30),
     "i (which is 39) >= max (which is 30)");
 }
 
 TEST(RangeMessage, RangeMessageSmallerThanOrEqualTo)
 {
-  EXPECT_STREQ(
+  EXPECT_EQ(
     RangeMessageSmallerThanOrEqualTo("i", "min", 39, 40),
     "i (which is 39) <= min (which is 40)");
 }
 
 TEST(RangeMessage, RangeMessageLargerThan)
 {
-  EXPECT_STREQ(
+  EXPECT_EQ(
     RangeMessageLargerThan("i", "max", 39, 30),
     "i (which is 39) > max (which is 30)");
 }
 
 TEST(RangeMessage, RangeMessageSmallerThan)
 {
-  EXPECT_STREQ(
+  EXPECT_EQ(
     RangeMessageSmallerThan("i", "min", 39, 40),
     "i (which is 39) < max (which is 40)");
 }
