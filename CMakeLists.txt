@@ -33,6 +33,11 @@ if (BUILD_TESTING)
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${TEST_FILES})
 
+  ament_add_gmock(test_index_range test/test_index_range.cpp)
+  target_include_directories(test_index_range PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test_index_range fmt)
+  ament_target_dependencies(test_index_range ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+
   ament_add_gmock(test_mask test/test_mask.cpp)
   target_include_directories(test_mask PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(test_mask fmt)
