@@ -5,6 +5,8 @@
 #ifndef ALGORITHM_HPP_
 #define ALGORITHM_HPP_
 
+#include <range/v3/all.hpp>
+
 #include <algorithm>
 #include <vector>
 
