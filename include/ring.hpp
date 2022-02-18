@@ -5,6 +5,36 @@
 #ifndef _RING_LIDAR_ODOMETRY_H_
 #define _RING_LIDAR_ODOMETRY_H_
 
+#include <algorithm>
+#include <utility>
+#include <set>
+#include <functional>
+#include <iterator>
+#include <unordered_map>
+#include <vector>
+
+#include <fmt/core.h>
+#include <pcl/point_cloud.h>
+
+#include "cloud_iterator.hpp"
+
+template<typename PointT>
+using ReferenceVector = std::vector<std::reference_wrapper<PointT>>;
+
+template<typename Iter>
+void SortByAtan2(Iter & iter)
+{
+  typedef typename std::iterator_traits<typename Iter::iterator>::value_type Element;
+
+  auto f = [](const Element & p1, const Element & p2) {
+      const double angle1 = std::atan2(p1.y, p1.x);
+      const double angle2 = std::atan2(p2.y, p2.x);
+      return angle1 < angle2;
+    };
+
+  std::sort(iter.begin(), iter.end(), f);
+}
+
 template<typename PointT>
 std::vector<std::pair<CloudConstIterator<PointT>, CloudConstIterator<PointT>>>
 ExtractSectionsByRing(const typename pcl::PointCloud<PointT>::Ptr & cloud)

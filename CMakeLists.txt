@@ -37,6 +37,11 @@ if (BUILD_TESTING)
   target_include_directories(test_utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(test_utility fmt)
   ament_target_dependencies(test_utility ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+
+  ament_add_gmock(test_ring test/test_ring.cpp)
+  target_include_directories(test_ring PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test_ring fmt)
+  ament_target_dependencies(test_ring ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
 endif()
 
 ament_auto_package(INSTALL_TO_SHARE launch)
