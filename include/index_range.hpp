@@ -41,7 +41,7 @@ protected:
   void ThrowExceptionIfOutOfRange(const int j) const
   {
     if (j >= n_blocks_) {
-      auto s = RangeMessageLargerOrEqualTo("j", "n_blocks", j, n_blocks_);
+      auto s = RangeMessageLargerThanOrEqualTo("j", "n_blocks", j, n_blocks_);
       throw std::out_of_range(s);
     }
 

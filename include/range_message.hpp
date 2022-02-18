@@ -10,7 +10,7 @@
 #include <string>
 
 template<typename T>
-std::string RangeMessageLargerOrEqualTo(
+std::string RangeMessageLargerThanOrEqualTo(
   const std::string & value_name,
   const std::string & range_name,
   const T value,
@@ -18,6 +18,30 @@ std::string RangeMessageLargerOrEqualTo(
 {
   return fmt::format(
     "{} (which is {}) >= {} (which is {})",
+    value_name, value, range_name, range_max);
+}
+
+template<typename T>
+std::string RangeMessageSmallerThanOrEqualTo(
+  const std::string & value_name,
+  const std::string & range_name,
+  const T value,
+  const T range_max)
+{
+  return fmt::format(
+    "{} (which is {}) <= {} (which is {})",
+    value_name, value, range_name, range_max);
+}
+
+template<typename T>
+std::string RangeMessageLargerThan(
+  const std::string & value_name,
+  const std::string & range_name,
+  const T value,
+  const T range_max)
+{
+  return fmt::format(
+    "{} (which is {}) > {} (which is {})",
     value_name, value, range_name, range_max);
 }
 
