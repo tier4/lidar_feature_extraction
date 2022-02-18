@@ -43,6 +43,11 @@ if (BUILD_TESTING)
   target_link_libraries(test_mask fmt)
   ament_target_dependencies(test_mask ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
 
+  ament_add_gmock(test_math test/test_math.cpp)
+  target_include_directories(test_math PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test_math fmt)
+  ament_target_dependencies(test_math ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+
   ament_add_gmock(test_utility test/test_utility.cpp)
   target_include_directories(test_utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(test_utility fmt)

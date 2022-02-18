@@ -27,13 +27,6 @@ TEST(Utility, RingIsAvailable)
   EXPECT_FALSE(RingIsAvailable(without_ring));
 }
 
-TEST(Utility, XYNorm)
-{
-  EXPECT_EQ(XYNorm(0., 0.), 0.);
-  EXPECT_EQ(XYNorm(-1., 0.), 1.);
-  EXPECT_EQ(XYNorm(3., 4.), 5.);
-}
-
 TEST(Utility, IsInInclusiveRange) {
   EXPECT_TRUE(IsInInclusiveRange(3., 1., 5.));
   EXPECT_TRUE(IsInInclusiveRange(1., 1., 5.));
