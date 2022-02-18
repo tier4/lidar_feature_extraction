@@ -76,8 +76,24 @@ public:
     return mask_;
   }
 
-  int Size() {
+  int Size() const
+  {
     return mask_.size();
+  }
+
+protected:
+  void ThrowExceptionIfOutOfRange(
+    const std::string & variable_name, const int variable) const
+  {
+    if (variable >= this->Size()) {
+      auto s = RangeMessageLargerOrEqualTo(variable_name, "this->Size()", variable, this->Size());
+      throw std::out_of_range(s);
+    }
+
+    if (variable < 0) {
+      auto s = RangeMessageSmallerThan(variable_name, "0", variable, 0);
+      throw std::out_of_range(s);
+    }
   }
 
 private:

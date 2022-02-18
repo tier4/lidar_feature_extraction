@@ -301,7 +301,7 @@ AssignLabelToPoints(
   MaskOccludedPoints<PointT>(mask, neighbor, range, padding, distance_diff_threshold);
   MaskParallelBeamPoints<PointT>(mask, range, range_ratio_threshold);
 
-  return Label(
+  return AssignLabel(
     mask, range, n_blocks, padding,
     max_edges_per_block, edge_threshold, surface_threshold);
 }
