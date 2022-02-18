@@ -87,29 +87,4 @@ pcl::PointCloud<PointT> ExtractEdge(
   return edge;
 }
 
-template<typename Element>
-std::vector<CurvatureLabel> AssignLabels(
-  const ConstReferenceVector<Element> & ref_points,
-  const int n_blocks)
-{
-  const int padding = 5;
-  const int max_edges_per_block = 20;
-  const double radian_threshold = 2.0;
-  const double distance_diff_threshold = 0.3;
-  const double range_ratio_threshold = 0.02;
-  const double edge_threshold = 0.1;
-  const double surface_threshold = 0.1;
-
-  const Neighbor<Element> neighbor(ref_points, radian_threshold);
-  const Range<Element> range(ref_points);
-
-  Mask<Element> mask(ref_points, radian_threshold);
-  MaskOccludedPoints<Element>(mask, neighbor, range, padding, distance_diff_threshold);
-  MaskParallelBeamPoints<Element>(mask, range, range_ratio_threshold);
-
-  return AssignLabel(
-    mask, range, n_blocks, padding,
-    max_edges_per_block, edge_threshold, surface_threshold);
-}
-
 #endif  // UTILITY_HPP_
