@@ -118,6 +118,33 @@ TEST(Mask, FillNeighbors)
       mask.Get(),
       testing::ElementsAre(false, false, true, true, true, true, false, false));
   }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    for (unsigned int i = 0; i < 10; i++) {
+      cloud.push_back(pcl::PointXYZ(1.0, 0.0, 0.0));
+    }
+
+    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    EXPECT_THROW(
+      try {
+        mask.FillNeighbors(7, 3);
+      } catch (const std::invalid_argument & e) {
+        EXPECT_STREQ("index + padding (which is 10) >= this->Size() (which is 10)", e.what());
+        throw e;
+      },
+      std::invalid_argument);
+
+    EXPECT_THROW(
+      try {
+        mask.FillNeighbors(3, 3);
+      } catch (const std::invalid_argument & e) {
+        EXPECT_STREQ("index - padding (which is 0) <= 0 (which is 0)", e.what());
+        throw e;
+      },
+      std::invalid_argument);
+  }
 }
 
 TEST(Mask, MaskOccludedPoints)

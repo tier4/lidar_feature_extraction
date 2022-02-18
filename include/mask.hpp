@@ -69,6 +69,18 @@ public:
 
   void FillNeighbors(const int index, const int padding)
   {
+    if (index + padding >= this->Size()) {
+      auto s = RangeMessageLargerThanOrEqualTo(
+        "index + padding", "this->Size()", index + padding, this->Size());
+      throw std::invalid_argument(s);
+    }
+
+    if (index - padding <= 0) {
+      auto s = RangeMessageSmallerThanOrEqualTo(
+        "index - padding", "0", index - padding, 0);
+      throw std::invalid_argument(s);
+    }
+
     this->Fill(index);
     this->FillFromLeft(index + 1, index + 1 + padding);
     this->FillFromRight(index - padding - 1, index - 1);
@@ -87,22 +99,6 @@ public:
   int Size() const
   {
     return mask_.size();
-  }
-
-protected:
-  void ThrowExceptionIfOutOfRange(
-    const std::string & variable_name, const int variable) const
-  {
-    if (variable >= this->Size()) {
-      auto s = RangeMessageLargerThanOrEqualTo(
-        variable_name, "this->Size()", variable, this->Size());
-      throw std::out_of_range(s);
-    }
-
-    if (variable < 0) {
-      auto s = RangeMessageSmallerThan(variable_name, "0", variable, 0);
-      throw std::out_of_range(s);
-    }
   }
 
 private:
