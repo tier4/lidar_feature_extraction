@@ -32,5 +32,5 @@ TEST(RangeMessage, RangeMessageSmallerThan)
 {
   EXPECT_EQ(
     RangeMessageSmallerThan("i", "min", 39, 40),
-    "i (which is 39) < max (which is 40)");
+    "i (which is 39) < min (which is 40)");
 }
