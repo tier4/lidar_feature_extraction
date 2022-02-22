@@ -6,6 +6,8 @@
 
 #include <gmock/gmock.h>
 
+#include <range/v3/all.hpp>
+
 #include "ring.hpp"
 
 TEST(Ring, RingIsAvailable)
@@ -33,27 +35,17 @@ TEST(Ring, SortByAtan2)
   };
 
   std::vector<Point> points;
-  points.push_back(Point{1., 1.});
-  points.push_back(Point{1., 0.});
-  points.push_back(Point{1., -1.});
-  points.push_back(Point{0., 1.});
-  points.push_back(Point{0., -1.});
-  points.push_back(Point{-1., -1.});
+  points.push_back(Point{1., 1.});    //       pi / 4
+  points.push_back(Point{1., 0.});    //            0
+  points.push_back(Point{1., -1.});   // -     pi / 4
+  points.push_back(Point{0., 1.});    //       pi / 2
+  points.push_back(Point{0., -1.});   // -     pi / 2
+  points.push_back(Point{-1., -1.});  // - 3 * pi / 4
 
-  std::vector<std::reference_wrapper<const Point>> point_refs(points.begin(), points.end());
-  SortByAtan2<Point>(point_refs);
-
-  auto to_vector = [](const std::reference_wrapper<const Point> & ref_p) {
-    const Point & p = ref_p.get();
-    return std::vector<double>{p.x, p.y};
-  };
-
-  EXPECT_THAT(to_vector(point_refs.at(0)), testing::ElementsAre(-1., -1.));
-  EXPECT_THAT(to_vector(point_refs.at(1)), testing::ElementsAre(0., -1.));
-  EXPECT_THAT(to_vector(point_refs.at(2)), testing::ElementsAre(1., -1.));
-  EXPECT_THAT(to_vector(point_refs.at(3)), testing::ElementsAre(1., 0.));
-  EXPECT_THAT(to_vector(point_refs.at(4)), testing::ElementsAre(1., 1.));
-  EXPECT_THAT(to_vector(point_refs.at(5)), testing::ElementsAre(0., 1.));
+  const int size = static_cast<int>(points.size());
+  std::vector<int> indices = ranges::views::ints(0, size) | ranges::to_vector;
+  SortByAtan2(indices, points);
+  EXPECT_THAT(indices, testing::ElementsAre(5, 4, 2, 1, 0, 3));
 }
 
 TEST(Ring, ExtractAngleSortedRings) {
@@ -75,23 +67,9 @@ TEST(Ring, ExtractAngleSortedRings) {
   points.push_back(PointWithRing{2,  0., -1.});
   points.push_back(PointWithRing{2, -1., -1.});
 
-  auto get_xy = [](const PointWithRing & p) {
-    return std::vector<double>{p.x, p.y};
-  };
-
   const auto rings = ExtractAngleSortedRings(points);
 
-  const auto ring0 = rings.at(0);
-  EXPECT_THAT(get_xy(ring0.at(0)), testing::ElementsAre(1., 0.));
-  EXPECT_THAT(get_xy(ring0.at(1)), testing::ElementsAre(1., 1.));
-
-  const auto ring1 = rings.at(1);
-  EXPECT_THAT(get_xy(ring1.at(0)), testing::ElementsAre(1., -1.));
-  EXPECT_THAT(get_xy(ring1.at(1)), testing::ElementsAre(1.,  0.));
-  EXPECT_THAT(get_xy(ring1.at(2)), testing::ElementsAre(0.,  1.));
-
-  const auto ring2 = rings.at(2);
-  EXPECT_THAT(get_xy(ring2.at(0)), testing::ElementsAre(-1.,  -1.));
-  EXPECT_THAT(get_xy(ring2.at(1)), testing::ElementsAre( 0.,  -1.));
-  EXPECT_THAT(get_xy(ring2.at(2)), testing::ElementsAre( 1.,   1.));
+  EXPECT_THAT(rings.at(0), testing::ElementsAre(1, 0));
+  EXPECT_THAT(rings.at(1), testing::ElementsAre(2, 3, 4));
+  EXPECT_THAT(rings.at(2), testing::ElementsAre(7, 6, 5));
 }

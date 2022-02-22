@@ -48,9 +48,9 @@ TEST(Range, Range) {
   cloud.push_back(pcl::PointXYZ(2., -3., 0.));
   cloud.push_back(pcl::PointXYZ(-1., 3., 0.));
 
-  ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+  const MappedPoints ref_points(cloud, irange(cloud.size()));
+  const Range<pcl::PointXYZ> range(ref_points);
 
-  Range<pcl::PointXYZ> range(ref_points);
   EXPECT_EQ(range(0), norm(cloud.at(0)));
   EXPECT_EQ(range(0, 4).size(), static_cast<std::uint32_t>(4));
 

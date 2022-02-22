@@ -19,6 +19,7 @@
 #include "cloud_iterator.hpp"
 #include "curvature_label.hpp"
 #include "curvature.hpp"
+#include "downsample.hpp"
 #include "extraction.hpp"
 #include "index_range.hpp"
 #include "mask.hpp"
@@ -93,32 +94,42 @@ private:
       rclcpp::shutdown();
     }
 
-    pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
-    pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
+    RCLCPP_INFO(this->get_logger(), "Ring extraction start");
 
     const auto rings = ExtractAngleSortedRings(*input_points);
 
-    for (const auto & [ring, ref_points] : rings) {
-      const auto labels = AssignLabels<PointXYZIR>(ref_points, n_blocks);
-      ExtractByLabel(edge, ref_points, labels, CurvatureLabel::Edge);
-      ExtractByLabel(surface, ref_points, labels, CurvatureLabel::Surface);
-      // *surface += ExtractSurface(input_points->begin(), surface_leaf_size, labels);
+    RCLCPP_INFO(this->get_logger(), "Ring extraction finished");
+
+    RCLCPP_INFO(this->get_logger(), "Point labeling start");
+
+    pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
+    pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
+
+    for (const auto & [ring, indices] : rings) {
+      RCLCPP_INFO(
+        this->get_logger(),
+        "ring = %d, indices.size() = %ld", ring, indices.size());
+      RCLCPP_INFO(this->get_logger(), "Assign labels");
+      const MappedPoints<PointXYZIR> wrapper(*input_points, indices);
+      const std::vector<CurvatureLabel> labels = AssignLabels<PointXYZIR>(wrapper, n_blocks);
+
+      // RCLCPP_INFO(this->get_logger(), "Extract by label");
+      // ExtractByLabel<PointXYZIR>(edge, wrapper, labels, CurvatureLabel::Edge);
+      // ExtractByLabel<PointXYZIR>(surface, wrapper, labels, CurvatureLabel::Surface);
     }
 
-    /*
-    const pcl::PointCloud<PointXYZIR> filtered = FilterByRange(input_points, range_min, range_max);
-    */
+    RCLCPP_INFO(this->get_logger(), "Point labeling finished");
 
-    // const auto edge_downsampled = downsample<pcl::PointXYZ>(edge, map_edge_leaf_size);
-    // const auto surface_downsampled = downsample<pcl::PointXYZ>(surface, map_surface_leaf_size);
+    /*
+    // const auto edge_downsampled = downsample<PointXYZIR>(edge, map_edge_leaf_size);
+    // const auto surface_downsampled = downsample<PointXYZIR>(surface, map_surface_leaf_size);
 
     const std::string lidar_frame = "base_link";
-    // const auto cloud_edge = toRosMsg(
-    //   *edge_downsampled, cloud_msg->header.stamp, lidar_frame);
-    // const auto cloud_surface = toRosMsg(
-    //   *surface_downsampled, cloud_msg->header.stamp, lidar_frame);
-    // edge_publisher_->publish(cloud_edge);
-    // surface_publisher_->publish(cloud_surface);
+    const auto cloud_edge = toRosMsg(edge, cloud_msg->header.stamp, lidar_frame);
+    const auto cloud_surface = toRosMsg(surface, cloud_msg->header.stamp, lidar_frame);
+    edge_publisher_->publish(cloud_edge);
+    surface_publisher_->publish(cloud_surface);
+    */
   }
 
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;

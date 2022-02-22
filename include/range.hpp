@@ -8,8 +8,9 @@
 #include <vector>
 
 #include "cloud_iterator.hpp"
+#include "iterator.hpp"
 #include "math.hpp"
-#include "reference_wrapper.hpp"
+#include "mapped_points.hpp"
 
 bool IsInInclusiveRange(const double v, const double min, const double max)
 {
@@ -36,12 +37,12 @@ template<typename PointT>
 class Range
 {
 public:
-  explicit Range(const ConstReferenceVector<PointT> & ref_points)
+  explicit Range(const MappedPoints<PointT> & ref_points)
   : ref_points_(ref_points) {}
 
   double operator()(const int index) const
   {
-    const PointT & p = ref_points_.at(index).get();
+    const PointT & p = ref_points_.at(index);
     return XYNorm(p.x, p.y);
   }
 
@@ -55,7 +56,7 @@ public:
   }
 
 private:
-  const ConstReferenceVector<PointT> ref_points_;
+  const MappedPoints<PointT> ref_points_;
 };
 
 #endif  // RANGE_HPP_

@@ -21,7 +21,7 @@ TEST(Mask, FillFromLeft)
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromLeft(1, 4);
 
@@ -36,7 +36,7 @@ TEST(Mask, FillFromLeft)
     cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromLeft(1, 5);
 
@@ -49,7 +49,7 @@ TEST(Mask, FillFromLeft)
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
 
     mask.FillFromLeft(1, 3);
@@ -88,7 +88,7 @@ TEST(Mask, FillFromRight)
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromRight(1, 3);
 
@@ -103,7 +103,7 @@ TEST(Mask, FillFromRight)
     cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromRight(1, 4);
 
@@ -116,7 +116,7 @@ TEST(Mask, FillFromRight)
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
 
     mask.FillFromRight(1, 2);
@@ -156,7 +156,7 @@ TEST(Mask, FillNeighbors)
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillNeighbors(3, 2);
 
@@ -174,7 +174,7 @@ TEST(Mask, FillNeighbors)
     cloud.push_back(pcl::PointXYZ(6.01, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(6.02, 1.0, 0.0));
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillNeighbors(3, 2);
 
@@ -189,7 +189,7 @@ TEST(Mask, FillNeighbors)
       cloud.push_back(pcl::PointXYZ(1.0, 0.0, 0.0));
     }
 
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     EXPECT_THROW(
       try {
@@ -230,7 +230,7 @@ TEST(Mask, MaskOccludedPoints)
     cloud.push_back(pcl::PointXYZ(8.08, 8.0, 0.0));
 
     {
-      ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
@@ -242,7 +242,7 @@ TEST(Mask, MaskOccludedPoints)
     }
 
     {
-      ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
@@ -268,7 +268,7 @@ TEST(Mask, MaskOccludedPoints)
     cloud.push_back(pcl::PointXYZ(4.12, 1.0, 0.0));
 
     {
-      ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
@@ -279,7 +279,7 @@ TEST(Mask, MaskOccludedPoints)
     }
 
     {
-      ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);

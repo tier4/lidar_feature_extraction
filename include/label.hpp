@@ -9,15 +9,17 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <rclcpp/rclcpp.hpp>
+
 #include <vector>
 
 #include "algorithm.hpp"
 #include "curvature.hpp"
 #include "curvature_label.hpp"
 #include "index_range.hpp"
+#include "mapped_points.hpp"
 #include "mask.hpp"
 #include "point_type.hpp"
-#include "reference_wrapper.hpp"
 
 template<typename PointT>
 class Label
@@ -93,7 +95,13 @@ std::vector<CurvatureLabel> AssignLabel(
   const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
   for (int j = 0; j < n_blocks; j++) {
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
-    const std::vector<double> curvature = CalcCurvature(ranges, padding);
+    std::vector<double> curvature;
+
+    try {
+      curvature = CalcCurvature(ranges, padding);
+    } catch (const std::invalid_argument & e) {
+      continue;
+    }
 
     const int expected_size = index_range.End(j) - index_range.Begin(j) - 2 * padding;
     assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
@@ -110,10 +118,10 @@ std::vector<CurvatureLabel> AssignLabel(
 
 template<typename Element>
 std::vector<CurvatureLabel> AssignLabels(
-  const ConstReferenceVector<Element> & ref_points,
+  const MappedPoints<Element> & ref_points,
   const int n_blocks)
 {
-  const int padding = 5;
+  const int padding = 2;
   const int max_edges_per_block = 20;
   const double radian_threshold = 2.0;
   const double distance_diff_threshold = 0.3;
@@ -122,6 +130,7 @@ std::vector<CurvatureLabel> AssignLabels(
   const double surface_threshold = 0.1;
 
   const Neighbor<Element> neighbor(ref_points, radian_threshold);
+
   const Range<Element> range(ref_points);
 
   Mask<Element> mask(ref_points, radian_threshold);

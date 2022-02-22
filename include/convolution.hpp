@@ -26,6 +26,7 @@ std::vector<double> Convolution1D(
     throw std::invalid_argument(s);
   }
 
+  assert(input_size - weight_size + 1 > 0);
   std::vector<double> result(input_size - weight_size + 1);
   for (unsigned int i = 0; i < result.size(); i++) {
     auto iter = input_begin + i;

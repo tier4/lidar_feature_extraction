@@ -12,14 +12,14 @@
 #include "neighbor.hpp"
 #include "range.hpp"
 #include "range_message.hpp"
-#include "reference_wrapper.hpp"
+#include "mapped_points.hpp"
 
 template<typename Element>
 class Mask
 {
 public:
   Mask(
-    const ConstReferenceVector<Element> & ref_points,
+    const MappedPoints<Element> & ref_points,
     const double radian_threshold)
   : mask_(std::vector<bool>(ref_points.size(), false)),
     ref_points_(ref_points),
@@ -55,8 +55,8 @@ public:
     for (int i = begin_index; i < end_index - 1; i++) {
       mask_.at(i) = true;
 
-      const Element & p0 = ref_points_.at(i + 0).get();
-      const Element & p1 = ref_points_.at(i + 1).get();
+      const Element & p0 = ref_points_.at(i + 0);
+      const Element & p1 = ref_points_.at(i + 1);
       if (!IsNeighbor(p0, p1, radian_threshold_)) {
         return;
       }
@@ -80,8 +80,8 @@ public:
     for (int i = end_index; i > begin_index + 1; i--) {
       mask_.at(i) = true;
 
-      const Element & p0 = ref_points_.at(i - 0).get();
-      const Element & p1 = ref_points_.at(i - 1).get();
+      const Element & p0 = ref_points_.at(i - 0);
+      const Element & p1 = ref_points_.at(i - 1);
       if (!IsNeighbor(p0, p1, radian_threshold_)) {
         return;
       }
@@ -125,7 +125,7 @@ public:
 
 private:
   std::vector<bool> mask_;
-  const ConstReferenceVector<Element> ref_points_;
+  const MappedPoints<Element> ref_points_;
   const double radian_threshold_;
 };
 

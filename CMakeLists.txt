@@ -3,7 +3,7 @@ project(lidar_feature_extraction)
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O3 -Wall -g -pthread --coverage")
+set(CMAKE_CXX_FLAGS "-g -Wall -Wextra -Wpedantic")  #  -Werror")
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 
 find_package(ament_cmake_auto REQUIRED)
@@ -18,6 +18,8 @@ target_link_libraries(${PROJECT_NAME} fmt)
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
   string(REGEX REPLACE ".cpp" "" test_name ${filename})
+
+  message("test_name = ${test_name}")
 
   ament_add_gmock(${test_name} ${filepath})
   target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

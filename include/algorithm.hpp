@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "iterator.hpp"
+
 template<typename T>
 class by_value
 {
@@ -28,8 +30,7 @@ private:
 template<typename T>
 std::vector<int> Argsort(const std::vector<T> & values)
 {
-  const int size = static_cast<int>(values.size());
-  std::vector<int> indices = ranges::views::ints(0, size) | ranges::to_vector;
+  std::vector<int> indices = irange(values.size());
   std::sort(indices.begin(), indices.end(), by_value(values));
   return indices;
 }

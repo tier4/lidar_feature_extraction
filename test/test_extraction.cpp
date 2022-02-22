@@ -9,7 +9,8 @@
 
 #include "curvature_label.hpp"
 #include "extraction.hpp"
-#include "reference_wrapper.hpp"
+#include "iterator.hpp"
+#include "mapped_points.hpp"
 
 TEST(Extraction, ExtractByLabel)
 {
@@ -19,7 +20,8 @@ TEST(Extraction, ExtractByLabel)
   input_cloud->push_back(pcl::PointXYZ{0., 1., 0.});
   input_cloud->push_back(pcl::PointXYZ{0., 1., 1.});
 
-  ConstReferenceVector<pcl::PointXYZ> input_ref_points(input_cloud->begin(), input_cloud->end());
+  const std::vector<int> indices = irange(input_cloud->size());
+  const MappedPoints input_ref_points(*input_cloud, indices);
 
   auto to_vector = [](const pcl::PointXYZ & p) {
     return std::vector<double>{p.x, p.y, p.z};

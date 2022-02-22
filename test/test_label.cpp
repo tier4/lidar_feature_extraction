@@ -25,7 +25,7 @@ TEST(Label, Label)
   const std::vector<double> curvature{0.3, 0.2, 1.0, 0.2, 0.1, 0.3};
 
   {
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     ASSERT_EQ(mask.Size(), static_cast<int>(cloud.size()));
     std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
@@ -46,7 +46,7 @@ TEST(Label, Label)
   }
 
   {
-    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
 
