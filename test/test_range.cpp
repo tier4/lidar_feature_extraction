@@ -11,7 +11,7 @@
 template<typename T>
 bool Equal(const T & a, const T & b) {
   return a.x == b.x && a.y == b.y && a.z == b.z;
-};
+}
 
 TEST(Range, IsInInclusiveRange) {
   EXPECT_TRUE(IsInInclusiveRange(3., 1., 5.));
