@@ -97,8 +97,8 @@ public:
       throw std::invalid_argument(s);
     }
 
-    if (index - padding <= 0) {
-      auto s = RangeMessageSmallerThanOrEqualTo(
+    if (index - padding < 0) {
+      auto s = RangeMessageSmallerThan(
         "index - padding", "0", index - padding, 0);
       throw std::invalid_argument(s);
     }

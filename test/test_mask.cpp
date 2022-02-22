@@ -200,11 +200,12 @@ TEST(Mask, FillNeighbors)
       },
       std::invalid_argument);
 
+    mask.FillNeighbors(3, 3);
     EXPECT_THROW(
       try {
-        mask.FillNeighbors(3, 3);
+        mask.FillNeighbors(2, 3);
       } catch (const std::invalid_argument & e) {
-        EXPECT_STREQ("index - padding (which is 0) <= 0 (which is 0)", e.what());
+        EXPECT_STREQ("index - padding (which is -1) < 0 (which is 0)", e.what());
         throw e;
       },
       std::invalid_argument);
