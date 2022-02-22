@@ -137,7 +137,7 @@ void MaskOccludedPoints(
   const int padding,
   const double distance_diff_threshold)
 {
-  for (int i = 0; i < mask.Size() - 1; i++) {
+  for (int i = padding; i < mask.Size() - padding - 1; i++) {
     if (!is_neighbor(i + 0, i + 1)) {
       continue;
     }
@@ -162,7 +162,7 @@ void MaskParallelBeamPoints(
   const double range_ratio_threshold)
 {
   const std::vector<double> ranges = range(0, mask.Size());
-  for (int i = 1; i < mask.Size() - 1; ++i) {
+  for (int i = 1; i < mask.Size() - 1; i++) {
     const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
     const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
 

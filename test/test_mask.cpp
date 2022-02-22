@@ -220,11 +220,13 @@ TEST(Mask, MaskOccludedPoints)
     pcl::PointCloud<pcl::PointXYZ> cloud;
     cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
     cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.02, 2.0, 0.0));  // occlusion
-    cloud.push_back(pcl::PointXYZ(8.03, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.05, 8.0, 0.0));  // discontinuity
-    cloud.push_back(pcl::PointXYZ(8.06, 8.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));  // occlusion
+    cloud.push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.07, 8.0, 0.0));  // discontinuity
+    cloud.push_back(pcl::PointXYZ(8.08, 8.0, 0.0));
 
     {
       ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
@@ -233,7 +235,9 @@ TEST(Mask, MaskOccludedPoints)
       const Range<pcl::PointXYZ> range(ref_points);
       MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 1, distance_threshold);
 
-      EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, false, false, false));
+      EXPECT_THAT(
+        mask.Get(),
+        testing::ElementsAre(false, false, false, false, true, true, false, false, false));
     }
 
     {
@@ -243,19 +247,24 @@ TEST(Mask, MaskOccludedPoints)
       const Range<pcl::PointXYZ> range(ref_points);
       MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 3, distance_threshold);
 
-      EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, true, false, false));
+      EXPECT_THAT(
+        mask.Get(),
+        testing::ElementsAre(false, false, false, false, true, true, true, false, false));
     }
   }
 
   {
     pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(8.00, 8.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.01, 8.0, 0.0));  // discontinuity
-    cloud.push_back(pcl::PointXYZ(8.02, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.03, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));  // occlusion
-    cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.03, 8.0, 0.0));  // discontinuity
+    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.07, 2.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(8.08, 2.0, 0.0));  // occlusion
+    cloud.push_back(pcl::PointXYZ(4.09, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.10, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.11, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(4.12, 1.0, 0.0));
 
     {
       ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
@@ -263,7 +272,9 @@ TEST(Mask, MaskOccludedPoints)
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
       MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 1, distance_threshold);
-      EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, true, true, false, false));
+      EXPECT_THAT(
+        mask.Get(),
+        testing::ElementsAre(false, false, false, false, true, true, false, false, false, false));
     }
 
     {
@@ -271,8 +282,10 @@ TEST(Mask, MaskOccludedPoints)
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 4, distance_threshold);
-      EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, true, false, false));
+      MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 3, distance_threshold);
+      EXPECT_THAT(
+        mask.Get(),
+        testing::ElementsAre(false, false, true, true, true, true, false, false, false, false));
     }
   }
 }
