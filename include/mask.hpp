@@ -41,6 +41,17 @@ public:
 
   void FillFromLeft(const int begin_index, const int end_index)
   {
+    if (end_index > this->Size()) {
+      auto s = RangeMessageLargerThan(
+        "end_index", "this->Size()", end_index, this->Size());
+      throw std::invalid_argument(s);
+    }
+
+    if (begin_index < 0) {
+      auto s = RangeMessageSmallerThan("begin_index", "0", begin_index, 0);
+      throw std::invalid_argument(s);
+    }
+
     for (int i = begin_index; i < end_index - 1; i++) {
       mask_.at(i) = true;
 
@@ -55,6 +66,17 @@ public:
 
   void FillFromRight(const int begin_index, const int end_index)
   {
+    if (end_index >= this->Size()) {
+      auto s = RangeMessageLargerThanOrEqualTo(
+        "end_index", "this->Size()", end_index, this->Size());
+      throw std::invalid_argument(s);
+    }
+
+    if (begin_index < -1) {
+      auto s = RangeMessageSmallerThan("begin_index", "-1", begin_index, -1);
+      throw std::invalid_argument(s);
+    }
+
     for (int i = end_index; i > begin_index + 1; i--) {
       mask_.at(i) = true;
 

@@ -42,6 +42,38 @@ TEST(Mask, FillFromLeft)
 
     EXPECT_THAT(mask.Get(), testing::ElementsAre(false, true, true, false, false));
   }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+
+    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+
+    mask.FillFromLeft(1, 3);
+    EXPECT_THROW(
+      try {
+        mask.FillFromLeft(1, 4);
+      } catch(const std::invalid_argument & e) {
+        EXPECT_STREQ("end_index (which is 4) > this->Size() (which is 3)", e.what());
+        throw e;
+      },
+      std::invalid_argument
+    );
+
+    mask.FillFromLeft(0, 2);
+    EXPECT_THROW(
+      try {
+        mask.FillFromLeft(-1, 2);
+      } catch(const std::invalid_argument & e) {
+        EXPECT_STREQ("begin_index (which is -1) < 0 (which is 0)", e.what());
+        throw e;
+      },
+      std::invalid_argument
+    );
+  }
 }
 
 TEST(Mask, FillFromRight)
@@ -76,6 +108,38 @@ TEST(Mask, FillFromRight)
     mask.FillFromRight(1, 4);
 
     EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, true, true));
+  }
+
+  {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+
+    ConstReferenceVector<pcl::PointXYZ> ref_points(cloud.begin(), cloud.end());
+    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+
+    mask.FillFromRight(1, 2);
+    EXPECT_THROW(
+      try {
+        mask.FillFromRight(1, 3);
+      } catch(const std::invalid_argument & e) {
+        EXPECT_STREQ("end_index (which is 3) >= this->Size() (which is 3)", e.what());
+        throw e;
+      },
+      std::invalid_argument
+    );
+
+    mask.FillFromRight(-1, 2);
+    EXPECT_THROW(
+      try {
+        mask.FillFromRight(-2, 2);
+      } catch(const std::invalid_argument & e) {
+        EXPECT_STREQ("begin_index (which is -2) < -1 (which is -1)", e.what());
+        throw e;
+      },
+      std::invalid_argument
+    );
   }
 }
 
