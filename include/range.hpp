@@ -55,6 +55,11 @@ public:
     return ranges;
   }
 
+  int Size() const
+  {
+    return ref_points_.size();
+  }
+
 private:
   const MappedPoints<PointT> ref_points_;
 };

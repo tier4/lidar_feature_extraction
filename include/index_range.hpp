@@ -15,6 +15,12 @@ public:
   IndexRange(const int start_index, const int end_index, const int n_blocks)
   : start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
   {
+    if (end_index - start_index < n_blocks) {
+      auto s = fmt::format(
+        "end_index - start_index (which is {}) cannot be smaller than n_blocks (which is {}",
+        end_index - start_index, n_blocks);
+      throw std::invalid_argument(s);
+    }
   }
 
   int Begin(const int j) const

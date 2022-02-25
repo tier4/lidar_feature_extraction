@@ -94,6 +94,22 @@ std::vector<CurvatureLabel> AssignLabel(
   std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
   const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
   for (int j = 0; j < n_blocks; j++) {
+    if (index_range.Begin(j) < 0 || range.Size() < index_range.Begin(j)) {
+      RCLCPP_INFO(
+        rclcpp::get_logger("lidar_feature_extraction"),
+        "mask.Size() = %d, n_blocks = %d, padding = %d",
+        mask.Size(), n_blocks, padding);
+      RCLCPP_INFO(
+        rclcpp::get_logger("lidar_feature_extraction"),
+        "index_range.Begin(%d) = %d", j, index_range.Begin(j));
+    }
+
+    if (index_range.End(j) < 0 || range.Size() < index_range.End(j)) {
+      RCLCPP_INFO(
+        rclcpp::get_logger("lidar_feature_extraction"),
+        "index_range.End(%d) = %d", j, index_range.End(j));
+    }
+
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
     std::vector<double> curvature;
 
