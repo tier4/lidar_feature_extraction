@@ -14,14 +14,14 @@ TEST(Mask, FillFromLeft)
   const double radian_threshold = 0.2;
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromLeft(1, 4);
 
@@ -29,14 +29,14 @@ TEST(Mask, FillFromLeft)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(1.00, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(1.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(1.02, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(1.00, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(1.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(1.02, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromLeft(1, 5);
 
@@ -44,12 +44,12 @@ TEST(Mask, FillFromLeft)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
 
     mask.FillFromLeft(1, 3);
@@ -81,14 +81,14 @@ TEST(Mask, FillFromRight)
   const double radian_threshold = 0.2;
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromRight(1, 3);
 
@@ -96,14 +96,14 @@ TEST(Mask, FillFromRight)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(1.00, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(1.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(1.02, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(1.00, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(1.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(1.02, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillFromRight(1, 4);
 
@@ -111,12 +111,12 @@ TEST(Mask, FillFromRight)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
 
     mask.FillFromRight(1, 2);
@@ -148,15 +148,15 @@ TEST(Mask, FillNeighbors)
   const double radian_threshold = 0.2;
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillNeighbors(3, 2);
 
@@ -164,17 +164,17 @@ TEST(Mask, FillNeighbors)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(2.00, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(2.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(6.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(6.02, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(2.00, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(2.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(6.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(6.02, 1.0, 0.0));
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     mask.FillNeighbors(3, 2);
 
@@ -184,12 +184,12 @@ TEST(Mask, FillNeighbors)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
     for (unsigned int i = 0; i < 10; i++) {
-      cloud.push_back(pcl::PointXYZ(1.0, 0.0, 0.0));
+      cloud->push_back(pcl::PointXYZ(1.0, 0.0, 0.0));
     }
 
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     EXPECT_THROW(
       try {
@@ -218,19 +218,19 @@ TEST(Mask, MaskOccludedPoints)
   const double distance_threshold = 2.0;
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));  // occlusion
-    cloud.push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.07, 8.0, 0.0));  // discontinuity
-    cloud.push_back(pcl::PointXYZ(8.08, 8.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(4.00, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.01, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.04, 2.0, 0.0));  // occlusion
+    cloud->push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.07, 8.0, 0.0));  // discontinuity
+    cloud->push_back(pcl::PointXYZ(8.08, 8.0, 0.0));
 
     {
-      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
@@ -242,7 +242,7 @@ TEST(Mask, MaskOccludedPoints)
     }
 
     {
-      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
@@ -255,20 +255,20 @@ TEST(Mask, MaskOccludedPoints)
   }
 
   {
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.push_back(pcl::PointXYZ(8.03, 8.0, 0.0));  // discontinuity
-    cloud.push_back(pcl::PointXYZ(8.04, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.07, 2.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(8.08, 2.0, 0.0));  // occlusion
-    cloud.push_back(pcl::PointXYZ(4.09, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.10, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.11, 1.0, 0.0));
-    cloud.push_back(pcl::PointXYZ(4.12, 1.0, 0.0));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(8.03, 8.0, 0.0));  // discontinuity
+    cloud->push_back(pcl::PointXYZ(8.04, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.07, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.08, 2.0, 0.0));  // occlusion
+    cloud->push_back(pcl::PointXYZ(4.09, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.10, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.11, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(4.12, 1.0, 0.0));
 
     {
-      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
@@ -279,7 +279,7 @@ TEST(Mask, MaskOccludedPoints)
     }
 
     {
-      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud.size()));
+      const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);

@@ -10,11 +10,11 @@
 
 TEST(MappedPoints, MappedPoints)
 {
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(0.0, 0.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 2.0, 0.0));
-  cloud.push_back(pcl::PointXYZ(0.0, 3.0, 0.0));
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(0.0, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 2.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 3.0, 0.0));
 
   const std::vector<int> indices{2, 0, 1, 3, 0, 1};
 

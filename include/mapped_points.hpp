@@ -16,7 +16,9 @@ template<typename Element>
 class MappedPoints
 {
 public:
-  MappedPoints(const pcl::PointCloud<Element> & iter, const std::vector<int> & indices)
+  MappedPoints(
+    const typename pcl::PointCloud<Element>::Ptr & iter,
+    const std::vector<int> & indices)
   : iter_(iter), indices_(indices)
   {
   }
@@ -28,11 +30,11 @@ public:
 
   Element at(const int index) const
   {
-    return iter_.at(indices_.at(index));
+    return iter_->at(indices_.at(index));
   }
 
 private:
-  const pcl::PointCloud<Element> iter_;
+  const typename pcl::PointCloud<Element>::Ptr iter_;
   const std::vector<int> indices_;
 };
 

@@ -106,7 +106,7 @@ private:
 
     for (const auto & [ring, indices] : rings) {
       try {
-        const MappedPoints<PointXYZIR> wrapper(*input_points, indices);
+        const MappedPoints<PointXYZIR> wrapper(input_points, indices);
         const std::vector<CurvatureLabel> labels = AssignLabels<PointXYZIR>(wrapper, n_blocks);
         ExtractByLabel<PointXYZIR>(edge, wrapper, labels, CurvatureLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, wrapper, labels, CurvatureLabel::Surface);

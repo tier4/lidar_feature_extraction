@@ -42,20 +42,20 @@ TEST(Range, Range) {
     return std::sqrt(p.x * p.x + p.y * p.y);
   };
 
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(3., 4., 0.));
-  cloud.push_back(pcl::PointXYZ(1., 1., 0.));
-  cloud.push_back(pcl::PointXYZ(2., -3., 0.));
-  cloud.push_back(pcl::PointXYZ(-1., 3., 0.));
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(3., 4., 0.));
+  cloud->push_back(pcl::PointXYZ(1., 1., 0.));
+  cloud->push_back(pcl::PointXYZ(2., -3., 0.));
+  cloud->push_back(pcl::PointXYZ(-1., 3., 0.));
 
-  const MappedPoints ref_points(cloud, irange(cloud.size()));
+  const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
   const Range<pcl::PointXYZ> range(ref_points);
 
   EXPECT_EQ(range(1, 4).size(), static_cast<std::uint32_t>(3));
   EXPECT_EQ(range(1, 3).size(), static_cast<std::uint32_t>(2));
 
   const std::vector<double> ranges = range(0, 4);
-  for (unsigned int i = 0; i < cloud.size(); i++) {
-    EXPECT_NEAR(ranges.at(i), norm(cloud.at(i)), 1e-7);
+  for (unsigned int i = 0; i < cloud->size(); i++) {
+    EXPECT_NEAR(ranges.at(i), norm(cloud->at(i)), 1e-7);
   }
 }
