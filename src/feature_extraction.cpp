@@ -20,7 +20,6 @@
 #include "curvature_label.hpp"
 #include "curvature.hpp"
 #include "downsample.hpp"
-#include "extraction.hpp"
 #include "index_range.hpp"
 #include "mask.hpp"
 #include "math.hpp"

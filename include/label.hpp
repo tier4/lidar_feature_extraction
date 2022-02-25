@@ -138,4 +138,20 @@ std::vector<CurvatureLabel> AssignLabels(
     max_edges_per_block, edge_threshold, surface_threshold);
 }
 
+template<typename PointT>
+void ExtractByLabel(
+  typename pcl::PointCloud<PointT>::Ptr output_cloud,
+  const MappedPoints<PointT> & ref_points,
+  const std::vector<CurvatureLabel> & labels,
+  const CurvatureLabel & label)
+{
+  assert(ref_points.size() == static_cast<int>(labels.size()));
+
+  for (unsigned int i = 0; i < labels.size(); i++) {
+    if (labels.at(i) == label) {
+      output_cloud->push_back(ref_points.at(i));
+    }
+  }
+}
+
 #endif  // LABEL_HPP_
