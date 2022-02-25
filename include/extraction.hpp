@@ -19,7 +19,7 @@ void ExtractByLabel(
   const std::vector<CurvatureLabel> & labels,
   const CurvatureLabel & label)
 {
-  assert(ref_points.size() == labels.size());
+  assert(ref_points.size() == static_cast<int>(labels.size()));
 
   for (unsigned int i = 0; i < labels.size(); i++) {
     if (labels.at(i) == label) {
