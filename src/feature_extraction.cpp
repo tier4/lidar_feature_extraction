@@ -106,16 +106,14 @@ private:
     pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
 
     for (const auto & [ring, indices] : rings) {
-      RCLCPP_INFO(
-        this->get_logger(),
-        "ring = %d, indices.size() = %ld", ring, indices.size());
-      RCLCPP_INFO(this->get_logger(), "Assign labels");
-      const MappedPoints<PointXYZIR> wrapper(*input_points, indices);
-      const std::vector<CurvatureLabel> labels = AssignLabels<PointXYZIR>(wrapper, n_blocks);
-
-      // RCLCPP_INFO(this->get_logger(), "Extract by label");
-      // ExtractByLabel<PointXYZIR>(edge, wrapper, labels, CurvatureLabel::Edge);
-      // ExtractByLabel<PointXYZIR>(surface, wrapper, labels, CurvatureLabel::Surface);
+      try {
+        const MappedPoints<PointXYZIR> wrapper(*input_points, indices);
+        const std::vector<CurvatureLabel> labels = AssignLabels<PointXYZIR>(wrapper, n_blocks);
+        ExtractByLabel<PointXYZIR>(edge, wrapper, labels, CurvatureLabel::Edge);
+        ExtractByLabel<PointXYZIR>(surface, wrapper, labels, CurvatureLabel::Surface);
+      } catch (const std::invalid_argument & e) {
+        RCLCPP_WARN(this->get_logger(), e.what());
+      }
     }
 
     RCLCPP_INFO(this->get_logger(), "Point labeling finished");
