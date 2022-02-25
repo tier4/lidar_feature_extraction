@@ -49,8 +49,8 @@ public:
   std::vector<double> operator()(const int begin, const int end) const
   {
     std::vector<double> ranges(end - begin);
-    for (int i = begin; i < end; i++) {
-      ranges[i] = (*this)(i);
+    for (unsigned int i = 0; i < ranges.size(); i++) {
+      ranges.at(i) = (*this)(i);
     }
     return ranges;
   }

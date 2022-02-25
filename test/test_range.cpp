@@ -51,8 +51,8 @@ TEST(Range, Range) {
   const MappedPoints ref_points(cloud, irange(cloud.size()));
   const Range<pcl::PointXYZ> range(ref_points);
 
-  EXPECT_EQ(range(0), norm(cloud.at(0)));
-  EXPECT_EQ(range(0, 4).size(), static_cast<std::uint32_t>(4));
+  EXPECT_EQ(range(1, 4).size(), static_cast<std::uint32_t>(3));
+  EXPECT_EQ(range(1, 3).size(), static_cast<std::uint32_t>(2));
 
   const std::vector<double> ranges = range(0, 4);
   for (unsigned int i = 0; i < cloud.size(); i++) {
