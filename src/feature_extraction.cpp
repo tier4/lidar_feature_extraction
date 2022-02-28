@@ -75,10 +75,6 @@ private:
   {
     const pcl::PointCloud<PointXYZIR>::Ptr input_points = getPointCloud<PointXYZIR>(*cloud_msg);
 
-    RCLCPP_INFO(
-      this->get_logger(), "width = %d, height = %d",
-      input_points->width, input_points->height);
-
     if (!input_points->is_dense) {
       RCLCPP_ERROR(
         this->get_logger(),
@@ -93,13 +89,7 @@ private:
       rclcpp::shutdown();
     }
 
-    RCLCPP_INFO(this->get_logger(), "Ring extraction start");
-
     const auto rings = ExtractAngleSortedRings(*input_points);
-
-    RCLCPP_INFO(this->get_logger(), "Ring extraction finished");
-
-    RCLCPP_INFO(this->get_logger(), "Point labeling start");
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
@@ -114,8 +104,6 @@ private:
         RCLCPP_WARN(this->get_logger(), e.what());
       }
     }
-
-    RCLCPP_INFO(this->get_logger(), "Point labeling finished");
 
     /*
     // const auto edge_downsampled = downsample<PointXYZIR>(edge, map_edge_leaf_size);
