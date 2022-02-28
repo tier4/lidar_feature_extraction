@@ -45,32 +45,33 @@ const int n_blocks = 6;
 //  CPU Params
 const int n_cores = 2;
 
-
 class FeatureExtraction : public rclcpp::Node
 {
 public:
   FeatureExtraction()
-  : Node("lidar_feature_extraction")
+  : Node("lidar_feature_extraction"),
+    cloud_subscriber_(this->create_subscription<sensor_msgs::msg::PointCloud2>(
+        "points_raw", rclcpp::SensorDataQoS().keep_last(1),
+        std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1),
+        this->MakeSubscriptionOption())),
+    edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
+    surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
-    rclcpp::CallbackGroup::SharedPtr main_callback_group;
-    main_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-
-    auto main_sub_opt = rclcpp::SubscriptionOptions();
-    main_sub_opt.callback_group = main_callback_group;
-
-    cloud_subscriber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-      "points_raw", rclcpp::SensorDataQoS().keep_last(1),
-      std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1), main_sub_opt);
-    edge_publisher_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1);
-    surface_publisher_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
   }
 
   ~FeatureExtraction() {}
 
 private:
+  rclcpp::SubscriptionOptions MakeSubscriptionOption()
+  {
+    const rclcpp::CallbackGroup::SharedPtr callback_group =
+      this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    auto main_sub_opt = rclcpp::SubscriptionOptions();
+    main_sub_opt.callback_group = callback_group;
+    return main_sub_opt;
+  }
+
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg)
   {
     const pcl::PointCloud<PointXYZIR>::Ptr input_points = getPointCloud<PointXYZIR>(*cloud_msg);
