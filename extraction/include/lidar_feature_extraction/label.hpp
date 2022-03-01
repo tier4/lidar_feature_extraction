@@ -19,7 +19,8 @@
 #include "index_range.hpp"
 #include "mapped_points.hpp"
 #include "mask.hpp"
-#include "point_type.hpp"
+
+#include "lidar_feature_library/point_type.hpp"
 
 template<typename PointT>
 class Label
