@@ -29,12 +29,15 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <tf2_eigen/tf2_eigen.h>
 #include <Eigen/Geometry>
+
+#include <fmt/core.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
+
+#include <tf2_eigen/tf2_eigen.h>
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -50,9 +53,9 @@
 #include "lidar_feature_library/transform.hpp"
 
 
-using PointCloud2 = sensor_msgs::msg::PointCloud2;
-using PoseStamped = geometry_msgs::msg::PoseStamped;
-using Exact = message_filters::sync_policies::ExactTime<PointCloud2, PointCloud2, PoseStamped>;
+using Exact = message_filters::sync_policies::ExactTime<
+  sensor_msgs::msg::PointCloud2,
+  geometry_msgs::msg::PoseStamped>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
 const rmw_qos_profile_t qos_profile = rclcpp::SensorDataQoS().keep_last(1).get_rmw_qos_profile();
@@ -68,11 +71,15 @@ template<typename T>
 class Map
 {
 public:
+  Map()
+  : map_ptr_(new pcl::PointCloud<T>()) {}
+
   void TransformAdd(
     const Eigen::Affine3d & transform,
     const typename pcl::PointCloud<T>::Ptr & cloud)
   {
-    *map_ptr_ += TransformPointCloud<T>(transform, cloud);
+    const pcl::PointCloud<T> transformed = TransformPointCloud<T>(transform, cloud);
+    *map_ptr_ += transformed;
   }
 
   void Save(const std::string & pcd_filename) const
@@ -86,53 +93,68 @@ public:
 class MapBuilder
 {
 public:
+  MapBuilder()
+  : map_() {}
+
   void Callback(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr & edge_msg,
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr & surface_msg,
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr & cloud_msg,
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
   {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("lidar_feature_mapping"),
+      "Recieved cloud of timestamp %d.%d",
+      cloud_msg->header.stamp.sec,
+      cloud_msg->header.stamp.nanosec);
+
     const Eigen::Affine3d transform = GetAffine(pose_msg->pose);
-    const pcl::PointCloud<PointXYZIR>::Ptr edge_cloud = getPointCloud<PointXYZIR>(*edge_msg);
-    const pcl::PointCloud<PointXYZIR>::Ptr surface_cloud = getPointCloud<PointXYZIR>(*surface_msg);
-    edge_map_.TransformAdd(transform, edge_cloud);
-    surface_map_.TransformAdd(transform, surface_cloud);
+    const pcl::PointCloud<PointXYZIR>::Ptr cloud = getPointCloud<PointXYZIR>(*cloud_msg);
+    map_.TransformAdd(transform, cloud);
   }
 
-  Map<PointXYZIR> edge_map_;
-  Map<PointXYZIR> surface_map_;
+  void SaveMap(const std::string & pcd_filename) const
+  {
+    RCLCPP_INFO(
+      rclcpp::get_logger("lidar_feature_mapping"),
+      "Saving map to %s", pcd_filename.c_str());
+    map_.Save(pcd_filename);
+  }
+
+  Map<PointXYZIR> map_;
 };
 
-class FeatureMapping : public rclcpp::Node
+class MapSubscriber : public rclcpp::Node
 {
 public:
-  explicit FeatureMapping(MapBuilder & builder)
+  MapSubscriber(
+    std::shared_ptr<MapBuilder> & builder,
+    const std::string & cloud_topic_name,
+    const std::string & pose_topic_name)
   : rclcpp::Node("lidar_feature_mapping"),
-    edge_subscriber_(this, "scan_edge", qos_profile),
-    surface_subscriber_(this, "scan_surface", qos_profile),
-    pose_subscriber_(this, "pose", qos_profile)
+    cloud_subscriber_(this, cloud_topic_name, qos_profile),
+    pose_subscriber_(this, pose_topic_name, qos_profile),
+    sync_(std::make_shared<Synchronizer>(Exact(10), cloud_subscriber_, pose_subscriber_))
   {
-    sync_ = std::make_shared<Synchronizer>(
-      Exact(10), edge_subscriber_, surface_subscriber_, pose_subscriber_);
-
     sync_->registerCallback(
-      std::bind(
-        &MapBuilder::Callback, builder,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    RCLCPP_INFO(this->get_logger(), "FeatureMapping constructor called");
+      std::bind(&MapBuilder::Callback, builder, std::placeholders::_1, std::placeholders::_2));
   }
 
 private:
-  message_filters::Subscriber<PointCloud2> edge_subscriber_;
-  message_filters::Subscriber<PointCloud2> surface_subscriber_;
-  message_filters::Subscriber<PoseStamped> pose_subscriber_;
+  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> cloud_subscriber_;
+  message_filters::Subscriber<geometry_msgs::msg::PoseStamped> pose_subscriber_;
   std::shared_ptr<Synchronizer> sync_;
 };
 
 int main(int argc, char * argv[])
 {
-  MapBuilder builder;
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<FeatureMapping>(builder));
+
+  RCLCPP_DEBUG(rclcpp::get_logger("lidar_feature_mapping"), "Start nodes");
+
+  auto edge_map_builder = std::make_shared<MapBuilder>();
+  rclcpp::spin(std::make_shared<MapSubscriber>(edge_map_builder, "scan_edge", "pose"));
+
+  edge_map_builder->SaveMap("edge.pcd");
+
   rclcpp::shutdown();
 
   return 0;
