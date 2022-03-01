@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="input_sensor_points_topic" default="/points_raw" description="Sensor points topic" />
+
+  <arg name="output_scan_edge_topic" default="/scan_edge" description="Scan edge features" />
+  <arg name="output_scan_surface_topic" default="/scan_surface" description="Scan surface features" />
+
+  <arg name="node_name" default="lidar_feature_extraction" />
+
+  <node pkg="lidar_feature_extraction" exec="lidar_feature_extraction" name="$(var node_name)" output="log">
+    <remap from="points_raw" to="$(var input_sensor_points_topic)" />
+
+    <remap from="scan_edge" to="$(var output_scan_edge_topic)" />
+    <remap from="scan_surface" to="$(var output_scan_surface_topic)" />
+  </node>
+</launch>
