@@ -151,9 +151,20 @@ int main(int argc, char * argv[])
   RCLCPP_DEBUG(rclcpp::get_logger("lidar_feature_mapping"), "Start nodes");
 
   auto edge_map_builder = std::make_shared<MapBuilder>();
-  rclcpp::spin(std::make_shared<MapSubscriber>(edge_map_builder, "scan_edge", "pose"));
+  auto surface_map_builder = std::make_shared<MapBuilder>();
+
+  auto edge_sub = std::make_shared<MapSubscriber>(
+    edge_map_builder, "scan_edge", "pose");
+  auto surface_sub = std::make_shared<MapSubscriber>(
+    surface_map_builder, "scan_surface", "pose");
+
+  rclcpp::executors::MultiThreadedExecutor exec;
+  exec.add_node(edge_sub);
+  exec.add_node(surface_sub);
+  exec.spin();
 
   edge_map_builder->SaveMap("edge.pcd");
+  surface_map_builder->SaveMap("surface.pcd");
 
   rclcpp::shutdown();
 
