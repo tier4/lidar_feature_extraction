@@ -6,7 +6,8 @@
 
 #include <vector>
 
-#include "convolution.hpp"
+#include "lidar_feature_extraction/convolution.hpp"
+
 
 TEST(Convolution, Convolution1D) {
   {

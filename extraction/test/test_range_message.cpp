@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "range_message.hpp"
+#include "lidar_feature_extraction/range_message.hpp"
 
 
 TEST(RangeMessage, RangeMessageLargerThanOrEqualTo)

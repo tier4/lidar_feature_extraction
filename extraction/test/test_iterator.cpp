@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "iterator.hpp"
+#include "lidar_feature_extraction/iterator.hpp"
 
 
 TEST(Iterator, Irange)

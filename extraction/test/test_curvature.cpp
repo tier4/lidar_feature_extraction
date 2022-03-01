@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "curvature.hpp"
+#include "lidar_feature_extraction/curvature.hpp"
 
 TEST(Curvature, MakeWeight)
 {

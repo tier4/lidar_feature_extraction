@@ -7,7 +7,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include "index_range.hpp"
+#include "lidar_feature_extraction/index_range.hpp"
+
 
 TEST(IndexRange, IndexRange)
 {

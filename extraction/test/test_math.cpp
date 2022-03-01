@@ -4,7 +4,8 @@
 
 #include <gmock/gmock.h>
 
-#include "math.hpp"
+#include "lidar_feature_extraction/math.hpp"
+
 
 TEST(Math, XYNorm)
 {

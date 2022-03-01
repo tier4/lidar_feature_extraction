@@ -16,16 +16,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include "cloud_iterator.hpp"
-#include "curvature_label.hpp"
-#include "curvature.hpp"
-#include "index_range.hpp"
-#include "mask.hpp"
-#include "math.hpp"
-#include "neighbor.hpp"
-#include "range.hpp"
-#include "ring.hpp"
-#include "label.hpp"
+#include "lidar_feature_extraction/cloud_iterator.hpp"
+#include "lidar_feature_extraction/curvature_label.hpp"
+#include "lidar_feature_extraction/curvature.hpp"
+#include "lidar_feature_extraction/index_range.hpp"
+#include "lidar_feature_extraction/mask.hpp"
+#include "lidar_feature_extraction/math.hpp"
+#include "lidar_feature_extraction/neighbor.hpp"
+#include "lidar_feature_extraction/range.hpp"
+#include "lidar_feature_extraction/ring.hpp"
+#include "lidar_feature_extraction/label.hpp"
 
 #include "lidar_feature_library/ros_msg.hpp"
 

@@ -7,7 +7,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include "mask.hpp"
+#include "lidar_feature_extraction/mask.hpp"
+
 
 TEST(Mask, FillFromLeft)
 {

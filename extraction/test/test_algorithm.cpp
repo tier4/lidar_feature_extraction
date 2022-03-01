@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include "algorithm.hpp"
+#include "lidar_feature_extraction/algorithm.hpp"
 
 
 TEST(Algorithm, Argsort)

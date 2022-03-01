@@ -7,7 +7,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include "label.hpp"
+#include "lidar_feature_extraction/label.hpp"
+
 
 TEST(Label, Label)
 {

@@ -6,7 +6,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include "range.hpp"
+#include "lidar_feature_extraction/range.hpp"
+
 
 template<typename T>
 bool Equal(const T & a, const T & b) {

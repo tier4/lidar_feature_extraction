@@ -6,7 +6,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include "mapped_points.hpp"
+#include "lidar_feature_extraction/mapped_points.hpp"
+
 
 TEST(MappedPoints, MappedPoints)
 {

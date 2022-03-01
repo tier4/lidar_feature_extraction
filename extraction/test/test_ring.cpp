@@ -8,7 +8,8 @@
 
 #include <range/v3/all.hpp>
 
-#include "ring.hpp"
+#include "lidar_feature_extraction/ring.hpp"
+
 
 TEST(Ring, RingIsAvailable)
 {
