@@ -6,7 +6,6 @@
 
   <license>BSD-3 Close</license>
   <maintainer email="takeshi.ishita@tier4.jp">Takeshi Ishita</maintainer>
-  <author>Tixiao Shan</author>
   <author email="shant@mit.edu">Tixiao Shan</author>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
