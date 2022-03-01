@@ -14,6 +14,7 @@
   <depend>eigen</depend>
   <depend>fmt</depend>
   <depend>libpcl-all-dev</depend>
+  <depend>lidar_feature_library</depend>
   <depend>pcl_conversions</depend>
   <depend>pcl_ros</depend>
   <depend>range-v3</depend>

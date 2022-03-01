@@ -19,15 +19,15 @@
 #include "cloud_iterator.hpp"
 #include "curvature_label.hpp"
 #include "curvature.hpp"
-#include "downsample.hpp"
 #include "index_range.hpp"
 #include "mask.hpp"
 #include "math.hpp"
 #include "neighbor.hpp"
 #include "range.hpp"
-#include "ros_msg.hpp"
 #include "ring.hpp"
 #include "label.hpp"
+
+#include "lidar_feature_library/ros_msg.hpp"
 
 //  VLS-128 Lidar Sensor Configuration
 const int N_SCAN = 128;
