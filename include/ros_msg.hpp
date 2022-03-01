@@ -15,20 +15,20 @@
 #include <string>
 
 template<typename T>
-sensor_msgs::msg::PointCloud2 toRosMsg(const pcl::PointCloud<T> & pointcloud)
+sensor_msgs::msg::PointCloud2 toRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
 {
   sensor_msgs::msg::PointCloud2 msg;
-  pcl::toROSMsg(pointcloud, msg);
+  pcl::toROSMsg(*cloud_ptr, msg);
   return msg;
 }
 
 template<typename T>
 sensor_msgs::msg::PointCloud2 toRosMsg(
-  const pcl::PointCloud<T> & pointcloud,
+  const typename pcl::PointCloud<T>::Ptr & cloud_ptr,
   const rclcpp::Time stamp,
   const std::string frame)
 {
-  sensor_msgs::msg::PointCloud2 msg = toRosMsg(pointcloud);
+  sensor_msgs::msg::PointCloud2 msg = toRosMsg<T>(cloud_ptr);
   msg.header.stamp = stamp;
   msg.header.frame_id = frame;
   return msg;

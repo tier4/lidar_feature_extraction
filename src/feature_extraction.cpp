@@ -106,16 +106,11 @@ private:
       }
     }
 
-    /*
-    // const auto edge_downsampled = downsample<PointXYZIR>(edge, map_edge_leaf_size);
-    // const auto surface_downsampled = downsample<PointXYZIR>(surface, map_surface_leaf_size);
-
     const std::string lidar_frame = "base_link";
-    const auto cloud_edge = toRosMsg(edge, cloud_msg->header.stamp, lidar_frame);
-    const auto cloud_surface = toRosMsg(surface, cloud_msg->header.stamp, lidar_frame);
+    const auto cloud_edge = toRosMsg<PointXYZIR>(edge, cloud_msg->header.stamp, lidar_frame);
+    const auto cloud_surface = toRosMsg<PointXYZIR>(surface, cloud_msg->header.stamp, lidar_frame);
     edge_publisher_->publish(cloud_edge);
     surface_publisher_->publish(cloud_surface);
-    */
   }
 
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
