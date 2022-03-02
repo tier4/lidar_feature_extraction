@@ -64,4 +64,46 @@ public:
   typename pcl::PointCloud<T>::Ptr map_ptr_;
 };
 
+class MapBuilder
+{
+public:
+  MapBuilder()
+  : map_() {}
+
+  void Callback(
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr & cloud_msg,
+    const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
+  {
+    const Eigen::Affine3d transform = GetAffine(pose_msg->pose);
+    const pcl::PointCloud<PointXYZIR>::Ptr cloud = getPointCloud<PointXYZIR>(*cloud_msg);
+
+    RCLCPP_INFO(
+      rclcpp::get_logger("lidar_feature_mapping"),
+      "Recieved cloud of size %lu at %d.%d",
+      cloud->size(),
+      cloud_msg->header.stamp.sec,
+      cloud_msg->header.stamp.nanosec);
+
+    map_.TransformAdd(transform, cloud);
+  }
+
+  void SaveMap(const std::string & pcd_filename) const
+  {
+    RCLCPP_INFO(
+      rclcpp::get_logger("lidar_feature_mapping"),
+      "Saving map to %s", pcd_filename.c_str());
+
+    if (map_.IsEmpty()) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("lidar_feature_mapping"),
+        "Map is empty! Quit without exporting to a file");
+      return;
+    }
+
+    map_.Save(pcd_filename);
+  }
+
+  Map<PointXYZIR> map_;
+};
+
 #endif  // MAP_HPP_
