@@ -26,17 +26,42 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef TRANSFORM_HPP_
-#define TRANSFORM_HPP_
+#ifndef MAP_HPP_
+#define MAP_HPP_
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include <string>
+
+#include "lidar_feature_library/transform.hpp"
 
 template<typename T>
-pcl::PointCloud<T> TransformPointCloud(
-  const Eigen::Affine3d & transform,
-  const typename pcl::PointCloud<T>::Ptr & cloud)
+class Map
 {
-  pcl::PointCloud<T> transformed;
-  pcl::transformPointCloud(*cloud, transformed, transform);
-  return transformed;
-}
+public:
+  Map()
+  : map_ptr_(new pcl::PointCloud<T>()) {}
 
-#endif  // TRANSFORM_HPP_
+  void TransformAdd(
+    const Eigen::Affine3d & transform,
+    const typename pcl::PointCloud<T>::Ptr & cloud)
+  {
+    const pcl::PointCloud<T> transformed = TransformPointCloud<T>(transform, cloud);
+    *map_ptr_ += transformed;
+  }
+
+  bool IsEmpty() const
+  {
+    return map_ptr_->size() == 0;
+  }
+
+  void Save(const std::string & pcd_filename) const
+  {
+    pcl::io::savePCDFileASCII(pcd_filename, *map_ptr_);
+  }
+
+  typename pcl::PointCloud<T>::Ptr map_ptr_;
+};
+
+#endif  // MAP_HPP_

@@ -31,8 +31,6 @@
 
 #include <Eigen/Geometry>
 
-#include <fmt/core.h>
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
@@ -50,7 +48,8 @@
 
 #include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
-#include "lidar_feature_library/transform.hpp"
+
+#include "lidar_feature_mapping/map.hpp"
 
 
 using Exact = message_filters::sync_policies::ExactTime<
@@ -59,34 +58,6 @@ using Exact = message_filters::sync_policies::ExactTime<
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
 const rmw_qos_profile_t qos_profile = rclcpp::SensorDataQoS().keep_last(1).get_rmw_qos_profile();
-
-template<typename T>
-class Map
-{
-public:
-  Map()
-  : map_ptr_(new pcl::PointCloud<T>()) {}
-
-  void TransformAdd(
-    const Eigen::Affine3d & transform,
-    const typename pcl::PointCloud<T>::Ptr & cloud)
-  {
-    const pcl::PointCloud<T> transformed = TransformPointCloud<T>(transform, cloud);
-    *map_ptr_ += transformed;
-  }
-
-  bool IsEmpty() const
-  {
-    return map_ptr_->size() == 0;
-  }
-
-  void Save(const std::string & pcd_filename) const
-  {
-    pcl::io::savePCDFileASCII(pcd_filename, *map_ptr_);
-  }
-
-  typename pcl::PointCloud<T>::Ptr map_ptr_;
-};
 
 class MapBuilder
 {
