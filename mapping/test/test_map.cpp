@@ -63,7 +63,6 @@ TEST(Map, TransformAdd)
   EXPECT_THAT(to_vector(loaded.at(2)), testing::ElementsAre(3., 1., 0.));
 }
 
-
 TEST(Map, IsEmpty)
 {
   Map<pcl::PointXYZ> map;
