@@ -26,19 +26,39 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef TRANSFORM_HPP_
-#define TRANSFORM_HPP_
+#include <gmock/gmock.h>
 
-#include <pcl/common/transforms.h>
+#include "lidar_feature_mapping/map.hpp"
 
-template<typename T>
-pcl::PointCloud<T> TransformPointCloud(
-  const Eigen::Affine3d & transform,
-  const typename pcl::PointCloud<T>::Ptr & cloud)
+
+TEST(Map, Map)
 {
-  pcl::PointCloud<T> transformed;
-  pcl::transformPointCloud(*cloud, transformed, transform);
-  return transformed;
-}
+  Map<pcl::PointXYZ> map;
 
-#endif  // TRANSFORM_HPP_
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud0(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud0->push_back(pcl::PointXYZ(0., 1., 0));
+  cloud0->push_back(pcl::PointXYZ(0., 1., 0));
+  const Eigen::Affine3d transform0 = Eigen::Affine3d::Identity();
+
+  map.TransformAdd(transform0, cloud0);
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud1->push_back(pcl::PointXYZ(0., 1., 0));
+  const Eigen::Affine3d transform1(
+    Eigen::Translation3d(3., 0., 0.) * Eigen::Quaterniond::Identity());
+
+  map.TransformAdd(transform1, cloud1);
+
+  map.Save(".__testfile.pcd");
+
+  pcl::PointCloud<pcl::PointXYZ> loaded;
+  const int retval = pcl::io::loadPCDFile<pcl::PointXYZ> (".__testfile.pcd", loaded);
+  ASSERT_EQ(retval, 0);
+
+  auto to_vector = [](const pcl::PointXYZ & p) { return std::vector<double>{p.x, p.y, p.z}; };
+
+  EXPECT_EQ(loaded.size(), static_cast<std::uint32_t>(3));
+  EXPECT_THAT(to_vector(loaded.at(0)), testing::ElementsAre(0., 1., 0.));
+  EXPECT_THAT(to_vector(loaded.at(1)), testing::ElementsAre(0., 1., 0.));
+  EXPECT_THAT(to_vector(loaded.at(2)), testing::ElementsAre(3., 1., 0.));
+}

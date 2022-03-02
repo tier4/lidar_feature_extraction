@@ -35,6 +35,8 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/point_field.hpp>
 
+#include <tf2/convert.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <string>

@@ -35,8 +35,6 @@
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
 
-#include <tf2_eigen/tf2_eigen.h>
-
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <message_filters/subscriber.h>
@@ -45,9 +43,6 @@
 
 #include <memory>
 #include <string>
-
-#include "lidar_feature_library/point_type.hpp"
-#include "lidar_feature_library/ros_msg.hpp"
 
 #include "lidar_feature_mapping/map.hpp"
 

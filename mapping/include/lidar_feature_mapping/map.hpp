@@ -29,12 +29,21 @@
 #ifndef MAP_HPP_
 #define MAP_HPP_
 
+#include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+
+#include <tf2_eigen/tf2_eigen.h>
+
 #include <string>
 
+#include "lidar_feature_library/point_type.hpp"
+#include "lidar_feature_library/ros_msg.hpp"
 #include "lidar_feature_library/transform.hpp"
+
 
 template<typename T>
 class Map
