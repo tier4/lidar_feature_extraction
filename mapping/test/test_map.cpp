@@ -31,7 +31,7 @@
 #include "lidar_feature_mapping/map.hpp"
 
 
-TEST(Map, Map)
+TEST(Map, TransformAdd)
 {
   Map<pcl::PointXYZ> map;
 
@@ -61,4 +61,19 @@ TEST(Map, Map)
   EXPECT_THAT(to_vector(loaded.at(0)), testing::ElementsAre(0., 1., 0.));
   EXPECT_THAT(to_vector(loaded.at(1)), testing::ElementsAre(0., 1., 0.));
   EXPECT_THAT(to_vector(loaded.at(2)), testing::ElementsAre(3., 1., 0.));
+}
+
+
+TEST(Map, IsEmpty)
+{
+  Map<pcl::PointXYZ> map;
+
+  EXPECT_TRUE(map.IsEmpty());
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(0., 0., 0));
+
+  map.TransformAdd(Eigen::Affine3d::Identity(), cloud);
+
+  EXPECT_FALSE(map.IsEmpty());
 }
