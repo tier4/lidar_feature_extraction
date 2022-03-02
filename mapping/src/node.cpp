@@ -82,6 +82,11 @@ public:
     *map_ptr_ += transformed;
   }
 
+  bool IsEmpty() const
+  {
+    return map_ptr_->size() == 0;
+  }
+
   void Save(const std::string & pcd_filename) const
   {
     pcl::io::savePCDFileASCII(pcd_filename, *map_ptr_);
@@ -113,6 +118,13 @@ public:
 
   void SaveMap(const std::string & pcd_filename) const
   {
+    if (map_.IsEmpty()) {
+      RCLCPP_WARN(
+        rclcpp::get_logger("lidar_feature_mapping"),
+        "Map is empty! Quit without exporting to a file");
+      return;
+    }
+
     RCLCPP_INFO(
       rclcpp::get_logger("lidar_feature_mapping"),
       "Saving map to %s", pcd_filename.c_str());
