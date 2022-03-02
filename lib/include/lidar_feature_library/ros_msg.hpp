@@ -67,4 +67,11 @@ typename pcl::PointCloud<T>::Ptr getPointCloud(const sensor_msgs::msg::PointClou
   return pclcloud;
 }
 
+Eigen::Affine3d GetAffine(const geometry_msgs::msg::Pose & pose)
+{
+  Eigen::Affine3d transform;
+  tf2::fromMsg(pose, transform);
+  return transform;
+}
+
 #endif   // ROS_MSG_HPP_

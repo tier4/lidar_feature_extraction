@@ -60,13 +60,6 @@ using Synchronizer = message_filters::Synchronizer<Exact>;
 
 const rmw_qos_profile_t qos_profile = rclcpp::SensorDataQoS().keep_last(1).get_rmw_qos_profile();
 
-Eigen::Affine3d GetAffine(const geometry_msgs::msg::Pose & pose)
-{
-  Eigen::Affine3d transform;
-  tf2::fromMsg(pose, transform);
-  return transform;
-}
-
 template<typename T>
 class Map
 {
