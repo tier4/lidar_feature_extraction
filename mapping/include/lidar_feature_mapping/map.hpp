@@ -38,6 +38,7 @@
 
 #include <tf2_eigen/tf2_eigen.h>
 
+#include <memory>
 #include <string>
 
 #include "lidar_feature_library/point_type.hpp"
@@ -77,7 +78,7 @@ class MapBuilder
 {
 public:
   MapBuilder()
-  : map_() {}
+  : map_(std::make_shared<Map<PointXYZIR>>()) {}
 
   void Callback(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr & cloud_msg,
@@ -93,7 +94,7 @@ public:
       cloud_msg->header.stamp.sec,
       cloud_msg->header.stamp.nanosec);
 
-    map_.TransformAdd(transform, cloud);
+    map_->TransformAdd(transform, cloud);
   }
 
   void SaveMap(const std::string & pcd_filename) const
@@ -102,17 +103,17 @@ public:
       rclcpp::get_logger("lidar_feature_mapping"),
       "Saving map to %s", pcd_filename.c_str());
 
-    if (map_.IsEmpty()) {
+    if (map_->IsEmpty()) {
       RCLCPP_WARN(
         rclcpp::get_logger("lidar_feature_mapping"),
         "Map is empty! Quit without exporting to a file");
       return;
     }
 
-    map_.Save(pcd_filename);
+    map_->Save(pcd_filename);
   }
 
-  Map<PointXYZIR> map_;
+  std::shared_ptr<Map<PointXYZIR>> map_;
 };
 
 #endif  // MAP_HPP_
