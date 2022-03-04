@@ -36,7 +36,7 @@
 #include <sensor_msgs/msg/point_field.hpp>
 
 #include <tf2/convert.h>
-
+#include <tf2_eigen/tf2_eigen.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <string>
