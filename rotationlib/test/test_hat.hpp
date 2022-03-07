@@ -30,7 +30,7 @@
 
 TEST(Hat, Hat)
 {
-  const Eigen::Matrix3d K = rotationlib::hat([1, 2, 3]);
+  const Eigen::Matrix3d K = rotationlib::Hat([1, 2, 3]);
   Eigen::Matrix3d expected;
   expected <<
     0., -3., 2.,
