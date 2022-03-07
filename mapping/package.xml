@@ -3,7 +3,7 @@
 <package format="3">
   <name>lidar_feature_mapping</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Tool to build a lidar-feature map</description>
   <maintainer email="ishitah.takeshi@gmail.com">sonicair</maintainer>
   <license>BSD-3 Close</license>
 
