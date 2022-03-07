@@ -26,6 +26,11 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef ROTATIONLIB_HAT_HPP_
+#define ROTATIONLIB_HAT_HPP_
+
+#include <eigen3/Eigen/Core>
+
 namespace rotationlib
 {
 
@@ -40,3 +45,5 @@ Eigen::Matrix3d Hat(const Eigen::Vector3d & v)
 }
 
 }  // namespace rotationlib
+
+#endif  // ROTATIONLIB_HAT_HPP_
