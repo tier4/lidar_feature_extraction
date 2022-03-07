@@ -5,6 +5,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(BUILD_TESTING ON)
+
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 
@@ -17,9 +19,10 @@ function(add_testcase filepath)
   ament_add_gmock(${test_name} ${filepath})
   target_include_directories(${test_name} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/jacobian/include)
+    ${CMAKE_CURRENT_SOURCE_DIR}/testlib)
   ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
 endfunction()
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -31,7 +34,9 @@ if(BUILD_TESTING)
 
   ament_lint_auto_find_test_dependencies()
 
-  file(GLOB SOURCE_AND_HEADER src/* include/*)
+  file(GLOB_RECURSE SOURCE_AND_HEADER src/* include/*)
+
+  message("SOURCE_AND_HEADER = ${SOURCE_AND_HEADER}")
 
   find_package(ament_cmake_cpplint)
   ament_cpplint(${SOURCE_AND_HEADER})
@@ -39,7 +44,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${SOURCE_AND_HEADER})
 
-  file(GLOB TEST_FILES test/*)
+  file(GLOB_RECURSE TEST_FILES test/*)
   foreach(filepath ${TEST_FILES})
     add_testcase(${filepath})
   endforeach()
