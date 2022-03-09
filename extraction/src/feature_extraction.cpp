@@ -115,6 +115,14 @@ private:
       rclcpp::shutdown();
     }
 
+    const int padding = 5;
+    const int max_edges_per_block = 20;
+    const double radian_threshold = 2.0;
+    const double distance_diff_threshold = 0.3;
+    const double range_ratio_threshold = 0.02;
+    const double edge_threshold = 0.1;
+    const double surface_threshold = 0.1;
+
     const auto rings = ExtractAngleSortedRings(*input_points);
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
@@ -122,10 +130,21 @@ private:
 
     for (const auto & [ring, indices] : rings) {
       try {
-        const MappedPoints<PointXYZIR> wrapper(input_points, indices);
-        const std::vector<CurvatureLabel> labels = AssignLabels<PointXYZIR>(wrapper, n_blocks);
-        ExtractByLabel<PointXYZIR>(edge, wrapper, labels, CurvatureLabel::Edge);
-        ExtractByLabel<PointXYZIR>(surface, wrapper, labels, CurvatureLabel::Surface);
+        const MappedPoints<PointXYZIR> ref_points(input_points, indices);
+
+        const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold);
+        const Range<PointXYZIR> range(ref_points);
+
+        Mask<PointXYZIR> mask(ref_points, radian_threshold);
+        MaskOccludedPoints<PointXYZIR>(mask, neighbor, range, padding, distance_diff_threshold);
+        MaskParallelBeamPoints<PointXYZIR>(mask, range, range_ratio_threshold);
+
+        const std::vector<CurvatureLabel> labels = AssignLabel(
+          mask, range, n_blocks, padding,
+          max_edges_per_block, edge_threshold, surface_threshold);
+
+        ExtractByLabel<PointXYZIR>(edge, ref_points, labels, CurvatureLabel::Edge);
+        ExtractByLabel<PointXYZIR>(surface, ref_points, labels, CurvatureLabel::Surface);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
