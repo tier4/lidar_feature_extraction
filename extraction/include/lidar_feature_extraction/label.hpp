@@ -47,46 +47,39 @@
 
 #include "lidar_feature_library/point_type.hpp"
 
-class Label
-{
-public:
-  explicit Label(const std::vector<double> & curvature)
-  : curvature_(curvature),
-    indices_(Argsort(curvature))
-  {
-  }
-
-protected:
-  const std::vector<double> curvature_;
-  const std::vector<int> indices_;
-};
-
 template<typename PointT>
-class EdgeLabel : public Label
+class EdgeLabel
 {
 public:
   EdgeLabel(
-    const std::vector<double> & curvature,
     const int padding,
     const int offset,
     const double threshold,
     const int n_max_edges)
-  : Label(curvature),
-    padding_(padding),
+  : padding_(padding),
     offset_(offset),
     threshold_(threshold),
     n_max_edges_(n_max_edges)
   {
   }
 
-  void Assign(std::vector<CurvatureLabel> & labels, Mask<PointT> & mask) const
+  void Assign(
+    const std::vector<double> & curvature,
+    std::vector<CurvatureLabel> & labels,
+    Mask<PointT> & mask) const
   {
+    auto is_edge = [&](const int i) {
+        return curvature.at(i) >= threshold_;
+      };
+
+    const std::vector<int> indices = Argsort(curvature);
+
     int n_picked = 0;
-    for (const int index : boost::adaptors::reverse(indices_)) {
+    for (const int index : boost::adaptors::reverse(indices)) {
       if (n_picked >= n_max_edges_) {
         break;
       }
-      if (mask.At(offset_ + index) || !this->IsEdge(index)) {
+      if (mask.At(offset_ + index) || !is_edge(index)) {
         continue;
       }
 
@@ -99,11 +92,6 @@ public:
   }
 
 private:
-  bool IsEdge(const int i) const
-  {
-    return curvature_.at(i) >= threshold_;
-  }
-
   const int padding_;
   const int offset_;
   const double threshold_;
@@ -111,25 +99,32 @@ private:
 };
 
 template<typename PointT>
-class SurfaceLabel : public Label
+class SurfaceLabel
 {
 public:
   SurfaceLabel(
-    const std::vector<double> & curvature,
     const int padding,
     const int offset,
     const double threshold)
-  : Label(curvature),
-    padding_(padding),
+  : padding_(padding),
     offset_(offset),
     threshold_(threshold)
   {
   }
 
-  void Assign(std::vector<CurvatureLabel> & labels, Mask<PointT> & mask) const
+  void Assign(
+    const std::vector<double> & curvature,
+    std::vector<CurvatureLabel> & labels,
+    Mask<PointT> & mask) const
   {
-    for (const int index : indices_) {
-      if (mask.At(offset_ + index) || !this->IsSurface(index)) {
+    auto is_surface = [&](const int i) {
+        return curvature.at(i) <= threshold_;
+      };
+
+    const std::vector<int> indices = Argsort(curvature);
+
+    for (const int index : indices) {
+      if (mask.At(offset_ + index) || !is_surface(index)) {
         continue;
       }
 
@@ -140,11 +135,6 @@ public:
   }
 
 private:
-  bool IsSurface(const int i) const
-  {
-    return curvature_.at(i) <= threshold_;
-  }
-
   const int padding_;
   const int offset_;
   const double threshold_;
@@ -175,10 +165,10 @@ std::vector<CurvatureLabel> AssignLabel(
 
     const int offset = index_range.Begin(j) + padding;
 
-    const EdgeLabel<PointT> edge_label(curvature, padding, offset, edge_threshold, n_max_edges);
-    const SurfaceLabel<PointT> surface_label(curvature, padding, offset, surface_threshold);
-    edge_label.Assign(labels, mask);
-    surface_label.Assign(labels, mask);
+    const EdgeLabel<PointT> edge_label(padding, offset, edge_threshold, n_max_edges);
+    const SurfaceLabel<PointT> surface_label(padding, offset, surface_threshold);
+    edge_label.Assign(curvature, labels, mask);
+    surface_label.Assign(curvature, labels, mask);
   }
 
   return labels;

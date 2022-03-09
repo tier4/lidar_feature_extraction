@@ -30,8 +30,8 @@ TEST(Label, Label)
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     ASSERT_EQ(mask.Size(), static_cast<int>(cloud->size()));
     std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
-    const EdgeLabel<pcl::PointXYZ> label(curvature, padding, offset, edge_threshold, 1);
-    label.Assign(labels, mask);
+    const EdgeLabel<pcl::PointXYZ> label(padding, offset, edge_threshold, 1);
+    label.Assign(curvature, labels, mask);
 
     std::vector<CurvatureLabel> expected_labels(cloud->size(), CurvatureLabel::Default);
     expected_labels.at(4) = CurvatureLabel::Edge;
@@ -51,8 +51,8 @@ TEST(Label, Label)
     Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
     std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
 
-    const SurfaceLabel<pcl::PointXYZ> label(curvature, padding, offset, surface_threshold);
-    label.Assign(labels, mask);
+    const SurfaceLabel<pcl::PointXYZ> label(padding, offset, surface_threshold);
+    label.Assign(curvature, labels, mask);
 
     std::vector<CurvatureLabel> expected_labels(cloud->size(), CurvatureLabel::Default);
     expected_labels.at(6) = CurvatureLabel::Surface;
