@@ -128,6 +128,9 @@ private:
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
 
+    const EdgeLabel<PointXYZIR> edge_label(padding, edge_threshold, max_edges_per_block);
+    const SurfaceLabel<PointXYZIR> surface_label(padding, surface_threshold);
+
     for (const auto & [ring, indices] : rings) {
       try {
         const MappedPoints<PointXYZIR> ref_points(input_points, indices);
@@ -140,8 +143,7 @@ private:
         MaskParallelBeamPoints<PointXYZIR>(mask, range, range_ratio_threshold);
 
         const std::vector<CurvatureLabel> labels = AssignLabel(
-          mask, range, n_blocks, padding,
-          max_edges_per_block, edge_threshold, surface_threshold);
+          mask, range, edge_label, surface_label, n_blocks, padding);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, CurvatureLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, CurvatureLabel::Surface);

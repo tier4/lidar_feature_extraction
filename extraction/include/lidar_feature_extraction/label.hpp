@@ -53,20 +53,19 @@ class EdgeLabel
 public:
   EdgeLabel(
     const int padding,
-    const int offset,
     const double threshold,
     const int n_max_edges)
   : padding_(padding),
-    offset_(offset),
     threshold_(threshold),
     n_max_edges_(n_max_edges)
   {
   }
 
   void Assign(
-    const std::vector<double> & curvature,
     std::vector<CurvatureLabel> & labels,
-    Mask<PointT> & mask) const
+    Mask<PointT> & mask,
+    const std::vector<double> & curvature,
+    const int offset) const
   {
     auto is_edge = [&](const int i) {
         return curvature.at(i) >= threshold_;
@@ -79,13 +78,13 @@ public:
       if (n_picked >= n_max_edges_) {
         break;
       }
-      if (mask.At(offset_ + index) || !is_edge(index)) {
+      if (mask.At(offset + index) || !is_edge(index)) {
         continue;
       }
 
-      labels.at(offset_ + index) = CurvatureLabel::Edge;
+      labels.at(offset + index) = CurvatureLabel::Edge;
 
-      mask.FillNeighbors(offset_ + index, padding_);
+      mask.FillNeighbors(offset + index, padding_);
 
       n_picked++;
     }
@@ -93,7 +92,6 @@ public:
 
 private:
   const int padding_;
-  const int offset_;
   const double threshold_;
   const int n_max_edges_;
 };
@@ -104,18 +102,17 @@ class SurfaceLabel
 public:
   SurfaceLabel(
     const int padding,
-    const int offset,
     const double threshold)
   : padding_(padding),
-    offset_(offset),
     threshold_(threshold)
   {
   }
 
   void Assign(
-    const std::vector<double> & curvature,
     std::vector<CurvatureLabel> & labels,
-    Mask<PointT> & mask) const
+    Mask<PointT> & mask,
+    const std::vector<double> & curvature,
+    const int offset) const
   {
     auto is_surface = [&](const int i) {
         return curvature.at(i) <= threshold_;
@@ -124,19 +121,18 @@ public:
     const std::vector<int> indices = Argsort(curvature);
 
     for (const int index : indices) {
-      if (mask.At(offset_ + index) || !is_surface(index)) {
+      if (mask.At(offset + index) || !is_surface(index)) {
         continue;
       }
 
-      labels.at(offset_ + index) = CurvatureLabel::Surface;
+      labels.at(offset + index) = CurvatureLabel::Surface;
 
-      mask.FillNeighbors(offset_ + index, padding_);
+      mask.FillNeighbors(offset + index, padding_);
     }
   }
 
 private:
   const int padding_;
-  const int offset_;
   const double threshold_;
 };
 
@@ -144,11 +140,10 @@ template<typename PointT>
 std::vector<CurvatureLabel> AssignLabel(
   const Mask<PointT> & input_mask,
   const Range<PointT> & range,
+  const EdgeLabel<PointT> edge_label,
+  const SurfaceLabel<PointT> surface_label,
   const int n_blocks,
-  const int padding,
-  const int n_max_edges,
-  const double edge_threshold,
-  const double surface_threshold)
+  const int padding)
 {
   Mask mask = input_mask;  // copy to make argument const
 
@@ -165,10 +160,8 @@ std::vector<CurvatureLabel> AssignLabel(
 
     const int offset = index_range.Begin(j) + padding;
 
-    const EdgeLabel<PointT> edge_label(padding, offset, edge_threshold, n_max_edges);
-    const SurfaceLabel<PointT> surface_label(padding, offset, surface_threshold);
-    edge_label.Assign(curvature, labels, mask);
-    surface_label.Assign(curvature, labels, mask);
+    edge_label.Assign(labels, mask, curvature, offset);
+    surface_label.Assign(labels, mask, curvature, offset);
   }
 
   return labels;
