@@ -75,6 +75,15 @@ class FeatureExtraction : public rclcpp::Node
 public:
   FeatureExtraction()
   : Node("lidar_feature_extraction"),
+    padding_(this->declare_parameter("convolution_padding", 5)),
+    max_edges_per_block_(this->declare_parameter("max_edges_per_block", 20)),
+    radian_threshold_(this->declare_parameter("radian_threshold", 2.0)),
+    distance_diff_threshold_(this->declare_parameter("distance_diff_threshold", 0.3)),
+    range_ratio_threshold_(this->declare_parameter("range_ratio_threshold", 0.02)),
+    edge_threshold_(this->declare_parameter("edge_threshold", 0.05)),
+    surface_threshold_(this->declare_parameter("surface_threshold", 0.05)),
+    edge_label_(padding_, edge_threshold_, max_edges_per_block_),
+    surface_label_(padding_, surface_threshold_),
     cloud_subscriber_(this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "points_raw", rclcpp::SensorDataQoS().keep_last(1),
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1),
@@ -82,6 +91,8 @@ public:
     edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
     surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
+    RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", edge_threshold_);
+    RCLCPP_INFO(this->get_logger(), "surface_threshold_ : %lf", surface_threshold_);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
   }
 
@@ -115,35 +126,24 @@ private:
       rclcpp::shutdown();
     }
 
-    const int padding = 5;
-    const int max_edges_per_block = 20;
-    const double radian_threshold = 2.0;
-    const double distance_diff_threshold = 0.3;
-    const double range_ratio_threshold = 0.02;
-    const double edge_threshold = 0.1;
-    const double surface_threshold = 0.1;
-
     const auto rings = ExtractAngleSortedRings(*input_points);
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
 
-    const EdgeLabel<PointXYZIR> edge_label(padding, edge_threshold, max_edges_per_block);
-    const SurfaceLabel<PointXYZIR> surface_label(padding, surface_threshold);
-
     for (const auto & [ring, indices] : rings) {
       try {
         const MappedPoints<PointXYZIR> ref_points(input_points, indices);
 
-        const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold);
+        const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
 
-        Mask<PointXYZIR> mask(ref_points, radian_threshold);
-        MaskOccludedPoints<PointXYZIR>(mask, neighbor, range, padding, distance_diff_threshold);
-        MaskParallelBeamPoints<PointXYZIR>(mask, range, range_ratio_threshold);
+        Mask<PointXYZIR> mask(ref_points, radian_threshold_);
+        MaskOccludedPoints<PointXYZIR>(mask, neighbor, range, padding_, distance_diff_threshold_);
+        MaskParallelBeamPoints<PointXYZIR>(mask, range, range_ratio_threshold_);
 
         const std::vector<CurvatureLabel> labels = AssignLabel(
-          mask, range, edge_label, surface_label, n_blocks, padding);
+          mask, range, edge_label_, surface_label_, n_blocks, padding_);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, CurvatureLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, CurvatureLabel::Surface);
@@ -159,6 +159,15 @@ private:
     surface_publisher_->publish(cloud_surface);
   }
 
+  const int padding_;
+  const int max_edges_per_block_;
+  const double radian_threshold_;
+  const double distance_diff_threshold_;
+  const double range_ratio_threshold_;
+  const double edge_threshold_;
+  const double surface_threshold_;
+  const EdgeLabel<PointXYZIR> edge_label_;
+  const SurfaceLabel<PointXYZIR> surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
