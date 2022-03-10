@@ -71,3 +71,17 @@ TEST(OptimizationProblem, PrincipalComponents)
   const Eigen::Vector3d u = eigenvectors.col(2);
   EXPECT_THAT((C * u - lambda * u).norm(), testing::Le(1e-4));
 }
+
+TEST(OptimizationProblem, Center)
+{
+  Eigen::Matrix<double, 2, 3> A;
+  A <<
+      4, 5, 1,
+      2, 0, 4,
+      6, 2, 2,
+      7, 5, 9,
+      0, 7, 7;
+  const Eigen::Vector3d c = Center(A);
+  std::vector<double> v(c.data(), c.data() + c.size());
+  EXPECT_THAT(v, ElementsAre(3.8, 3.8, 4.6));
+}

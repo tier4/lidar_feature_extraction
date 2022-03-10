@@ -188,6 +188,12 @@ std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Ma
   return {solver.eigenvalues(), solver.eigenvectors()};
 }
 
+template<int N>
+Eigen::Vector3d Center(const Eigen::Matrix<double, N, 3> & neighbors)
+{
+  return neighbors.colwise().mean();
+}
+
 std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>
 OptimizationProblem::FromEdge(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
@@ -215,7 +221,8 @@ OptimizationProblem::FromEdge(
       continue;
     }
 
-    coeffs[i] = EdgeCoefficient(p0, neighbors.colwise().mean(), eigenvectors.col(2));
+    const Eigen::Vector3d principal = eigenvectors.col(2);
+    coeffs[i] = EdgeCoefficient(p0, Center(neighbors), principal);
     flags[i] = true;
   }
 
