@@ -29,7 +29,7 @@
 #ifndef MAP_HPP_
 #define MAP_HPP_
 
-#include <pcl/io/pcd_io.h>
+#include <pcl/io/auto_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -68,7 +68,7 @@ public:
 
   void Save(const std::string & pcd_filename) const
   {
-    pcl::io::savePCDFileASCII(pcd_filename, *map_ptr_);
+    pcl::io::save(pcd_filename, *map_ptr_);
   }
 
   typename pcl::PointCloud<T>::Ptr map_ptr_;
