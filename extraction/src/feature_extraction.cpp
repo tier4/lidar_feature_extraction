@@ -82,6 +82,8 @@ public:
     range_ratio_threshold_(this->declare_parameter("range_ratio_threshold", 0.02)),
     edge_threshold_(this->declare_parameter("edge_threshold", 0.05)),
     surface_threshold_(this->declare_parameter("surface_threshold", 0.05)),
+    min_range_(this->declare_parameter("min_range_", 0.1)),
+    max_range_(this->declare_parameter("max_range_", 100.0)),
     edge_label_(padding_, edge_threshold_, max_edges_per_block_),
     surface_label_(padding_, surface_threshold_),
     cloud_subscriber_(this->create_subscription<sensor_msgs::msg::PointCloud2>(
@@ -139,6 +141,7 @@ private:
         const Range<PointXYZIR> range(ref_points);
 
         Mask<PointXYZIR> mask(ref_points, radian_threshold_);
+        MaskOutOfRange(mask, range, min_range_, max_range_);
         MaskOccludedPoints<PointXYZIR>(mask, neighbor, range, padding_, distance_diff_threshold_);
         MaskParallelBeamPoints<PointXYZIR>(mask, range, range_ratio_threshold_);
 
@@ -166,6 +169,8 @@ private:
   const double range_ratio_threshold_;
   const double edge_threshold_;
   const double surface_threshold_;
+  const double min_range_;
+  const double max_range_;
   const EdgeLabel<PointXYZIR> edge_label_;
   const SurfaceLabel<PointXYZIR> surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;

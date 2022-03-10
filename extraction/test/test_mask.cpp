@@ -213,6 +213,27 @@ TEST(Mask, FillNeighbors)
   }
 }
 
+TEST(Mask, MaskOutOfRange)
+{
+  const double radian_threshold = 0.2;
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(1.9, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(2.0, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 5.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 8.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 8.1, 0.0));
+
+  const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+  const Range<pcl::PointXYZ> range(ref_points);
+
+  Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+  MaskOutOfRange(mask, range, 2.0, 8.0);
+  EXPECT_THAT(
+    mask.Get(),
+    testing::ElementsAre(true, false, false, false, true));
+}
+
 TEST(Mask, MaskOccludedPoints)
 {
   const double radian_threshold = 0.2;

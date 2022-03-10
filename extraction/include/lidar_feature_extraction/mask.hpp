@@ -155,6 +155,20 @@ private:
 };
 
 template<typename PointT>
+void MaskOutOfRange(
+  Mask<PointT> & mask,
+  const Range<PointT> & range,
+  const double min_range,
+  const double max_range)
+{
+  for (int i = 0; i < range.Size(); i++) {
+    if (!IsInInclusiveRange(range(i), min_range, max_range)) {
+      mask.Fill(i);
+    }
+  }
+}
+
+template<typename PointT>
 void MaskOccludedPoints(
   Mask<PointT> & mask,
   const Neighbor<PointT> & is_neighbor,
