@@ -23,21 +23,6 @@ TEST(Range, IsInInclusiveRange) {
   EXPECT_FALSE(IsInInclusiveRange(6., 1., 5.));
 }
 
-TEST(Range, FilterByRange) {
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(0., 0., 0));
-  cloud.push_back(pcl::PointXYZ(0., 1., 0));
-  cloud.push_back(pcl::PointXYZ(1., 0., 1));
-  cloud.push_back(pcl::PointXYZ(2., 0., 0));
-  cloud.push_back(pcl::PointXYZ(2., 2., 0));
-
-  const pcl::PointCloud<pcl::PointXYZ> r = FilterByRange(cloud, 1., 2.);
-  EXPECT_EQ(r.size(), static_cast<std::uint32_t>(3));
-  EXPECT_TRUE(Equal(r.at(0), cloud.at(1)));
-  EXPECT_TRUE(Equal(r.at(1), cloud.at(2)));
-  EXPECT_TRUE(Equal(r.at(2), cloud.at(3)));
-}
-
 TEST(Range, Range) {
   auto norm = [](const pcl::PointXYZ & p) {
     return std::sqrt(p.x * p.x + p.y * p.y);
