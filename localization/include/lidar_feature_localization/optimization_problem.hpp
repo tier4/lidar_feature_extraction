@@ -81,19 +81,21 @@ std::vector<int> TrueIndices(const std::vector<bool> & flags)
          ranges::to_vector;
 }
 
-std::vector<Eigen::Vector3d> FilteredCoeffs(
-  const std::vector<int> & indices,
-  const std::vector<Eigen::Vector3d> & coeffs)
+template<typename Iter>
+auto Filter(
+  const std::vector<bool> & flags,
+  const Iter & values)
 {
-  return indices | ranges::views::transform([&](int i) {return coeffs[i];}) | ranges::to_vector;
-}
+  typedef typename Iter::value_type T;
 
-std::vector<Eigen::Vector3d> FilteredPoints(
-  const std::vector<int> & indices,
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud)
-{
-  const auto f = [&](int i) {return GetXYZ(pointcloud->at(i));};
-  return indices | ranges::views::transform(f) | ranges::to_vector;
+  assert(flags.size() == values.size());
+  std::vector<T> filtered;
+  for (unsigned int i = 0; i < flags.size(); i++) {
+    if (flags[i]) {
+      filtered.push_back(values[i]);
+    }
+  }
+  return filtered;
 }
 
 double PointPlaneDistance(const Eigen::Vector3d & w, const Eigen::Vector3d & x)
@@ -194,6 +196,11 @@ Eigen::Vector3d Center(const Eigen::Matrix<double, N, 3> & neighbors)
   return neighbors.colwise().mean();
 }
 
+std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<pcl::PointXYZ> & cloud)
+{
+  return cloud | ranges::views::transform(GetXYZ) | ranges::to_vector;
+}
+
 std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>
 OptimizationProblem::FromEdge(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
@@ -226,9 +233,9 @@ OptimizationProblem::FromEdge(
     flags[i] = true;
   }
 
-  const std::vector<int> indices = TrueIndices(flags);
-  const std::vector<Eigen::Vector3d> points = FilteredPoints(indices, edge_scan);
-  const std::vector<Eigen::Vector3d> coeffs_filtered = FilteredCoeffs(indices, coeffs);
+  const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *edge_scan);
+  const std::vector<Eigen::Vector3d> points = PointCloudToEigen(pcl_points);
+  const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
   const std::vector<double> b(coeffs_filtered.size(), -1.0);
   return {points, coeffs_filtered, b};
 }
@@ -271,11 +278,10 @@ OptimizationProblem::FromSurface(
     flags[i] = true;
   }
 
-  const std::vector<int> indices = TrueIndices(flags);
-  const std::vector<Eigen::Vector3d> points = FilteredPoints(indices, surface_scan);
-  const std::vector<Eigen::Vector3d> coeffs_filtered = FilteredCoeffs(indices, coeffs);
-  const std::vector<double> b_filtered =
-    indices | ranges::views::transform([&](int i) {return b[i];}) | ranges::to_vector;
+  const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *surface_scan);
+  const std::vector<Eigen::Vector3d> points = PointCloudToEigen(pcl_points);
+  const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
+  const std::vector<double> b_filtered = Filter(flags, b);
   return {points, coeffs_filtered, b_filtered};
 }
 
