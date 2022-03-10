@@ -255,7 +255,6 @@ OptimizationProblem::FromSurface(
   std::vector<double> b(surface_scan->size());
   std::vector<bool> flags(surface_scan->size(), false);
 
-  // surface optimization
   for (unsigned int i = 0; i < surface_scan->size(); i++) {
     const Eigen::Vector3d p = point_to_map * GetXYZ(surface_scan->at(i));
     const pcl::PointXYZ q = MakePointXYZ(p);
@@ -291,12 +290,12 @@ OptimizationProblem::Make(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
   const Eigen::Isometry3d & point_to_map) const
 {
-  const auto [edge_points, edge_coeffs, edge_coeffs_b] = FromEdge(edge_scan, point_to_map);
-  const auto [surface_points, surface_coeffs, surface_coeffs_b] = FromSurface(surface_scan, point_to_map);
+  const auto [edge_points, edge_coeffs, edge_b] = FromEdge(edge_scan, point_to_map);
+  const auto [surface_points, surface_coeffs, surface_b] = FromSurface(surface_scan, point_to_map);
 
   const auto points = ranges::views::concat(edge_points, surface_points) | ranges::to_vector;
   const auto coeffs = ranges::views::concat(edge_coeffs, surface_coeffs) | ranges::to_vector;
-  auto b_vector = ranges::views::concat(edge_coeffs_b, surface_coeffs_b) | ranges::to_vector;
+  auto b_vector = ranges::views::concat(edge_b, surface_b) | ranges::to_vector;
 
   assert(points.size() == coeffs.size());
   assert(points.size() == b_vector.size());
