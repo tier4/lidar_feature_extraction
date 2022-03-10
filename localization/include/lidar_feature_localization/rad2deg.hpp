@@ -31,7 +31,7 @@
 #ifndef RAD2DEG_HPP_
 #define RAD2DEG_HPP_
 
-inline Eigen::MatrixXd rad2deg(const Eigen::MatrixXd & x)
+inline Eigen::MatrixXd Rad2Deg(const Eigen::MatrixXd & x)
 {
   return x * (180.0 / M_PI);
 }

@@ -36,7 +36,7 @@
 
 bool CheckConvergence(const Vector7d & dx)
 {
-  const float dr = rad2deg(dx.head(3)).norm();
+  const float dr = Rad2Deg(dx.head(3)).norm();
   const float dt = (100 * dx.tail(3)).norm();
   return dr < 0.05 && dt < 0.05;
 }
@@ -64,7 +64,7 @@ public:
     Vector7d posevec = MakePosevec(initial_pose);
     for (int iter = 0; iter < 30; iter++) {
       const Eigen::Isometry3d pose = MakePose(posevec);
-      const auto [J, b] = problem_.make(edge_xyz, surface_xyz, pose);
+      const auto [J, b] = problem_.Make(edge_xyz, surface_xyz, pose);
       if (J.rows() < 50) {
         continue;
       }

@@ -51,14 +51,9 @@ Eigen::Vector3d GetXYZ(const pcl::PointXYZ & point)
   return Eigen::Vector3d(point.x, point.y, point.z);
 }
 
-pcl::PointXYZ makePointXYZ(const Eigen::Vector3d & v)
+pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v)
 {
   return pcl::PointXYZ(v(0), v(1), v(2));
-}
-
-pcl::PointXYZ transform(const Eigen::Isometry3d & transform, const pcl::PointXYZ & point)
-{
-  return makePointXYZ(transform * GetXYZ(point));
 }
 
 Eigen::MatrixXd Get(
@@ -101,16 +96,16 @@ std::vector<Eigen::Vector3d> FilteredPoints(
   return indices | ranges::views::transform(f) | ranges::to_vector;
 }
 
-double pointPlaneDistance(const Eigen::Vector3d & w, const Eigen::Vector3d & x)
+double PointPlaneDistance(const Eigen::Vector3d & w, const Eigen::Vector3d & x)
 {
   return std::abs(w.dot(x) + 1.0) / w.norm();
 }
 
-bool validatePlane(const Eigen::MatrixXd & X, const Eigen::Vector3d & w)
+bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::Vector3d & w)
 {
   for (int j = 0; j < X.rows(); j++) {
     const Eigen::Vector3d x = X.row(j);
-    if (pointPlaneDistance(w, x) > 0.2) {
+    if (PointPlaneDistance(w, x) > 0.2) {
       return false;
     }
   }
@@ -140,7 +135,7 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const;
 
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> make(
+  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const;
@@ -162,7 +157,7 @@ bool OptimizationProblem::IsDegenerate(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
   const Eigen::Isometry3d & point_to_map) const
 {
-  const auto [J, b] = this->make(edge_scan, surface_scan, point_to_map);
+  const auto [J, b] = this->Make(edge_scan, surface_scan, point_to_map);
   const Eigen::MatrixXd JtJ = J.transpose() * J;
   const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(JtJ);
   const Eigen::VectorXd eigenvalues = es.eigenvalues();
@@ -181,8 +176,8 @@ OptimizationProblem::FromEdge(
   std::vector<bool> flags(edge_scan->size(), false);
 
   for (unsigned int i = 0; i < edge_scan->size(); i++) {
-    const pcl::PointXYZ p = transform(point_to_map, edge_scan->at(i));
-    const auto [indices, squared_distances] = edge_kdtree_.nearestKSearch(p, n_neighbors);
+    const Eigen::Vector3d p0 = point_to_map * GetXYZ(edge_scan->at(i));
+    const auto [indices, squared_distances] = edge_kdtree_.nearestKSearch(MakePointXYZ(p0), n_neighbors);
     if (squared_distances.back() >= 1.0) {
       continue;
     }
@@ -197,7 +192,6 @@ OptimizationProblem::FromEdge(
     }
 
     const Eigen::Vector3d c = neighbors.colwise().mean();
-    const Eigen::Vector3d p0 = GetXYZ(p);
     const Eigen::Vector3d p1 = c + 0.1 * eigenvector;
     const Eigen::Vector3d p2 = c - 0.1 * eigenvector;
 
@@ -239,8 +233,9 @@ OptimizationProblem::FromSurface(
 
   // surface optimization
   for (unsigned int i = 0; i < surface_scan->size(); i++) {
-    const pcl::PointXYZ p = transform(point_to_map, surface_scan->at(i));
-    const auto [indices, squared_distances] = surface_kdtree_.nearestKSearch(p, n_neighbors);
+    const Eigen::Vector3d p = point_to_map * GetXYZ(surface_scan->at(i));
+    const pcl::PointXYZ q = MakePointXYZ(p);
+    const auto [indices, squared_distances] = surface_kdtree_.nearestKSearch(q, n_neighbors);
 
     if (squared_distances.back() >= 1.0) {
       continue;
@@ -249,15 +244,14 @@ OptimizationProblem::FromSurface(
     const Eigen::MatrixXd X = Get(surface_map_, indices);
     const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
 
-    if (!validatePlane(X, w)) {
+    if (!ValidatePlane(X, w)) {
       continue;
     }
 
-    const Eigen::Vector3d q = GetXYZ(p);
     const double norm = w.norm();
 
     coeffs[i] = w / norm;
-    b[i] = -(w.dot(q) + 1.0) / norm;
+    b[i] = -(w.dot(p) + 1.0) / norm;
     flags[i] = true;
   }
 
@@ -270,7 +264,7 @@ OptimizationProblem::FromSurface(
 }
 
 std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-OptimizationProblem::make(
+OptimizationProblem::Make(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
   const Eigen::Isometry3d & point_to_map) const
