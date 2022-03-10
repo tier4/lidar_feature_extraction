@@ -85,3 +85,10 @@ TEST(OptimizationProblem, Center)
   std::vector<double> v(c.data(), c.data() + c.size());
   EXPECT_THAT(v, ElementsAre(3.8, 3.8, 4.6));
 }
+
+TEST(OptimizationProblem, Filter)
+{
+  std::vector<int> a{4, 5, 1, 2, 0};
+  std::vector<bool> flags{true, false, true, true, false};
+  EXPECT_THAT(Filter(flags, a), ElementsAre(4, 1, 2));
+}
