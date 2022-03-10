@@ -36,16 +36,136 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <string>
 #include <vector>
 
 #include "lidar_feature_extraction/algorithm.hpp"
+#include "lidar_feature_extraction/cloud_iterator.hpp"
 #include "lidar_feature_extraction/curvature.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
+#include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
-#include "lidar_feature_extraction/mask.hpp"
+#include "lidar_feature_extraction/neighbor.hpp"
+#include "lidar_feature_extraction/range.hpp"
+#include "lidar_feature_extraction/range_message.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 
 #include "lidar_feature_library/point_type.hpp"
+
+template<typename Element>
+class Label
+{
+public:
+  Label(
+    const MappedPoints<Element> & ref_points,
+    const double radian_threshold)
+  : label_(std::vector<bool>(ref_points.size(), false)),
+    ref_points_(ref_points),
+    radian_threshold_(radian_threshold)
+  {
+  }
+
+  Label(const Label & label)
+  : label_(label.label_),
+    ref_points_(label.ref_points_),
+    radian_threshold_(label.radian_threshold_)
+  {
+  }
+
+  void Fill(const int index)
+  {
+    label_.at(index) = true;
+  }
+
+  void FillFromLeft(const int begin_index, const int end_index)
+  {
+    if (end_index > this->Size()) {
+      auto s = RangeMessageLargerThan(
+        "end_index", "this->Size()", end_index, this->Size());
+      throw std::invalid_argument(s);
+    }
+
+    if (begin_index < 0) {
+      auto s = RangeMessageSmallerThan("begin_index", "0", begin_index, 0);
+      throw std::invalid_argument(s);
+    }
+
+    for (int i = begin_index; i < end_index - 1; i++) {
+      label_.at(i) = true;
+
+      const Element & p0 = ref_points_.at(i + 0);
+      const Element & p1 = ref_points_.at(i + 1);
+      if (!IsNeighbor(p0, p1, radian_threshold_)) {
+        return;
+      }
+    }
+    label_.at(end_index - 1) = true;
+  }
+
+  void FillFromRight(const int begin_index, const int end_index)
+  {
+    if (end_index >= this->Size()) {
+      auto s = RangeMessageLargerThanOrEqualTo(
+        "end_index", "this->Size()", end_index, this->Size());
+      throw std::invalid_argument(s);
+    }
+
+    if (begin_index < -1) {
+      auto s = RangeMessageSmallerThan("begin_index", "-1", begin_index, -1);
+      throw std::invalid_argument(s);
+    }
+
+    for (int i = end_index; i > begin_index + 1; i--) {
+      label_.at(i) = true;
+
+      const Element & p0 = ref_points_.at(i - 0);
+      const Element & p1 = ref_points_.at(i - 1);
+      if (!IsNeighbor(p0, p1, radian_threshold_)) {
+        return;
+      }
+    }
+    label_.at(begin_index + 1) = true;
+  }
+
+  void FillNeighbors(const int index, const int padding)
+  {
+    if (index + padding >= this->Size()) {
+      auto s = RangeMessageLargerThanOrEqualTo(
+        "index + padding", "this->Size()", index + padding, this->Size());
+      throw std::invalid_argument(s);
+    }
+
+    if (index - padding < 0) {
+      auto s = RangeMessageSmallerThan(
+        "index - padding", "0", index - padding, 0);
+      throw std::invalid_argument(s);
+    }
+
+    this->Fill(index);
+    this->FillFromLeft(index + 1, index + 1 + padding);
+    this->FillFromRight(index - padding - 1, index - 1);
+  }
+
+  bool At(const int index) const
+  {
+    return label_.at(index);
+  }
+
+  std::vector<bool> Get() const
+  {
+    return label_;
+  }
+
+  int Size() const
+  {
+    return label_.size();
+  }
+
+private:
+  std::vector<bool> label_;
+  const MappedPoints<Element> ref_points_;
+  const double radian_threshold_;
+};
 
 template<typename PointT>
 class EdgeLabel
@@ -63,7 +183,7 @@ public:
 
   void Assign(
     std::vector<PointLabel> & labels,
-    Mask<PointT> & mask,
+    Label<PointT> & label,
     const std::vector<double> & curvature,
     const int offset) const
   {
@@ -78,13 +198,13 @@ public:
       if (n_picked >= n_max_edges_) {
         break;
       }
-      if (mask.At(offset + index) || !is_edge(index)) {
+      if (label.At(offset + index) || !is_edge(index)) {
         continue;
       }
 
       labels.at(offset + index) = PointLabel::Edge;
 
-      mask.FillNeighbors(offset + index, padding_);
+      label.FillNeighbors(offset + index, padding_);
 
       n_picked++;
     }
@@ -110,7 +230,7 @@ public:
 
   void Assign(
     std::vector<PointLabel> & labels,
-    Mask<PointT> & mask,
+    Label<PointT> & label,
     const std::vector<double> & curvature,
     const int offset) const
   {
@@ -121,13 +241,13 @@ public:
     const std::vector<int> indices = Argsort(curvature);
 
     for (const int index : indices) {
-      if (mask.At(offset + index) || !is_surface(index)) {
+      if (label.At(offset + index) || !is_surface(index)) {
         continue;
       }
 
       labels.at(offset + index) = PointLabel::Surface;
 
-      mask.FillNeighbors(offset + index, padding_);
+      label.FillNeighbors(offset + index, padding_);
     }
   }
 
@@ -137,19 +257,77 @@ private:
 };
 
 template<typename PointT>
+void LabelOutOfRange(
+  Label<PointT> & label,
+  const Range<PointT> & range,
+  const double min_range,
+  const double max_range)
+{
+  for (int i = 0; i < range.Size(); i++) {
+    if (!IsInInclusiveRange(range(i), min_range, max_range)) {
+      label.Fill(i);
+    }
+  }
+}
+
+template<typename PointT>
+void LabelOccludedPoints(
+  Label<PointT> & label,
+  const Neighbor<PointT> & is_neighbor,
+  const Range<PointT> & range,
+  const int padding,
+  const double distance_diff_threshold)
+{
+  for (int i = padding; i < label.Size() - padding - 1; i++) {
+    if (!is_neighbor(i + 0, i + 1)) {
+      continue;
+    }
+
+    const double range0 = range(i + 0);
+    const double range1 = range(i + 1);
+
+    if (range0 > range1 + distance_diff_threshold) {
+      label.FillFromRight(i - padding - 1, i);
+    }
+
+    if (range1 > range0 + distance_diff_threshold) {
+      label.FillFromLeft(i + 1, i + padding + 2);
+    }
+  }
+}
+
+template<typename PointT>
+void LabelParallelBeamPoints(
+  Label<PointT> & label,
+  const Range<PointT> & range,
+  const double range_ratio_threshold)
+{
+  const std::vector<double> ranges = range(0, label.Size());
+  for (int i = 1; i < label.Size() - 1; i++) {
+    const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
+    const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
+
+    if (ratio1 > range_ratio_threshold && ratio2 > range_ratio_threshold) {
+      label.Fill(i);
+    }
+  }
+}
+
+
+template<typename PointT>
 std::vector<PointLabel> AssignLabel(
-  const Mask<PointT> & input_mask,
+  const Label<PointT> & input_label,
   const Range<PointT> & range,
   const EdgeLabel<PointT> edge_label,
   const SurfaceLabel<PointT> surface_label,
   const int n_blocks,
   const int padding)
 {
-  Mask mask = input_mask;  // copy to make argument const
+  Label label = input_label;  // copy to make argument const
 
-  const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
+  const PaddedIndexRange index_range(0, label.Size(), n_blocks, padding);
 
-  std::vector<PointLabel> labels(mask.Size(), PointLabel::Default);
+  std::vector<PointLabel> labels(label.Size(), PointLabel::Default);
 
   for (int j = 0; j < n_blocks; j++) {
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
@@ -160,8 +338,8 @@ std::vector<PointLabel> AssignLabel(
 
     const int offset = index_range.Begin(j) + padding;
 
-    edge_label.Assign(labels, mask, curvature, offset);
-    surface_label.Assign(labels, mask, curvature, offset);
+    edge_label.Assign(labels, label, curvature, offset);
+    surface_label.Assign(labels, label, curvature, offset);
   }
 
   return labels;

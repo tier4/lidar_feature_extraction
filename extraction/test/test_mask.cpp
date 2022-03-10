@@ -7,10 +7,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include "lidar_feature_extraction/mask.hpp"
+#include "lidar_feature_extraction/label.hpp"
 
 
-TEST(Mask, FillFromLeft)
+TEST(Label, FillFromLeft)
 {
   const double radian_threshold = 0.2;
 
@@ -23,10 +23,10 @@ TEST(Mask, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillFromLeft(1, 4);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    label.FillFromLeft(1, 4);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, true, true, true, false));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, true, true, true, false));
   }
 
   {
@@ -38,10 +38,10 @@ TEST(Mask, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillFromLeft(1, 5);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    label.FillFromLeft(1, 5);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, true, true, false, false));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, true, true, false, false));
   }
 
   {
@@ -51,12 +51,12 @@ TEST(Mask, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
 
-    mask.FillFromLeft(1, 3);
+    label.FillFromLeft(1, 3);
     EXPECT_THROW(
       try {
-        mask.FillFromLeft(1, 4);
+        label.FillFromLeft(1, 4);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("end_index (which is 4) > this->Size() (which is 3)", e.what());
         throw e;
@@ -64,10 +64,10 @@ TEST(Mask, FillFromLeft)
       std::invalid_argument
     );
 
-    mask.FillFromLeft(0, 2);
+    label.FillFromLeft(0, 2);
     EXPECT_THROW(
       try {
-        mask.FillFromLeft(-1, 2);
+        label.FillFromLeft(-1, 2);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("begin_index (which is -1) < 0 (which is 0)", e.what());
         throw e;
@@ -77,7 +77,7 @@ TEST(Mask, FillFromLeft)
   }
 }
 
-TEST(Mask, FillFromRight)
+TEST(Label, FillFromRight)
 {
   const double radian_threshold = 0.2;
 
@@ -90,10 +90,10 @@ TEST(Mask, FillFromRight)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillFromRight(1, 3);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    label.FillFromRight(1, 3);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, true, false));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, true, true, false));
   }
 
   {
@@ -105,10 +105,10 @@ TEST(Mask, FillFromRight)
     cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillFromRight(1, 4);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    label.FillFromRight(1, 4);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, true, true));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, false, true, true));
   }
 
   {
@@ -118,12 +118,12 @@ TEST(Mask, FillFromRight)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
 
-    mask.FillFromRight(1, 2);
+    label.FillFromRight(1, 2);
     EXPECT_THROW(
       try {
-        mask.FillFromRight(1, 3);
+        label.FillFromRight(1, 3);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("end_index (which is 3) >= this->Size() (which is 3)", e.what());
         throw e;
@@ -131,10 +131,10 @@ TEST(Mask, FillFromRight)
       std::invalid_argument
     );
 
-    mask.FillFromRight(-1, 2);
+    label.FillFromRight(-1, 2);
     EXPECT_THROW(
       try {
-        mask.FillFromRight(-2, 2);
+        label.FillFromRight(-2, 2);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("begin_index (which is -2) < -1 (which is -1)", e.what());
         throw e;
@@ -144,7 +144,7 @@ TEST(Mask, FillFromRight)
   }
 }
 
-TEST(Mask, FillNeighbors)
+TEST(Label, FillNeighbors)
 {
   const double radian_threshold = 0.2;
 
@@ -158,10 +158,10 @@ TEST(Mask, FillNeighbors)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillNeighbors(3, 2);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    label.FillNeighbors(3, 2);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, true, true, true, true, true));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, true, true, true, true, true));
   }
 
   {
@@ -176,11 +176,11 @@ TEST(Mask, FillNeighbors)
     cloud->push_back(pcl::PointXYZ(6.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    mask.FillNeighbors(3, 2);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    label.FillNeighbors(3, 2);
 
     EXPECT_THAT(
-      mask.Get(),
+      label.Get(),
       testing::ElementsAre(false, false, true, true, true, true, false, false));
   }
 
@@ -191,20 +191,20 @@ TEST(Mask, FillNeighbors)
     }
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
     EXPECT_THROW(
       try {
-        mask.FillNeighbors(7, 3);
+        label.FillNeighbors(7, 3);
       } catch (const std::invalid_argument & e) {
         EXPECT_STREQ("index + padding (which is 10) >= this->Size() (which is 10)", e.what());
         throw e;
       },
       std::invalid_argument);
 
-    mask.FillNeighbors(3, 3);
+    label.FillNeighbors(3, 3);
     EXPECT_THROW(
       try {
-        mask.FillNeighbors(2, 3);
+        label.FillNeighbors(2, 3);
       } catch (const std::invalid_argument & e) {
         EXPECT_STREQ("index - padding (which is -1) < 0 (which is 0)", e.what());
         throw e;
@@ -213,7 +213,7 @@ TEST(Mask, FillNeighbors)
   }
 }
 
-TEST(Mask, MaskOutOfRange)
+TEST(Label, LabelOutOfRange)
 {
   const double radian_threshold = 0.2;
 
@@ -227,14 +227,14 @@ TEST(Mask, MaskOutOfRange)
   const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
   const Range<pcl::PointXYZ> range(ref_points);
 
-  Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-  MaskOutOfRange(mask, range, 2.0, 8.0);
+  Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+  LabelOutOfRange(label, range, 2.0, 8.0);
   EXPECT_THAT(
-    mask.Get(),
+    label.Get(),
     testing::ElementsAre(true, false, false, false, true));
 }
 
-TEST(Mask, MaskOccludedPoints)
+TEST(Label, LabelOccludedPoints)
 {
   const double radian_threshold = 0.2;
   const double distance_threshold = 2.0;
@@ -253,25 +253,25 @@ TEST(Mask, MaskOccludedPoints)
 
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-      Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+      Label<pcl::PointXYZ> label(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 1, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 1, distance_threshold);
 
       EXPECT_THAT(
-        mask.Get(),
+        label.Get(),
         testing::ElementsAre(false, false, false, false, true, true, false, false, false));
     }
 
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-      Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+      Label<pcl::PointXYZ> label(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 3, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 3, distance_threshold);
 
       EXPECT_THAT(
-        mask.Get(),
+        label.Get(),
         testing::ElementsAre(false, false, false, false, true, true, true, false, false));
     }
   }
@@ -291,29 +291,29 @@ TEST(Mask, MaskOccludedPoints)
 
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-      Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+      Label<pcl::PointXYZ> label(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 1, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 1, distance_threshold);
       EXPECT_THAT(
-        mask.Get(),
+        label.Get(),
         testing::ElementsAre(false, false, false, false, true, true, false, false, false, false));
     }
 
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-      Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+      Label<pcl::PointXYZ> label(ref_points, radian_threshold);
       const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      MaskOccludedPoints<pcl::PointXYZ>(mask, neighbor, range, 3, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 3, distance_threshold);
       EXPECT_THAT(
-        mask.Get(),
+        label.Get(),
         testing::ElementsAre(false, false, true, true, true, true, false, false, false, false));
     }
   }
 }
 
-TEST(Mask, MaskParallelBeamPoints)
+TEST(Label, LabelParallelBeamPoints)
 {
   const double radian_threshold = 0.2;
 
@@ -326,19 +326,19 @@ TEST(Mask, MaskParallelBeamPoints)
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
-    MaskParallelBeamPoints(mask, range, 3.0);
+    LabelParallelBeamPoints(label, range, 3.0);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, false, false));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, false, false, false));
   }
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
-    MaskParallelBeamPoints(mask, range, 2.9);
+    LabelParallelBeamPoints(label, range, 2.9);
 
-    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, false, false));
+    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, true, false, false));
   }
 }

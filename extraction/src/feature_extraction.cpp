@@ -44,13 +44,12 @@
 #include "lidar_feature_extraction/cloud_iterator.hpp"
 #include "lidar_feature_extraction/curvature.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
-#include "lidar_feature_extraction/mask.hpp"
+#include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/ring.hpp"
-#include "lidar_feature_extraction/label.hpp"
 
 #include "lidar_feature_library/ros_msg.hpp"
 
@@ -140,13 +139,13 @@ private:
         const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
 
-        Mask<PointXYZIR> mask(ref_points, radian_threshold_);
-        MaskOutOfRange(mask, range, min_range_, max_range_);
-        MaskOccludedPoints(mask, neighbor, range, padding_, distance_diff_threshold_);
-        MaskParallelBeamPoints(mask, range, range_ratio_threshold_);
+        Label<PointXYZIR> label(ref_points, radian_threshold_);
+        LabelOutOfRange(label, range, min_range_, max_range_);
+        LabelOccludedPoints(label, neighbor, range, padding_, distance_diff_threshold_);
+        LabelParallelBeamPoints(label, range, range_ratio_threshold_);
 
         const std::vector<PointLabel> labels = AssignLabel(
-          mask, range, edge_label_, surface_label_, n_blocks, padding_);
+          label, range, edge_label_, surface_label_, n_blocks, padding_);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);

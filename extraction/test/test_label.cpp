@@ -27,43 +27,43 @@ TEST(Label, Label)
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    ASSERT_EQ(mask.Size(), static_cast<int>(cloud->size()));
-    std::vector<PointLabel> labels(mask.Size(), PointLabel::Default);
-    const EdgeLabel<pcl::PointXYZ> label(padding, edge_threshold, 1);
-    label.Assign(labels, mask, curvature, offset);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
+    std::vector<PointLabel> labels(label.Size(), PointLabel::Default);
+    const EdgeLabel<pcl::PointXYZ> edge_label(padding, edge_threshold, 1);
+    edge_label.Assign(labels, label, curvature, offset);
 
     std::vector<PointLabel> expected_labels(cloud->size(), PointLabel::Default);
     expected_labels.at(4) = PointLabel::Edge;
 
-    ASSERT_EQ(mask.Size(), static_cast<int>(cloud->size()));
+    ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
     for (unsigned int i = 0; i < cloud->size(); i++) {
       EXPECT_EQ(labels.at(i), expected_labels.at(i));
     }
 
     EXPECT_THAT(
-      mask.Get(),
+      label.Get(),
       testing::ElementsAre(false, false, true, true, true, true, true, false, false, false));
   }
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
-    std::vector<PointLabel> labels(mask.Size(), PointLabel::Default);
+    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    std::vector<PointLabel> labels(label.Size(), PointLabel::Default);
 
-    const SurfaceLabel<pcl::PointXYZ> label(padding, surface_threshold);
-    label.Assign(labels, mask, curvature, offset);
+    const SurfaceLabel<pcl::PointXYZ> surface_label(padding, surface_threshold);
+    surface_label.Assign(labels, label, curvature, offset);
 
     std::vector<PointLabel> expected_labels(cloud->size(), PointLabel::Default);
     expected_labels.at(6) = PointLabel::Surface;
 
-    ASSERT_EQ(mask.Size(), static_cast<int>(cloud->size()));
+    ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
     for (unsigned int i = 0; i < cloud->size(); i++) {
       EXPECT_EQ(labels.at(i), expected_labels.at(i));
     }
 
     EXPECT_THAT(
-      mask.Get(),
+      label.Get(),
       testing::ElementsAre(false, false, false, false, true, true, true, true, true, false));
   }
 }
