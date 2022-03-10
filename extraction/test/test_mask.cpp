@@ -313,3 +313,32 @@ TEST(Mask, MaskOccludedPoints)
   }
 }
 
+TEST(Mask, MaskParallelBeamPoints)
+{
+  const double radian_threshold = 0.2;
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(8.0, 0.0, 0.0));  // discontinuity
+  cloud->push_back(pcl::PointXYZ(8.0, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(2.0, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(8.0, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(8.0, 0.0, 0.0));
+
+  {
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    const Range<pcl::PointXYZ> range(ref_points);
+    MaskParallelBeamPoints(mask, range, 3.0);
+
+    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, false, false, false));
+  }
+
+  {
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+    Mask<pcl::PointXYZ> mask(ref_points, radian_threshold);
+    const Range<pcl::PointXYZ> range(ref_points);
+    MaskParallelBeamPoints(mask, range, 2.9);
+
+    EXPECT_THAT(mask.Get(), testing::ElementsAre(false, false, true, false, false));
+  }
+}
