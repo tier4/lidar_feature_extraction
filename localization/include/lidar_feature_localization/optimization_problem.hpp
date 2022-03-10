@@ -155,6 +155,13 @@ Eigen::Vector3d EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
   return SolveLinear(X, g);
 }
 
+bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1)
+{
+  const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(C);
+  const Eigen::VectorXd eigenvalues = es.eigenvalues();
+  return (eigenvalues.array().abs() < threshold).any();
+}
+
 class OptimizationProblem
 {
 public:
@@ -175,9 +182,7 @@ public:
   {
     const auto [J, b] = this->Make(edge_scan, surface_scan, point_to_map);
     const Eigen::MatrixXd JtJ = J.transpose() * J;
-    const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(JtJ);
-    const Eigen::VectorXd eigenvalues = es.eigenvalues();
-    return (eigenvalues.array() < 100.0).any();
+    return ::IsDegenerate(JtJ);
   }
 
   std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>

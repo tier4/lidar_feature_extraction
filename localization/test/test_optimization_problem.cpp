@@ -92,3 +92,14 @@ TEST(OptimizationProblem, Filter)
   std::vector<bool> flags{true, false, true, true, false};
   EXPECT_THAT(Filter(flags, a), ElementsAre(4, 1, 2));
 }
+
+TEST(OptimizationProblem, IsDegenerate) {
+  Eigen::Matrix3d C;
+  C << 0.41424324, 0.00859019, 0.48987231,
+       0.00859019, 0.70073226, 0.53176928,
+       0.48987231, 0.53176928, 0.09261140;
+
+  // Eigenvalues of C should be -0.43457688,  0.52137662,  1.12078716
+  EXPECT_TRUE(IsDegenerate(C, 1.));
+  EXPECT_FALSE(IsDegenerate(C, 0.4));
+}
