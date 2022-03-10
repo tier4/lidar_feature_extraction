@@ -40,17 +40,13 @@
 
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
+#include "lidar_feature_localization/math.hpp"
 
 
 const int n_neighbors = 5;
 
 
-inline Eigen::MatrixXd rad2deg(const Eigen::MatrixXd & x)
-{
-  return x * (180.0 / M_PI);
-}
-
-Eigen::Vector3d getXYZ(const pcl::PointXYZ & point)
+Eigen::Vector3d GetXYZ(const pcl::PointXYZ & point)
 {
   return Eigen::Vector3d(point.x, point.y, point.z);
 }
@@ -62,52 +58,46 @@ pcl::PointXYZ makePointXYZ(const Eigen::Vector3d & v)
 
 pcl::PointXYZ transform(const Eigen::Isometry3d & transform, const pcl::PointXYZ & point)
 {
-  return makePointXYZ(transform * getXYZ(point));
+  return makePointXYZ(transform * GetXYZ(point));
 }
 
-Eigen::MatrixXd get(
+Eigen::MatrixXd Get(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud,
   const std::vector<int> & indices)
 {
   Eigen::MatrixXd A(indices.size(), 3);
   for (const auto & [j, index] : ranges::views::enumerate(indices)) {
-    const Eigen::Vector3d p = getXYZ(pointcloud->at(index));
-    A.row(j) = p.transpose();
+    A.row(j) = GetXYZ(pointcloud->at(index)).transpose();
   }
   return A;
 }
 
-Eigen::Matrix3d calcCovariance(const Eigen::MatrixXd & X)
+Eigen::Matrix3d CalcCovariance(const Eigen::MatrixXd & X)
 {
   const Eigen::Vector3d c = X.colwise().mean();
   const Eigen::MatrixXd D = X.rowwise() - c.transpose();
   return D.transpose() * D / X.rows();
 }
 
-Eigen::VectorXd solveLinear(const Eigen::MatrixXd & A, const Eigen::VectorXd & b)
-{
-  return A.householderQr().solve(b);
-}
-
-std::vector<int> trueIndices(const std::vector<bool> & flags)
+std::vector<int> TrueIndices(const std::vector<bool> & flags)
 {
   return ranges::views::iota(0, static_cast<int>(flags.size())) |
          ranges::views::filter([&](int i) {return flags[i];}) |
          ranges::to_vector;
 }
 
-std::vector<Eigen::Vector3d> filteredCoeffs(
+std::vector<Eigen::Vector3d> FilteredCoeffs(
   const std::vector<int> & indices,
   const std::vector<Eigen::Vector3d> & coeffs)
 {
   return indices | ranges::views::transform([&](int i) {return coeffs[i];}) | ranges::to_vector;
 }
 
-std::vector<Eigen::Vector3d> filteredPoints(
+std::vector<Eigen::Vector3d> FilteredPoints(
   const std::vector<int> & indices,
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud)
 {
-  const auto f = [&](int i) {return getXYZ(pointcloud->at(i));};
+  const auto f = [&](int i) {return GetXYZ(pointcloud->at(i));};
   return indices | ranges::views::transform(f) | ranges::to_vector;
 }
 
@@ -197,8 +187,8 @@ OptimizationProblem::FromEdge(
       continue;
     }
 
-    const Eigen::Matrix<double, n_neighbors, 3> neighbors = get(edge_map_, indices);
-    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(calcCovariance(neighbors));
+    const Eigen::Matrix<double, n_neighbors, 3> neighbors = Get(edge_map_, indices);
+    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(CalcCovariance(neighbors));
     const Eigen::Vector3d eigenvalues = solver.eigenvalues();
     const Eigen::Vector3d eigenvector = solver.eigenvectors().col(2);
 
@@ -207,7 +197,7 @@ OptimizationProblem::FromEdge(
     }
 
     const Eigen::Vector3d c = neighbors.colwise().mean();
-    const Eigen::Vector3d p0 = getXYZ(p);
+    const Eigen::Vector3d p0 = GetXYZ(p);
     const Eigen::Vector3d p1 = c + 0.1 * eigenvector;
     const Eigen::Vector3d p2 = c - 0.1 * eigenvector;
 
@@ -225,17 +215,17 @@ OptimizationProblem::FromEdge(
     flags[i] = true;
   }
 
-  const std::vector<int> indices = trueIndices(flags);
-  const std::vector<Eigen::Vector3d> points = filteredPoints(indices, edge_scan);
-  const std::vector<Eigen::Vector3d> coeffs_filtered = filteredCoeffs(indices, coeffs);
+  const std::vector<int> indices = TrueIndices(flags);
+  const std::vector<Eigen::Vector3d> points = FilteredPoints(indices, edge_scan);
+  const std::vector<Eigen::Vector3d> coeffs_filtered = FilteredCoeffs(indices, coeffs);
   const std::vector<double> b(coeffs_filtered.size(), -1.0);
   return {points, coeffs_filtered, b};
 }
 
-Eigen::Vector3d estimatePlaneCoefficients(const Eigen::MatrixXd & X)
+Eigen::Vector3d EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
 {
   const Eigen::VectorXd g = -1.0 * Eigen::VectorXd::Ones(X.rows());
-  return solveLinear(X, g);
+  return SolveLinear(X, g);
 }
 
 std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>
@@ -256,14 +246,14 @@ OptimizationProblem::FromSurface(
       continue;
     }
 
-    const Eigen::MatrixXd X = get(surface_map_, indices);
-    const Eigen::Vector3d w = estimatePlaneCoefficients(X);
+    const Eigen::MatrixXd X = Get(surface_map_, indices);
+    const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
 
     if (!validatePlane(X, w)) {
       continue;
     }
 
-    const Eigen::Vector3d q = getXYZ(p);
+    const Eigen::Vector3d q = GetXYZ(p);
     const double norm = w.norm();
 
     coeffs[i] = w / norm;
@@ -271,9 +261,9 @@ OptimizationProblem::FromSurface(
     flags[i] = true;
   }
 
-  const std::vector<int> indices = trueIndices(flags);
-  const std::vector<Eigen::Vector3d> points = filteredPoints(indices, surface_scan);
-  const std::vector<Eigen::Vector3d> coeffs_filtered = filteredCoeffs(indices, coeffs);
+  const std::vector<int> indices = TrueIndices(flags);
+  const std::vector<Eigen::Vector3d> points = FilteredPoints(indices, surface_scan);
+  const std::vector<Eigen::Vector3d> coeffs_filtered = FilteredCoeffs(indices, coeffs);
   const std::vector<double> b_filtered =
     indices | ranges::views::transform([&](int i) {return b[i];}) | ranges::to_vector;
   return {points, coeffs_filtered, b_filtered};
@@ -281,9 +271,9 @@ OptimizationProblem::FromSurface(
 
 std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
 OptimizationProblem::make(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
-    const Eigen::Isometry3d & point_to_map) const
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
+  const Eigen::Isometry3d & point_to_map) const
 {
   const auto [edge_points, edge_coeffs, edge_coeffs_b] = FromEdge(edge_scan, point_to_map);
   const auto [surface_points, surface_coeffs, surface_coeffs_b] = FromSurface(surface_scan, point_to_map);

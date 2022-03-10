@@ -26,62 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OPTIMIZER_HPP_
-#define OPTIMIZER_HPP_
+#ifndef MATH_HPP_
+#define MATH_HPP_
 
-#include "lidar_feature_localization/matrix_type.hpp"
-#include "lidar_feature_localization/math.hpp"
-#include "lidar_feature_localization/posevec.hpp"
-#include "lidar_feature_localization/rad2deg.hpp"
-
-bool CheckConvergence(const Vector7d & dx)
+Eigen::VectorXd SolveLinear(const Eigen::MatrixXd & A, const Eigen::VectorXd & b)
 {
-  const float dr = rad2deg(dx.head(3)).norm();
-  const float dt = (100 * dx.tail(3)).norm();
-  return dr < 0.05 && dt < 0.05;
+  return A.householderQr().solve(b);
 }
 
-Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
-{
-  const Eigen::MatrixXd JtJ = J.transpose() * J;
-  const Eigen::VectorXd JtB = J.transpose() * b;
-  return SolveLinear(JtJ, JtB);
-}
-
-class Optimizer
-{
-public:
-  explicit Optimizer(const OptimizationProblem & problem)
-  : problem_(problem)
-  {
-  }
-
-  Eigen::Isometry3d Run(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_xyz,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_xyz,
-    const Eigen::Isometry3d & initial_pose) const
-  {
-    Vector7d posevec = MakePosevec(initial_pose);
-    for (int iter = 0; iter < 30; iter++) {
-      const Eigen::Isometry3d pose = MakePose(posevec);
-      const auto [J, b] = problem_.make(edge_xyz, surface_xyz, pose);
-      if (J.rows() < 50) {
-        continue;
-      }
-
-      const Eigen::VectorXd dx = CalcUpdate(J, b);
-
-      posevec += dx;
-
-      if (CheckConvergence(dx)) {
-        break;
-      }
-    }
-    return MakePose(posevec);
-  }
-
-private:
-  const OptimizationProblem problem_;
-};
-
-#endif  // OPTIMIZER_HPP_
+#endif  // MATH_HPP_
