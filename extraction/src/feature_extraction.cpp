@@ -142,8 +142,8 @@ private:
 
         Mask<PointXYZIR> mask(ref_points, radian_threshold_);
         MaskOutOfRange(mask, range, min_range_, max_range_);
-        MaskOccludedPoints<PointXYZIR>(mask, neighbor, range, padding_, distance_diff_threshold_);
-        MaskParallelBeamPoints<PointXYZIR>(mask, range, range_ratio_threshold_);
+        MaskOccludedPoints(mask, neighbor, range, padding_, distance_diff_threshold_);
+        MaskParallelBeamPoints(mask, range, range_ratio_threshold_);
 
         const std::vector<CurvatureLabel> labels = AssignLabel(
           mask, range, edge_label_, surface_label_, n_blocks, padding_);
