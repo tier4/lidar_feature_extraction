@@ -74,7 +74,7 @@ TEST(OptimizationProblem, PrincipalComponents)
 
 TEST(OptimizationProblem, Center)
 {
-  Eigen::Matrix<double, 2, 3> A;
+  Eigen::Matrix<double, 5, 3> A;
   A <<
       4, 5, 1,
       2, 0, 4,
