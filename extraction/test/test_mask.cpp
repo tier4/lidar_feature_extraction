@@ -260,8 +260,6 @@ TEST(Label, FillNeighbors)
 
 TEST(Label, LabelOutOfRange)
 {
-  const double radian_threshold = 0.2;
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(1.9, 0.0, 0.0));
   cloud->push_back(pcl::PointXYZ(2.0, 0.0, 0.0));
@@ -272,7 +270,7 @@ TEST(Label, LabelOutOfRange)
   const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
   const Range<pcl::PointXYZ> range(ref_points);
 
-  Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+  LabelBase label(ref_points.size());
   LabelOutOfRange(label, range, 2.0, 8.0);
   EXPECT_THAT(
     label.Get(),
@@ -403,8 +401,6 @@ TEST(Label, LabelOccludedPoints)
 
 TEST(Label, LabelParallelBeamPoints)
 {
-  const double radian_threshold = 0.2;
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(8.0, 0.0, 0.0));  // discontinuity
   cloud->push_back(pcl::PointXYZ(8.0, 0.0, 0.0));
@@ -414,7 +410,7 @@ TEST(Label, LabelParallelBeamPoints)
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    LabelBase label(ref_points.size());
     const Range<pcl::PointXYZ> range(ref_points);
     LabelParallelBeamPoints(label, range, 3.0);
 
@@ -430,7 +426,7 @@ TEST(Label, LabelParallelBeamPoints)
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    LabelBase label(ref_points.size());
     const Range<pcl::PointXYZ> range(ref_points);
     LabelParallelBeamPoints(label, range, 2.9);
 

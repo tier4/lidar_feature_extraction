@@ -72,8 +72,6 @@ TEST(Label, Label)
 
 TEST(Extraction, ExtractByLabel)
 {
-  const double radian_threshold = 0.2;
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>());
   input_cloud->push_back(pcl::PointXYZ{0., 0., 0.});
   input_cloud->push_back(pcl::PointXYZ{0., 0., 1.});
@@ -88,7 +86,7 @@ TEST(Extraction, ExtractByLabel)
   };
 
   {
-    Label<pcl::PointXYZ> label(input_ref_points, radian_threshold);
+    LabelBase label(input_ref_points.size());
     label.Fill(0, PointLabel::Default);
     label.Fill(1, PointLabel::Edge);
     label.Fill(2, PointLabel::Default);
@@ -102,7 +100,7 @@ TEST(Extraction, ExtractByLabel)
   }
 
   {
-    Label<pcl::PointXYZ> label(input_ref_points, radian_threshold);
+    LabelBase label(input_ref_points.size());
     label.Fill(0, PointLabel::Surface);
     label.Fill(1, PointLabel::Surface);
     label.Fill(2, PointLabel::Default);

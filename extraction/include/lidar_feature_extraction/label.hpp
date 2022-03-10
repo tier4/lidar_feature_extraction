@@ -52,21 +52,58 @@
 
 #include "lidar_feature_library/point_type.hpp"
 
+class LabelBase
+{
+public:
+  explicit LabelBase(const int size)
+  : label_(std::vector<PointLabel>(size, PointLabel::Default))
+  {
+  }
+
+  explicit LabelBase(const LabelBase & label)
+  : label_(label.label_)
+  {
+  }
+
+  void Fill(const int index, const PointLabel & label)
+  {
+    label_.at(index) = label;
+  }
+
+  PointLabel At(const int index) const
+  {
+    return label_.at(index);
+  }
+
+  std::vector<PointLabel> Get() const
+  {
+    return label_;
+  }
+
+  int Size() const
+  {
+    return label_.size();
+  }
+
+protected:
+  std::vector<PointLabel> label_;
+};
+
 template<typename Element>
-class Label
+class Label : public LabelBase
 {
 public:
   Label(
     const MappedPoints<Element> & ref_points,
     const double radian_threshold)
-  : label_(std::vector<PointLabel>(ref_points.size(), PointLabel::Default)),
+  : LabelBase(ref_points.size()),
     ref_points_(ref_points),
     radian_threshold_(radian_threshold)
   {
   }
 
   Label(const Label & label)
-  : label_(label.label_),
+  : LabelBase(label),
     ref_points_(label.ref_points_),
     radian_threshold_(label.radian_threshold_)
   {
@@ -146,23 +183,7 @@ public:
     this->FillFromRight(index - padding - 1, index - 1, label);
   }
 
-  PointLabel At(const int index) const
-  {
-    return label_.at(index);
-  }
-
-  std::vector<PointLabel> Get() const
-  {
-    return label_;
-  }
-
-  int Size() const
-  {
-    return label_.size();
-  }
-
 private:
-  std::vector<PointLabel> label_;
   const MappedPoints<Element> ref_points_;
   const double radian_threshold_;
 };
@@ -254,7 +275,7 @@ private:
 
 template<typename PointT>
 void LabelOutOfRange(
-  Label<PointT> & label,
+  LabelBase & label,
   const Range<PointT> & range,
   const double min_range,
   const double max_range)
@@ -294,7 +315,7 @@ void LabelOccludedPoints(
 
 template<typename PointT>
 void LabelParallelBeamPoints(
-  Label<PointT> & label,
+  LabelBase & label,
   const Range<PointT> & range,
   const double range_ratio_threshold)
 {
@@ -339,7 +360,7 @@ template<typename PointT>
 void ExtractByLabel(
   typename pcl::PointCloud<PointT>::Ptr output_cloud,
   const MappedPoints<PointT> & ref_points,
-  const Label<PointT> & labels,
+  const LabelBase & labels,
   const PointLabel & label)
 {
   assert(ref_points.size() == labels.Size());
