@@ -59,7 +59,7 @@ public:
   Label(
     const MappedPoints<Element> & ref_points,
     const double radian_threshold)
-  : label_(std::vector<bool>(ref_points.size(), false)),
+  : label_(std::vector<PointLabel>(ref_points.size(), PointLabel::Default)),
     ref_points_(ref_points),
     radian_threshold_(radian_threshold)
   {
@@ -72,12 +72,12 @@ public:
   {
   }
 
-  void Fill(const int index)
+  void Fill(const int index, const PointLabel & label)
   {
-    label_.at(index) = true;
+    label_.at(index) = label;
   }
 
-  void FillFromLeft(const int begin_index, const int end_index)
+  void FillFromLeft(const int begin_index, const int end_index, const PointLabel & label)
   {
     if (end_index > this->Size()) {
       auto s = RangeMessageLargerThan(
@@ -91,7 +91,7 @@ public:
     }
 
     for (int i = begin_index; i < end_index - 1; i++) {
-      label_.at(i) = true;
+      label_.at(i) = label;
 
       const Element & p0 = ref_points_.at(i + 0);
       const Element & p1 = ref_points_.at(i + 1);
@@ -99,10 +99,10 @@ public:
         return;
       }
     }
-    label_.at(end_index - 1) = true;
+    label_.at(end_index - 1) = label;
   }
 
-  void FillFromRight(const int begin_index, const int end_index)
+  void FillFromRight(const int begin_index, const int end_index, const PointLabel & label)
   {
     if (end_index >= this->Size()) {
       auto s = RangeMessageLargerThanOrEqualTo(
@@ -116,7 +116,7 @@ public:
     }
 
     for (int i = end_index; i > begin_index + 1; i--) {
-      label_.at(i) = true;
+      label_.at(i) = label;
 
       const Element & p0 = ref_points_.at(i - 0);
       const Element & p1 = ref_points_.at(i - 1);
@@ -124,10 +124,10 @@ public:
         return;
       }
     }
-    label_.at(begin_index + 1) = true;
+    label_.at(begin_index + 1) = label;
   }
 
-  void FillNeighbors(const int index, const int padding)
+  void FillNeighbors(const int index, const int padding, const PointLabel & label)
   {
     if (index + padding >= this->Size()) {
       auto s = RangeMessageLargerThanOrEqualTo(
@@ -141,17 +141,17 @@ public:
       throw std::invalid_argument(s);
     }
 
-    this->Fill(index);
-    this->FillFromLeft(index + 1, index + 1 + padding);
-    this->FillFromRight(index - padding - 1, index - 1);
+    this->Fill(index, label);
+    this->FillFromLeft(index + 1, index + 1 + padding, label);
+    this->FillFromRight(index - padding - 1, index - 1, label);
   }
 
-  bool At(const int index) const
+  PointLabel At(const int index) const
   {
     return label_.at(index);
   }
 
-  std::vector<bool> Get() const
+  std::vector<PointLabel> Get() const
   {
     return label_;
   }
@@ -162,7 +162,7 @@ public:
   }
 
 private:
-  std::vector<bool> label_;
+  std::vector<PointLabel> label_;
   const MappedPoints<Element> ref_points_;
   const double radian_threshold_;
 };
@@ -182,7 +182,6 @@ public:
   }
 
   void Assign(
-    std::vector<PointLabel> & labels,
     Label<PointT> & label,
     const std::vector<double> & curvature,
     const int offset) const
@@ -198,13 +197,12 @@ public:
       if (n_picked >= n_max_edges_) {
         break;
       }
-      if (label.At(offset + index) || !is_edge(index)) {
+      if (label.At(offset + index) != PointLabel::Default || !is_edge(index)) {
         continue;
       }
 
-      labels.at(offset + index) = PointLabel::Edge;
-
-      label.FillNeighbors(offset + index, padding_);
+      label.FillNeighbors(offset + index, padding_, PointLabel::EdgeNeighbor);
+      label.Fill(offset + index, PointLabel::Edge);
 
       n_picked++;
     }
@@ -229,7 +227,6 @@ public:
   }
 
   void Assign(
-    std::vector<PointLabel> & labels,
     Label<PointT> & label,
     const std::vector<double> & curvature,
     const int offset) const
@@ -241,13 +238,12 @@ public:
     const std::vector<int> indices = Argsort(curvature);
 
     for (const int index : indices) {
-      if (label.At(offset + index) || !is_surface(index)) {
+      if (label.At(offset + index) != PointLabel::Default || !is_surface(index)) {
         continue;
       }
 
-      labels.at(offset + index) = PointLabel::Surface;
-
-      label.FillNeighbors(offset + index, padding_);
+      label.FillNeighbors(offset + index, padding_, PointLabel::SurfaceNeighbor);
+      label.Fill(offset + index, PointLabel::Surface);
     }
   }
 
@@ -265,7 +261,7 @@ void LabelOutOfRange(
 {
   for (int i = 0; i < range.Size(); i++) {
     if (!IsInInclusiveRange(range(i), min_range, max_range)) {
-      label.Fill(i);
+      label.Fill(i, PointLabel::OutOfRange);
     }
   }
 }
@@ -287,11 +283,11 @@ void LabelOccludedPoints(
     const double range1 = range(i + 1);
 
     if (range0 > range1 + distance_diff_threshold) {
-      label.FillFromRight(i - padding - 1, i);
+      label.FillFromRight(i - padding - 1, i, PointLabel::Occluded);
     }
 
     if (range1 > range0 + distance_diff_threshold) {
-      label.FillFromLeft(i + 1, i + padding + 2);
+      label.FillFromLeft(i + 1, i + padding + 2, PointLabel::Occluded);
     }
   }
 }
@@ -308,26 +304,22 @@ void LabelParallelBeamPoints(
     const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
 
     if (ratio1 > range_ratio_threshold && ratio2 > range_ratio_threshold) {
-      label.Fill(i);
+      label.Fill(i, PointLabel::ParallelBeam);
     }
   }
 }
 
 
 template<typename PointT>
-std::vector<PointLabel> AssignLabel(
-  const Label<PointT> & input_label,
+void AssignLabel(
+  Label<PointT> & label,
   const Range<PointT> & range,
   const EdgeLabel<PointT> edge_label,
   const SurfaceLabel<PointT> surface_label,
   const int n_blocks,
   const int padding)
 {
-  Label label = input_label;  // copy to make argument const
-
   const PaddedIndexRange index_range(0, label.Size(), n_blocks, padding);
-
-  std::vector<PointLabel> labels(label.Size(), PointLabel::Default);
 
   for (int j = 0; j < n_blocks; j++) {
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
@@ -338,24 +330,22 @@ std::vector<PointLabel> AssignLabel(
 
     const int offset = index_range.Begin(j) + padding;
 
-    edge_label.Assign(labels, label, curvature, offset);
-    surface_label.Assign(labels, label, curvature, offset);
+    edge_label.Assign(label, curvature, offset);
+    surface_label.Assign(label, curvature, offset);
   }
-
-  return labels;
 }
 
 template<typename PointT>
 void ExtractByLabel(
   typename pcl::PointCloud<PointT>::Ptr output_cloud,
   const MappedPoints<PointT> & ref_points,
-  const std::vector<PointLabel> & labels,
+  const Label<PointT> & labels,
   const PointLabel & label)
 {
-  assert(ref_points.size() == static_cast<int>(labels.size()));
+  assert(ref_points.size() == labels.Size());
 
-  for (unsigned int i = 0; i < labels.size(); i++) {
-    if (labels.at(i) == label) {
+  for (int i = 0; i < labels.Size(); i++) {
+    if (labels.At(i) == label) {
       output_cloud->push_back(ref_points.at(i));
     }
   }

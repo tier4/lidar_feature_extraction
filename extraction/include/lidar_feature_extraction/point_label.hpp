@@ -29,12 +29,16 @@
 #ifndef POINT_LABEL_HPP_
 #define POINT_LABEL_HPP_
 
-enum class PointLabel
+enum class PointLabel : uint8_t
 {
-  Default = 0,
-  Edge = 1,
-  Surface = 2,
-  OutOfRange = 3
+  Default,
+  Edge,
+  Surface,
+  EdgeNeighbor,
+  SurfaceNeighbor,
+  OutOfRange,
+  Occluded,
+  ParallelBeam
 };
 
 #endif  // POINT_LABEL_HPP_

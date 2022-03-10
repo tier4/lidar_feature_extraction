@@ -139,16 +139,15 @@ private:
         const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
 
-        Label<PointXYZIR> label(ref_points, radian_threshold_);
+        Label label(ref_points, radian_threshold_);
         LabelOutOfRange(label, range, min_range_, max_range_);
         LabelOccludedPoints(label, neighbor, range, padding_, distance_diff_threshold_);
         LabelParallelBeamPoints(label, range, range_ratio_threshold_);
 
-        const std::vector<PointLabel> labels = AssignLabel(
-          label, range, edge_label_, surface_label_, n_blocks, padding_);
+        AssignLabel(label, range, edge_label_, surface_label_, n_blocks, padding_);
 
-        ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
-        ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
+        ExtractByLabel<PointXYZIR>(edge, ref_points, label, PointLabel::Edge);
+        ExtractByLabel<PointXYZIR>(surface, ref_points, label, PointLabel::Surface);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }

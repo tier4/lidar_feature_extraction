@@ -8,6 +8,7 @@
 #include <pcl/point_types.h>
 
 #include "lidar_feature_extraction/label.hpp"
+#include "lidar_feature_extraction/point_label.hpp"
 
 
 TEST(Label, FillFromLeft)
@@ -23,10 +24,17 @@ TEST(Label, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    label.FillFromLeft(1, 4);
+    Label label(ref_points, radian_threshold);
+    label.FillFromLeft(1, 4, PointLabel::Edge);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, true, true, true, false));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Edge,
+        PointLabel::Edge,
+        PointLabel::Edge,
+        PointLabel::Default));
   }
 
   {
@@ -38,10 +46,17 @@ TEST(Label, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    label.FillFromLeft(1, 5);
+    Label label(ref_points, radian_threshold);
+    label.FillFromLeft(1, 5, PointLabel::Edge);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, true, true, false, false));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Edge,
+        PointLabel::Edge,
+        PointLabel::Default,
+        PointLabel::Default));
   }
 
   {
@@ -53,10 +68,10 @@ TEST(Label, FillFromLeft)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
 
-    label.FillFromLeft(1, 3);
+    label.FillFromLeft(1, 3, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromLeft(1, 4);
+        label.FillFromLeft(1, 4, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("end_index (which is 4) > this->Size() (which is 3)", e.what());
         throw e;
@@ -64,10 +79,10 @@ TEST(Label, FillFromLeft)
       std::invalid_argument
     );
 
-    label.FillFromLeft(0, 2);
+    label.FillFromLeft(0, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromLeft(-1, 2);
+        label.FillFromLeft(-1, 2, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("begin_index (which is -1) < 0 (which is 0)", e.what());
         throw e;
@@ -91,9 +106,16 @@ TEST(Label, FillFromRight)
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    label.FillFromRight(1, 3);
+    label.FillFromRight(1, 3, PointLabel::Edge);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, true, true, false));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Edge,
+        PointLabel::Edge,
+        PointLabel::Default));
   }
 
   {
@@ -106,9 +128,16 @@ TEST(Label, FillFromRight)
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    label.FillFromRight(1, 4);
+    label.FillFromRight(1, 4, PointLabel::Edge);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, false, true, true));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Edge,
+        PointLabel::Edge));
   }
 
   {
@@ -120,10 +149,10 @@ TEST(Label, FillFromRight)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
 
-    label.FillFromRight(1, 2);
+    label.FillFromRight(1, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromRight(1, 3);
+        label.FillFromRight(1, 3, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("end_index (which is 3) >= this->Size() (which is 3)", e.what());
         throw e;
@@ -131,10 +160,10 @@ TEST(Label, FillFromRight)
       std::invalid_argument
     );
 
-    label.FillFromRight(-1, 2);
+    label.FillFromRight(-1, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromRight(-2, 2);
+        label.FillFromRight(-2, 2, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("begin_index (which is -2) < -1 (which is -1)", e.what());
         throw e;
@@ -159,9 +188,17 @@ TEST(Label, FillNeighbors)
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    label.FillNeighbors(3, 2);
+    label.FillNeighbors(3, 2, PointLabel::EdgeNeighbor);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, true, true, true, true, true));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor));
   }
 
   {
@@ -177,11 +214,19 @@ TEST(Label, FillNeighbors)
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    label.FillNeighbors(3, 2);
+    label.FillNeighbors(3, 2, PointLabel::EdgeNeighbor);
 
     EXPECT_THAT(
       label.Get(),
-      testing::ElementsAre(false, false, true, true, true, true, false, false));
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Default,
+        PointLabel::Default));
   }
 
   {
@@ -194,17 +239,17 @@ TEST(Label, FillNeighbors)
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
     EXPECT_THROW(
       try {
-        label.FillNeighbors(7, 3);
+        label.FillNeighbors(7, 3, PointLabel::Default);
       } catch (const std::invalid_argument & e) {
         EXPECT_STREQ("index + padding (which is 10) >= this->Size() (which is 10)", e.what());
         throw e;
       },
       std::invalid_argument);
 
-    label.FillNeighbors(3, 3);
+    label.FillNeighbors(3, 3, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillNeighbors(2, 3);
+        label.FillNeighbors(2, 3, PointLabel::Default);
       } catch (const std::invalid_argument & e) {
         EXPECT_STREQ("index - padding (which is -1) < 0 (which is 0)", e.what());
         throw e;
@@ -231,7 +276,12 @@ TEST(Label, LabelOutOfRange)
   LabelOutOfRange(label, range, 2.0, 8.0);
   EXPECT_THAT(
     label.Get(),
-    testing::ElementsAre(true, false, false, false, true));
+    testing::ElementsAre(
+      PointLabel::OutOfRange,
+      PointLabel::Default,
+      PointLabel::Default,
+      PointLabel::Default,
+      PointLabel::OutOfRange));
 }
 
 TEST(Label, LabelOccludedPoints)
@@ -260,7 +310,16 @@ TEST(Label, LabelOccludedPoints)
 
       EXPECT_THAT(
         label.Get(),
-        testing::ElementsAre(false, false, false, false, true, true, false, false, false));
+        testing::ElementsAre(
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default));
     }
 
     {
@@ -272,7 +331,16 @@ TEST(Label, LabelOccludedPoints)
 
       EXPECT_THAT(
         label.Get(),
-        testing::ElementsAre(false, false, false, false, true, true, true, false, false));
+        testing::ElementsAre(
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Default,
+          PointLabel::Default));
     }
   }
 
@@ -297,7 +365,17 @@ TEST(Label, LabelOccludedPoints)
       LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 1, distance_threshold);
       EXPECT_THAT(
         label.Get(),
-        testing::ElementsAre(false, false, false, false, true, true, false, false, false, false));
+        testing::ElementsAre(
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default));
     }
 
     {
@@ -308,7 +386,17 @@ TEST(Label, LabelOccludedPoints)
       LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 3, distance_threshold);
       EXPECT_THAT(
         label.Get(),
-        testing::ElementsAre(false, false, true, true, true, true, false, false, false, false));
+        testing::ElementsAre(
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default,
+          PointLabel::Default));
     }
   }
 }
@@ -330,7 +418,14 @@ TEST(Label, LabelParallelBeamPoints)
     const Range<pcl::PointXYZ> range(ref_points);
     LabelParallelBeamPoints(label, range, 3.0);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, false, false, false));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default));
   }
 
   {
@@ -339,6 +434,13 @@ TEST(Label, LabelParallelBeamPoints)
     const Range<pcl::PointXYZ> range(ref_points);
     LabelParallelBeamPoints(label, range, 2.9);
 
-    EXPECT_THAT(label.Get(), testing::ElementsAre(false, false, true, false, false));
+    EXPECT_THAT(
+      label.Get(),
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::ParallelBeam,
+        PointLabel::Default,
+        PointLabel::Default));
   }
 }

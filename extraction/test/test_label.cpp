@@ -29,47 +29,51 @@ TEST(Label, Label)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
     ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
-    std::vector<PointLabel> labels(label.Size(), PointLabel::Default);
     const EdgeLabel<pcl::PointXYZ> edge_label(padding, edge_threshold, 1);
-    edge_label.Assign(labels, label, curvature, offset);
-
-    std::vector<PointLabel> expected_labels(cloud->size(), PointLabel::Default);
-    expected_labels.at(4) = PointLabel::Edge;
-
-    ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
-    for (unsigned int i = 0; i < cloud->size(); i++) {
-      EXPECT_EQ(labels.at(i), expected_labels.at(i));
-    }
+    edge_label.Assign(label, curvature, offset);
 
     EXPECT_THAT(
       label.Get(),
-      testing::ElementsAre(false, false, true, true, true, true, true, false, false, false));
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Edge,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default));
   }
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-    std::vector<PointLabel> labels(label.Size(), PointLabel::Default);
 
     const SurfaceLabel<pcl::PointXYZ> surface_label(padding, surface_threshold);
-    surface_label.Assign(labels, label, curvature, offset);
-
-    std::vector<PointLabel> expected_labels(cloud->size(), PointLabel::Default);
-    expected_labels.at(6) = PointLabel::Surface;
-
-    ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
-    for (unsigned int i = 0; i < cloud->size(); i++) {
-      EXPECT_EQ(labels.at(i), expected_labels.at(i));
-    }
+    surface_label.Assign(label, curvature, offset);
 
     EXPECT_THAT(
       label.Get(),
-      testing::ElementsAre(false, false, false, false, true, true, true, true, true, false));
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::Surface,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::Default));
   }
 }
 
 TEST(Extraction, ExtractByLabel)
 {
+  const double radian_threshold = 0.2;
+
   pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>());
   input_cloud->push_back(pcl::PointXYZ{0., 0., 0.});
   input_cloud->push_back(pcl::PointXYZ{0., 0., 1.});
@@ -84,30 +88,28 @@ TEST(Extraction, ExtractByLabel)
   };
 
   {
-    const std::vector<PointLabel> labels {
-      PointLabel::Default,
-      PointLabel::Edge,
-      PointLabel::Default,
-      PointLabel::Edge
-    };
+    Label<pcl::PointXYZ> label(input_ref_points, radian_threshold);
+    label.Fill(0, PointLabel::Default);
+    label.Fill(1, PointLabel::Edge);
+    label.Fill(2, PointLabel::Default);
+    label.Fill(3, PointLabel::Edge);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-    ExtractByLabel(output_cloud, input_ref_points, labels, PointLabel::Edge);
+    ExtractByLabel(output_cloud, input_ref_points, label, PointLabel::Edge);
     EXPECT_EQ(output_cloud->size(), static_cast<std::uint32_t>(2));
     EXPECT_THAT(to_vector(output_cloud->at(0)), testing::ElementsAre(0., 0., 1.));
     EXPECT_THAT(to_vector(output_cloud->at(1)), testing::ElementsAre(0., 1., 1.));
   }
 
   {
-    const std::vector<PointLabel> labels {
-      PointLabel::Surface,
-      PointLabel::Surface,
-      PointLabel::Default,
-      PointLabel::Default
-    };
+    Label<pcl::PointXYZ> label(input_ref_points, radian_threshold);
+    label.Fill(0, PointLabel::Surface);
+    label.Fill(1, PointLabel::Surface);
+    label.Fill(2, PointLabel::Default);
+    label.Fill(3, PointLabel::Default);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-    ExtractByLabel(output_cloud, input_ref_points, labels, PointLabel::Surface);
+    ExtractByLabel(output_cloud, input_ref_points, label, PointLabel::Surface);
     EXPECT_EQ(output_cloud->size(), static_cast<std::uint32_t>(2));
     EXPECT_THAT(to_vector(output_cloud->at(0)), testing::ElementsAre(0., 0., 0.));
     EXPECT_THAT(to_vector(output_cloud->at(1)), testing::ElementsAre(0., 0., 1.));
