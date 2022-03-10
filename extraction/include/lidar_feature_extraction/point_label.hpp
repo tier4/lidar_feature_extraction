@@ -26,11 +26,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef POINT_LABEL_HPP_
+#define POINT_LABEL_HPP_
 
-#ifndef CURVATURE_LABEL_HPP_
-#define CURVATURE_LABEL_HPP_
-
-enum class CurvatureLabel
+enum class PointLabel
 {
   Default = 0,
   Edge = 1,
@@ -38,4 +37,4 @@ enum class CurvatureLabel
   OutOfRange = 3
 };
 
-#endif  // CURVATURE_LABEL_HPP_
+#endif  // POINT_LABEL_HPP_

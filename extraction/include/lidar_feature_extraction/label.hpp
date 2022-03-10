@@ -38,12 +38,12 @@
 
 #include <vector>
 
-#include "algorithm.hpp"
-#include "curvature.hpp"
-#include "curvature_label.hpp"
-#include "index_range.hpp"
-#include "mapped_points.hpp"
-#include "mask.hpp"
+#include "lidar_feature_extraction/algorithm.hpp"
+#include "lidar_feature_extraction/curvature.hpp"
+#include "lidar_feature_extraction/index_range.hpp"
+#include "lidar_feature_extraction/mapped_points.hpp"
+#include "lidar_feature_extraction/mask.hpp"
+#include "lidar_feature_extraction/point_label.hpp"
 
 #include "lidar_feature_library/point_type.hpp"
 
@@ -62,7 +62,7 @@ public:
   }
 
   void Assign(
-    std::vector<CurvatureLabel> & labels,
+    std::vector<PointLabel> & labels,
     Mask<PointT> & mask,
     const std::vector<double> & curvature,
     const int offset) const
@@ -82,7 +82,7 @@ public:
         continue;
       }
 
-      labels.at(offset + index) = CurvatureLabel::Edge;
+      labels.at(offset + index) = PointLabel::Edge;
 
       mask.FillNeighbors(offset + index, padding_);
 
@@ -109,7 +109,7 @@ public:
   }
 
   void Assign(
-    std::vector<CurvatureLabel> & labels,
+    std::vector<PointLabel> & labels,
     Mask<PointT> & mask,
     const std::vector<double> & curvature,
     const int offset) const
@@ -125,7 +125,7 @@ public:
         continue;
       }
 
-      labels.at(offset + index) = CurvatureLabel::Surface;
+      labels.at(offset + index) = PointLabel::Surface;
 
       mask.FillNeighbors(offset + index, padding_);
     }
@@ -137,7 +137,7 @@ private:
 };
 
 template<typename PointT>
-std::vector<CurvatureLabel> AssignLabel(
+std::vector<PointLabel> AssignLabel(
   const Mask<PointT> & input_mask,
   const Range<PointT> & range,
   const EdgeLabel<PointT> edge_label,
@@ -149,7 +149,7 @@ std::vector<CurvatureLabel> AssignLabel(
 
   const PaddedIndexRange index_range(0, mask.Size(), n_blocks, padding);
 
-  std::vector<CurvatureLabel> labels(mask.Size(), CurvatureLabel::Default);
+  std::vector<PointLabel> labels(mask.Size(), PointLabel::Default);
 
   for (int j = 0; j < n_blocks; j++) {
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
@@ -171,8 +171,8 @@ template<typename PointT>
 void ExtractByLabel(
   typename pcl::PointCloud<PointT>::Ptr output_cloud,
   const MappedPoints<PointT> & ref_points,
-  const std::vector<CurvatureLabel> & labels,
-  const CurvatureLabel & label)
+  const std::vector<PointLabel> & labels,
+  const PointLabel & label)
 {
   assert(ref_points.size() == static_cast<int>(labels.size()));
 

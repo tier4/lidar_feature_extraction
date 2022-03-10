@@ -42,12 +42,12 @@
 #include <vector>
 
 #include "lidar_feature_extraction/cloud_iterator.hpp"
-#include "lidar_feature_extraction/curvature_label.hpp"
 #include "lidar_feature_extraction/curvature.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
 #include "lidar_feature_extraction/mask.hpp"
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
+#include "lidar_feature_extraction/point_label.hpp"
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/ring.hpp"
 #include "lidar_feature_extraction/label.hpp"
@@ -145,11 +145,11 @@ private:
         MaskOccludedPoints(mask, neighbor, range, padding_, distance_diff_threshold_);
         MaskParallelBeamPoints(mask, range, range_ratio_threshold_);
 
-        const std::vector<CurvatureLabel> labels = AssignLabel(
+        const std::vector<PointLabel> labels = AssignLabel(
           mask, range, edge_label_, surface_label_, n_blocks, padding_);
 
-        ExtractByLabel<PointXYZIR>(edge, ref_points, labels, CurvatureLabel::Edge);
-        ExtractByLabel<PointXYZIR>(surface, ref_points, labels, CurvatureLabel::Surface);
+        ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
+        ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
