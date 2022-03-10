@@ -39,9 +39,11 @@
 #include <geometry_msgs/msg/pose.hpp>
 
 #include "lidar_feature_localization/optimization_problem.hpp"
+#include "lidar_feature_localization/optimizer.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/posevec.hpp"
 
+#include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
@@ -49,53 +51,6 @@
 #include <memory>
 #include <limits>
 
-
-bool CheckConvergence(const Vector7d & dx)
-{
-  const float dr = rad2deg(dx.head(3)).norm();
-  const float dt = (100 * dx.tail(3)).norm();
-  return dr < 0.05 && dt < 0.05;
-}
-
-Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
-{
-  const Eigen::MatrixXd JtJ = J.transpose() * J;
-  const Eigen::VectorXd JtB = J.transpose() * b;
-  return solveLinear(JtJ, JtB);
-}
-
-class Optimizer
-{
-public:
-  explicit Optimizer(const OptimizationProblem & problem)
-  : problem_(problem)
-  {
-  }
-
-  Eigen::Isometry3d Run(const Eigen::Isometry3d & initial_pose) const
-  {
-    Vector7d posevec = MakePosevec(initial_pose);
-    for (int iter = 0; iter < 30; iter++) {
-      const Eigen::Isometry3d pose = MakePose(posevec);
-      const auto [J, b] = problem_.make(pose);
-      if (J.rows() < 50) {
-        continue;
-      }
-
-      const Eigen::VectorXd dx = CalcUpdate(J, b);
-
-      posevec += dx;
-
-      if (CheckConvergence(dx)) {
-        break;
-      }
-    }
-    return MakePose(posevec);
-  }
-
-private:
-  const OptimizationProblem problem_;
-};
 
 class Localizer
 {
@@ -120,8 +75,8 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_xyz,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_xyz)
   {
-    const OptimizationProblem problem(edge_xyz, surface_xyz, edge_map_, surface_map_);
-    if (problem.IsDegenerate(pose_)) {
+    const OptimizationProblem problem(edge_map_, surface_map_);
+    if (problem.IsDegenerate(edge_xyz, surface_xyz, pose_)) {
       RCLCPP_WARN(
         rclcpp::get_logger("lidar_feature_localization"),
         "The optimization problem is degenerate. Pose not optimized");
@@ -129,7 +84,7 @@ public:
     }
 
     const Optimizer optimizer(problem);
-    pose_ = optimizer.Run(pose_);
+    pose_ = optimizer.Run(edge_xyz, surface_xyz, pose_);
     return true;
   }
 
@@ -180,9 +135,7 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
 template<typename T>
 pcl::PointCloud<pcl::PointXYZ>::Ptr ToPointXYZ(const typename pcl::PointCloud<T>::Ptr & cloud)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::copyPointCloud(*cloud, *cloud_xyz);
-  return cloud_xyz;
+  return ConvertPointCloudType<T, pcl::PointXYZ>(cloud);
 }
 
 class Subscriber : public rclcpp::Node
@@ -208,6 +161,7 @@ public:
       std::bind(
         &Subscriber::PoseUpdateCallback, this,
         std::placeholders::_1, std::placeholders::_2));
+    RCLCPP_INFO(this->get_logger(), "Subscriber created");
   }
 
   rclcpp::SubscriptionOptions MakeInitialSubscriptionOption()
@@ -229,12 +183,16 @@ public:
     Eigen::Isometry3d transform;
     tf2::fromMsg(initial_pose->pose, transform);
     localizer_->Init(transform);
+
+    RCLCPP_INFO(this->get_logger(), "Initialized");
   }
 
   void PoseUpdateCallback(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg,
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr surface_msg)
   {
+    RCLCPP_INFO(this->get_logger(), "Pose update called");
+
     const pcl::PointCloud<PointXYZIR>::Ptr edge = getPointCloud<PointXYZIR>(*edge_msg);
     const pcl::PointCloud<PointXYZIR>::Ptr surface = getPointCloud<PointXYZIR>(*surface_msg);
 
@@ -244,6 +202,8 @@ public:
     localizer_->Run(edge_xyz, surface_xyz);
     const Eigen::Isometry3d pose = localizer_->Get();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
+
+    RCLCPP_INFO(this->get_logger(), "Pose update done");
   }
 
 private:
