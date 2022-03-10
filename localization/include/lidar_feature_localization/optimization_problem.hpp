@@ -164,6 +164,30 @@ bool OptimizationProblem::IsDegenerate(
   return (eigenvalues.array() < 100.0).any();
 }
 
+Eigen::Vector3d TripletCross(
+  const Eigen::Vector3d & p0,
+  const Eigen::Vector3d & p1,
+  const Eigen::Vector3d & p2)
+{
+  return (p2 - p1).cross((p0 - p1).cross(p0 - p2));
+}
+
+Eigen::Vector3d EdgeCoefficient(
+  const Eigen::Vector3d p0,
+  const Eigen::Vector3d & center,
+  const Eigen::Vector3d & eigenvector)
+{
+  const Eigen::Vector3d p1 = center + 0.1 * eigenvector;
+  const Eigen::Vector3d p2 = center - 0.1 * eigenvector;
+  return TripletCross(p0, p1, p2);
+}
+
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Matrix3d & C)
+{
+  const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(C);
+  return {solver.eigenvalues(), solver.eigenvectors()};
+}
+
 std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>
 OptimizationProblem::FromEdge(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
@@ -177,35 +201,21 @@ OptimizationProblem::FromEdge(
 
   for (unsigned int i = 0; i < edge_scan->size(); i++) {
     const Eigen::Vector3d p0 = point_to_map * GetXYZ(edge_scan->at(i));
-    const auto [indices, squared_distances] = edge_kdtree_.nearestKSearch(MakePointXYZ(p0), n_neighbors);
+    const pcl::PointXYZ q = MakePointXYZ(p0);
+    const auto [indices, squared_distances] = edge_kdtree_.nearestKSearch(q, n_neighbors);
     if (squared_distances.back() >= 1.0) {
       continue;
     }
 
     const Eigen::Matrix<double, n_neighbors, 3> neighbors = Get(edge_map_, indices);
-    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(CalcCovariance(neighbors));
-    const Eigen::Vector3d eigenvalues = solver.eigenvalues();
-    const Eigen::Vector3d eigenvector = solver.eigenvectors().col(2);
+    const Eigen::Matrix3d C = CalcCovariance(neighbors);
+    const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 
     if (eigenvalues(2) <= 3 * eigenvalues(1)) {
       continue;
     }
 
-    const Eigen::Vector3d c = neighbors.colwise().mean();
-    const Eigen::Vector3d p1 = c + 0.1 * eigenvector;
-    const Eigen::Vector3d p2 = c - 0.1 * eigenvector;
-
-    const Eigen::Vector3d d01 = p0 - p1;
-    const Eigen::Vector3d d12 = p1 - p2;
-    const Eigen::Vector3d d20 = p2 - p0;
-
-    const Eigen::Vector3d u = d20.cross(d01);
-
-    if (u.norm() >= 1.0) {
-      continue;
-    }
-
-    coeffs[i] = d12.cross(u);
+    coeffs[i] = EdgeCoefficient(p0, neighbors.colwise().mean(), eigenvectors.col(2));
     flags[i] = true;
   }
 
@@ -236,7 +246,6 @@ OptimizationProblem::FromSurface(
     const Eigen::Vector3d p = point_to_map * GetXYZ(surface_scan->at(i));
     const pcl::PointXYZ q = MakePointXYZ(p);
     const auto [indices, squared_distances] = surface_kdtree_.nearestKSearch(q, n_neighbors);
-
     if (squared_distances.back() >= 1.0) {
       continue;
     }
