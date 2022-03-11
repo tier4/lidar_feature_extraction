@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "lidar_feature_extraction/cloud_iterator.hpp"
+#include "lidar_feature_extraction/color_points.hpp"
 #include "lidar_feature_extraction/curvature.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
 #include "lidar_feature_extraction/label.hpp"
@@ -85,10 +86,13 @@ public:
     max_range_(this->declare_parameter("max_range_", 100.0)),
     edge_label_(padding_, edge_threshold_, max_edges_per_block_),
     surface_label_(padding_, surface_threshold_),
-    cloud_subscriber_(this->create_subscription<sensor_msgs::msg::PointCloud2>(
+    cloud_subscriber_(
+      this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "points_raw", rclcpp::SensorDataQoS().keep_last(1),
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1),
         this->MakeSubscriptionOption())),
+    colored_scan_publisher_(
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
     edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
     surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
@@ -111,9 +115,9 @@ private:
 
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg) const
   {
-    const pcl::PointCloud<PointXYZIR>::Ptr input_points = getPointCloud<PointXYZIR>(*cloud_msg);
+    const pcl::PointCloud<PointXYZIR>::Ptr input_cloud = getPointCloud<PointXYZIR>(*cloud_msg);
 
-    if (!input_points->is_dense) {
+    if (!input_cloud->is_dense) {
       RCLCPP_ERROR(
         this->get_logger(),
         "Point cloud is not in dense format, please remove NaN points first!");
@@ -127,14 +131,15 @@ private:
       rclcpp::shutdown();
     }
 
-    const auto rings = ExtractAngleSortedRings(*input_points);
+    const auto rings = ExtractAngleSortedRings(*input_cloud);
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
     for (const auto & [ring, indices] : rings) {
       try {
-        const MappedPoints<PointXYZIR> ref_points(input_points, indices);
+        const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
 
         const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
@@ -148,14 +153,20 @@ private:
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, label, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, label, PointLabel::Surface);
+
+        *colored_cloud += *ColorPointsByLabel<PointXYZIR>(input_cloud, label);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
     }
 
     const std::string lidar_frame = "base_link";
+
+    const auto colored_cloud_msg = toRosMsg<pcl::PointXYZRGB>(
+      colored_cloud, cloud_msg->header.stamp, lidar_frame);
     const auto cloud_edge = toRosMsg<PointXYZIR>(edge, cloud_msg->header.stamp, lidar_frame);
     const auto cloud_surface = toRosMsg<PointXYZIR>(surface, cloud_msg->header.stamp, lidar_frame);
+    colored_scan_publisher_->publish(colored_cloud_msg);
     edge_publisher_->publish(cloud_edge);
     surface_publisher_->publish(cloud_surface);
   }
@@ -172,6 +183,7 @@ private:
   const EdgeLabel<PointXYZIR> edge_label_;
   const SurfaceLabel<PointXYZIR> surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
+  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr colored_scan_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
 };

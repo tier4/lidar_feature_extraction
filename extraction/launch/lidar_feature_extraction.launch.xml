@@ -4,6 +4,7 @@
 
   <arg name="param_file" default="$(find-pkg-share lidar_feature_library)/config/lidar_feature_library.param.yaml" />
 
+  <arg name="output_colored_scan_topic" default="/colored_scan" description="Debug colored scan" />
   <arg name="output_scan_edge_topic" default="/scan_edge" description="Scan edge features" />
   <arg name="output_scan_surface_topic" default="/scan_surface" description="Scan surface features" />
 
@@ -12,6 +13,7 @@
   <node pkg="lidar_feature_extraction" exec="lidar_feature_extraction" name="$(var node_name)" output="log">
     <remap from="points_raw" to="$(var input_sensor_points_topic)" />
 
+    <remap from="colored_scan" to="$(var output_colored_scan_topic)" />
     <remap from="scan_edge" to="$(var output_scan_edge_topic)" />
     <remap from="scan_surface" to="$(var output_scan_surface_topic)" />
 
