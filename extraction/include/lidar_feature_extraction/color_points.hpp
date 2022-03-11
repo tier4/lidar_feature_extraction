@@ -36,7 +36,7 @@
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 
-std::vector<uint8_t> LabelPoint(const PointLabel & label)
+std::vector<uint8_t> LabelToColor(const PointLabel & label)
 {
   if (label == PointLabel::Default) {
     return std::vector<uint8_t>{255, 255, 255};
@@ -48,10 +48,10 @@ std::vector<uint8_t> LabelPoint(const PointLabel & label)
     return std::vector<uint8_t>{0, 0, 255};
   }
   if (label == PointLabel::EdgeNeighbor) {
-    return std::vector<uint8_t>{255, 255, 0};
+    return std::vector<uint8_t>{255, 63, 0};
   }
   if (label == PointLabel::SurfaceNeighbor) {
-    return std::vector<uint8_t>{0, 255, 255};
+    return std::vector<uint8_t>{0, 63, 255};
   }
   if (label == PointLabel::OutOfRange) {
     return std::vector<uint8_t>{127, 127, 127};
@@ -67,13 +67,14 @@ std::vector<uint8_t> LabelPoint(const PointLabel & label)
 
 template<typename PointT>
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByLabel(
-  const typename pcl::PointCloud<PointT>::Ptr & input_cloud,
+  const MappedPoints<PointT> & ref_points,
   const LabelBase & label)
 {
+  assert(ref_points.Size() == label.Size());
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGB>());
   for (int i = 0; i < label.Size(); i++) {
-    const std::vector<uint8_t> rgb = LabelPoint(label.At(i));
-    const PointT & p = input_cloud->at(i);
+    const std::vector<uint8_t> rgb = LabelToColor(label.At(i));
+    const PointT & p = ref_points.At(i);
 
     pcl::PointXYZRGB xyzrgb;
 

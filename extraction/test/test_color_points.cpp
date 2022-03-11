@@ -56,23 +56,24 @@ TEST(ColorPoints, ColorPointsByLabel)
   label.Fill(6, PointLabel::Occluded);
   label.Fill(7, PointLabel::ParallelBeam);
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  input_cloud->push_back(pcl::PointXYZ(0, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(1, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(2, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(3, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(4, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(5, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(6, 0, 0));
-  input_cloud->push_back(pcl::PointXYZ(7, 0, 0));
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(0, 0, 0));
+  cloud->push_back(pcl::PointXYZ(1, 0, 0));
+  cloud->push_back(pcl::PointXYZ(2, 0, 0));
+  cloud->push_back(pcl::PointXYZ(3, 0, 0));
+  cloud->push_back(pcl::PointXYZ(4, 0, 0));
+  cloud->push_back(pcl::PointXYZ(5, 0, 0));
+  cloud->push_back(pcl::PointXYZ(6, 0, 0));
+  cloud->push_back(pcl::PointXYZ(7, 0, 0));
 
-  const auto colored = ColorPointsByLabel<pcl::PointXYZ>(input_cloud, label);
+  const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+  const auto colored = ColorPointsByLabel<pcl::PointXYZ>(ref_points, label);
 
   EXPECT_THAT(to_vector(colored->at(0)), ElementsAre(0., 0., 0., 255., 255., 255.));
   EXPECT_THAT(to_vector(colored->at(1)), ElementsAre(1., 0., 0., 255.,   0.,   0.));
   EXPECT_THAT(to_vector(colored->at(2)), ElementsAre(2., 0., 0.,   0.,   0., 255.));
-  EXPECT_THAT(to_vector(colored->at(3)), ElementsAre(3., 0., 0., 255., 255.,   0.));
-  EXPECT_THAT(to_vector(colored->at(4)), ElementsAre(4., 0., 0.,   0., 255., 255.));
+  EXPECT_THAT(to_vector(colored->at(3)), ElementsAre(3., 0., 0., 255.,  63.,   0.));
+  EXPECT_THAT(to_vector(colored->at(4)), ElementsAre(4., 0., 0.,   0.,  63., 255.));
   EXPECT_THAT(to_vector(colored->at(5)), ElementsAre(5., 0., 0., 127., 127., 127.));
   EXPECT_THAT(to_vector(colored->at(6)), ElementsAre(6., 0., 0., 255.,   0., 255.));
   EXPECT_THAT(to_vector(colored->at(7)), ElementsAre(7., 0., 0.,   0., 255.,   0.));

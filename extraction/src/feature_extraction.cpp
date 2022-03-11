@@ -154,7 +154,7 @@ private:
         ExtractByLabel<PointXYZIR>(edge, ref_points, label, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, label, PointLabel::Surface);
 
-        *colored_cloud += *ColorPointsByLabel<PointXYZIR>(input_cloud, label);
+        *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, label);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
