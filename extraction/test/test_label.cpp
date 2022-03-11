@@ -86,7 +86,7 @@ TEST(Extraction, ExtractByLabel)
   };
 
   {
-    LabelBase label(input_ref_points.size());
+    LabelBase label(input_ref_points.Size());
     label.Fill(0, PointLabel::Default);
     label.Fill(1, PointLabel::Edge);
     label.Fill(2, PointLabel::Default);
@@ -100,7 +100,7 @@ TEST(Extraction, ExtractByLabel)
   }
 
   {
-    LabelBase label(input_ref_points.size());
+    LabelBase label(input_ref_points.Size());
     label.Fill(0, PointLabel::Surface);
     label.Fill(1, PointLabel::Surface);
     label.Fill(2, PointLabel::Default);

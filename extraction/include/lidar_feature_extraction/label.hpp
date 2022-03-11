@@ -96,7 +96,7 @@ public:
   Label(
     const MappedPoints<Element> & ref_points,
     const double radian_threshold)
-  : LabelBase(ref_points.size()),
+  : LabelBase(ref_points.Size()),
     ref_points_(ref_points),
     radian_threshold_(radian_threshold)
   {
@@ -130,8 +130,8 @@ public:
     for (int i = begin_index; i < end_index - 1; i++) {
       label_.at(i) = label;
 
-      const Element & p0 = ref_points_.at(i + 0);
-      const Element & p1 = ref_points_.at(i + 1);
+      const Element & p0 = ref_points_.At(i + 0);
+      const Element & p1 = ref_points_.At(i + 1);
       if (!IsNeighbor(p0, p1, radian_threshold_)) {
         return;
       }
@@ -155,8 +155,8 @@ public:
     for (int i = end_index; i > begin_index + 1; i--) {
       label_.at(i) = label;
 
-      const Element & p0 = ref_points_.at(i - 0);
-      const Element & p1 = ref_points_.at(i - 1);
+      const Element & p0 = ref_points_.At(i - 0);
+      const Element & p1 = ref_points_.At(i - 1);
       if (!IsNeighbor(p0, p1, radian_threshold_)) {
         return;
       }
@@ -363,11 +363,11 @@ void ExtractByLabel(
   const LabelBase & labels,
   const PointLabel & label)
 {
-  assert(ref_points.size() == labels.Size());
+  assert(ref_points.Size() == labels.Size());
 
   for (int i = 0; i < labels.Size(); i++) {
     if (labels.At(i) == label) {
-      output_cloud->push_back(ref_points.at(i));
+      output_cloud->push_back(ref_points.At(i));
     }
   }
 }

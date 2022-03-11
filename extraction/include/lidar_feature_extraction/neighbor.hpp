@@ -51,8 +51,8 @@ public:
 
   bool operator()(const int index1, const int index2) const
   {
-    const PointT & p1 = ref_points_.at(index1);
-    const PointT & p2 = ref_points_.at(index2);
+    const PointT & p1 = ref_points_.At(index1);
+    const PointT & p2 = ref_points_.At(index2);
     return IsNeighbor(p1, p2, radian_threshold_);
   }
 

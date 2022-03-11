@@ -21,12 +21,12 @@ TEST(MappedPoints, MappedPoints)
 
   const MappedPoints<pcl::PointXYZ> mapped_points(cloud, indices);
 
-  EXPECT_EQ(mapped_points.size(), 6);
+  EXPECT_EQ(mapped_points.Size(), 6);
 
-  EXPECT_EQ(mapped_points.at(0).y, 2.);
-  EXPECT_EQ(mapped_points.at(1).y, 0.);
-  EXPECT_EQ(mapped_points.at(2).y, 1.);
-  EXPECT_EQ(mapped_points.at(3).y, 3.);
-  EXPECT_EQ(mapped_points.at(4).y, 0.);
-  EXPECT_EQ(mapped_points.at(5).y, 1.);
+  EXPECT_EQ(mapped_points.At(0).y, 2.);
+  EXPECT_EQ(mapped_points.At(1).y, 0.);
+  EXPECT_EQ(mapped_points.At(2).y, 1.);
+  EXPECT_EQ(mapped_points.At(3).y, 3.);
+  EXPECT_EQ(mapped_points.At(4).y, 0.);
+  EXPECT_EQ(mapped_points.At(5).y, 1.);
 }

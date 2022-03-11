@@ -270,7 +270,7 @@ TEST(Label, LabelOutOfRange)
   const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
   const Range<pcl::PointXYZ> range(ref_points);
 
-  LabelBase label(ref_points.size());
+  LabelBase label(ref_points.Size());
   LabelOutOfRange(label, range, 2.0, 8.0);
   EXPECT_THAT(
     label.Get(),
@@ -410,7 +410,7 @@ TEST(Label, LabelParallelBeamPoints)
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    LabelBase label(ref_points.size());
+    LabelBase label(ref_points.Size());
     const Range<pcl::PointXYZ> range(ref_points);
     LabelParallelBeamPoints(label, range, 3.0);
 
@@ -426,7 +426,7 @@ TEST(Label, LabelParallelBeamPoints)
 
   {
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    LabelBase label(ref_points.size());
+    LabelBase label(ref_points.Size());
     const Range<pcl::PointXYZ> range(ref_points);
     LabelParallelBeamPoints(label, range, 2.9);
 

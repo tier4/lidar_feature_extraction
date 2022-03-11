@@ -48,12 +48,12 @@ public:
   {
   }
 
-  int size() const
+  int Size() const
   {
     return indices_.size();
   }
 
-  Element at(const int index) const
+  Element At(const int index) const
   {
     return iter_->at(indices_.at(index));
   }
