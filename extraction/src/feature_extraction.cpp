@@ -52,23 +52,11 @@
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/ring.hpp"
 
+#include "lidar_feature_extraction/csvfile.hpp"
+
 #include "lidar_feature_library/ros_msg.hpp"
 
-//  VLS-128 Lidar Sensor Configuration
-const int N_SCAN = 128;
-const int HORIZONTAL_SIZE = 1800;
-const float range_min = 1.0;
-const float range_max = 1000.0;
-
-//  voxel filter paprams
-const float surface_leaf_size = 0.2;
-const float map_edge_leaf_size = 0.2;
-const float map_surface_leaf_size = 0.2;
-
 const int n_blocks = 6;
-
-//  CPU Params
-const int n_cores = 2;
 
 class FeatureExtraction : public rclcpp::Node
 {
