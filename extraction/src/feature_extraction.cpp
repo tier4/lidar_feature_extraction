@@ -70,8 +70,8 @@ public:
     range_ratio_threshold_(this->declare_parameter("range_ratio_threshold", 0.02)),
     edge_threshold_(this->declare_parameter("edge_threshold", 0.05)),
     surface_threshold_(this->declare_parameter("surface_threshold", 0.05)),
-    min_range_(this->declare_parameter("min_range_", 0.1)),
-    max_range_(this->declare_parameter("max_range_", 100.0)),
+    min_range_(this->declare_parameter("min_range", 0.1)),
+    max_range_(this->declare_parameter("max_range", 100.0)),
     edge_label_(padding_, edge_threshold_, max_edges_per_block_),
     surface_label_(padding_, surface_threshold_),
     cloud_subscriber_(
