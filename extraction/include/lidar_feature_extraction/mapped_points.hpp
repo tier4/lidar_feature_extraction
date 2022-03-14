@@ -42,9 +42,9 @@ class MappedPoints
 {
 public:
   MappedPoints(
-    const typename pcl::PointCloud<Element>::Ptr & iter,
+    const typename pcl::PointCloud<Element>::Ptr & cloud,
     const std::vector<int> & indices)
-  : iter_(iter), indices_(indices)
+  : cloud_(cloud), indices_(indices)
   {
   }
 
@@ -55,11 +55,11 @@ public:
 
   Element At(const int index) const
   {
-    return iter_->at(indices_.at(index));
+    return cloud_->at(indices_.at(index));
   }
 
 private:
-  const typename pcl::PointCloud<Element>::Ptr iter_;
+  const typename pcl::PointCloud<Element>::Ptr cloud_;
   const std::vector<int> indices_;
 };
 
