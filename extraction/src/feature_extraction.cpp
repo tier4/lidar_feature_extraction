@@ -93,6 +93,8 @@ public:
         this->MakeSubscriptionOption())),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
+    curvature_cloud_publisher_(
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("curvature_scan", 1)),
     edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
     surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
@@ -132,10 +134,12 @@ private:
     }
 
     const auto rings = ExtractAngleSortedRings(*input_cloud);
+    const double debug_max_curvature = 10.;
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
     for (const auto & [ring, indices] : rings) {
       try {
@@ -149,24 +153,30 @@ private:
         LabelOccludedPoints(label, neighbor, range, padding_, distance_diff_threshold_);
         LabelParallelBeamPoints(label, range, range_ratio_threshold_);
 
-        AssignLabel(label, range, edge_label_, surface_label_, n_blocks, padding_);
+        std::vector<double> curvature_output;
+        AssignLabel(
+          label, curvature_output, range,
+          edge_label_, surface_label_, n_blocks, padding_);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, label, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, label, PointLabel::Surface);
 
         *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, label);
+        *curvature_cloud += *ColorPointsByValue(
+          ref_points, curvature_output, 0., debug_max_curvature);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
     }
 
     const std::string lidar_frame = "base_link";
-
-    const auto colored_cloud_msg = toRosMsg<pcl::PointXYZRGB>(
-      colored_cloud, cloud_msg->header.stamp, lidar_frame);
-    const auto cloud_edge = toRosMsg<PointXYZIR>(edge, cloud_msg->header.stamp, lidar_frame);
-    const auto cloud_surface = toRosMsg<PointXYZIR>(surface, cloud_msg->header.stamp, lidar_frame);
-    colored_scan_publisher_->publish(colored_cloud_msg);
+    const auto stamp = cloud_msg->header.stamp;
+    const auto colored_msg = toRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
+    const auto curvature_msg = toRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
+    const auto cloud_edge = toRosMsg<PointXYZIR>(edge, stamp, lidar_frame);
+    const auto cloud_surface = toRosMsg<PointXYZIR>(surface, stamp, lidar_frame);
+    colored_scan_publisher_->publish(colored_msg);
+    curvature_cloud_publisher_->publish(curvature_msg);
     edge_publisher_->publish(cloud_edge);
     surface_publisher_->publish(cloud_surface);
   }
@@ -184,6 +194,7 @@ private:
   const SurfaceLabel<PointXYZIR> surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr colored_scan_publisher_;
+  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr curvature_cloud_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
 };

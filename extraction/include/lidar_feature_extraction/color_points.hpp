@@ -65,6 +65,28 @@ std::vector<uint8_t> LabelToColor(const PointLabel & label)
   throw std::invalid_argument(fmt::format("Invalid label {}", label));
 }
 
+std::vector<uint8_t> ValueToColor(const double value, const double min, const double max)
+{
+  const double v = std::clamp(value, min, max);
+  const uint8_t c = static_cast<uint8_t>(255. * v / (max - min));
+  return std::vector<uint8_t>{c, c, c};
+}
+
+template<typename PointT>
+pcl::PointXYZRGB MakeXYZRGB(const PointT & p, const std::vector<uint8_t> & rgb)
+{
+  pcl::PointXYZRGB xyzrgb;
+
+  xyzrgb.x = p.x;
+  xyzrgb.y = p.y;
+  xyzrgb.z = p.z;
+  xyzrgb.r = rgb.at(0);
+  xyzrgb.g = rgb.at(1);
+  xyzrgb.b = rgb.at(2);
+
+  return xyzrgb;
+}
+
 template<typename PointT>
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByLabel(
   const MappedPoints<PointT> & ref_points,
@@ -73,19 +95,27 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByLabel(
   assert(ref_points.Size() == label.Size());
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGB>());
   for (int i = 0; i < label.Size(); i++) {
-    const std::vector<uint8_t> rgb = LabelToColor(label.At(i));
     const PointT & p = ref_points.At(i);
+    const std::vector<uint8_t> rgb = LabelToColor(label.At(i));
+    colored->push_back(MakeXYZRGB(p, rgb));
+  }
+  return colored;
+}
 
-    pcl::PointXYZRGB xyzrgb;
+template<typename PointT>
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByValue(
+  const MappedPoints<PointT> & ref_points,
+  const std::vector<double> & values,
+  const double min,
+  const double max)
+{
+  assert(ref_points.Size() == static_cast<int>(values.size()));
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGB>());
 
-    xyzrgb.x = p.x;
-    xyzrgb.y = p.y;
-    xyzrgb.z = p.z;
-    xyzrgb.r = rgb.at(0);
-    xyzrgb.g = rgb.at(1);
-    xyzrgb.b = rgb.at(2);
-
-    colored->push_back(xyzrgb);
+  for (unsigned int i = 0; i < values.size(); i++) {
+    const PointT & p = ref_points.At(i);
+    const std::vector<uint8_t> rgb = ValueToColor(values.at(i), min, max);
+    colored->push_back(MakeXYZRGB(p, rgb));
   }
   return colored;
 }

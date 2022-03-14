@@ -330,29 +330,43 @@ void LabelParallelBeamPoints(
   }
 }
 
+void AssignCurvature(
+  std::vector<double> & curvature_output,
+  const std::vector<double> & curvature,
+  const int begin, const int end)
+{
+  for (int i = 0; i < end - begin; i++) {
+    curvature_output[begin + i] = curvature[i];
+  }
+}
 
 template<typename PointT>
 void AssignLabel(
   Label<PointT> & label,
+  std::vector<double> & curvature_output,
   const Range<PointT> & range,
   const EdgeLabel<PointT> edge_label,
   const SurfaceLabel<PointT> surface_label,
   const int n_blocks,
   const int padding)
 {
-  const PaddedIndexRange index_range(0, label.Size(), n_blocks, padding);
+  assert(label.Size() == range.Size());
+
+  curvature_output = std::vector<double>(range.Size(), 0.);
+
+  const PaddedIndexRange index_range(0, range.Size(), n_blocks, padding);
 
   for (int j = 0; j < n_blocks; j++) {
     const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
     const std::vector<double> curvature = CalcCurvature(ranges, padding);
 
-    const int expected_size = index_range.End(j) - index_range.Begin(j) - 2 * padding;
-    assert(curvature.size() == static_cast<std::uint32_t>(expected_size));
+    const int end = index_range.End(j) - padding;
+    const int begin = index_range.Begin(j) + padding;
+    assert(curvature.size() == static_cast<std::uint32_t>(end - begin));
+    AssignCurvature(curvature_output, curvature, begin, end);
 
-    const int offset = index_range.Begin(j) + padding;
-
-    edge_label.Assign(label, curvature, offset);
-    surface_label.Assign(label, curvature, offset);
+    edge_label.Assign(label, curvature, begin);
+    surface_label.Assign(label, curvature, begin);
   }
 }
 
