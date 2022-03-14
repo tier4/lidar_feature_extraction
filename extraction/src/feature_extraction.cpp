@@ -56,7 +56,6 @@
 
 #include "lidar_feature_library/ros_msg.hpp"
 
-const int n_blocks = 6;
 
 class FeatureExtraction : public rclcpp::Node
 {
@@ -72,6 +71,7 @@ public:
     surface_threshold_(this->declare_parameter("surface_threshold", 0.05)),
     min_range_(this->declare_parameter("min_range", 0.1)),
     max_range_(this->declare_parameter("max_range", 100.0)),
+    n_blocks_(this->declare_parameter("n_blocks", 6)),
     edge_label_(padding_, edge_threshold_, max_edges_per_block_),
     surface_label_(padding_, surface_threshold_),
     cloud_subscriber_(
@@ -171,6 +171,7 @@ private:
 
   const int padding_;
   const int max_edges_per_block_;
+  const int n_blocks_;
   const double radian_threshold_;
   const double distance_diff_threshold_;
   const double range_ratio_threshold_;
