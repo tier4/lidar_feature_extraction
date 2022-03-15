@@ -88,31 +88,24 @@ protected:
   std::vector<PointLabel> label_;
 };
 
-template<typename Element>
+template<typename PointT>
 class Label : public LabelBase
 {
 public:
-  Label(
-    const MappedPoints<Element> & ref_points,
-    const double radian_threshold)
-  : LabelBase(ref_points.Size()),
-    ref_points_(ref_points),
-    is_neighbor_(ref_points, radian_threshold)
+  explicit Label(const NeighborCheck<PointT> & is_neighbor)
+  : LabelBase(is_neighbor.Size()), is_neighbor_(is_neighbor)
   {
   }
 
-  Label(const Label & label)
-  : LabelBase(label),
-    ref_points_(label.ref_points_),
-    is_neighbor_(label.is_neighbor_)
+  explicit Label(const Label & label)
+  : LabelBase(label), is_neighbor_(label.is_neighbor_)
   {
   }
 
   void FillFromLeft(const int begin_index, const int end_index, const PointLabel & label)
   {
     if (end_index > this->Size()) {
-      auto s = RangeMessageLargerThan(
-        "end_index", "this->Size()", end_index, this->Size());
+      auto s = RangeMessageLargerThan("end_index", "this->Size()", end_index, this->Size());
       throw std::invalid_argument(s);
     }
 
@@ -174,8 +167,7 @@ public:
   }
 
 private:
-  const MappedPoints<Element> ref_points_;
-  const NeighborCheck<Element> is_neighbor_;
+  const NeighborCheck<PointT> is_neighbor_;
 };
 
 template<typename PointT>

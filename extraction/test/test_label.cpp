@@ -24,10 +24,11 @@ TEST(Label, Label)
   }
 
   const std::vector<double> curvature{0.3, 0.2, 1.0, 0.2, 0.1, 0.3};
+  const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+  const NeighborCheck is_neighbor(ref_points, radian_threshold);
 
   {
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(is_neighbor);
     ASSERT_EQ(label.Size(), static_cast<int>(cloud->size()));
     const EdgeLabel<pcl::PointXYZ> edge_label(padding, edge_threshold, 1);
     edge_label.Assign(label, curvature, offset);
@@ -48,8 +49,7 @@ TEST(Label, Label)
   }
 
   {
-    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    Label<pcl::PointXYZ> label(ref_points, radian_threshold);
+    Label<pcl::PointXYZ> label(is_neighbor);
 
     const SurfaceLabel<pcl::PointXYZ> surface_label(padding, surface_threshold);
     surface_label.Assign(label, curvature, offset);
