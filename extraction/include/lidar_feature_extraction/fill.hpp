@@ -30,6 +30,8 @@
 #ifndef FILL_HPP_
 #define FILL_HPP_
 
+#include <algorithm>
+
 #include "lidar_feature_extraction/neighbor.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 #include "lidar_feature_extraction/range_message.hpp"
