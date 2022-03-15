@@ -35,14 +35,30 @@
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
 
+#include "lidar_feature_library/span.hpp"
+
 template<typename PointT>
 bool IsNeighborXY(const PointT & p1, const PointT & p2, const double radian_threshold)
 {
   return CalcRadian(p1.x, p1.y, p2.x, p2.y) < radian_threshold;
 }
 
+class NeighborCheckBase
+{
+ public:
+  virtual bool operator()(const int index1, const int index2) const
+  {
+    return index1 == index2;
+  }
+
+  virtual int Size() const
+  {
+    return -1;
+  }
+};
+
 template<typename PointT>
-class NeighborCheckXY
+class NeighborCheckXY : public NeighborCheckBase
 {
 public:
   NeighborCheckXY(const MappedPoints<PointT> & ref_points, const double radian_threshold)
@@ -55,14 +71,14 @@ public:
     }
   }
 
-  bool operator()(const int index1, const int index2) const
+  bool operator()(const int index1, const int index2) const override
   {
     const PointT & p1 = ref_points_.At(index1);
     const PointT & p2 = ref_points_.At(index2);
     return IsNeighborXY(p1, p2, radian_threshold_);
   }
 
-  int Size() const
+  int Size() const override
   {
     return ref_points_.Size();
   }
@@ -75,6 +91,29 @@ public:
 private:
   const MappedPoints<PointT> ref_points_;
   const double radian_threshold_;
+};
+
+
+class NeighborCheckDebug : public NeighborCheckBase
+{
+public:
+  NeighborCheckDebug(const std::vector<int> & values)
+  : values_(values)
+  {
+  }
+
+  bool operator()(const int index1, const int index2) const override
+  {
+    return values_.at(index1) == values_.at(index2);
+  }
+
+  int Size() const override
+  {
+    return values_.size();
+  }
+
+private:
+  const std::vector<int> values_;
 };
 
 #endif  // NEIGHBOR_HPP_
