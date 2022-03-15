@@ -64,54 +64,110 @@ TEST(Extraction, ExtractByLabel)
 
 TEST(Extraction, EdgeLabel)
 {
-  const int padding = 2;
-  const double threshold = 1.5;
+  {
+    const int padding = 2;
+    const double threshold = 1.5;
 
-  const EdgeLabel label(padding, threshold);
+    const EdgeLabel label(padding, threshold);
 
-  std::vector<PointLabel> labels = InitLabels(8);
-  const std::vector<double> curvature{3, 1, 2, 1, 1, 4, 1, 1};
-  const NeighborCheckDebug is_neighbor({0, 0, 0, 0, 0, 0, 0, 0});
-  label.Assign(labels, curvature, is_neighbor);
+    std::vector<PointLabel> labels = InitLabels(8);
+    const std::vector<double> curvature{3, 1, 2, 1, 1, 4, 1, 1};
+    const NeighborCheckDebug is_neighbor({0, 0, 0, 0, 0, 0, 0, 0});
+    label.Assign(labels, curvature, is_neighbor);
 
-  EXPECT_THAT(
-    labels,
-    testing::ElementsAre(
-      PointLabel::Edge,
-      PointLabel::EdgeNeighbor,
-      PointLabel::EdgeNeighbor,
-      PointLabel::EdgeNeighbor,
-      PointLabel::EdgeNeighbor,
-      PointLabel::Edge,
-      PointLabel::EdgeNeighbor,
-      PointLabel::EdgeNeighbor
-    )
-  );
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::Edge,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Edge,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor
+      )
+    );
+  }
+
+  {
+    const int padding = 2;
+    const double threshold = 1.5;
+
+    const EdgeLabel label(padding, threshold);
+
+    std::vector<PointLabel> labels = InitLabels(8);
+    const std::vector<double> curvature{0, 2, 4, 1, 0, 2, 1, 1};
+    const NeighborCheckDebug is_neighbor({0, 0, 0, 0, 1, 1, 1, 1});
+    label.Assign(labels, curvature, is_neighbor);
+
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Edge,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Edge,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor
+      )
+    );
+  }
 }
 
 TEST(Extraction, SurfaceLabel)
 {
-  const int padding = 2;
-  const double threshold = 0.5;
+  {
+    const int padding = 2;
+    const double threshold = 0.5;
 
-  const SurfaceLabel label(padding, threshold);
+    const SurfaceLabel label(padding, threshold);
 
-  std::vector<PointLabel> labels = InitLabels(8);
-  const std::vector<double> curvature{0, 1, 1, 0, 2, 0, 1, 1};
-  const NeighborCheckDebug is_neighbor({0, 0, 0, 0, 0, 0, 0, 0});
-  label.Assign(labels, curvature, is_neighbor);
+    std::vector<PointLabel> labels = InitLabels(8);
+    const std::vector<double> curvature{0, 1, 1, 0, 2, 0, 1, 1};
+    const NeighborCheckDebug is_neighbor({0, 0, 0, 0, 0, 0, 0, 0});
+    label.Assign(labels, curvature, is_neighbor);
 
-  EXPECT_THAT(
-    labels,
-    testing::ElementsAre(
-      PointLabel::Surface,
-      PointLabel::SurfaceNeighbor,
-      PointLabel::SurfaceNeighbor,
-      PointLabel::Surface,
-      PointLabel::SurfaceNeighbor,
-      PointLabel::SurfaceNeighbor,
-      PointLabel::Default,
-      PointLabel::Default
-    )
-  );
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::Surface,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::Surface,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::Default,
+        PointLabel::Default
+      )
+    );
+  }
+
+  {
+    const int padding = 2;
+    const double threshold = 0.5;
+
+    const SurfaceLabel label(padding, threshold);
+
+    std::vector<PointLabel> labels = InitLabels(8);
+    const std::vector<double> curvature{1, 1, 1, 0, 1, 1, 0, 1};
+    const NeighborCheckDebug is_neighbor({0, 0, 1, 1, 1, 0, 0, 0});
+    label.Assign(labels, curvature, is_neighbor);
+
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::Surface,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::SurfaceNeighbor,
+        PointLabel::Surface,
+        PointLabel::SurfaceNeighbor
+      )
+    );
+  }
 }
