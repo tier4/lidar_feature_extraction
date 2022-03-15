@@ -37,12 +37,12 @@
 
 #include "iterator.hpp"
 
-template<typename Element>
+template<typename PointT>
 class MappedPoints
 {
 public:
   MappedPoints(
-    const typename pcl::PointCloud<Element>::Ptr & cloud,
+    const typename pcl::PointCloud<PointT>::Ptr & cloud,
     const std::vector<int> & indices)
   : cloud_(cloud), indices_(indices)
   {
@@ -53,13 +53,19 @@ public:
     return indices_.size();
   }
 
-  Element At(const int index) const
+  PointT At(const int index) const
   {
     return cloud_->at(indices_.at(index));
   }
 
+  MappedPoints Slice(const int begin, const int end) const
+  {
+    const std::vector<int> indices(indices_.begin() + begin, indices_.begin() + end);
+    return MappedPoints<PointT>(cloud_, indices);
+  }
+
 private:
-  const typename pcl::PointCloud<Element>::Ptr cloud_;
+  const typename pcl::PointCloud<PointT>::Ptr cloud_;
   const std::vector<int> indices_;
 };
 

@@ -29,4 +29,10 @@ TEST(MappedPoints, MappedPoints)
   EXPECT_EQ(mapped_points.At(3).y, 3.);
   EXPECT_EQ(mapped_points.At(4).y, 0.);
   EXPECT_EQ(mapped_points.At(5).y, 1.);
+
+  const MappedPoints<pcl::PointXYZ> sliced = mapped_points.Slice(1, 4);
+  EXPECT_EQ(sliced.Size(), 3);
+  EXPECT_EQ(sliced.At(0).y, 0.);
+  EXPECT_EQ(sliced.At(1).y, 1.);
+  EXPECT_EQ(sliced.At(2).y, 3.);
 }
