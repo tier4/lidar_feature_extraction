@@ -211,7 +211,7 @@ public:
         return curvature.at(i) >= threshold_;
       };
 
-    const std::vector<int> indices = Argsort(curvature);
+    const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
     int n_picked = 0;
     for (const int index : boost::adaptors::reverse(indices)) {
@@ -256,7 +256,7 @@ public:
         return curvature.at(i) <= threshold_;
       };
 
-    const std::vector<int> indices = Argsort(curvature);
+    const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
     for (const int index : indices) {
       if (label.At(offset + index) != PointLabel::Default || !is_surface(index)) {

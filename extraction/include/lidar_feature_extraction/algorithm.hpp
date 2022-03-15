@@ -34,29 +34,39 @@
 
 #include <algorithm>
 #include <vector>
+#include <iterator>
 
 #include "iterator.hpp"
 
-template<typename T>
-class by_value
+template<typename Iterator>
+using ValueType = typename std::iterator_traits<Iterator>::value_type;
+
+template<typename Iterator, typename T = ValueType<Iterator>>
+class ByValue
 {
 public:
-  explicit by_value(const std::vector<T> & values)
-  : values_(values) {}
+  explicit ByValue(const Iterator & values_begin)
+  : begin_(values_begin) {}
+
+  T At(const int i) const
+  {
+    return *(begin_ + i);
+  }
+
   bool operator()(const int & left, const int & right)
   {
-    return values_.at(left) < values_.at(right);
+    return this->At(left) < this->At(right);
   }
 
 private:
-  const std::vector<T> & values_;
+  const typename std::vector<T>::const_iterator & begin_;
 };
 
-template<typename T>
-std::vector<int> Argsort(const std::vector<T> & values)
+template<typename Iterator, typename T = ValueType<Iterator>>
+std::vector<int> Argsort(const Iterator & values_begin, const Iterator & values_end)
 {
-  std::vector<int> indices = irange(values.size());
-  std::sort(indices.begin(), indices.end(), by_value(values));
+  std::vector<int> indices = irange(values_end - values_begin);
+  std::sort(indices.begin(), indices.end(), ByValue(values_begin));
   return indices;
 }
 

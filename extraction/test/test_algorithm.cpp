@@ -12,14 +12,14 @@
 TEST(Algorithm, Argsort)
 {
   {
-    const std::vector<double> curvature{0.3, 0.2, 1.0, 0.2, 0.0, 0.1};
-    const std::vector<int> indices = Argsort(curvature);
+    const std::vector<double> values{0.3, 0.2, 1.0, 0.2, 0.0, 0.1};
+    const std::vector<int> indices = Argsort(values.begin(), values.end());
     EXPECT_THAT(indices, testing::ElementsAre(4, 5, 1, 3, 0, 2));
   }
 
   {
-    const std::vector<double> curvature{0.0, 0.0, 0.0, 0.0, 0.0};
-    const std::vector<int> indices = Argsort(curvature);
+    const std::vector<double> values{0.0, 0.0, 0.0, 0.0, 0.0};
+    const std::vector<int> indices = Argsort(values.begin(), values.end());
     EXPECT_THAT(indices, testing::ElementsAre(0, 1, 2, 3, 4));
   }
 }
