@@ -45,7 +45,6 @@
 #include "lidar_feature_extraction/index_range.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
-#include "lidar_feature_extraction/occlusion.hpp"
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/range_message.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
@@ -255,20 +254,6 @@ private:
   const int padding_;
   const double threshold_;
 };
-
-template<typename PointT>
-void LabelOutOfRange(
-  LabelBase & label,
-  const Range<PointT> & range,
-  const double min_range,
-  const double max_range)
-{
-  for (int i = 0; i < range.Size(); i++) {
-    if (!IsInInclusiveRange(range(i), min_range, max_range)) {
-      label.Fill(i, PointLabel::OutOfRange);
-    }
-  }
-}
 
 void AssignCurvature(
   std::vector<double> & curvature_output,

@@ -275,27 +275,3 @@ TEST(Label, FillNeighbors)
       std::invalid_argument);
   }
 }
-
-TEST(Label, LabelOutOfRange)
-{
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  cloud->push_back(pcl::PointXYZ(1.9, 0.0, 0.0));
-  cloud->push_back(pcl::PointXYZ(2.0, 0.0, 0.0));
-  cloud->push_back(pcl::PointXYZ(0.0, 5.0, 0.0));
-  cloud->push_back(pcl::PointXYZ(0.0, 8.0, 0.0));
-  cloud->push_back(pcl::PointXYZ(0.0, 8.1, 0.0));
-
-  const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-  const Range<pcl::PointXYZ> range(ref_points);
-
-  LabelBase label(ref_points.Size());
-  LabelOutOfRange(label, range, 2.0, 8.0);
-  EXPECT_THAT(
-    label.Get(),
-    testing::ElementsAre(
-      PointLabel::OutOfRange,
-      PointLabel::Default,
-      PointLabel::Default,
-      PointLabel::Default,
-      PointLabel::OutOfRange));
-}

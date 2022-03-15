@@ -26,36 +26,30 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OCCLUSION_HPP_
-#define OCCLUSION_HPP_
 
-#include "lidar_feature_extraction/label.hpp"
-#include "lidar_feature_extraction/neighbor.hpp"
+#include "lidar_feature_extraction/out_of_range.hpp"
 
-template<typename PointT>
-void LabelOccludedPoints(
-  Label<PointT> & label,
-  const NeighborCheck<PointT> & is_neighbor,
-  const Range<PointT> & range,
-  const int padding,
-  const double distance_diff_threshold)
+
+TEST(Label, LabelOutOfRange)
 {
-  for (int i = padding; i < label.Size() - padding - 1; i++) {
-    if (!is_neighbor(i + 0, i + 1)) {
-      continue;
-    }
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(1.9, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(2.0, 0.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 5.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 8.0, 0.0));
+  cloud->push_back(pcl::PointXYZ(0.0, 8.1, 0.0));
 
-    const double range0 = range(i + 0);
-    const double range1 = range(i + 1);
+  const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+  const Range<pcl::PointXYZ> range(ref_points);
 
-    if (range0 > range1 + distance_diff_threshold) {
-      label.FillFromRight(i - padding - 1, i, PointLabel::Occluded);
-    }
-
-    if (range1 > range0 + distance_diff_threshold) {
-      label.FillFromLeft(i + 1, i + padding + 2, PointLabel::Occluded);
-    }
-  }
+  LabelBase label(ref_points.Size());
+  LabelOutOfRange(label, range, 2.0, 8.0);
+  EXPECT_THAT(
+    label.Get(),
+    testing::ElementsAre(
+      PointLabel::OutOfRange,
+      PointLabel::Default,
+      PointLabel::Default,
+      PointLabel::Default,
+      PointLabel::OutOfRange));
 }
-
-#endif  // OCCLUSION_HPP_

@@ -30,6 +30,7 @@
 #define PARALLEL_BEAM_HPP_
 
 #include <vector>
+
 #include "lidar_feature_extraction/label.hpp"
 
 template<typename PointT>

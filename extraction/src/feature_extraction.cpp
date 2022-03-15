@@ -49,6 +49,7 @@
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
 #include "lidar_feature_extraction/occlusion.hpp"
+#include "lidar_feature_extraction/out_of_range.hpp"
 #include "lidar_feature_extraction/parallel_beam.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 #include "lidar_feature_extraction/range.hpp"

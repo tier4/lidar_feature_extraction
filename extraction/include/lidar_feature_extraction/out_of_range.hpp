@@ -26,36 +26,25 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OCCLUSION_HPP_
-#define OCCLUSION_HPP_
+#ifndef LABEL_OUT_OF_RANGE_HPP_
+#define LABEL_OUT_OF_RANGE_HPP_
+
 
 #include "lidar_feature_extraction/label.hpp"
-#include "lidar_feature_extraction/neighbor.hpp"
+
 
 template<typename PointT>
-void LabelOccludedPoints(
-  Label<PointT> & label,
-  const NeighborCheck<PointT> & is_neighbor,
+void LabelOutOfRange(
+  LabelBase & label,
   const Range<PointT> & range,
-  const int padding,
-  const double distance_diff_threshold)
+  const double min_range,
+  const double max_range)
 {
-  for (int i = padding; i < label.Size() - padding - 1; i++) {
-    if (!is_neighbor(i + 0, i + 1)) {
-      continue;
-    }
-
-    const double range0 = range(i + 0);
-    const double range1 = range(i + 1);
-
-    if (range0 > range1 + distance_diff_threshold) {
-      label.FillFromRight(i - padding - 1, i, PointLabel::Occluded);
-    }
-
-    if (range1 > range0 + distance_diff_threshold) {
-      label.FillFromLeft(i + 1, i + padding + 2, PointLabel::Occluded);
+  for (int i = 0; i < range.Size(); i++) {
+    if (!IsInInclusiveRange(range(i), min_range, max_range)) {
+      label.Fill(i, PointLabel::OutOfRange);
     }
   }
 }
 
-#endif  // OCCLUSION_HPP_
+#endif  // LABEL_OUT_OF_RANGE_HPP_
