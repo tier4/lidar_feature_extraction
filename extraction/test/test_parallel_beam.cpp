@@ -27,6 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
+#include <gmock/gmock.h>
+
 #include "lidar_feature_extraction/parallel_beam.hpp"
 
 

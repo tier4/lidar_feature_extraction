@@ -26,20 +26,28 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <gmock/gmock.h>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include "lidar_feature_extraction/neighbor.hpp"
+#include "lidar_feature_extraction/iterator.hpp"
+
 
 TEST(IsNeighbor, IsNeighbor)
 {
   {
     const pcl::PointXYZ p0(1., 1., 0.);
     const pcl::PointXYZ p1(1., 1., 0.);
-    EXPECT_TRUE(NeighborCheck(p0, p1, 0.));
+    EXPECT_TRUE(IsNeighbor(p0, p1, 0.));
   }
 
   {
     const pcl::PointXYZ p0(0., 1., 0.);
     const pcl::PointXYZ p1(1., 0., 0.);
-    EXPECT_TRUE(NeighborCheck(p0, p1, M_PI / 2.));
-    EXPECT_FALSE(NeighborCheck(p0, p1, M_PI / 2. - 1e-3));
+    EXPECT_TRUE(IsNeighbor(p0, p1, M_PI / 2.));
+    EXPECT_FALSE(IsNeighbor(p0, p1, M_PI / 2. - 1e-3));
   }
 }
 
@@ -51,27 +59,47 @@ TEST(NeighborCheck, NeighborCheck)
   cloud->push_back(pcl::PointXYZ(0., 1., 0.));
   cloud->push_back(pcl::PointXYZ(1., 0., 0.));
   cloud->push_back(pcl::PointXYZ(1., 0., 0.));
+  MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
 
   {
-    const NeighborCheck is_neighbor(cloud, 0.);
+    const NeighborCheck is_neighbor(ref_points, 0.);
     EXPECT_EQ(is_neighbor.Size(), 4);
   }
 
   {
-    const NeighborCheck is_neighbor(cloud, 0.);
+    const NeighborCheck is_neighbor(ref_points, 0.);
     EXPECT_TRUE(is_neighbor(2, 3));
   }
 
   {
-    const NeighborCheck is_neighbor(cloud, M_PI / 4.);
+    const NeighborCheck is_neighbor(ref_points, M_PI / 4.);
     EXPECT_TRUE(is_neighbor(0, 1));
     EXPECT_FALSE(is_neighbor(1, 2));
   }
 
   {
-    const NeighborCheck is_neighbor(cloud, M_PI / 4.);
+    const NeighborCheck is_neighbor(ref_points, M_PI / 4.);
     const NeighborCheck sliced = is_neighbor.Slice(1, 3);
     EXPECT_EQ(sliced.Size(), 2);
     EXPECT_FALSE(sliced(0, 1));
   }
+}
+
+TEST(NeighborCheck, ThrowIfInsufficientPoints)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(1., 1., 0.));
+
+  MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+
+  EXPECT_THROW(
+    try {
+      const NeighborCheck is_neighbor(ref_points, 0.);
+      EXPECT_EQ(is_neighbor.Size(), 4);
+    } catch(std::invalid_argument & e) {
+      EXPECT_STREQ(e.what(), "The input point size (which is 1) cannot be smaller than 2");
+      throw e;
+    },
+    std::invalid_argument
+  );
 }

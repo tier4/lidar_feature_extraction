@@ -30,6 +30,8 @@
 #ifndef NEIGHBOR_HPP_
 #define NEIGHBOR_HPP_
 
+#include <fmt/core.h>
+
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
 
@@ -46,6 +48,11 @@ public:
   NeighborCheck(const MappedPoints<PointT> & ref_points, const double radian_threshold)
   : ref_points_(ref_points), radian_threshold_(radian_threshold)
   {
+    if (ref_points.Size() < 2) {
+      auto s = fmt::format(
+        "The input point size (which is {}) cannot be smaller than 2", ref_points.Size());
+      throw std::invalid_argument(s);
+    }
   }
 
   bool operator()(const int index1, const int index2) const
