@@ -64,7 +64,6 @@ public:
   FeatureExtraction()
   : Node("lidar_feature_extraction"),
     padding_(this->declare_parameter("convolution_padding", 5)),
-    max_edges_per_block_(this->declare_parameter("max_edges_per_block", 20)),
     radian_threshold_(this->declare_parameter("radian_threshold", 2.0)),
     distance_diff_threshold_(this->declare_parameter("distance_diff_threshold", 0.3)),
     range_ratio_threshold_(this->declare_parameter("range_ratio_threshold", 0.02)),
@@ -171,7 +170,6 @@ private:
   }
 
   const int padding_;
-  const int max_edges_per_block_;
   const double radian_threshold_;
   const double distance_diff_threshold_;
   const double range_ratio_threshold_;
