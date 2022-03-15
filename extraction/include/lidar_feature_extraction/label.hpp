@@ -36,6 +36,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -57,10 +58,10 @@ std::vector<PointLabel> InitLabels(const int size)
   return std::vector<PointLabel>(size, PointLabel::Default);
 }
 
-template<typename PointT>
+template<typename Container>
 void FillFromLeft(
-  std::vector<PointLabel> & labels,
-  const NeighborCheckXY<PointT> & is_neighbor,
+  Container & labels,
+  const NeighborCheckBase & is_neighbor,
   const int begin_index,
   const int end_index,
   const PointLabel & label)
@@ -87,10 +88,10 @@ void FillFromLeft(
   labels.at(end_index - 1) = label;
 }
 
-template<typename PointT>
+template<typename Container>
 void FillFromRight(
-  std::vector<PointLabel> & labels,
-  const NeighborCheckXY<PointT> & is_neighbor,
+  Container & labels,
+  const NeighborCheckBase & is_neighbor,
   const int begin_index,
   const int end_index,
   const PointLabel & label)
@@ -118,10 +119,10 @@ void FillFromRight(
   labels.at(begin_index + 1) = label;
 }
 
-template<typename PointT>
+template<typename Container>
 void FillNeighbors(
-  std::vector<PointLabel> & labels,
-  const NeighborCheckXY<PointT> & is_neighbor,
+  Container & labels,
+  const NeighborCheckBase & is_neighbor,
   const int index,
   const int padding,
   const PointLabel & label)
@@ -144,7 +145,6 @@ void FillNeighbors(
   FillFromRight(labels, is_neighbor, index - padding - 1, index - 1, label);
 }
 
-template<typename PointT>
 class EdgeLabel
 {
 public:
@@ -158,11 +158,11 @@ public:
   {
   }
 
+  template<typename ContainerA, typename ContainerB>
   void Assign(
-    std::vector<PointLabel> & labels,
-    const NeighborCheckXY<PointT> & is_neighbor,
-    const std::vector<double> & curvature,
-    const int offset) const
+    ContainerA & labels,
+    const ContainerB & curvature,
+    const NeighborCheckBase & is_neighbor) const
   {
     auto is_edge = [&](const int i) {
         return curvature.at(i) >= threshold_;
@@ -192,7 +192,6 @@ private:
   const int n_max_edges_;
 };
 
-template<typename PointT>
 class SurfaceLabel
 {
 public:
@@ -204,12 +203,13 @@ public:
   {
   }
 
+  template<typename ContainerA, typename ContainerB>
   void Assign(
-    std::vector<PointLabel> & labels,
-    const NeighborCheckXY<PointT> & is_neighbor,
-    const std::vector<double> & curvature,
-    const int offset) const
+    ContainerA & labels,
+    const ContainerB & curvature,
+    const NeighborCheckBase & is_neighbor) const
   {
+    assert(is_neighbor.Size());
     auto is_surface = [&](const int i) {
         return curvature.at(i) <= threshold_;
       };
