@@ -1,0 +1,60 @@
+// Copyright 2022 Tixiao Shan, Takeshi Ishita
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the Tixiao Shan, Takeshi Ishita nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+#ifndef OCCLUSION_HPP_
+#define OCCLUSION_HPP_
+
+#include "lidar_feature_extraction/label.hpp"
+
+template<typename PointT>
+void LabelOccludedPoints(
+  Label<PointT> & label,
+  const NeighborCheck<PointT> & is_neighbor,
+  const Range<PointT> & range,
+  const int padding,
+  const double distance_diff_threshold)
+{
+  for (int i = padding; i < label.Size() - padding - 1; i++) {
+    if (!is_neighbor(i + 0, i + 1)) {
+      continue;
+    }
+
+    const double range0 = range(i + 0);
+    const double range1 = range(i + 1);
+
+    if (range0 > range1 + distance_diff_threshold) {
+      label.FillFromRight(i - padding - 1, i, PointLabel::Occluded);
+    }
+
+    if (range1 > range0 + distance_diff_threshold) {
+      label.FillFromLeft(i + 1, i + padding + 2, PointLabel::Occluded);
+    }
+  }
+}
+
+#endif  // OCCLUSION_HPP_
