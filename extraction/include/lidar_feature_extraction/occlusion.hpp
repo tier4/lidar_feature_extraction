@@ -32,15 +32,18 @@
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
 
+#include <vector>
+
+
 template<typename PointT>
 void LabelOccludedPoints(
-  Label<PointT> & label,
+  std::vector<PointLabel> & labels,
   const NeighborCheckXY<PointT> & is_neighbor,
   const Range<PointT> & range,
   const int padding,
   const double distance_diff_threshold)
 {
-  for (int i = padding; i < label.Size() - padding - 1; i++) {
+  for (unsigned int i = padding; i < labels.size() - padding - 1; i++) {
     if (!is_neighbor(i + 0, i + 1)) {
       continue;
     }
@@ -49,11 +52,11 @@ void LabelOccludedPoints(
     const double range1 = range(i + 1);
 
     if (range0 > range1 + distance_diff_threshold) {
-      label.FillFromRight(i - padding - 1, i, PointLabel::Occluded);
+      FillFromRight(labels, is_neighbor, i - padding - 1, i, PointLabel::Occluded);
     }
 
     if (range1 > range0 + distance_diff_threshold) {
-      label.FillFromLeft(i + 1, i + padding + 2, PointLabel::Occluded);
+      FillFromLeft(labels, is_neighbor, i + 1, i + padding + 2, PointLabel::Occluded);
     }
   }
 }

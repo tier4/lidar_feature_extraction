@@ -137,20 +137,20 @@ private:
         const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
 
-        Label label(is_neighbor);
-        LabelOutOfRange(label, range, min_range_, max_range_);
-        LabelOccludedPoints(label, is_neighbor, range, padding_, distance_diff_threshold_);
-        LabelParallelBeamPoints(label, range, range_ratio_threshold_);
+        std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+        LabelOutOfRange(labels, range, min_range_, max_range_);
+        LabelOccludedPoints(labels, is_neighbor, range, padding_, distance_diff_threshold_);
+        LabelParallelBeamPoints(labels, range, range_ratio_threshold_);
 
         std::vector<double> curvature_output;
         AssignLabel(
-          label, curvature_output, range,
+          labels, curvature_output, is_neighbor, range,
           edge_label_, surface_label_, n_blocks_, padding_);
 
-        ExtractByLabel<PointXYZIR>(edge, ref_points, label, PointLabel::Edge);
-        ExtractByLabel<PointXYZIR>(surface, ref_points, label, PointLabel::Surface);
+        ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
+        ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
 
-        *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, label);
+        *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, labels);
         *curvature_cloud += *ColorPointsByValue(
           ref_points, curvature_output, 0., debug_max_curvature);
       } catch (const std::invalid_argument & e) {

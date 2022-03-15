@@ -36,6 +36,7 @@
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 
+
 std::vector<uint8_t> LabelToColor(const PointLabel & label)
 {
   if (label == PointLabel::Default) {
@@ -90,13 +91,14 @@ pcl::PointXYZRGB MakeXYZRGB(const PointT & p, const std::vector<uint8_t> & rgb)
 template<typename PointT>
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByLabel(
   const MappedPoints<PointT> & ref_points,
-  const LabelBase & label)
+  const std::vector<PointLabel> & labels)
 {
-  assert(ref_points.Size() == label.Size());
+  assert(ref_points.Size() == static_cast<int>(labels.size()));
+
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGB>());
-  for (int i = 0; i < label.Size(); i++) {
+  for (unsigned int i = 0; i < labels.size(); i++) {
     const PointT & p = ref_points.At(i);
-    const std::vector<uint8_t> rgb = LabelToColor(label.At(i));
+    const std::vector<uint8_t> rgb = LabelToColor(labels.at(i));
     colored->push_back(MakeXYZRGB(p, rgb));
   }
   return colored;

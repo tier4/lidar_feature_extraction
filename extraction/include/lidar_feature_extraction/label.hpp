@@ -51,124 +51,98 @@
 
 #include "lidar_feature_library/point_type.hpp"
 
-class LabelBase
+
+std::vector<PointLabel> InitLabels(const int size)
 {
-public:
-  explicit LabelBase(const int size)
-  : label_(std::vector<PointLabel>(size, PointLabel::Default))
-  {
-  }
-
-  explicit LabelBase(const LabelBase & label)
-  : label_(label.label_)
-  {
-  }
-
-  void Fill(const int index, const PointLabel & label)
-  {
-    label_.at(index) = label;
-  }
-
-  PointLabel At(const int index) const
-  {
-    return label_.at(index);
-  }
-
-  std::vector<PointLabel> Get() const
-  {
-    return label_;
-  }
-
-  int Size() const
-  {
-    return label_.size();
-  }
-
-protected:
-  std::vector<PointLabel> label_;
-};
+  return std::vector<PointLabel>(size, PointLabel::Default);
+}
 
 template<typename PointT>
-class Label : public LabelBase
+void FillFromLeft(
+  std::vector<PointLabel> & labels,
+  const NeighborCheckXY<PointT> & is_neighbor,
+  const int begin_index,
+  const int end_index,
+  const PointLabel & label)
 {
-public:
-  explicit Label(const NeighborCheckXY<PointT> & is_neighbor)
-  : LabelBase(is_neighbor.Size()), is_neighbor_(is_neighbor)
-  {
+  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
+
+  if (end_index > static_cast<int>(labels.size())) {
+    auto s = RangeMessageLargerThan("end_index", "labels.size()", end_index, labels.size());
+    throw std::invalid_argument(s);
   }
 
-  explicit Label(const Label & label)
-  : LabelBase(label), is_neighbor_(label.is_neighbor_)
-  {
+  if (begin_index < 0) {
+    auto s = RangeMessageSmallerThan("begin_index", "0", begin_index, 0);
+    throw std::invalid_argument(s);
   }
 
-  void FillFromLeft(const int begin_index, const int end_index, const PointLabel & label)
-  {
-    if (end_index > this->Size()) {
-      auto s = RangeMessageLargerThan("end_index", "this->Size()", end_index, this->Size());
-      throw std::invalid_argument(s);
-    }
+  for (int i = begin_index; i < end_index - 1; i++) {
+    labels.at(i) = label;
 
-    if (begin_index < 0) {
-      auto s = RangeMessageSmallerThan("begin_index", "0", begin_index, 0);
-      throw std::invalid_argument(s);
+    if (!is_neighbor(i + 0, i + 1)) {
+      return;
     }
+  }
+  labels.at(end_index - 1) = label;
+}
 
-    for (int i = begin_index; i < end_index - 1; i++) {
-      label_.at(i) = label;
+template<typename PointT>
+void FillFromRight(
+  std::vector<PointLabel> & labels,
+  const NeighborCheckXY<PointT> & is_neighbor,
+  const int begin_index,
+  const int end_index,
+  const PointLabel & label)
+{
+  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
 
-      if (!is_neighbor_(i + 0, i + 1)) {
-        return;
-      }
-    }
-    label_.at(end_index - 1) = label;
+  if (end_index >= static_cast<int>(labels.size())) {
+    auto s = RangeMessageLargerThanOrEqualTo(
+      "end_index", "labels.size()", end_index, labels.size());
+    throw std::invalid_argument(s);
   }
 
-  void FillFromRight(const int begin_index, const int end_index, const PointLabel & label)
-  {
-    if (end_index >= this->Size()) {
-      auto s = RangeMessageLargerThanOrEqualTo(
-        "end_index", "this->Size()", end_index, this->Size());
-      throw std::invalid_argument(s);
-    }
-
-    if (begin_index < -1) {
-      auto s = RangeMessageSmallerThan("begin_index", "-1", begin_index, -1);
-      throw std::invalid_argument(s);
-    }
-
-    for (int i = end_index; i > begin_index + 1; i--) {
-      label_.at(i) = label;
-
-      if (!is_neighbor_(i - 0, i - 1)) {
-        return;
-      }
-    }
-    label_.at(begin_index + 1) = label;
+  if (begin_index < -1) {
+    auto s = RangeMessageSmallerThan("begin_index", "-1", begin_index, -1);
+    throw std::invalid_argument(s);
   }
 
-  void FillNeighbors(const int index, const int padding, const PointLabel & label)
-  {
-    if (index + padding >= this->Size()) {
-      auto s = RangeMessageLargerThanOrEqualTo(
-        "index + padding", "this->Size()", index + padding, this->Size());
-      throw std::invalid_argument(s);
-    }
+  for (int i = end_index; i > begin_index + 1; i--) {
+    labels.at(i) = label;
 
-    if (index - padding < 0) {
-      auto s = RangeMessageSmallerThan(
-        "index - padding", "0", index - padding, 0);
-      throw std::invalid_argument(s);
+    if (!is_neighbor(i - 0, i - 1)) {
+      return;
     }
+  }
+  labels.at(begin_index + 1) = label;
+}
 
-    this->Fill(index, label);
-    this->FillFromLeft(index + 1, index + 1 + padding, label);
-    this->FillFromRight(index - padding - 1, index - 1, label);
+template<typename PointT>
+void FillNeighbors(
+  std::vector<PointLabel> & labels,
+  const NeighborCheckXY<PointT> & is_neighbor,
+  const int index,
+  const int padding,
+  const PointLabel & label)
+{
+  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
+
+  if (index + padding >= static_cast<int>(labels.size())) {
+    auto s = RangeMessageLargerThanOrEqualTo(
+      "index + padding", "labels.size()", index + padding, labels.size());
+    throw std::invalid_argument(s);
   }
 
-private:
-  const NeighborCheckXY<PointT> is_neighbor_;
-};
+  if (index - padding < 0) {
+    auto s = RangeMessageSmallerThan("index - padding", "0", index - padding, 0);
+    throw std::invalid_argument(s);
+  }
+
+  labels.at(index) = label;
+  FillFromLeft(labels, is_neighbor, index + 1, index + 1 + padding, label);
+  FillFromRight(labels, is_neighbor, index - padding - 1, index - 1, label);
+}
 
 template<typename PointT>
 class EdgeLabel
@@ -185,7 +159,8 @@ public:
   }
 
   void Assign(
-    Label<PointT> & label,
+    std::vector<PointLabel> & labels,
+    const NeighborCheckXY<PointT> & is_neighbor,
     const std::vector<double> & curvature,
     const int offset) const
   {
@@ -200,12 +175,12 @@ public:
       if (n_picked >= n_max_edges_) {
         break;
       }
-      if (label.At(offset + index) != PointLabel::Default || !is_edge(index)) {
+      if (labels.at(offset + index) != PointLabel::Default || !is_edge(index)) {
         continue;
       }
 
-      label.FillNeighbors(offset + index, padding_, PointLabel::EdgeNeighbor);
-      label.Fill(offset + index, PointLabel::Edge);
+      FillNeighbors(labels, is_neighbor, offset + index, padding_, PointLabel::EdgeNeighbor);
+      labels.at(offset + index) = PointLabel::Edge;
 
       n_picked++;
     }
@@ -230,7 +205,8 @@ public:
   }
 
   void Assign(
-    Label<PointT> & label,
+    std::vector<PointLabel> & labels,
+    const NeighborCheckXY<PointT> & is_neighbor,
     const std::vector<double> & curvature,
     const int offset) const
   {
@@ -241,12 +217,12 @@ public:
     const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
     for (const int index : indices) {
-      if (label.At(offset + index) != PointLabel::Default || !is_surface(index)) {
+      if (labels.at(offset + index) != PointLabel::Default || !is_surface(index)) {
         continue;
       }
 
-      label.FillNeighbors(offset + index, padding_, PointLabel::SurfaceNeighbor);
-      label.Fill(offset + index, PointLabel::Surface);
+      FillNeighbors(labels, is_neighbor, offset + index, padding_, PointLabel::SurfaceNeighbor);
+      labels.at(offset + index) = PointLabel::Surface;
     }
   }
 
@@ -267,15 +243,16 @@ void AssignCurvature(
 
 template<typename PointT>
 void AssignLabel(
-  Label<PointT> & label,
+  std::vector<PointLabel> & labels,
   std::vector<double> & curvature_output,
+  const NeighborCheckXY<PointT> & is_neighbor,
   const Range<PointT> & range,
   const EdgeLabel<PointT> edge_label,
   const SurfaceLabel<PointT> surface_label,
   const int n_blocks,
   const int padding)
 {
-  assert(label.Size() == range.Size());
+  assert(static_cast<int>(labels.size()) == range.Size());
 
   curvature_output = std::vector<double>(range.Size(), 0.);
 
@@ -290,8 +267,8 @@ void AssignLabel(
     assert(curvature.size() == static_cast<std::uint32_t>(end - begin));
     AssignCurvature(curvature_output, curvature, begin, end);
 
-    edge_label.Assign(label, curvature, begin);
-    surface_label.Assign(label, curvature, begin);
+    edge_label.Assign(labels, is_neighbor, curvature, begin);
+    surface_label.Assign(labels, is_neighbor, curvature, begin);
   }
 }
 
@@ -299,13 +276,13 @@ template<typename PointT>
 void ExtractByLabel(
   typename pcl::PointCloud<PointT>::Ptr output_cloud,
   const MappedPoints<PointT> & ref_points,
-  const LabelBase & labels,
+  const std::vector<PointLabel> & labels,
   const PointLabel & label)
 {
-  assert(ref_points.Size() == labels.Size());
+  assert(ref_points.Size() == static_cast<int>(labels.size()));
 
-  for (int i = 0; i < labels.Size(); i++) {
-    if (labels.At(i) == label) {
+  for (unsigned int i = 0; i < labels.size(); i++) {
+    if (labels.at(i) == label) {
       output_cloud->push_back(ref_points.At(i));
     }
   }

@@ -54,11 +54,11 @@ TEST(Label, LabelOccludedPoints)
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
-      Label<pcl::PointXYZ> label(is_neighbor);
-      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 1, distance_threshold);
+      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 1, distance_threshold);
 
       EXPECT_THAT(
-        label.Get(),
+        labels,
         testing::ElementsAre(
           PointLabel::Default,
           PointLabel::Default,
@@ -72,11 +72,11 @@ TEST(Label, LabelOccludedPoints)
     }
 
     {
-      Label<pcl::PointXYZ> label(is_neighbor);
-      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 3, distance_threshold);
+      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 3, distance_threshold);
 
       EXPECT_THAT(
-        label.Get(),
+        labels,
         testing::ElementsAre(
           PointLabel::Default,
           PointLabel::Default,
@@ -108,10 +108,10 @@ TEST(Label, LabelOccludedPoints)
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
-      Label<pcl::PointXYZ> label(is_neighbor);
-      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 1, distance_threshold);
+      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 1, distance_threshold);
       EXPECT_THAT(
-        label.Get(),
+        labels,
         testing::ElementsAre(
           PointLabel::Default,
           PointLabel::Default,
@@ -126,10 +126,10 @@ TEST(Label, LabelOccludedPoints)
     }
 
     {
-      Label<pcl::PointXYZ> label(is_neighbor);
-      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 3, distance_threshold);
+      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 3, distance_threshold);
       EXPECT_THAT(
-        label.Get(),
+        labels,
         testing::ElementsAre(
           PointLabel::Default,
           PointLabel::Default,

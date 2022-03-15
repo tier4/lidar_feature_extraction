@@ -46,15 +46,15 @@ TEST(ColorPoints, ColorPointsByLabel)
     };
   };
 
-  LabelBase label(8);
-  label.Fill(0, PointLabel::Default);
-  label.Fill(1, PointLabel::Edge);
-  label.Fill(2, PointLabel::Surface);
-  label.Fill(3, PointLabel::EdgeNeighbor);
-  label.Fill(4, PointLabel::SurfaceNeighbor);
-  label.Fill(5, PointLabel::OutOfRange);
-  label.Fill(6, PointLabel::Occluded);
-  label.Fill(7, PointLabel::ParallelBeam);
+  std::vector<PointLabel> labels = InitLabels(8);
+  labels.at(0) = PointLabel::Default;
+  labels.at(1) = PointLabel::Edge;
+  labels.at(2) = PointLabel::Surface;
+  labels.at(3) = PointLabel::EdgeNeighbor;
+  labels.at(4) = PointLabel::SurfaceNeighbor;
+  labels.at(5) = PointLabel::OutOfRange;
+  labels.at(6) = PointLabel::Occluded;
+  labels.at(7) = PointLabel::ParallelBeam;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(0, 0, 0));
@@ -67,7 +67,7 @@ TEST(ColorPoints, ColorPointsByLabel)
   cloud->push_back(pcl::PointXYZ(7, 0, 0));
 
   const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-  const auto colored = ColorPointsByLabel<pcl::PointXYZ>(ref_points, label);
+  const auto colored = ColorPointsByLabel<pcl::PointXYZ>(ref_points, labels);
 
   EXPECT_THAT(to_vector(colored->at(0)), ElementsAre(0., 0., 0., 255., 255., 255.));
   EXPECT_THAT(to_vector(colored->at(1)), ElementsAre(1., 0., 0., 255.,   0.,   0.));

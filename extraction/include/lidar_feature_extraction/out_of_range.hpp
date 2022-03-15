@@ -29,20 +29,21 @@
 #ifndef LABEL_OUT_OF_RANGE_HPP_
 #define LABEL_OUT_OF_RANGE_HPP_
 
-
 #include "lidar_feature_extraction/label.hpp"
+
+#include <vector>
 
 
 template<typename PointT>
 void LabelOutOfRange(
-  LabelBase & label,
+  std::vector<PointLabel> & labels,
   const Range<PointT> & range,
   const double min_range,
   const double max_range)
 {
   for (int i = 0; i < range.Size(); i++) {
     if (!IsInInclusiveRange(range(i), min_range, max_range)) {
-      label.Fill(i, PointLabel::OutOfRange);
+      labels.at(i) = PointLabel::OutOfRange;
     }
   }
 }

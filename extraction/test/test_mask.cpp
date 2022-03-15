@@ -10,6 +10,12 @@
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 
+TEST(Label, InitLabels)
+{
+  EXPECT_THAT(
+    InitLabels(2),
+    testing::ElementsAre(PointLabel::Default, PointLabel::Default));
+}
 
 TEST(Label, FillFromLeft)
 {
@@ -26,11 +32,12 @@ TEST(Label, FillFromLeft)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label label(is_neighbor);
-    label.FillFromLeft(1, 4, PointLabel::Edge);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+
+    FillFromLeft(labels, is_neighbor, 1, 4, PointLabel::Edge);
 
     EXPECT_THAT(
-      label.Get(),
+      labels,
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::Edge,
@@ -50,11 +57,12 @@ TEST(Label, FillFromLeft)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label label(is_neighbor);
-    label.FillFromLeft(1, 5, PointLabel::Edge);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+
+    FillFromLeft(labels, is_neighbor, 1, 5, PointLabel::Edge);
 
     EXPECT_THAT(
-      label.Get(),
+      labels,
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::Edge,
@@ -71,24 +79,24 @@ TEST(Label, FillFromLeft)
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    auto labels = InitLabels(ref_points.Size());
 
-    Label<pcl::PointXYZ> label(is_neighbor);
+    FillFromLeft(labels, is_neighbor, 1, 3, PointLabel::Default);
 
-    label.FillFromLeft(1, 3, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromLeft(1, 4, PointLabel::Default);
+        FillFromLeft(labels, is_neighbor, 1, 4, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
-        EXPECT_STREQ("end_index (which is 4) > this->Size() (which is 3)", e.what());
+        EXPECT_STREQ("end_index (which is 4) > labels.size() (which is 3)", e.what());
         throw e;
       },
       std::invalid_argument
     );
 
-    label.FillFromLeft(0, 2, PointLabel::Default);
+    FillFromLeft(labels, is_neighbor, 0, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromLeft(-1, 2, PointLabel::Default);
+        FillFromLeft(labels, is_neighbor, -1, 2, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("begin_index (which is -1) < 0 (which is 0)", e.what());
         throw e;
@@ -113,11 +121,12 @@ TEST(Label, FillFromRight)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label<pcl::PointXYZ> label(is_neighbor);
-    label.FillFromRight(1, 3, PointLabel::Edge);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+
+    FillFromRight(labels, is_neighbor, 1, 3, PointLabel::Edge);
 
     EXPECT_THAT(
-      label.Get(),
+      labels,
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::Default,
@@ -137,11 +146,12 @@ TEST(Label, FillFromRight)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label<pcl::PointXYZ> label(is_neighbor);
-    label.FillFromRight(1, 4, PointLabel::Edge);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+
+    FillFromRight(labels, is_neighbor, 1, 4, PointLabel::Edge);
 
     EXPECT_THAT(
-      label.Get(),
+      labels,
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::Default,
@@ -159,23 +169,23 @@ TEST(Label, FillFromRight)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label<pcl::PointXYZ> label(is_neighbor);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
 
-    label.FillFromRight(1, 2, PointLabel::Default);
+    FillFromRight(labels, is_neighbor, 1, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromRight(1, 3, PointLabel::Default);
+        FillFromRight(labels, is_neighbor, 1, 3, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
-        EXPECT_STREQ("end_index (which is 3) >= this->Size() (which is 3)", e.what());
+        EXPECT_STREQ("end_index (which is 3) >= labels.size() (which is 3)", e.what());
         throw e;
       },
       std::invalid_argument
     );
 
-    label.FillFromRight(-1, 2, PointLabel::Default);
+    FillFromRight(labels, is_neighbor, -1, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillFromRight(-2, 2, PointLabel::Default);
+        FillFromRight(labels, is_neighbor, -2, 2, PointLabel::Default);
       } catch(const std::invalid_argument & e) {
         EXPECT_STREQ("begin_index (which is -2) < -1 (which is -1)", e.what());
         throw e;
@@ -200,12 +210,12 @@ TEST(Label, FillNeighbors)
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    auto labels = InitLabels(ref_points.Size());
 
-    Label<pcl::PointXYZ> label(is_neighbor);
-    label.FillNeighbors(3, 2, PointLabel::EdgeNeighbor);
+    FillNeighbors(labels, is_neighbor, 3, 2, PointLabel::EdgeNeighbor);
 
     EXPECT_THAT(
-      label.Get(),
+      labels,
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::EdgeNeighbor,
@@ -229,11 +239,12 @@ TEST(Label, FillNeighbors)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label<pcl::PointXYZ> label(is_neighbor);
-    label.FillNeighbors(3, 2, PointLabel::EdgeNeighbor);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+
+    FillNeighbors(labels, is_neighbor, 3, 2, PointLabel::EdgeNeighbor);
 
     EXPECT_THAT(
-      label.Get(),
+      labels,
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::Default,
@@ -254,20 +265,21 @@ TEST(Label, FillNeighbors)
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
     const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
-    Label<pcl::PointXYZ> label(is_neighbor);
+    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+
     EXPECT_THROW(
       try {
-        label.FillNeighbors(7, 3, PointLabel::Default);
+        FillNeighbors(labels, is_neighbor, 7, 3, PointLabel::Default);
       } catch (const std::invalid_argument & e) {
-        EXPECT_STREQ("index + padding (which is 10) >= this->Size() (which is 10)", e.what());
+        EXPECT_STREQ("index + padding (which is 10) >= labels.size() (which is 10)", e.what());
         throw e;
       },
       std::invalid_argument);
 
-    label.FillNeighbors(3, 3, PointLabel::Default);
+    FillNeighbors(labels, is_neighbor, 3, 3, PointLabel::Default);
     EXPECT_THROW(
       try {
-        label.FillNeighbors(2, 3, PointLabel::Default);
+        FillNeighbors(labels, is_neighbor, 2, 3, PointLabel::Default);
       } catch (const std::invalid_argument & e) {
         EXPECT_STREQ("index - padding (which is -1) < 0 (which is 0)", e.what());
         throw e;
