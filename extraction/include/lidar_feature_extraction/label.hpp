@@ -109,11 +109,6 @@ public:
   {
   }
 
-  void Fill(const int index, const PointLabel & label)
-  {
-    label_.at(index) = label;
-  }
-
   void FillFromLeft(const int begin_index, const int end_index, const PointLabel & label)
   {
     if (end_index > this->Size()) {
