@@ -86,6 +86,16 @@ public:
     edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
     surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
+    assert(padding_ > 0);
+    assert(radian_threshold_ > 0);
+    assert(distance_diff_threshold_ > 0);
+    assert(range_ratio_threshold_ > 0);
+    assert(edge_threshold_ > 0);
+    assert(surface_threshold_ > 0);
+    assert(min_range_ > 0);
+    assert(max_range_ > 0);
+    assert(n_blocks_ > 0);
+
     RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", edge_threshold_);
     RCLCPP_INFO(this->get_logger(), "surface_threshold_ : %lf", surface_threshold_);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);

@@ -51,7 +51,7 @@ TEST(IsNeighborXY, IsNeighborXY)
   }
 }
 
-TEST(NeighborCheckXY, NeighborCheckXY)
+TEST(Neighbor, NeighborCheckXY)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
 
@@ -85,7 +85,59 @@ TEST(NeighborCheckXY, NeighborCheckXY)
   }
 }
 
-TEST(NeighborCheckXY, ThrowIfInsufficientPoints)
+TEST(Neighbor, ThrowOutOfRange)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+
+  cloud->push_back(pcl::PointXYZ(1., 1., 0.));
+  cloud->push_back(pcl::PointXYZ(0., 1., 0.));
+  cloud->push_back(pcl::PointXYZ(1., 0., 0.));
+  MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+
+  const NeighborCheckXY is_neighbor(ref_points, 1e-3);
+
+  EXPECT_THROW(
+    try {
+      is_neighbor(-1, 0);
+    } catch(std::out_of_range & e) {
+      EXPECT_STREQ(e.what(), "index1 (which is -1) < 0 (which is 0)");
+      throw e;
+    },
+    std::out_of_range
+  );
+
+  EXPECT_THROW(
+    try {
+      is_neighbor(3, 0);
+    } catch(std::out_of_range & e) {
+      EXPECT_STREQ(e.what(), "index1 (which is 3) >= this->Size() (which is 3)");
+      throw e;
+    },
+    std::out_of_range
+  );
+
+  EXPECT_THROW(
+    try {
+      is_neighbor(0, -1);
+    } catch(std::out_of_range & e) {
+      EXPECT_STREQ(e.what(), "index2 (which is -1) < 0 (which is 0)");
+      throw e;
+    },
+    std::out_of_range
+  );
+
+  EXPECT_THROW(
+    try {
+      is_neighbor(0, 3);
+    } catch(std::out_of_range & e) {
+      EXPECT_STREQ(e.what(), "index2 (which is 3) >= this->Size() (which is 3)");
+      throw e;
+    },
+    std::out_of_range
+  );
+}
+
+TEST(Neighbor, ThrowIfInsufficientPoints)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(1., 1., 0.));

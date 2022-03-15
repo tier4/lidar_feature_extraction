@@ -33,9 +33,11 @@
 #include <fmt/core.h>
 
 #include <vector>
+#include <string>
 
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
+#include "lidar_feature_extraction/range_message.hpp"
 
 #include "lidar_feature_library/span.hpp"
 
@@ -75,6 +77,9 @@ public:
 
   bool operator()(const int index1, const int index2) const override
   {
+    CheckIndex("index1", index1);
+    CheckIndex("index2", index2);
+
     const PointT & p1 = ref_points_.At(index1);
     const PointT & p2 = ref_points_.At(index2);
     return IsNeighborXY(p1, p2, radian_threshold_);
@@ -91,6 +96,18 @@ public:
   }
 
 private:
+  void CheckIndex(const std::string & name, const int index) const
+  {
+    if (index < 0) {
+      throw std::out_of_range(RangeMessageSmallerThan(name, "0", index, 0));
+    }
+
+    if (index >= this->Size()) {
+      throw std::out_of_range(
+              RangeMessageLargerThanOrEqualTo(name, "this->Size()", index, this->Size()));
+    }
+  }
+
   const MappedPoints<PointT> ref_points_;
   const double radian_threshold_;
 };

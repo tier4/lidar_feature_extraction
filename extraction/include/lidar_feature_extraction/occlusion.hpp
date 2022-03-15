@@ -43,6 +43,9 @@ void LabelOccludedPoints(
   const int padding,
   const double distance_diff_threshold)
 {
+  assert(is_neighbor.Size() == static_cast<int>(labels.size()));
+  assert(is_neighbor.Size() == range.Size());
+
   for (unsigned int i = padding; i < labels.size() - padding - 1; i++) {
     if (!is_neighbor(i + 0, i + 1)) {
       continue;
