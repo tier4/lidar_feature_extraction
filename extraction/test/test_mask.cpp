@@ -86,6 +86,22 @@ TEST(Label, FillFromRight)
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0});
     std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
 
+    FillFromRight(labels, is_neighbor, 0, 2, PointLabel::Edge);
+
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Edge,
+        PointLabel::Edge,
+        PointLabel::Default,
+        PointLabel::Default));
+  }
+
+  {
+    const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0});
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+
     FillFromRight(labels, is_neighbor, 1, 3, PointLabel::Edge);
 
     EXPECT_THAT(
@@ -181,26 +197,36 @@ TEST(Label, FillNeighbors)
   }
 
   {
-    const NeighborCheckDebug is_neighbor(std::vector<int>(10, 0));
+    const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0, 0});
     std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
 
-    EXPECT_THROW(
-      try {
-        FillNeighbors(labels, is_neighbor, 7, 3, PointLabel::Default);
-      } catch (const std::invalid_argument & e) {
-        EXPECT_STREQ("index + padding (which is 10) >= labels.size() (which is 10)", e.what());
-        throw e;
-      },
-      std::invalid_argument);
+    FillNeighbors(labels, is_neighbor, 1, 2, PointLabel::EdgeNeighbor);
 
-    FillNeighbors(labels, is_neighbor, 3, 3, PointLabel::Default);
-    EXPECT_THROW(
-      try {
-        FillNeighbors(labels, is_neighbor, 2, 3, PointLabel::Default);
-      } catch (const std::invalid_argument & e) {
-        EXPECT_STREQ("index - padding (which is -1) < 0 (which is 0)", e.what());
-        throw e;
-      },
-      std::invalid_argument);
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Default,
+        PointLabel::Default));
+  }
+
+  {
+    const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0, 0});
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+
+    FillNeighbors(labels, is_neighbor, 4, 2, PointLabel::EdgeNeighbor);
+
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor));
   }
 }
