@@ -127,22 +127,15 @@ void FillNeighbors(
   const int padding,
   const PointLabel & label)
 {
-  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
+  const int label_size = static_cast<int>(labels.size());
+  assert(label_size == is_neighbor.Size());
 
-  if (index + padding >= static_cast<int>(labels.size())) {
-    auto s = RangeMessageLargerThanOrEqualTo(
-      "index + padding", "labels.size()", index + padding, labels.size());
-    throw std::invalid_argument(s);
-  }
-
-  if (index - padding < 0) {
-    auto s = RangeMessageSmallerThan("index - padding", "0", index - padding, 0);
-    throw std::invalid_argument(s);
-  }
+  const int min = std::max(-1, index - padding - 1);
+  const int max = std::min(index + 1 + padding, label_size);
 
   labels.at(index) = label;
-  FillFromLeft(labels, is_neighbor, index + 1, index + 1 + padding, label);
-  FillFromRight(labels, is_neighbor, index - padding - 1, index - 1, label);
+  FillFromRight(labels, is_neighbor, min, index - 1, label);
+  FillFromLeft(labels, is_neighbor, index + 1, max, label);
 }
 
 class EdgeLabel
