@@ -15,6 +15,8 @@ TEST(IndexRange, IndexRange)
   {
     const IndexRange index_range(0, 12, 3);
 
+    EXPECT_EQ(index_range.NBlocks(), 3);
+
     EXPECT_EQ(index_range.Begin(0), 0);
     EXPECT_EQ(index_range.End(0), 4);
 
@@ -27,6 +29,8 @@ TEST(IndexRange, IndexRange)
 
   {
     const IndexRange index_range(0, 14, 4);
+
+    EXPECT_EQ(index_range.NBlocks(), 4);
 
     EXPECT_EQ(index_range.Begin(0), 0);
     EXPECT_EQ(index_range.End(0), 3);
@@ -43,6 +47,8 @@ TEST(IndexRange, IndexRange)
 
   {
     const IndexRange index_range(0, 3, 3);
+
+    EXPECT_EQ(index_range.NBlocks(), 3);
 
     EXPECT_EQ(index_range.Begin(0), 0);
     EXPECT_EQ(index_range.End(0), 1);

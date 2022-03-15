@@ -48,6 +48,11 @@ public:
     }
   }
 
+  int NBlocks() const
+  {
+    return n_blocks_;
+  }
+
   int Begin(const int j) const
   {
     ThrowExceptionIfOutOfRange(j);
