@@ -52,8 +52,6 @@
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/ring.hpp"
 
-#include "lidar_feature_extraction/csvfile.hpp"
-
 #include "lidar_feature_library/ros_msg.hpp"
 
 
