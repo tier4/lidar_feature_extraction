@@ -93,28 +93,4 @@ private:
   const int n_blocks_;
 };
 
-class PaddedIndexRange : public IndexRange
-{
-public:
-  PaddedIndexRange(
-    const int start_index, const int end_index, const int n_blocks,
-    const int padding)
-  : IndexRange(start_index + padding, end_index - padding, n_blocks), padding_(padding)
-  {
-  }
-
-  int Begin(const int j) const
-  {
-    return IndexRange::Begin(j) - padding_;
-  }
-
-  int End(const int j) const
-  {
-    return IndexRange::End(j) + padding_;
-  }
-
-private:
-  const int padding_;
-};
-
 #endif  // INDEX_RANGE_HPP_

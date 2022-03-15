@@ -113,32 +113,3 @@ TEST(IndexRange, IndexRange)
       std::out_of_range);
   }
 }
-
-TEST(IndexRange, PaddedIndexRange) {
-  {
-    const PaddedIndexRange index_range(0, 17, 3, 1);
-
-    EXPECT_EQ(index_range.Begin(0), 0);
-    EXPECT_EQ(index_range.End(0), 7);
-
-    EXPECT_EQ(index_range.Begin(1), 5);
-    EXPECT_EQ(index_range.End(1), 12);
-
-    EXPECT_EQ(index_range.Begin(2), 10);
-    EXPECT_EQ(index_range.End(2), 17);
-  }
-
-  {
-    const PaddedIndexRange index_range(1, 20, 3, 2);
-
-    EXPECT_EQ(index_range.Begin(0), 1);
-    EXPECT_EQ(index_range.End(0), 10);
-
-    EXPECT_EQ(index_range.Begin(1), 6);
-    EXPECT_EQ(index_range.End(1), 15);
-
-    EXPECT_EQ(index_range.Begin(2), 11);
-    EXPECT_EQ(index_range.End(2), 20);
-  }
-}
-
