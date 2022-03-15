@@ -7,15 +7,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include "lidar_feature_extraction/fill.hpp"
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 
-TEST(Label, InitLabels)
-{
-  EXPECT_THAT(
-    InitLabels(2),
-    testing::ElementsAre(PointLabel::Default, PointLabel::Default));
-}
 
 TEST(Label, FillFromLeft)
 {

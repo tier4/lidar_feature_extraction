@@ -11,6 +11,13 @@
 #include "lidar_feature_extraction/label.hpp"
 
 
+TEST(Label, InitLabels)
+{
+  EXPECT_THAT(
+    InitLabels(2),
+    testing::ElementsAre(PointLabel::Default, PointLabel::Default));
+}
+
 TEST(Extraction, ExtractByLabel)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>());

@@ -42,7 +42,7 @@
 
 #include "lidar_feature_extraction/algorithm.hpp"
 #include "lidar_feature_extraction/cloud_iterator.hpp"
-#include "lidar_feature_extraction/curvature.hpp"
+#include "lidar_feature_extraction/fill.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
@@ -56,85 +56,6 @@
 std::vector<PointLabel> InitLabels(const int size)
 {
   return std::vector<PointLabel>(size, PointLabel::Default);
-}
-
-template<typename Container>
-void FillFromLeft(
-  Container & labels,
-  const NeighborCheckBase & is_neighbor,
-  const int begin_index,
-  const int end_index,
-  const PointLabel & label)
-{
-  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
-
-  if (end_index > static_cast<int>(labels.size())) {
-    auto s = RangeMessageLargerThan("end_index", "labels.size()", end_index, labels.size());
-    throw std::invalid_argument(s);
-  }
-
-  if (begin_index < 0) {
-    auto s = RangeMessageSmallerThan("begin_index", "0", begin_index, 0);
-    throw std::invalid_argument(s);
-  }
-
-  for (int i = begin_index; i < end_index - 1; i++) {
-    labels.at(i) = label;
-
-    if (!is_neighbor(i + 0, i + 1)) {
-      return;
-    }
-  }
-  labels.at(end_index - 1) = label;
-}
-
-template<typename Container>
-void FillFromRight(
-  Container & labels,
-  const NeighborCheckBase & is_neighbor,
-  const int begin_index,
-  const int end_index,
-  const PointLabel & label)
-{
-  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
-
-  if (end_index >= static_cast<int>(labels.size())) {
-    auto s = RangeMessageLargerThanOrEqualTo(
-      "end_index", "labels.size()", end_index, labels.size());
-    throw std::invalid_argument(s);
-  }
-
-  if (begin_index < -1) {
-    auto s = RangeMessageSmallerThan("begin_index", "-1", begin_index, -1);
-    throw std::invalid_argument(s);
-  }
-
-  for (int i = end_index; i > begin_index + 1; i--) {
-    labels.at(i) = label;
-
-    if (!is_neighbor(i - 0, i - 1)) {
-      return;
-    }
-  }
-  labels.at(begin_index + 1) = label;
-}
-
-template<typename Container>
-void FillNeighbors(
-  Container & labels,
-  const NeighborCheckBase & is_neighbor,
-  const int index,
-  const int padding,
-  const PointLabel & label)
-{
-  const int label_size = static_cast<int>(labels.size());
-  assert(label_size == is_neighbor.Size());
-
-  const int min = std::max(-1, index - padding - 1);
-  const int max = std::min(index + 1 + padding, label_size);
-
-  FillFromRight(labels, is_neighbor, min, index, label);
-  FillFromLeft(labels, is_neighbor, index, max, label);
 }
 
 class EdgeLabel
