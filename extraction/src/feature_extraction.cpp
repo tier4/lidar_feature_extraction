@@ -144,7 +144,7 @@ private:
         std::vector<double> curvature_output;
         AssignLabel(
           label, curvature_output, range,
-          edge_label_, surface_label_, n_blocks, padding_);
+          edge_label_, surface_label_, n_blocks_, padding_);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, label, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, label, PointLabel::Surface);
@@ -171,7 +171,6 @@ private:
 
   const int padding_;
   const int max_edges_per_block_;
-  const int n_blocks_;
   const double radian_threshold_;
   const double distance_diff_threshold_;
   const double range_ratio_threshold_;
@@ -179,6 +178,7 @@ private:
   const double surface_threshold_;
   const double min_range_;
   const double max_range_;
+  const int n_blocks_;
   const EdgeLabel<PointXYZIR> edge_label_;
   const SurfaceLabel<PointXYZIR> surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
