@@ -73,7 +73,7 @@ public:
     min_range_(this->declare_parameter("min_range", 0.1)),
     max_range_(this->declare_parameter("max_range", 100.0)),
     n_blocks_(this->declare_parameter("n_blocks", 6)),
-    edge_label_(padding_, edge_threshold_, max_edges_per_block_),
+    edge_label_(padding_, edge_threshold_),
     surface_label_(padding_, surface_threshold_),
     cloud_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
@@ -142,17 +142,17 @@ private:
         LabelOccludedPoints(labels, is_neighbor, range, padding_, distance_diff_threshold_);
         LabelParallelBeamPoints(labels, range, range_ratio_threshold_);
 
-        std::vector<double> curvature_output;
-        AssignLabel(
-          labels, curvature_output, is_neighbor, range,
-          edge_label_, surface_label_, n_blocks_, padding_);
+        const std::vector<double> ranges = range(0, range.Size());
+        const std::vector<double> curvature = CalcCurvature(ranges, padding_);
+        const IndexRange index_range(padding_, range.Size() - padding_, n_blocks_);
+
+        AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_, surface_label_);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
 
         *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, labels);
-        *curvature_cloud += *ColorPointsByValue(
-          ref_points, curvature_output, 0., debug_max_curvature);
+        *curvature_cloud += *ColorPointsByValue(ref_points, curvature, 0., debug_max_curvature);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
@@ -180,8 +180,8 @@ private:
   const double min_range_;
   const double max_range_;
   const int n_blocks_;
-  const EdgeLabel<PointXYZIR> edge_label_;
-  const SurfaceLabel<PointXYZIR> surface_label_;
+  const EdgeLabel edge_label_;
+  const SurfaceLabel surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr colored_scan_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr curvature_cloud_publisher_;

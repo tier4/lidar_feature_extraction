@@ -63,11 +63,9 @@ class EdgeLabel
 public:
   EdgeLabel(
     const int padding,
-    const double threshold,
-    const int n_max_edges)
+    const double threshold)
   : padding_(padding),
-    threshold_(threshold),
-    n_max_edges_(n_max_edges)
+    threshold_(threshold)
   {
   }
 
@@ -77,32 +75,28 @@ public:
     const ContainerB & curvature,
     const NeighborCheckBase & is_neighbor) const
   {
+    assert(curvature.size() == labels.size());
+    assert(is_neighbor.Size() == static_cast<int>(labels.size()));
+
     auto is_edge = [&](const int i) {
         return curvature.at(i) >= threshold_;
       };
 
     const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
-    int n_picked = 0;
     for (const int index : boost::adaptors::reverse(indices)) {
-      if (n_picked >= n_max_edges_) {
-        break;
-      }
-      if (labels.at(offset + index) != PointLabel::Default || !is_edge(index)) {
+      if (labels.at(index) != PointLabel::Default || !is_edge(index)) {
         continue;
       }
 
-      FillNeighbors(labels, is_neighbor, offset + index, padding_, PointLabel::EdgeNeighbor);
-      labels.at(offset + index) = PointLabel::Edge;
-
-      n_picked++;
+      FillNeighbors(labels, is_neighbor, index, padding_, PointLabel::EdgeNeighbor);
+      labels.at(index) = PointLabel::Edge;
     }
   }
 
 private:
   const int padding_;
   const double threshold_;
-  const int n_max_edges_;
 };
 
 class SurfaceLabel
@@ -130,12 +124,12 @@ public:
     const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
     for (const int index : indices) {
-      if (labels.at(offset + index) != PointLabel::Default || !is_surface(index)) {
+      if (labels.at(index) != PointLabel::Default || !is_surface(index)) {
         continue;
       }
 
-      FillNeighbors(labels, is_neighbor, offset + index, padding_, PointLabel::SurfaceNeighbor);
-      labels.at(offset + index) = PointLabel::Surface;
+      FillNeighbors(labels, is_neighbor, index, padding_, PointLabel::SurfaceNeighbor);
+      labels.at(index) = PointLabel::Surface;
     }
   }
 
@@ -144,44 +138,28 @@ private:
   const double threshold_;
 };
 
-void AssignCurvature(
-  std::vector<double> & curvature_output,
-  const std::vector<double> & curvature,
-  const int begin, const int end)
-{
-  for (int i = 0; i < end - begin; i++) {
-    curvature_output[begin + i] = curvature[i];
-  }
-}
-
 template<typename PointT>
 void AssignLabel(
   std::vector<PointLabel> & labels,
-  std::vector<double> & curvature_output,
+  const std::vector<double> & curvature,
   const NeighborCheckXY<PointT> & is_neighbor,
-  const Range<PointT> & range,
-  const EdgeLabel<PointT> edge_label,
-  const SurfaceLabel<PointT> surface_label,
-  const int n_blocks,
-  const int padding)
+  const IndexRange & index_range,
+  const EdgeLabel & edge_label,
+  const SurfaceLabel & surface_label)
 {
-  assert(static_cast<int>(labels.size()) == range.Size());
+  assert(curvature.size() == labels.size());
+  assert(is_neighbor.Size() == static_cast<int>(labels.size()));
 
-  curvature_output = std::vector<double>(range.Size(), 0.);
+  for (int j = 0; j < index_range.NBlocks(); j++) {
+    const int begin = index_range.Begin(j);
+    const int end = index_range.End(j);
 
-  const PaddedIndexRange index_range(0, range.Size(), n_blocks, padding);
+    span<PointLabel> label_view(labels.begin() + begin, labels.begin() + end);
+    const const_span<double> curvature_view(curvature.begin() + begin, curvature.begin() + end);
+    const NeighborCheckXY<PointT> sliced_neighbor = is_neighbor.Slice(begin, end);
 
-  for (int j = 0; j < n_blocks; j++) {
-    const std::vector<double> ranges = range(index_range.Begin(j), index_range.End(j));
-    const std::vector<double> curvature = CalcCurvature(ranges, padding);
-
-    const int end = index_range.End(j) - padding;
-    const int begin = index_range.Begin(j) + padding;
-    assert(curvature.size() == static_cast<std::uint32_t>(end - begin));
-    AssignCurvature(curvature_output, curvature, begin, end);
-
-    edge_label.Assign(labels, is_neighbor, curvature, begin);
-    surface_label.Assign(labels, is_neighbor, curvature, begin);
+    edge_label.Assign(label_view, curvature_view, sliced_neighbor);
+    surface_label.Assign(label_view, curvature_view, sliced_neighbor);
   }
 }
 
