@@ -32,6 +32,8 @@
 
 #include <fmt/core.h>
 
+#include <vector>
+
 #include "lidar_feature_extraction/math.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
 
@@ -45,7 +47,7 @@ bool IsNeighborXY(const PointT & p1, const PointT & p2, const double radian_thre
 
 class NeighborCheckBase
 {
- public:
+public:
   virtual bool operator()(const int index1, const int index2) const
   {
     return index1 == index2;
@@ -97,7 +99,7 @@ private:
 class NeighborCheckDebug : public NeighborCheckBase
 {
 public:
-  NeighborCheckDebug(const std::vector<int> & values)
+  explicit NeighborCheckDebug(const std::vector<int> & values)
   : values_(values)
   {
   }
