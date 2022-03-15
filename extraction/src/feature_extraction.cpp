@@ -144,7 +144,7 @@ private:
 
         const std::vector<double> ranges = range(0, range.Size());
         const std::vector<double> curvature = CalcCurvature(ranges, padding_);
-        const IndexRange index_range(padding_, range.Size() - padding_, n_blocks_);
+        const PaddedIndexRange index_range(range.Size(), n_blocks_, padding_);
 
         AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_, surface_label_);
 

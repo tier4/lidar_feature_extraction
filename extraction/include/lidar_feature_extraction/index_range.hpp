@@ -93,4 +93,14 @@ private:
   const int n_blocks_;
 };
 
+class PaddedIndexRange : public IndexRange
+{
+public:
+  PaddedIndexRange(const int size, const int n_blocks, const int padding)
+  : IndexRange(padding, size - padding, n_blocks)
+  {
+  }
+};
+
+
 #endif  // INDEX_RANGE_HPP_

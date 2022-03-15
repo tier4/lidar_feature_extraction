@@ -143,7 +143,7 @@ void AssignLabel(
   std::vector<PointLabel> & labels,
   const std::vector<double> & curvature,
   const NeighborCheckXY<PointT> & is_neighbor,
-  const IndexRange & index_range,
+  const PaddedIndexRange & index_range,
   const EdgeLabel & edge_label,
   const SurfaceLabel & surface_label)
 {
