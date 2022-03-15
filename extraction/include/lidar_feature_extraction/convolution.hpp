@@ -36,27 +36,36 @@
 
 #include "math.hpp"
 
-template<typename T1, typename T2>
 std::vector<double> Convolution1D(
-  const T1 input_begin, const T1 input_end,
-  const T2 weight_begin, const T2 weight_end)
+  const std::vector<double> input,
+  const std::vector<double> weight)
 {
-  const int input_size = input_end - input_begin;
-  const int weight_size = weight_end - weight_begin;
-
-  if (input_size < weight_size) {
+  if (input.size() < weight.size()) {
     auto s = fmt::format(
-      "Input array size {} cannot be smaller than weight size {}",
-      input_size, weight_size);
+      "Input array size {} cannot be smaller than weight size {}", input.size(), weight.size());
     throw std::invalid_argument(s);
   }
 
-  assert(input_size - weight_size + 1 > 0);
-  std::vector<double> result(input_size - weight_size + 1);
-  for (unsigned int i = 0; i < result.size(); i++) {
-    auto iter = input_begin + i;
-    result[i] = InnerProduct(iter, iter + weight_size, weight_begin);
+  assert(weight.size() % 2 == 1);
+
+  const int padding = (weight.size() - 1) / 2;
+  const int convolution_size = input.size() - padding * 2;
+
+  std::vector<double> result(input.size());
+
+  for (int i = 0; i < padding; i++) {
+    result[i] = 0.;
   }
+
+  for (int i = 0; i < convolution_size; i++) {
+    const auto iter = input.begin() + i;
+    result[padding + i] = InnerProduct(iter, iter + weight.size(), weight.begin());
+  }
+
+  for (int i = 0; i < padding; i++) {
+    result[convolution_size + padding + i] = 0.;
+  }
+
   return result;
 }
 

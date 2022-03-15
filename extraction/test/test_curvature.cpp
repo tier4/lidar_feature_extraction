@@ -23,7 +23,8 @@ TEST(Curvature, CalcCurvature)
     const double e1 = 1 * 1 + 2 * 1 + 0 * (-4) + 1 * 1 + 1 * 1;
     const double e2 = 2 * 1 + 0 * 1 + 1 * (-4) + 1 * 1 + 0 * 1;
 
-    EXPECT_THAT(result, testing::ElementsAre(e0 * e0, e1 * e1, e2 * e2));
+    EXPECT_THAT(result.size(), range.size());
+    EXPECT_THAT(result, testing::ElementsAre(0., 0., e0 * e0, e1 * e1, e2 * e2, 0., 0.));
   }
 
   {
@@ -34,6 +35,7 @@ TEST(Curvature, CalcCurvature)
     const double e0 = 4 * 1 + 4 * 1 + 1 * 1 + 2 * (-6) + 0 * 1 + 5 * 1 + 3 * 1;
     const double e1 = 4 * 1 + 1 * 1 + 2 * 1 + 0 * (-6) + 5 * 1 + 3 * 1 + 6 * 1;
 
-    EXPECT_THAT(result, testing::ElementsAre(e0 * e0, e1 * e1));
+    EXPECT_THAT(result.size(), range.size());
+    EXPECT_THAT(result, testing::ElementsAre(0., 0., 0., e0 * e0, e1 * e1, 0., 0., 0.));
   }
 }

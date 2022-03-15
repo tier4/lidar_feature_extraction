@@ -46,11 +46,11 @@ std::vector<double> MakeWeight(const int padding)
   return weight;
 }
 
-std::vector<double> CalcCurvature(const std::vector<double> & range, int padding)
+std::vector<double> CalcCurvature(const std::vector<double> & range, const int padding)
 {
   const std::vector<double> weight = MakeWeight(padding);
   auto f = [](const double v) {return v * v;};
-  const auto weighted = Convolution1D(range.begin(), range.end(), weight.begin(), weight.end());
+  const auto weighted = Convolution1D(range, weight);
   return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
