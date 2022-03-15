@@ -295,23 +295,6 @@ void LabelOccludedPoints(
   }
 }
 
-template<typename PointT>
-void LabelParallelBeamPoints(
-  LabelBase & label,
-  const Range<PointT> & range,
-  const double range_ratio_threshold)
-{
-  const std::vector<double> ranges = range(0, label.Size());
-  for (int i = 1; i < label.Size() - 1; i++) {
-    const float ratio1 = std::abs(ranges.at(i - 1) - ranges.at(i)) / ranges.at(i);
-    const float ratio2 = std::abs(ranges.at(i + 1) - ranges.at(i)) / ranges.at(i);
-
-    if (ratio1 > range_ratio_threshold && ratio2 > range_ratio_threshold) {
-      label.Fill(i, PointLabel::ParallelBeam);
-    }
-  }
-}
-
 void AssignCurvature(
   std::vector<double> & curvature_output,
   const std::vector<double> & curvature,
