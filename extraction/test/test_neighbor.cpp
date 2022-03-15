@@ -40,13 +40,13 @@ TEST(IsNeighbor, IsNeighbor)
   {
     const pcl::PointXYZ p0(1., 1., 0.);
     const pcl::PointXYZ p1(1., 1., 0.);
-    EXPECT_TRUE(IsNeighbor(p0, p1, 0.));
+    EXPECT_TRUE(IsNeighbor(p0, p1, 1e-7));
   }
 
   {
     const pcl::PointXYZ p0(0., 1., 0.);
     const pcl::PointXYZ p1(1., 0., 0.);
-    EXPECT_TRUE(IsNeighbor(p0, p1, M_PI / 2.));
+    EXPECT_TRUE(IsNeighbor(p0, p1, M_PI / 2. + 1e-3));
     EXPECT_FALSE(IsNeighbor(p0, p1, M_PI / 2. - 1e-3));
   }
 }
@@ -72,13 +72,13 @@ TEST(NeighborCheck, NeighborCheck)
   }
 
   {
-    const NeighborCheck is_neighbor(ref_points, M_PI / 4.);
+    const NeighborCheck is_neighbor(ref_points, M_PI / 4. + 1e-3);
     EXPECT_TRUE(is_neighbor(0, 1));
     EXPECT_FALSE(is_neighbor(1, 2));
   }
 
   {
-    const NeighborCheck is_neighbor(ref_points, M_PI / 4.);
+    const NeighborCheck is_neighbor(ref_points, M_PI / 4. + 1e-3);
     const NeighborCheck sliced = is_neighbor.Slice(1, 3);
     EXPECT_EQ(sliced.Size(), 2);
     EXPECT_FALSE(sliced(0, 1));
