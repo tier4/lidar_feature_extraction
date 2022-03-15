@@ -214,7 +214,7 @@ TEST(Label, FillNeighbors)
   }
 
   {
-    const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0, 0});
+    const NeighborCheckDebug is_neighbor(std::vector<int>{1, 1, 1, 0, 0, 0});
     std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
 
     FillNeighbors(labels, is_neighbor, 4, 2, PointLabel::EdgeNeighbor);
@@ -224,9 +224,26 @@ TEST(Label, FillNeighbors)
       testing::ElementsAre(
         PointLabel::Default,
         PointLabel::Default,
-        PointLabel::EdgeNeighbor,
+        PointLabel::Default,
         PointLabel::EdgeNeighbor,
         PointLabel::EdgeNeighbor,
         PointLabel::EdgeNeighbor));
+  }
+
+  {
+    const NeighborCheckDebug is_neighbor(std::vector<int>{1, 1, 1, 0, 0, 0});
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+
+    FillNeighbors(labels, is_neighbor, 2, 2, PointLabel::EdgeNeighbor);
+
+    EXPECT_THAT(
+      labels,
+      testing::ElementsAre(
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::EdgeNeighbor,
+        PointLabel::Default,
+        PointLabel::Default,
+        PointLabel::Default));
   }
 }

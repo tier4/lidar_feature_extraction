@@ -133,9 +133,8 @@ void FillNeighbors(
   const int min = std::max(-1, index - padding - 1);
   const int max = std::min(index + 1 + padding, label_size);
 
-  labels.at(index) = label;
-  FillFromRight(labels, is_neighbor, min, index - 1, label);
-  FillFromLeft(labels, is_neighbor, index + 1, max, label);
+  FillFromRight(labels, is_neighbor, min, index, label);
+  FillFromLeft(labels, is_neighbor, index, max, label);
 }
 
 class EdgeLabel
