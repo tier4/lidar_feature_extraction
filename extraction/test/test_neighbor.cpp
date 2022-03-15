@@ -43,7 +43,6 @@ TEST(Neighbor, IsNeighbor)
   }
 }
 
-
 TEST(Neighbor, NeighborCheck)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -51,8 +50,28 @@ TEST(Neighbor, NeighborCheck)
   cloud->push_back(pcl::PointXYZ(1., 1., 0.));
   cloud->push_back(pcl::PointXYZ(0., 1., 0.));
   cloud->push_back(pcl::PointXYZ(1., 0., 0.));
+  cloud->push_back(pcl::PointXYZ(1., 0., 0.));
 
-  NeighborCheck is_neighbor_(cloud, M_PI / 4.);
-  EXPECT_TRUE(is_neighbor_(0, 1));
-  EXPECT_FALSE(is_neighbor_(1, 2));
+  {
+    NeighborCheck is_neighbor(cloud, 0.);
+    EXPECT_TRUE(is_neighbor(2, 3));
+  }
+
+  {
+    NeighborCheck is_neighbor(cloud, M_PI / 4.);
+    EXPECT_TRUE(is_neighbor(0, 1));
+    EXPECT_FALSE(is_neighbor(1, 2));
+  }
+}
+
+TEST(Neighbor, NeighborCheck)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+
+  for (unsigned int i = 0; i < 10; i++) {
+    cloud->push_back(pcl::PointXYZ(1., 1., 0.));
+  }
+
+  NeighborCheck is_neighbor(cloud, 0.);
+  EXPECT_EQ(is_neighbor.Size(), 10);
 }

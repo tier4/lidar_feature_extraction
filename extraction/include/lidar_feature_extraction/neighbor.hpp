@@ -55,6 +55,11 @@ public:
     return IsNeighbor(p1, p2, radian_threshold_);
   }
 
+  int Size() const
+  {
+    return ref_points_.Size();
+  }
+
 private:
   const MappedPoints<PointT> ref_points_;
   const double radian_threshold_;
