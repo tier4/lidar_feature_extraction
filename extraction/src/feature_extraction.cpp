@@ -140,12 +140,15 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
     for (const auto & [ring, indices] : rings) {
+      if (static_cast<int>(indices.size()) < padding_) {
+        continue;
+      }
+
+      const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
+      const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
+      const Range<PointXYZIR> range(ref_points);
+
       try {
-        const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
-
-        const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
-        const Range<PointXYZIR> range(ref_points);
-
         std::vector<PointLabel> labels = InitLabels(ref_points.Size());
         LabelOutOfRange(labels, range, min_range_, max_range_);
         LabelOccludedPoints(labels, is_neighbor, range, padding_, distance_diff_threshold_);
