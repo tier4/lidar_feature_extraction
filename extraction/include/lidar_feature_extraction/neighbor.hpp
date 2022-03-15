@@ -36,16 +36,16 @@
 #include "lidar_feature_extraction/mapped_points.hpp"
 
 template<typename PointT>
-bool IsNeighbor(const PointT & p1, const PointT & p2, const double radian_threshold)
+bool IsNeighborXY(const PointT & p1, const PointT & p2, const double radian_threshold)
 {
   return CalcRadian(p1.x, p1.y, p2.x, p2.y) < radian_threshold;
 }
 
 template<typename PointT>
-class NeighborCheck
+class NeighborCheckXY
 {
 public:
-  NeighborCheck(const MappedPoints<PointT> & ref_points, const double radian_threshold)
+  NeighborCheckXY(const MappedPoints<PointT> & ref_points, const double radian_threshold)
   : ref_points_(ref_points), radian_threshold_(radian_threshold)
   {
     if (ref_points.Size() < 2) {
@@ -59,7 +59,7 @@ public:
   {
     const PointT & p1 = ref_points_.At(index1);
     const PointT & p2 = ref_points_.At(index2);
-    return IsNeighbor(p1, p2, radian_threshold_);
+    return IsNeighborXY(p1, p2, radian_threshold_);
   }
 
   int Size() const
@@ -67,9 +67,9 @@ public:
     return ref_points_.Size();
   }
 
-  NeighborCheck Slice(const int begin, const int end) const
+  NeighborCheckXY Slice(const int begin, const int end) const
   {
-    return NeighborCheck(ref_points_.Slice(begin, end), radian_threshold_);
+    return NeighborCheckXY(ref_points_.Slice(begin, end), radian_threshold_);
   }
 
 private:

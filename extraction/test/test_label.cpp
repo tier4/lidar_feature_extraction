@@ -25,7 +25,7 @@ TEST(Label, Label)
 
   const std::vector<double> curvature{0.3, 0.2, 1.0, 0.2, 0.1, 0.3};
   const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-  const NeighborCheck is_neighbor(ref_points, radian_threshold);
+  const NeighborCheckXY is_neighbor(ref_points, radian_threshold);
 
   {
     Label<pcl::PointXYZ> label(is_neighbor);

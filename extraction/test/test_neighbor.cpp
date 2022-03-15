@@ -35,23 +35,23 @@
 #include "lidar_feature_extraction/iterator.hpp"
 
 
-TEST(IsNeighbor, IsNeighbor)
+TEST(IsNeighborXY, IsNeighborXY)
 {
   {
     const pcl::PointXYZ p0(1., 1., 0.);
     const pcl::PointXYZ p1(1., 1., 0.);
-    EXPECT_TRUE(IsNeighbor(p0, p1, 1e-7));
+    EXPECT_TRUE(IsNeighborXY(p0, p1, 1e-7));
   }
 
   {
     const pcl::PointXYZ p0(0., 1., 0.);
     const pcl::PointXYZ p1(1., 0., 0.);
-    EXPECT_TRUE(IsNeighbor(p0, p1, M_PI / 2. + 1e-3));
-    EXPECT_FALSE(IsNeighbor(p0, p1, M_PI / 2. - 1e-3));
+    EXPECT_TRUE(IsNeighborXY(p0, p1, M_PI / 2. + 1e-3));
+    EXPECT_FALSE(IsNeighborXY(p0, p1, M_PI / 2. - 1e-3));
   }
 }
 
-TEST(NeighborCheck, NeighborCheck)
+TEST(NeighborCheckXY, NeighborCheckXY)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
 
@@ -62,30 +62,30 @@ TEST(NeighborCheck, NeighborCheck)
   MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
 
   {
-    const NeighborCheck is_neighbor(ref_points, 0.);
+    const NeighborCheckXY is_neighbor(ref_points, 1e-3);
     EXPECT_EQ(is_neighbor.Size(), 4);
   }
 
   {
-    const NeighborCheck is_neighbor(ref_points, 0.);
+    const NeighborCheckXY is_neighbor(ref_points, 1e-3);
     EXPECT_TRUE(is_neighbor(2, 3));
   }
 
   {
-    const NeighborCheck is_neighbor(ref_points, M_PI / 4. + 1e-3);
+    const NeighborCheckXY is_neighbor(ref_points, M_PI / 4. + 1e-3);
     EXPECT_TRUE(is_neighbor(0, 1));
     EXPECT_FALSE(is_neighbor(1, 2));
   }
 
   {
-    const NeighborCheck is_neighbor(ref_points, M_PI / 4. + 1e-3);
-    const NeighborCheck sliced = is_neighbor.Slice(1, 3);
+    const NeighborCheckXY is_neighbor(ref_points, M_PI / 4. + 1e-3);
+    const NeighborCheckXY sliced = is_neighbor.Slice(1, 3);
     EXPECT_EQ(sliced.Size(), 2);
     EXPECT_FALSE(sliced(0, 1));
   }
 }
 
-TEST(NeighborCheck, ThrowIfInsufficientPoints)
+TEST(NeighborCheckXY, ThrowIfInsufficientPoints)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(1., 1., 0.));
@@ -94,7 +94,7 @@ TEST(NeighborCheck, ThrowIfInsufficientPoints)
 
   EXPECT_THROW(
     try {
-      const NeighborCheck is_neighbor(ref_points, 0.);
+      const NeighborCheckXY is_neighbor(ref_points, 0.);
       EXPECT_EQ(is_neighbor.Size(), 4);
     } catch(std::invalid_argument & e) {
       EXPECT_STREQ(e.what(), "The input point size (which is 1) cannot be smaller than 2");

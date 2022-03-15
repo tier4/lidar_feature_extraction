@@ -24,7 +24,7 @@ TEST(Label, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label label(is_neighbor);
     label.FillFromLeft(1, 4, PointLabel::Edge);
@@ -48,7 +48,7 @@ TEST(Label, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label label(is_neighbor);
     label.FillFromLeft(1, 5, PointLabel::Edge);
@@ -70,7 +70,7 @@ TEST(Label, FillFromLeft)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
 
@@ -111,7 +111,7 @@ TEST(Label, FillFromRight)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
     label.FillFromRight(1, 3, PointLabel::Edge);
@@ -135,7 +135,7 @@ TEST(Label, FillFromRight)
     cloud->push_back(pcl::PointXYZ(4.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
     label.FillFromRight(1, 4, PointLabel::Edge);
@@ -157,7 +157,7 @@ TEST(Label, FillFromRight)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
 
@@ -199,7 +199,7 @@ TEST(Label, FillNeighbors)
     cloud->push_back(pcl::PointXYZ(0.0, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
     label.FillNeighbors(3, 2, PointLabel::EdgeNeighbor);
@@ -227,7 +227,7 @@ TEST(Label, FillNeighbors)
     cloud->push_back(pcl::PointXYZ(6.02, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
     label.FillNeighbors(3, 2, PointLabel::EdgeNeighbor);
@@ -252,7 +252,7 @@ TEST(Label, FillNeighbors)
     }
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
 
     Label<pcl::PointXYZ> label(is_neighbor);
     EXPECT_THROW(

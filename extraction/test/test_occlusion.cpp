@@ -50,7 +50,7 @@ TEST(Label, LabelOccludedPoints)
     cloud->push_back(pcl::PointXYZ(8.08, 8.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
@@ -104,7 +104,7 @@ TEST(Label, LabelOccludedPoints)
     cloud->push_back(pcl::PointXYZ(4.12, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
 
     {

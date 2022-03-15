@@ -92,7 +92,7 @@ template<typename PointT>
 class Label : public LabelBase
 {
 public:
-  explicit Label(const NeighborCheck<PointT> & is_neighbor)
+  explicit Label(const NeighborCheckXY<PointT> & is_neighbor)
   : LabelBase(is_neighbor.Size()), is_neighbor_(is_neighbor)
   {
   }
@@ -167,7 +167,7 @@ public:
   }
 
 private:
-  const NeighborCheck<PointT> is_neighbor_;
+  const NeighborCheckXY<PointT> is_neighbor_;
 };
 
 template<typename PointT>

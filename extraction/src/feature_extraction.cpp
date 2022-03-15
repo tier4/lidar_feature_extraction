@@ -134,7 +134,7 @@ private:
       try {
         const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
 
-        const NeighborCheck<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
+        const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
 
         Label label(is_neighbor);

@@ -35,7 +35,7 @@
 template<typename PointT>
 void LabelOccludedPoints(
   Label<PointT> & label,
-  const NeighborCheck<PointT> & is_neighbor,
+  const NeighborCheckXY<PointT> & is_neighbor,
   const Range<PointT> & range,
   const int padding,
   const double distance_diff_threshold)
