@@ -35,22 +35,22 @@
 TEST(Span, Span)
 {
   std::vector<int> v{0, 1, 2, 3, 4, 5, 6};
-  Span span(v.begin(), v.end());
+  span<int> span(v.begin(), v.end());
 
-  EXPECT_EQ(span.Size(), 7);
+  EXPECT_EQ(span.size(), 7);
 
-  EXPECT_EQ(span.At(0), 0);
-  EXPECT_EQ(span.At(4), 4);
+  EXPECT_EQ(span.at(0), 0);
+  EXPECT_EQ(span.at(4), 4);
 
-  EXPECT_EQ(span.Begin(), v.begin());
-  EXPECT_EQ(span.End(), v.end());
+  EXPECT_EQ(span.begin(), v.begin());
+  EXPECT_EQ(span.end(), v.end());
 
-  span.At(3) = 9;
-  EXPECT_EQ(span.At(3), 9);
+  span.at(3) = 9;
+  EXPECT_EQ(span.at(3), 9);
 
   EXPECT_THROW(
     try {
-      span.At(-1);
+      span.at(-1);
     } catch(std::out_of_range & e) {
       EXPECT_STREQ(e.what(), "Index out of range. -1 < 0");
       throw e;
@@ -60,9 +60,9 @@ TEST(Span, Span)
 
   EXPECT_THROW(
     try {
-      span.At(7);
+      span.at(7);
     } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "Index out of range. 7 >= this->Size()");
+      EXPECT_STREQ(e.what(), "Index out of range. 7 >= this->size()");
       throw e;
     },
     std::out_of_range

@@ -30,65 +30,62 @@
 #ifndef SPAN_HPP_
 #define SPAN_HPP_
 
-
 #include <iterator>
+#include <vector>
+
 #include <fmt/core.h>
 
 
-template<typename Iterator>
-using ValueType = typename std::iterator_traits<Iterator>::value_type;
-
-
-template<typename Iterator>
-class Span
+template<typename T>
+class span
 {
 public:
-  Span(Iterator begin, Iterator end)
+  span(typename std::vector<T>::iterator begin, typename std::vector<T>::iterator end)
   : begin_(begin), end_(end)
   {
   }
 
-  Iterator Begin() const
+  typename std::vector<T>::iterator begin() const
   {
     return begin_;
   }
 
-  Iterator End() const
+  typename std::vector<T>::iterator end() const
   {
     return end_;
   }
 
-  typename Iterator::reference At(const int i)
+  T & at(const int i)
   {
-    CheckIndex(i);
+    check_index(i);
     return begin_[i];
   }
 
-  typename Iterator::reference At(const int i) const
+  T at(const int i) const
   {
-    CheckIndex(i);
+    check_index(i);
     return begin_[i];
   }
 
-  void CheckIndex(const int i)
-  {
-    if (i < 0) {
-      throw std::out_of_range(fmt::format("Index out of range. {} < 0", i));
-    }
-
-    if (i >= this->Size()) {
-      throw std::out_of_range(fmt::format("Index out of range. {} >= this->Size()", i));
-    }
-  }
-
-  int Size() const
+  int size() const
   {
     return end_ - begin_;
   }
 
 private:
-  Iterator begin_;
-  Iterator end_;
+  void check_index(const int i)
+  {
+    if (i < 0) {
+      throw std::out_of_range(fmt::format("Index out of range. {} < 0", i));
+    }
+
+    if (i >= this->size()) {
+      throw std::out_of_range(fmt::format("Index out of range. {} >= this->size()", i));
+    }
+  }
+
+  typename std::vector<T>::iterator begin_;
+  typename std::vector<T>::iterator end_;
 };
 
 #endif  // SPAN_HPP_
