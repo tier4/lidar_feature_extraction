@@ -35,30 +35,18 @@
 
 #include <fmt/core.h>
 
-
-template<typename T>
-class span
+template<typename T, typename Iterator>
+class span_base
 {
 public:
-  span(typename std::vector<T>::iterator begin, typename std::vector<T>::iterator end)
-  : begin_(begin), end_(end)
-  {
-  }
-
-  typename std::vector<T>::iterator begin() const
+  Iterator begin() const
   {
     return begin_;
   }
 
-  typename std::vector<T>::iterator end() const
+  Iterator end() const
   {
     return end_;
-  }
-
-  T & at(const int i)
-  {
-    check_index(i);
-    return begin_[i];
   }
 
   T at(const int i) const
@@ -72,8 +60,13 @@ public:
     return end_ - begin_;
   }
 
-private:
-  void check_index(const int i)
+protected:
+  span_base(Iterator begin, Iterator end)
+  : begin_(begin), end_(end)
+  {
+  }
+
+  void check_index(const int i) const
   {
     if (i < 0) {
       throw std::out_of_range(fmt::format("Index out of range. {} < 0", i));
@@ -84,8 +77,38 @@ private:
     }
   }
 
-  typename std::vector<T>::iterator begin_;
-  typename std::vector<T>::iterator end_;
+  Iterator begin_;
+  Iterator end_;
+};
+
+template<typename T>
+class const_span : public span_base<T, typename std::vector<T>::const_iterator>
+{
+public:
+  const_span(
+    typename std::vector<T>::const_iterator begin,
+    typename std::vector<T>::const_iterator end)
+  : span_base<T, typename std::vector<T>::const_iterator>(begin, end)
+  {
+  }
+};
+
+template<typename T>
+class span : public span_base<T, typename std::vector<T>::iterator>
+{
+public:
+  span(
+    typename std::vector<T>::iterator begin,
+    typename std::vector<T>::iterator end)
+  : span_base<T, typename std::vector<T>::iterator>(begin, end)
+  {
+  }
+
+  T & at(const int i)
+  {
+    this->check_index(i);
+    return this->begin_[i];
+  }
 };
 
 #endif  // SPAN_HPP_

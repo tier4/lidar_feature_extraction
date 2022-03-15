@@ -32,7 +32,7 @@
 #include "lidar_feature_library/span.hpp"
 
 
-TEST(Span, Span)
+TEST(Span, NonConstSpan)
 {
   std::vector<int> v{0, 1, 2, 3, 4, 5, 6};
   span<int> span(v.begin(), v.end());
@@ -67,4 +67,12 @@ TEST(Span, Span)
     },
     std::out_of_range
   );
+}
+
+TEST(Span, ConstSpan)
+{
+  const std::vector<int> v{0, 1, 2, 3, 4, 5, 6};
+  const const_span<int> span(v.begin(), v.end());
+
+  EXPECT_EQ(span.size(), 7);
 }
