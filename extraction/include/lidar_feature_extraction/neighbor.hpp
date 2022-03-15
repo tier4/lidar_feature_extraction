@@ -60,6 +60,11 @@ public:
     return ref_points_.Size();
   }
 
+  NeighborCheck Slice(const int begin, const int end) const
+  {
+    return NeighborCheck(ref_points_.Slice(begin, end), radian_threshold_);
+  }
+
 private:
   const MappedPoints<PointT> ref_points_;
   const double radian_threshold_;
