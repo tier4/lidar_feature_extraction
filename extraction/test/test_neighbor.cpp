@@ -27,7 +27,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-TEST(Neighbor, IsNeighbor)
+TEST(IsNeighbor, IsNeighbor)
 {
   {
     const pcl::PointXYZ p0(1., 1., 0.);
@@ -43,7 +43,7 @@ TEST(Neighbor, IsNeighbor)
   }
 }
 
-TEST(Neighbor, NeighborCheck)
+TEST(NeighborCheck, IsNeighbor)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
 
@@ -64,7 +64,7 @@ TEST(Neighbor, NeighborCheck)
   }
 }
 
-TEST(Neighbor, NeighborCheck)
+TEST(NeighborCheck, Size)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
 
