@@ -302,9 +302,9 @@ TEST(Label, LabelOccludedPoints)
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-      const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
+      const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 1, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 1, distance_threshold);
 
       EXPECT_THAT(
         label.Get(),
@@ -323,9 +323,9 @@ TEST(Label, LabelOccludedPoints)
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-      const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
+      const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 3, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 3, distance_threshold);
 
       EXPECT_THAT(
         label.Get(),
@@ -358,9 +358,9 @@ TEST(Label, LabelOccludedPoints)
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-      const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
+      const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 1, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 1, distance_threshold);
       EXPECT_THAT(
         label.Get(),
         testing::ElementsAre(
@@ -379,9 +379,9 @@ TEST(Label, LabelOccludedPoints)
     {
       const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
       Label<pcl::PointXYZ> label(ref_points, radian_threshold);
-      const Neighbor<pcl::PointXYZ> neighbor(ref_points, radian_threshold);
+      const NeighborCheck<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
       const Range<pcl::PointXYZ> range(ref_points);
-      LabelOccludedPoints<pcl::PointXYZ>(label, neighbor, range, 3, distance_threshold);
+      LabelOccludedPoints<pcl::PointXYZ>(label, is_neighbor, range, 3, distance_threshold);
       EXPECT_THAT(
         label.Get(),
         testing::ElementsAre(

@@ -30,9 +30,8 @@
 #ifndef NEIGHBOR_HPP_
 #define NEIGHBOR_HPP_
 
-#include "math.hpp"
-#include "neighbor.hpp"
-#include "mapped_points.hpp"
+#include "lidar_feature_extraction/math.hpp"
+#include "lidar_feature_extraction/mapped_points.hpp"
 
 template<typename PointT>
 bool IsNeighbor(const PointT & p1, const PointT & p2, const double radian_threshold)
@@ -41,10 +40,10 @@ bool IsNeighbor(const PointT & p1, const PointT & p2, const double radian_thresh
 }
 
 template<typename PointT>
-class Neighbor
+class NeighborCheck
 {
 public:
-  Neighbor(const MappedPoints<PointT> & ref_points, const double radian_threshold)
+  NeighborCheck(const MappedPoints<PointT> & ref_points, const double radian_threshold)
   : ref_points_(ref_points), radian_threshold_(radian_threshold)
   {
   }

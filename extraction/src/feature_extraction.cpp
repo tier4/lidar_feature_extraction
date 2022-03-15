@@ -131,12 +131,12 @@ private:
       try {
         const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
 
-        const Neighbor<PointXYZIR> neighbor(ref_points, radian_threshold_);
+        const NeighborCheck<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
         const Range<PointXYZIR> range(ref_points);
 
         Label label(ref_points, radian_threshold_);
         LabelOutOfRange(label, range, min_range_, max_range_);
-        LabelOccludedPoints(label, neighbor, range, padding_, distance_diff_threshold_);
+        LabelOccludedPoints(label, is_neighbor, range, padding_, distance_diff_threshold_);
         LabelParallelBeamPoints(label, range, range_ratio_threshold_);
 
         std::vector<double> curvature_output;

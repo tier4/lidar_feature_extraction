@@ -43,7 +43,6 @@
 #include "lidar_feature_extraction/cloud_iterator.hpp"
 #include "lidar_feature_extraction/curvature.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
-#include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/mapped_points.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
 #include "lidar_feature_extraction/range.hpp"
@@ -98,14 +97,14 @@ public:
     const double radian_threshold)
   : LabelBase(ref_points.Size()),
     ref_points_(ref_points),
-    radian_threshold_(radian_threshold)
+    is_neighbor_(ref_points, radian_threshold)
   {
   }
 
   Label(const Label & label)
   : LabelBase(label),
     ref_points_(label.ref_points_),
-    radian_threshold_(label.radian_threshold_)
+    is_neighbor_(label.is_neighbor_)
   {
   }
 
@@ -125,9 +124,7 @@ public:
     for (int i = begin_index; i < end_index - 1; i++) {
       label_.at(i) = label;
 
-      const Element & p0 = ref_points_.At(i + 0);
-      const Element & p1 = ref_points_.At(i + 1);
-      if (!IsNeighbor(p0, p1, radian_threshold_)) {
+      if (!is_neighbor_(i + 0, i + 1)) {
         return;
       }
     }
@@ -150,9 +147,7 @@ public:
     for (int i = end_index; i > begin_index + 1; i--) {
       label_.at(i) = label;
 
-      const Element & p0 = ref_points_.At(i - 0);
-      const Element & p1 = ref_points_.At(i - 1);
-      if (!IsNeighbor(p0, p1, radian_threshold_)) {
+      if (!is_neighbor_(i - 0, i - 1)) {
         return;
       }
     }
@@ -180,7 +175,7 @@ public:
 
 private:
   const MappedPoints<Element> ref_points_;
-  const double radian_threshold_;
+  const NeighborCheck<Element> is_neighbor_;
 };
 
 template<typename PointT>
@@ -285,7 +280,7 @@ void LabelOutOfRange(
 template<typename PointT>
 void LabelOccludedPoints(
   Label<PointT> & label,
-  const Neighbor<PointT> & is_neighbor,
+  const NeighborCheck<PointT> & is_neighbor,
   const Range<PointT> & range,
   const int padding,
   const double distance_diff_threshold)
