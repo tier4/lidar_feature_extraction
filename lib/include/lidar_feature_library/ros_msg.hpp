@@ -1,4 +1,4 @@
-// Copyright 2022 Tixiao Shan, Takeshi Ishita
+// Copyright 2022 Takeshi Ishita
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -10,7 +10,7 @@
 //      notice, this list of conditions and the following disclaimer in the
 //      documentation and/or other materials provided with the distribution.
 //
-//    * Neither the name of the Tixiao Shan, Takeshi Ishita nor the names of its
+//    * Neither the name of the Takeshi Ishita nor the names of its
 //      contributors may be used to endorse or promote products derived from
 //      this software without specific prior written permission.
 //
@@ -52,7 +52,7 @@ sensor_msgs::msg::PointCloud2 toRosMsg(const typename pcl::PointCloud<T>::Ptr & 
 template<typename T>
 sensor_msgs::msg::PointCloud2 toRosMsg(
   const typename pcl::PointCloud<T>::Ptr & cloud_ptr,
-  const rclcpp::Time stamp,
+  const rclcpp::Time & stamp,
   const std::string frame)
 {
   sensor_msgs::msg::PointCloud2 msg = toRosMsg<T>(cloud_ptr);
