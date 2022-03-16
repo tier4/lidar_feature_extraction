@@ -88,6 +88,21 @@ MakeReferenceVectorsPerRing(const Iter & points)
   return point_indices;
 }
 
+void RemoveInsufficientNumRing(
+  std::unordered_map<int, std::vector<int>> & rings,
+  const int n_min_points)
+{
+  for (auto it = rings.begin(); it != rings.end(); ) {
+    const auto & indices = it->second;
+    const int size = static_cast<int>(indices.size());
+    if (size < n_min_points) {
+      it = rings.erase(it);
+      continue;
+    }
+    it++;
+  }
+}
+
 template<typename Iter>
 void SortEachRingByAngle(
   std::unordered_map<int, std::vector<int>> & point_indices,

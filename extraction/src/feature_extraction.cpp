@@ -131,7 +131,6 @@ private:
       rclcpp::shutdown();
     }
 
-    const auto rings = ExtractAngleSortedRings(*input_cloud);
     const double debug_max_curvature = 10.;
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
@@ -139,11 +138,13 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
-    for (const auto & [ring, indices] : rings) {
-      if (static_cast<int>(indices.size()) < padding_) {
-        continue;
-      }
+    const auto rings = [&] {
+        auto rings = ExtractAngleSortedRings(*input_cloud);
+        RemoveInsufficientNumRing(rings, padding_ + 1);
+        return rings;
+      } ();
 
+    for (const auto & [ring, indices] : rings) {
       const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
       const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
       const Range<PointXYZIR> range(ref_points);

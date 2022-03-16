@@ -49,6 +49,39 @@ TEST(Ring, SortByAtan2)
   EXPECT_THAT(indices, testing::ElementsAre(5, 4, 2, 1, 0, 3));
 }
 
+TEST(Ring, RemoveInsufficientNumRing)
+{
+  {
+    std::unordered_map<int, std::vector<int>> rings;
+    rings[0] = {0, 1, 2};
+    rings[2] = {0, 1, 2, 3};
+    rings[4] = {0, 1};
+    rings[6] = {0, 1, 2};
+    RemoveInsufficientNumRing(rings, 3);
+
+    EXPECT_THAT(rings.size(), 3);
+    EXPECT_THAT(rings.at(0).size(), 3);
+    EXPECT_THAT(rings.at(2).size(), 4);
+    EXPECT_THAT(rings.at(6).size(), 3);
+  }
+
+  {
+    std::unordered_map<int, std::vector<int>> rings;
+    rings[0] = {0, 1, 2};
+    rings[2] = {0, 1, 2, 3};
+    rings[4] = {0, 1};
+    rings[6] = {0, 1, 2};
+    RemoveInsufficientNumRing(rings, 4);
+
+    for (auto & [key, indices] : rings) {
+      std::cerr << "key = " << key << std::endl;
+    }
+
+    EXPECT_THAT(rings.size(), 1);
+    EXPECT_THAT(rings.at(2).size(), 4);
+  }
+}
+
 TEST(Ring, ExtractAngleSortedRings) {
   struct PointWithRing {
     int ring;
