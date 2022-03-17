@@ -70,8 +70,7 @@ public:
       }
 
       const Eigen::VectorXd dx = CalcUpdate(J, b);
-
-      posevec += dx;
+      posevec = UpdatePoseVec(posevec, -dx);
 
       if (CheckConvergence(dx)) {
         break;

@@ -55,4 +55,39 @@ Vector7d MakePosevec(const Eigen::Isometry3d & pose)
   return posevec;
 }
 
+Eigen::Quaterniond Exp(const Eigen::Vector3d & r)
+{
+  const double norm = r.norm();
+
+  if (norm < 1e-7) {
+    return Eigen::Quaterniond::Identity();
+  }
+
+  const Eigen::Vector3d xyz = r * std::sin(norm) / norm;
+  const double w = std::cos(norm);
+
+  return Eigen::Quaterniond(w, xyz(0), xyz(1), xyz(2));
+}
+
+Eigen::Quaterniond UpdateQuaternionVec(
+  const Eigen::Vector4d & current,
+  const Eigen::Vector4d & dwxyz)
+{
+  const Eigen::Quaterniond q(current(0), current(1), current(2), current(3));
+
+  const Eigen::Quaterniond dq = Exp(Eigen::Vector3d(dwxyz(1), dwxyz(2), dwxyz(3)));
+
+  return dq * q;
+}
+
+Vector7d UpdatePoseVec(const Vector7d & x0, const Vector7d & dx)
+{
+  const Eigen::Quaterniond q = UpdateQuaternionVec(x0.head(4), dx.head(4));
+
+  Vector7d x1;
+  x1.head(4) = Eigen::Vector4d(q.w(), q.x(), q.y(), q.z());
+  x1.tail(3) = x0.tail(3) + dx.tail(3);
+  return x1;
+}
+
 #endif  // POSEVEC_HPP_
