@@ -84,7 +84,7 @@ public:
     }
 
     const Optimizer optimizer(problem);
-    pose_ = optimizer.Run(edge_xyz, surface_xyz, pose_);
+    pose_ = optimizer.Run(std::make_tuple(edge_xyz, surface_xyz), pose_);
     return true;
   }
 

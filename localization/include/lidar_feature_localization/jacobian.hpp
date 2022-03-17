@@ -51,7 +51,7 @@ Eigen::MatrixXd MakeJacobian(
   const Eigen::Quaterniond & q)
 {
   assert(points.size() == coeffs.size());
-  Eigen::MatrixXd J(points.size(), 6);
+  Eigen::MatrixXd J(points.size(), 7);
   for (unsigned int i = 0; i < points.size(); i++) {
     const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, points.at(i));
     FillJacobianRow(J, i, drpdq, coeffs.at(i));

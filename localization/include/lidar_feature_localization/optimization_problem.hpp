@@ -180,7 +180,7 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
-    const auto [J, b] = this->Make(edge_scan, surface_scan, point_to_map);
+    const auto [J, b] = this->Make(std::make_tuple(edge_scan, surface_scan), point_to_map);
     const Eigen::MatrixXd JtJ = J.transpose() * J;
     return ::IsDegenerate(JtJ);
   }
@@ -264,10 +264,13 @@ public:
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
   Make(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
+    const std::tuple<
+      pcl::PointCloud<pcl::PointXYZ>::Ptr,
+      pcl::PointCloud<pcl::PointXYZ>::Ptr> & edge_surface_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan = std::get<0>(edge_surface_scan);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan = std::get<1>(edge_surface_scan);
     const auto [edge_points, edge_coeffs, edge_b] = FromEdge(edge_scan, point_to_map);
     const auto [surface_points, surface_coeffs, surface_b] = FromSurface(surface_scan, point_to_map);
 

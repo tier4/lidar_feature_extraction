@@ -56,15 +56,15 @@ public:
   {
   }
 
+  template<typename ArgumentType>
   Eigen::Isometry3d Run(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_xyz,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_xyz,
+    const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
   {
     Vector7d posevec = MakePosevec(initial_pose);
     for (int iter = 0; iter < 30; iter++) {
       const Eigen::Isometry3d pose = MakePose(posevec);
-      const auto [J, b] = problem_.Make(edge_xyz, surface_xyz, pose);
+      const auto [J, b] = problem_.Make(x, pose);
       if (J.rows() < 50) {
         continue;
       }
