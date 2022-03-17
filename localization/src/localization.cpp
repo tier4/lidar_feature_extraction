@@ -38,9 +38,10 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 
+#include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/optimization_problem.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
-#include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/posevec.hpp"
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
@@ -75,7 +76,7 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_xyz,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_xyz)
   {
-    const OptimizationProblem problem(edge_map_, surface_map_);
+    const LOAMOptimizationProblem problem(edge_map_, surface_map_);
     if (problem.IsDegenerate(edge_xyz, surface_xyz, pose_)) {
       RCLCPP_WARN(
         rclcpp::get_logger("lidar_feature_localization"),

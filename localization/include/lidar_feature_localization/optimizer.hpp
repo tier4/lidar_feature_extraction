@@ -48,15 +48,15 @@ Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
   return SolveLinear(JtJ, JtB);
 }
 
+template<typename ArgumentType>
 class Optimizer
 {
 public:
-  explicit Optimizer(const OptimizationProblem & problem)
+  explicit Optimizer(const OptimizationProblem<ArgumentType> & problem)
   : problem_(problem)
   {
   }
 
-  template<typename ArgumentType>
   Eigen::Isometry3d Run(
     const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
@@ -80,7 +80,7 @@ public:
   }
 
 private:
-  const OptimizationProblem problem_;
+  const OptimizationProblem<ArgumentType> problem_;
 };
 
 #endif  // OPTIMIZER_HPP_
