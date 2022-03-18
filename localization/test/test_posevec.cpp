@@ -30,6 +30,22 @@
 
 #include "lidar_feature_localization/posevec.hpp"
 
+TEST(Posevec, MakeQuaternionFromXYZ)
+{
+  {
+    const Eigen::Quaterniond q = MakeQuaternionFromXYZ(Eigen::Vector3d(0, 0, 0));
+    EXPECT_EQ(q.norm(), 1.0);
+    EXPECT_EQ(q.w(), 1.0);
+  }
+
+  {
+    const Eigen::Quaterniond q = MakeQuaternionFromXYZ(Eigen::Vector3d(0.2, 0.3, 0.4));
+    const std::vector<double> xyz{q.x(), q.y(), q.z()};
+    EXPECT_THAT(std::abs(q.w() - 0.842614977), testing::Le(1e-8));
+    EXPECT_THAT(xyz, testing::ElementsAre(0.2, 0.3, 0.4));
+  }
+}
+
 TEST(Posevec, MakePosevec)
 {
   Eigen::Matrix3d R;
@@ -44,17 +60,17 @@ TEST(Posevec, MakePosevec)
   pose.linear() = R;
   pose.translation() = t;
 
-  const Vector7d posevec = MakePosevec(pose);
-  Vector7d expected;
-  expected << -0.5,  0.5,  0.5, -0.5, 9., 2., 4.;
+  const Vector6d posevec = MakePosevec(pose);
+  Vector6d expected;
+  expected << 0.5,  0.5, -0.5, 9., 2., 4.;
   EXPECT_THAT((posevec - expected).norm(), testing::Le(1e-3));
 }
 
 TEST(Posevec, MakePose)
 {
 
-  Vector7d posevec;
-  posevec << -0.5,  0.5,  0.5, -0.5, 9, 2, 4;
+  Vector6d posevec;
+  posevec << 0.5, 0.5, -0.5, 9., 2., 4.;
   const Eigen::Isometry3d pose = MakePose(posevec);
   Eigen::Matrix3d R;
   R <<

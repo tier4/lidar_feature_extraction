@@ -34,9 +34,13 @@
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/rad2deg.hpp"
 
-bool CheckConvergence(const Vector7d & dx)
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+
+bool CheckConvergence(const Vector6d & dx)
 {
-  const float dr = Rad2Deg(dx.head(3)).norm();
+  const float dr = dx.head(3).norm();
   const float dt = (100 * dx.tail(3)).norm();
   return dr < 0.05 && dt < 0.05;
 }
@@ -61,16 +65,16 @@ public:
     const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
   {
-    Vector7d posevec = MakePosevec(initial_pose);
+    Vector6d posevec = MakePosevec(initial_pose);
     for (int iter = 0; iter < 30; iter++) {
       const Eigen::Isometry3d pose = MakePose(posevec);
       const auto [J, b] = problem_.Make(x, pose);
-      if (J.rows() < 50) {
+      if (J.rows() == 0) {
         continue;
       }
 
       const Eigen::VectorXd dx = CalcUpdate(J, b);
-      posevec = UpdatePoseVec(posevec, -dx);
+      posevec = UpdatePoseVec(posevec, dx);
 
       if (CheckConvergence(dx)) {
         break;

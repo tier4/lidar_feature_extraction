@@ -30,5 +30,6 @@
 #define MATRIX_TYPE_HPP_
 
 using Vector7d = Eigen::Matrix<double, 7, 1>;
+using Vector6d = Eigen::Matrix<double, 6, 1>;
 
 #endif  // MATRIX_TYPE_HPP_

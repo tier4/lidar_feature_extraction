@@ -34,24 +34,32 @@
 
 #include "lidar_feature_localization/matrix_type.hpp"
 
-
-Eigen::Isometry3d MakePose(const Vector7d & posevec)
+Eigen::Quaterniond MakeQuaternionFromXYZ(const Eigen::Vector3d & xyz)
 {
-  const Eigen::Vector4d wxyz = posevec.head(4);
-  const Eigen::Quaterniond q(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
+  const double w = std::sqrt(1 - xyz.squaredNorm());
+  return Eigen::Quaterniond(w, xyz(0), xyz(1), xyz(2));
+}
 
+Eigen::Vector3d GetXYZ(const Eigen::Quaterniond & q)
+{
+  return Eigen::Vector3d(q.x(), q.y(), q.z());
+}
+
+Eigen::Isometry3d MakePose(const Vector6d & posevec)
+{
+  const Eigen::Quaterniond q = MakeQuaternionFromXYZ(posevec.head(3));
   Eigen::Isometry3d pose;
   pose.linear() = q.toRotationMatrix();
   pose.translation() = posevec.tail(3);
   return pose;
 }
 
-Vector7d MakePosevec(const Eigen::Isometry3d & pose)
+Vector6d MakePosevec(const Eigen::Isometry3d & pose)
 {
   const Eigen::Quaterniond q = Eigen::Quaterniond(pose.rotation()).normalized();
   const Eigen::Vector3d t = pose.translation();
-  Vector7d posevec;
-  posevec << q.w(), q.x(), q.y(), q.z(), t.x(), t.y(), t.z();
+  Vector6d posevec;
+  posevec << q.x(), q.y(), q.z(), t.x(), t.y(), t.z();
   return posevec;
 }
 
@@ -80,12 +88,12 @@ Eigen::Quaterniond UpdateQuaternionVec(
   return dq * q;
 }
 
-Vector7d UpdatePoseVec(const Vector7d & x0, const Vector7d & dx)
+Vector6d UpdatePoseVec(const Vector6d & x0, const Vector6d & dx)
 {
   const Eigen::Quaterniond q = UpdateQuaternionVec(x0.head(4), dx.head(4));
 
-  Vector7d x1;
-  x1.head(4) = Eigen::Vector4d(q.w(), q.x(), q.y(), q.z());
+  Vector6d x1;
+  x1.head(3) = GetXYZ(q);
   x1.tail(3) = x0.tail(3) + dx.tail(3);
   return x1;
 }
