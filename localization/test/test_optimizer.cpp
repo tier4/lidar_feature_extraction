@@ -26,42 +26,51 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OPTIMIZATION_PROBLEM_
-#define OPTIMIZATION_PROBLEM_
+#include <gmock/gmock.h>
 
-#include <Eigen/Eigenvalues>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
-
-#include <range/v3/all.hpp>
-
-#include <algorithm>
 #include <tuple>
-#include <vector>
 
-#include "lidar_feature_localization/kdtree.hpp"
-#include "lidar_feature_localization/jacobian.hpp"
-#include "lidar_feature_localization/math.hpp"
+#include "lidar_feature_localization/alignment.hpp"
+#include "lidar_feature_localization/optimizer.hpp"
 
 
-bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1)
+const Eigen::Isometry3d MakeTransform(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
 {
-  const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(C);
-  const Eigen::VectorXd eigenvalues = es.eigenvalues();
-  return (eigenvalues.array().abs() < threshold).any();
+  Eigen::Isometry3d transform;
+  transform.linear() = q.toRotationMatrix();
+  transform.translation() = t;
+  return transform;
 }
 
-template<typename ArgumentType>
-class OptimizationProblem
+TEST(Optimizer, Alignment)
 {
-public:
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  virtual Make(const ArgumentType &, const Eigen::Isometry3d &) const
-  {
-    return std::make_tuple(Eigen::MatrixXd::Zero(0, 0), Eigen::VectorXd::Zero(0));
-  }
-};
+  const Eigen::Quaterniond q_true = Eigen::Quaterniond(1, -1, 1, -1).normalized();
+  const Eigen::Vector3d t_true(-1, 3, 2);
+  const Eigen::Isometry3d transform_true = MakeTransform(q_true, t_true);
 
-#endif  // OPTIMIZATION_PROBLEM_
+  const Eigen::Matrix<double, 4, 3> X = (
+    Eigen::Matrix<double, 4, 3>() <<
+     4, -3, -4,
+    -3, -2, -5,
+    -4,  0,  2,
+    -3, -3,  3).finished();
+
+  const Eigen::MatrixXd Y = (transform_true * X.transpose()).transpose();
+
+  {
+    const AlignmentProblem problem;
+    const Optimizer optimizer(problem);
+
+    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), transform_true);
+
+    EXPECT_THAT(
+      (transform_true.linear() - transform_pred.linear()).norm(),
+      testing::Le(1e-4));
+    EXPECT_THAT(
+      (transform_true.translation() - transform_pred.translation()).norm(),
+      testing::Le(1e-4));
+  }
+}

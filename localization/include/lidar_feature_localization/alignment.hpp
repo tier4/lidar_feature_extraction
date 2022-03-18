@@ -68,16 +68,15 @@ Eigen::VectorXd MakeResidual(
   return r;
 }
 
-using T = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
+using Points = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
 
-class AlignmentProblem : public OptimizationProblem<T>
+class AlignmentProblem : public OptimizationProblem<Points>
 {
- public:
+public:
   AlignmentProblem() {}
 
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
-    const T & points,
-    const Eigen::Isometry3d & point_to_map) const
+  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
+  Make(const Points & points, const Eigen::Isometry3d & point_to_map) const
   {
     const Eigen::Quaterniond q(point_to_map.rotation());
     const auto & [source_points, target_points] = points;
