@@ -26,6 +26,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef ROTATIONLIB_JACOBIAN_QUATERNION_HPP_
+#define ROTATIONLIB_JACOBIAN_QUATERNION_HPP_
+
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
@@ -54,3 +57,5 @@ Eigen::Matrix<double, 3, 4> DRpDq(const Eigen::Quaterniond & q, const Eigen::Vec
 }
 
 }  // namespace rotationlib
+
+#endif  // ROTATIONLIB_JACOBIAN_QUATERNION_HPP_
