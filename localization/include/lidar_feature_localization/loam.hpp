@@ -160,7 +160,7 @@ using EdgeSurfaceScan = std::tuple<
 const int n_neighbors = 5;
 
 
-class LOAMOptimizationProblem : public OptimizationProblem<EdgeSurfaceScan>
+class LOAMOptimizationProblem
 {
 public:
   LOAMOptimizationProblem(

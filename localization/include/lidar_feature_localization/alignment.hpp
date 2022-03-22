@@ -70,7 +70,7 @@ Eigen::VectorXd MakeResidual(
 
 using Points = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
 
-class AlignmentProblem : public OptimizationProblem<Points>
+class AlignmentProblem
 {
 public:
   AlignmentProblem() {}

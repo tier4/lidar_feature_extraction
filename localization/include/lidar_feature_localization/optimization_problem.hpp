@@ -53,15 +53,4 @@ bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1)
   return (eigenvalues.array().abs() < threshold).any();
 }
 
-template<typename ArgumentType>
-class OptimizationProblem
-{
-public:
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  virtual Make(const ArgumentType &, const Eigen::Isometry3d &) const
-  {
-    return std::make_tuple(Eigen::MatrixXd::Zero(0, 0), Eigen::VectorXd::Zero(0));
-  }
-};
-
 #endif  // OPTIMIZATION_PROBLEM_

@@ -48,10 +48,14 @@
 #include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
-#include <string>
-#include <memory>
 #include <limits>
+#include <memory>
+#include <string>
+#include <tuple>
 
+using ArgumentType = std::tuple<
+  pcl::PointCloud<pcl::PointXYZ>::Ptr,
+  pcl::PointCloud<pcl::PointXYZ>::Ptr>;
 
 class Localizer
 {
@@ -84,7 +88,7 @@ public:
       return false;
     }
 
-    const Optimizer optimizer(problem);
+    const Optimizer<LOAMOptimizationProblem, ArgumentType> optimizer(problem);
     pose_ = optimizer.Run(std::make_tuple(edge_xyz, surface_xyz), pose_);
     return true;
   }

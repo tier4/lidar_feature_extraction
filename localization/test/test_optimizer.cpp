@@ -56,13 +56,16 @@ TEST(Optimizer, Alignment)
      4, -3, -4,
     -3, -2, -5,
     -4,  0,  2,
-    -3, -3,  3).finished();
+    -3, -3,  3
+  ).finished();
 
   const Eigen::MatrixXd Y = (transform_true * X.transpose()).transpose();
 
+  using ArgumentType = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
+
   {
     const AlignmentProblem problem;
-    const Optimizer optimizer(problem);
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
 
     const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), transform_true);
 
@@ -72,5 +75,78 @@ TEST(Optimizer, Alignment)
     EXPECT_THAT(
       (transform_true.translation() - transform_pred.translation()).norm(),
       testing::Le(1e-4));
+  }
+
+  {
+    const AlignmentProblem problem;
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+
+    Eigen::Isometry3d initial;
+    initial.linear() = q_true.toRotationMatrix();
+    initial.translation() = Eigen::Vector3d(2, 4, 1);
+
+    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
+
+    const Eigen::Quaterniond q_pred(transform_pred.linear());
+    const Eigen::Vector3d t_pred(transform_pred.translation());
+    EXPECT_THAT(
+      (transform_true.linear() - transform_pred.linear()).norm(),
+      testing::Le(1e-4));
+    EXPECT_THAT(
+      (transform_true.translation() - transform_pred.translation()).norm(),
+      testing::Le(1e-4));
+  }
+
+  {
+    const AlignmentProblem problem;
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+
+    const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
+    Eigen::Isometry3d initial;
+    initial.linear() = q.toRotationMatrix();
+    initial.translation() = t_true;
+
+    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
+
+    const Eigen::Quaterniond q_pred(transform_pred.linear());
+    const Eigen::Vector3d t_pred(transform_pred.translation());
+    EXPECT_THAT(
+      (transform_true.linear() - transform_pred.linear()).norm(),
+      testing::Le(1e-4));
+    EXPECT_THAT(
+      (transform_true.translation() - transform_pred.translation()).norm(),
+      testing::Le(1e-4));
+  }
+}
+
+TEST(Optimizer, MakeM)
+{
+  {
+    const Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
+    const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+    Eigen::Matrix<double, 7, 6> expected;
+    expected <<
+       0, 0, 0, 0, 0, 0,
+       1, 0, 0, 0, 0, 0,
+       0, 1, 0, 0, 0, 0,
+       0, 0, 1, 0, 0, 0,
+       0, 0, 0, 1, 0, 0,
+       0, 0, 0, 0, 1, 0,
+       0, 0, 0, 0, 0, 1;
+    EXPECT_THAT((M - expected).norm(), testing::Le(1e-8));
+  }
+  {
+    const Eigen::Quaterniond q(1, 2, 3, 4);
+    const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+    Eigen::Matrix<double, 7, 6> expected;
+    expected <<
+      -2, -3, -4, 0, 0, 0,
+       1, -4,  3, 0, 0, 0,
+       4,  1, -2, 0, 0, 0,
+      -3,  2,  1, 0, 0, 0,
+       0,  0,  0, 1, 0, 0,
+       0,  0,  0, 0, 1, 0,
+       0,  0,  0, 0, 0, 1;
+    EXPECT_THAT((M - expected).norm(), testing::Le(1e-8));
   }
 }

@@ -45,57 +45,14 @@ Eigen::Vector3d GetXYZ(const Eigen::Quaterniond & q)
   return Eigen::Vector3d(q.x(), q.y(), q.z());
 }
 
-Eigen::Isometry3d MakePose(const Vector6d & posevec)
+Eigen::Isometry3d MakePose(
+  const Eigen::Quaterniond & q,
+  const Eigen::Vector3d & t)
 {
-  const Eigen::Quaterniond q = MakeQuaternionFromXYZ(posevec.head(3));
   Eigen::Isometry3d pose;
   pose.linear() = q.toRotationMatrix();
-  pose.translation() = posevec.tail(3);
+  pose.translation() = t;
   return pose;
-}
-
-Vector6d MakePosevec(const Eigen::Isometry3d & pose)
-{
-  const Eigen::Quaterniond q = Eigen::Quaterniond(pose.rotation()).normalized();
-  const Eigen::Vector3d t = pose.translation();
-  Vector6d posevec;
-  posevec << q.x(), q.y(), q.z(), t.x(), t.y(), t.z();
-  return posevec;
-}
-
-Eigen::Quaterniond Exp(const Eigen::Vector3d & r)
-{
-  const double norm = r.norm();
-
-  if (norm < 1e-7) {
-    return Eigen::Quaterniond::Identity();
-  }
-
-  const Eigen::Vector3d xyz = r * std::sin(norm) / norm;
-  const double w = std::cos(norm);
-
-  return Eigen::Quaterniond(w, xyz(0), xyz(1), xyz(2));
-}
-
-Eigen::Quaterniond UpdateQuaternionVec(
-  const Eigen::Vector4d & current,
-  const Eigen::Vector4d & dwxyz)
-{
-  const Eigen::Quaterniond q(current(0), current(1), current(2), current(3));
-
-  const Eigen::Quaterniond dq = Exp(Eigen::Vector3d(dwxyz(1), dwxyz(2), dwxyz(3)));
-
-  return dq * q;
-}
-
-Vector6d UpdatePoseVec(const Vector6d & x0, const Vector6d & dx)
-{
-  const Eigen::Quaterniond q = UpdateQuaternionVec(x0.head(4), dx.head(4));
-
-  Vector6d x1;
-  x1.head(3) = GetXYZ(q);
-  x1.tail(3) = x0.tail(3) + dx.tail(3);
-  return x1;
 }
 
 #endif  // POSEVEC_HPP_

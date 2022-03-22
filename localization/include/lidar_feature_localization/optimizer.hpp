@@ -34,6 +34,8 @@
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/rad2deg.hpp"
 
+#include "rotationlib/quaternion.hpp"
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -41,8 +43,8 @@
 bool CheckConvergence(const Vector6d & dx)
 {
   const float dr = dx.head(3).norm();
-  const float dt = (100 * dx.tail(3)).norm();
-  return dr < 0.05 && dt < 0.05;
+  const float dt = dx.tail(3).norm();
+  return dr < 1e-3 && dt < 1e-3;
 }
 
 Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
@@ -52,11 +54,25 @@ Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
   return SolveLinear(JtJ, JtB);
 }
 
-template<typename ArgumentType>
+Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
+{
+  const Eigen::Matrix<double, 4, 3> Q = LeftMultiplicationMatrix(q).block<4, 3>(0, 1);
+
+  Eigen::Matrix<double, 7, 6> M;
+  M.block<4, 3>(0, 0) = Q;
+  M.block<4, 3>(0, 3) = Eigen::MatrixXd::Zero(4, 3);
+  M.block<3, 3>(4, 0) = Eigen::Matrix3d::Zero();
+  M.block<3, 3>(4, 3) = Eigen::Matrix3d::Identity();
+  return M;
+}
+
+// Sola, Joan. Course on SLAM. Technical Report IRI-TR-16-04, Institut de Robòtica i, 2017.
+// Section 4.2.5
+template<typename ProblemType, typename ArgumentType>
 class Optimizer
 {
 public:
-  explicit Optimizer(const OptimizationProblem<ArgumentType> & problem)
+  explicit Optimizer(const ProblemType & problem)
   : problem_(problem)
   {
   }
@@ -65,26 +81,31 @@ public:
     const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
   {
-    Vector6d posevec = MakePosevec(initial_pose);
-    for (int iter = 0; iter < 30; iter++) {
-      const Eigen::Isometry3d pose = MakePose(posevec);
-      const auto [J, b] = problem_.Make(x, pose);
+    Eigen::Quaterniond q(initial_pose.linear());
+    Eigen::Vector3d t(initial_pose.translation());
+
+    for (int iter = 0; iter < 10; iter++) {
+      const Eigen::Isometry3d pose = MakePose(q, t);
+      const auto [J, r] = problem_.Make(x, pose);
       if (J.rows() == 0) {
         continue;
       }
 
-      const Eigen::VectorXd dx = CalcUpdate(J, b);
-      posevec = UpdatePoseVec(posevec, dx);
+      const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+      const Vector6d dx = CalcUpdate(J * M, r);
+      const Eigen::Quaterniond dq = MakeQuaternionFromXYZ(dx.head(3));
+      q = q * dq;
+      t = t - dx.tail(3);
 
       if (CheckConvergence(dx)) {
         break;
       }
     }
-    return MakePose(posevec);
+    return MakePose(q, t);
   }
 
 private:
-  const OptimizationProblem<ArgumentType> problem_;
+  const ProblemType problem_;
 };
 
 #endif  // OPTIMIZER_HPP_

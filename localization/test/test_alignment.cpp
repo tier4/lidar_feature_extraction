@@ -40,6 +40,7 @@ TEST(Alignment, MakeJacobian)
   const Eigen::Quaterniond q = Eigen::Quaterniond(1, -1, 1, -1).normalized();
 
   const Eigen::MatrixXd J = MakeJacobian(q, points);
+
   ASSERT_EQ(J.rows(), 6);
   ASSERT_EQ(J.cols(), 7);
 
