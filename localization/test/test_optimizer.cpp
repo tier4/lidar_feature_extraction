@@ -117,6 +117,27 @@ TEST(Optimizer, Alignment)
       (transform_true.translation() - transform_pred.translation()).norm(),
       testing::Le(1e-4));
   }
+
+  {
+    const AlignmentProblem problem;
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+
+    const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
+    Eigen::Isometry3d initial;
+    initial.linear() = q.toRotationMatrix();
+    initial.translation() = Eigen::Vector3d(-4, -6, 3);;
+
+    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
+
+    const Eigen::Quaterniond q_pred(transform_pred.linear());
+    const Eigen::Vector3d t_pred(transform_pred.translation());
+    EXPECT_THAT(
+      (transform_true.linear() - transform_pred.linear()).norm(),
+      testing::Le(1e-4));
+    EXPECT_THAT(
+      (transform_true.translation() - transform_pred.translation()).norm(),
+      testing::Le(1e-4));
+  }
 }
 
 TEST(Optimizer, MakeM)
