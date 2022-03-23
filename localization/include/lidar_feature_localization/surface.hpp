@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "lidar_feature_localization/filter.hpp"
+#include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/pcl_utils.hpp"
 
@@ -69,13 +70,12 @@ public:
   {
   }
 
-  std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>
-  Make(
+  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
     std::vector<Eigen::Vector3d> coeffs(surface_scan->size());
-    std::vector<double> b(surface_scan->size());
+    std::vector<double> b_vector(surface_scan->size());
     std::vector<bool> flags(surface_scan->size(), false);
 
     for (unsigned int i = 0; i < surface_scan->size(); i++) {
@@ -96,15 +96,19 @@ public:
       const double norm = w.norm();
 
       coeffs[i] = w / norm;
-      b[i] = -(w.dot(p) + 1.0) / norm;
+      b_vector[i] = -(w.dot(p) + 1.0) / norm;
       flags[i] = true;
     }
 
     const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *surface_scan);
     const std::vector<Eigen::Vector3d> points = PointCloudToEigen(pcl_points);
     const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
-    const std::vector<double> b_filtered = Filter(flags, b);
-    return {points, coeffs_filtered, b_filtered};
+    const std::vector<double> b_filtered = Filter(flags, b_vector);
+
+    const Eigen::Quaterniond q(point_to_map.rotation());
+    const Eigen::MatrixXd J = MakeJacobian(points, coeffs_filtered, q);
+    const Eigen::Map<const Eigen::VectorXd> b(b_filtered.data(), b_filtered.size());
+    return {J, b};
   }
 
 private:

@@ -43,7 +43,6 @@
 #include <vector>
 
 #include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/optimization_problem.hpp"
 #include "lidar_feature_localization/surface.hpp"
 #include "lidar_feature_localization/math.hpp"
@@ -82,18 +81,16 @@ public:
   {
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan = std::get<0>(edge_surface_scan);
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan = std::get<1>(edge_surface_scan);
-    const auto [edge_points, edge_coeffs, edge_b] = edge_.Make(edge_scan, point_to_map);
-    const auto [surface_points, surface_coeffs, surface_b] = surface_.Make(surface_scan, point_to_map);
+    const auto [edge_jacobian, edge_residual] = edge_.Make(edge_scan, point_to_map);
+    const auto [surface_jacobian, surface_residual] = surface_.Make(surface_scan, point_to_map);
 
-    const auto points = ranges::views::concat(edge_points, surface_points) | ranges::to_vector;
-    const auto coeffs = ranges::views::concat(edge_coeffs, surface_coeffs) | ranges::to_vector;
-    auto b_vector = ranges::views::concat(edge_b, surface_b) | ranges::to_vector;
+    assert(edge_jacobian.cols() == surface_jacobian.cols());
 
-    assert(points.size() == coeffs.size());
-    assert(points.size() == b_vector.size());
-    const Eigen::Quaterniond q(point_to_map.rotation());
-    const Eigen::MatrixXd J = MakeJacobian(points, coeffs, q);
-    const Eigen::Map<Eigen::VectorXd> b(b_vector.data(), b_vector.size());
+    Eigen::VectorXd b(edge_residual.size() + surface_residual.size());
+    Eigen::MatrixXd J(edge_jacobian.rows() + surface_jacobian.rows(), edge_jacobian.cols());
+
+    b << edge_residual, surface_residual;
+    J << edge_jacobian, surface_jacobian;
     return {J, b};
   }
 

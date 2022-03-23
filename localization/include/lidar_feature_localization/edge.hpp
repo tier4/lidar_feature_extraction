@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "lidar_feature_localization/filter.hpp"
+#include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/pcl_utils.hpp"
 
@@ -88,8 +89,7 @@ public:
   {
   }
 
-  std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>, std::vector<double>>
-  Make(
+  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
@@ -124,8 +124,11 @@ public:
     const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *edge_scan);
     const std::vector<Eigen::Vector3d> points = PointCloudToEigen(pcl_points);
     const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
-    const std::vector<double> b(coeffs_filtered.size(), -1.0);
-    return {points, coeffs_filtered, b};
+
+    const Eigen::Quaterniond q(point_to_map.rotation());
+    const Eigen::MatrixXd J = MakeJacobian(points, coeffs, q);
+    const Eigen::VectorXd b = Eigen::VectorXd::Constant(points.size(), -1.0);
+    return {J, b};
   }
 
 private:
