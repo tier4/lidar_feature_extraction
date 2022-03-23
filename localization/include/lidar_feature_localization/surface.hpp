@@ -38,9 +38,11 @@
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/pcl_utils.hpp"
 
+const double plane_bias = 1.0;
+
 double PointPlaneDistance(const Eigen::Vector3d & w, const Eigen::Vector3d & x)
 {
-  return std::abs(w.dot(x) + 1.0) / w.norm();
+  return std::abs(w.dot(x) + plane_bias) / w.norm();
 }
 
 bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::Vector3d & w)
@@ -56,7 +58,7 @@ bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::Vector3d & w)
 
 Eigen::Vector3d EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
 {
-  const Eigen::VectorXd g = -1.0 * Eigen::VectorXd::Ones(X.rows());
+  const Eigen::VectorXd g = Eigen::VectorXd::Constant(X.rows(), -plane_bias);
   return SolveLinear(X, g);
 }
 
@@ -96,7 +98,7 @@ public:
       const double norm = w.norm();
 
       coeffs[i] = w / norm;
-      b_vector[i] = -(w.dot(p) + 1.0) / norm;
+      b_vector[i] = -(w.dot(p) + plane_bias) / norm;
       flags[i] = true;
     }
 
