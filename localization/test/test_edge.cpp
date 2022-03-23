@@ -86,3 +86,24 @@ TEST(OptimizationProblem, Center)
   std::vector<double> v(c.data(), c.data() + c.size());
   EXPECT_THAT(v, ElementsAre(3.8, 3.8, 4.6));
 }
+
+TEST(Edge, CalcCovariance)
+{
+  const Eigen::MatrixXd X =
+    (Eigen::MatrixXd(4, 3) <<
+      2, 8, 9,
+      3, 5, 0,
+      6, 5, 5,
+      5, 2, 2).finished();
+
+  const Eigen::Matrix3d expected =
+    (Eigen::Matrix3d() <<
+      10., -9., -6.,
+      -9., 18., 21.,
+      -6., 21., 46.).finished() / 4.;
+
+  const Eigen::MatrixXd C = CalcCovariance(X);
+  ASSERT_EQ(C.rows(), 3);
+  ASSERT_EQ(C.cols(), 3);
+  EXPECT_EQ((C - expected).norm(), 0.);
+}

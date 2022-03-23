@@ -38,9 +38,9 @@
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/pcl_utils.hpp"
 
-Eigen::Vector3d Center(const Eigen::MatrixXd & neighbors)
+Eigen::VectorXd Center(const Eigen::MatrixXd & X)
 {
-  return neighbors.colwise().mean();
+  return X.colwise().mean();
 }
 
 std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<pcl::PointXYZ> & cloud)
@@ -48,10 +48,9 @@ std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<pcl::PointXYZ> 
   return cloud | ranges::views::transform(GetXYZ) | ranges::to_vector;
 }
 
-Eigen::Matrix3d CalcCovariance(const Eigen::MatrixXd & X)
+Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X)
 {
-  const Eigen::Vector3d c = X.colwise().mean();
-  const Eigen::MatrixXd D = X.rowwise() - c.transpose();
+  const Eigen::MatrixXd D = X.rowwise() - Center(X).transpose();
   return D.transpose() * D / X.rows();
 }
 
