@@ -56,4 +56,9 @@ Eigen::MatrixXd Get(
   return A;
 }
 
+std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<pcl::PointXYZ> & cloud)
+{
+  return cloud | ranges::views::transform(GetXYZ) | ranges::to_vector;
+}
+
 #endif  //  PCL_UTILS_HPP_

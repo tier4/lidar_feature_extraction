@@ -44,11 +44,6 @@ Eigen::VectorXd Center(const Eigen::MatrixXd & X)
   return X.colwise().mean();
 }
 
-std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<pcl::PointXYZ> & cloud)
-{
-  return cloud | ranges::views::transform(GetXYZ) | ranges::to_vector;
-}
-
 Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X)
 {
   const Eigen::MatrixXd D = X.rowwise() - Center(X).transpose();
