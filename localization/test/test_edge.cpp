@@ -33,7 +33,7 @@
 using testing::ElementsAre;
 using testing::DoubleEq;
 
-TEST(OptimizationProblem, TripletCross)
+TEST(Edge, TripletCross)
 {
   {
     const Eigen::Vector3d p0(1., 2., 3.);
@@ -54,7 +54,7 @@ TEST(OptimizationProblem, TripletCross)
   }
 }
 
-TEST(OptimizationProblem, PrincipalComponents)
+TEST(Edge, PrincipalComponents)
 {
   const Eigen::Matrix3d A = Eigen::Matrix3d::Random();
   const Eigen::Matrix3d C = A * A.transpose();
@@ -73,7 +73,7 @@ TEST(OptimizationProblem, PrincipalComponents)
   EXPECT_THAT((C * u - lambda * u).norm(), testing::Le(1e-4));
 }
 
-TEST(OptimizationProblem, Center)
+TEST(Edge, Center)
 {
   Eigen::Matrix<double, 5, 3> A;
   A <<

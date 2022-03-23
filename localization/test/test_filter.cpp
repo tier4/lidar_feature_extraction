@@ -31,7 +31,7 @@
 #include "lidar_feature_localization/filter.hpp"
 
 
-TEST(OptimizationProblem, Filter)
+TEST(Filter, Filter)
 {
   std::vector<int> a{4, 5, 1, 2, 0};
   std::vector<bool> flags{true, false, true, true, false};
