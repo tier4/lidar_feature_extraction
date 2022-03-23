@@ -81,7 +81,7 @@ public:
     for (unsigned int i = 0; i < surface_scan->size(); i++) {
       const Eigen::Vector3d p = point_to_map * GetXYZ(surface_scan->at(i));
       const pcl::PointXYZ q = MakePointXYZ(p);
-      const auto [indices, squared_distances] = surface_kdtree_.nearestKSearch(q, n_neighbors_);
+      const auto [indices, squared_distances] = surface_kdtree_.NearestKSearch(q, n_neighbors_);
       if (squared_distances.back() >= 1.0) {
         continue;
       }

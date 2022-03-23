@@ -26,44 +26,48 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef KDTREE_HPP_
-#define KDTREE_HPP_
+#include <gmock/gmock.h>
 
-#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
-#include <tuple>
-#include <vector>
+#include "lidar_feature_localization/kdtree.hpp"
 
-template<typename T>
-class KDTree
+
+TEST(KDTree, KDTree)
 {
-public:
-  explicit KDTree(const typename pcl::PointCloud<T>::Ptr & points)
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(2, 0, 1)),
+  cloud->push_back(pcl::PointXYZ(2, 0, 0)),
+  cloud->push_back(pcl::PointXYZ(0, 0, 4)),
+  cloud->push_back(pcl::PointXYZ(0, 2, 4));
+
+  const KDTree<pcl::PointXYZ> kdtree(cloud);
+
   {
-    kdtree_.setInputCloud(points);
+    const auto [indices, squared_distances] = kdtree.RadiusSearch(pcl::PointXYZ(2, 0, 1), 1.0);
+
+    EXPECT_EQ(indices.size(), static_cast<long unsigned int>(1));
+    EXPECT_EQ(squared_distances.size(), static_cast<long unsigned int>(1));
+    EXPECT_THAT(indices, testing::ElementsAre(0));
+    EXPECT_THAT(squared_distances, testing::ElementsAre(0.));
   }
 
-  std::tuple<std::vector<int>, std::vector<float>> RadiusSearch(
-    const T & point, const double radius) const
   {
-    std::vector<int> indices;
-    std::vector<float> squared_distances;
-    kdtree_.radiusSearch(point, radius, indices, squared_distances);
-    return {indices, squared_distances};
+    const auto [indices, squared_distances] = kdtree.RadiusSearch(pcl::PointXYZ(2, 0, 1), 1.2);
+
+    EXPECT_EQ(indices.size(), static_cast<long unsigned int>(2));
+    EXPECT_EQ(squared_distances.size(), static_cast<long unsigned int>(2));
+    EXPECT_THAT(indices, testing::ElementsAre(0, 1));
+    EXPECT_THAT(squared_distances, testing::ElementsAre(0., 1.));
   }
 
-  std::tuple<std::vector<int>, std::vector<float>> NearestKSearch(
-    const T & point, const int k) const
   {
-    std::vector<int> indices;
-    std::vector<float> squared_distances;
-    kdtree_.nearestKSearch(point, k, indices, squared_distances);
-    return {indices, squared_distances};
+    const auto [indices, squared_distances] = kdtree.NearestKSearch(pcl::PointXYZ(0, 0, 0), 2);
+
+    EXPECT_EQ(indices.size(), static_cast<long unsigned int>(2));
+    EXPECT_EQ(squared_distances.size(), static_cast<long unsigned int>(2));
+    EXPECT_THAT(indices, testing::ElementsAre(1, 0));
+    EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5.));
   }
-
-private:
-  pcl::KdTreeFLANN<T> kdtree_;
-};
-
-#endif
+}

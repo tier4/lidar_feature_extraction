@@ -103,7 +103,7 @@ public:
     for (unsigned int i = 0; i < edge_scan->size(); i++) {
       const Eigen::Vector3d p0 = point_to_map * GetXYZ(edge_scan->at(i));
       const pcl::PointXYZ q = MakePointXYZ(p0);
-      const auto [indices, squared_distances] = edge_kdtree_.nearestKSearch(q, n_neighbors_);
+      const auto [indices, squared_distances] = edge_kdtree_.NearestKSearch(q, n_neighbors_);
       if (squared_distances.back() >= 1.0) {
         continue;
       }
