@@ -57,8 +57,8 @@ public:
     const Eigen::Affine3d & transform,
     const typename pcl::PointCloud<T>::Ptr & cloud)
   {
-    const pcl::PointCloud<T> transformed = TransformPointCloud<T>(transform, cloud);
-    *map_ptr_ += transformed;
+    const auto transformed = TransformPointCloud<T>(transform, cloud);
+    *map_ptr_ += *transformed;
   }
 
   bool IsEmpty() const
