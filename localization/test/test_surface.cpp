@@ -26,40 +26,23 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef PCL_UTILS_HPP_
-#define PCL_UTILS_HPP_
 
-#include <algorithm>
-#include <tuple>
-#include <vector>
+#include <gmock/gmock.h>
 
-#include <range/v3/all.hpp>
+#include "lidar_feature_localization/surface.hpp"
 
 
-Eigen::Vector3d GetXYZ(const pcl::PointXYZ & point)
+TEST(Surface, EstimatePlaneCoefficients)
 {
-  return Eigen::Vector3d(point.x, point.y, point.z);
-}
+  const Eigen::MatrixXd A =
+    (Eigen::MatrixXd(4, 2) <<
+      2, 3,
+      3, 4,
+      4, 5,
+      5, 6
+    ).finished();
 
-pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v)
-{
-  return pcl::PointXYZ(v(0), v(1), v(2));
+  const Eigen::Vector2d x = EstimatePlaneCoefficients(A);
+  const Eigen::Vector2d expected(1, -1);
+  EXPECT_THAT((x - expected).norm(), testing::Le(1e-6));
 }
-
-Eigen::MatrixXd Get(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud,
-  const std::vector<int> & indices)
-{
-  Eigen::MatrixXd A(indices.size(), 3);
-  for (const auto & [j, index] : ranges::views::enumerate(indices)) {
-    A.row(j) = GetXYZ(pointcloud->at(index)).transpose();
-  }
-  return A;
-}
-
-std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<pcl::PointXYZ> & cloud)
-{
-  return cloud | ranges::views::transform(GetXYZ) | ranges::to_vector;
-}
-
-#endif  //  PCL_UTILS_HPP_

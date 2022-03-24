@@ -36,6 +36,7 @@
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
+#include "lidar_feature_localization/math.hpp"
 #include "lidar_feature_localization/pcl_utils.hpp"
 
 const double plane_bias = 1.0;
@@ -56,7 +57,7 @@ bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::Vector3d & w)
   return true;
 }
 
-Eigen::Vector3d EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
+Eigen::VectorXd EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
 {
   const Eigen::VectorXd g = Eigen::VectorXd::Constant(X.rows(), -plane_bias);
   return SolveLinear(X, g);
