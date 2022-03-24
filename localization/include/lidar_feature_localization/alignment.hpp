@@ -35,7 +35,6 @@
 #include <tuple>
 
 #include "lidar_feature_localization/math.hpp"
-#include "lidar_feature_localization/optimization_problem.hpp"
 #include "rotationlib/jacobian/quaternion.hpp"
 
 

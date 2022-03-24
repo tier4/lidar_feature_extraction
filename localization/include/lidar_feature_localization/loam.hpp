@@ -43,7 +43,7 @@
 #include <vector>
 
 #include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/optimization_problem.hpp"
+#include "lidar_feature_localization/degenerate.hpp"
 #include "lidar_feature_localization/surface.hpp"
 #include "lidar_feature_localization/math.hpp"
 

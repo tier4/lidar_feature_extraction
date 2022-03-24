@@ -40,7 +40,6 @@
 
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
-#include "lidar_feature_localization/optimization_problem.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 #include "lidar_feature_localization/posevec.hpp"
 

@@ -27,7 +27,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <gmock/gmock.h>
-#include "lidar_feature_localization/optimization_problem.hpp"
+#include "lidar_feature_localization/degenerate.hpp"
 
 TEST(OptimizationProblem, IsDegenerate) {
   Eigen::Matrix3d C;
