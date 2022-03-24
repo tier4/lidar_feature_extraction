@@ -52,7 +52,7 @@ double PointPlaneDistance(const Eigen::VectorXd & w, const Eigen::VectorXd & x)
   return std::abs(SignedPointPlaneDistance(w, x));
 }
 
-bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::VectorXd & w)
+bool CheckPointsDistributeAlongPlane(const Eigen::MatrixXd & X, const Eigen::VectorXd & w)
 {
   for (int j = 0; j < X.rows(); j++) {
     const Eigen::VectorXd x = X.row(j);
@@ -98,13 +98,11 @@ public:
       const Eigen::MatrixXd X = Get(surface_map_, indices);
       const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
 
-      if (!ValidatePlane(X, w)) {
+      if (!CheckPointsDistributeAlongPlane(X, w)) {
         continue;
       }
 
-      const double norm = w.norm();
-
-      coeffs[i] = w / norm;
+      coeffs[i] = w / w.norm();
       b_vector[i] = -SignedPointPlaneDistance(w, p);
       flags[i] = true;
     }

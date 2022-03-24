@@ -47,7 +47,7 @@ TEST(Surface, EstimatePlaneCoefficients)
   EXPECT_THAT((w - expected).norm(), testing::Le(1e-6));
 }
 
-TEST(Surface, ValidatePlane)
+TEST(Surface, CheckPointsDistributeAlongPlane)
 {
   {
     const Eigen::MatrixXd X =
@@ -58,7 +58,7 @@ TEST(Surface, ValidatePlane)
         5, 6
       ).finished();
     const Eigen::Vector2d w(1, -1);
-    EXPECT_TRUE(ValidatePlane(X, w));
+    EXPECT_TRUE(CheckPointsDistributeAlongPlane(X, w));
   }
 
   {
@@ -70,6 +70,6 @@ TEST(Surface, ValidatePlane)
         5, 6
       ).finished();
     const Eigen::Vector2d w(1, -1);
-    EXPECT_FALSE(ValidatePlane(X, w));
+    EXPECT_FALSE(CheckPointsDistributeAlongPlane(X, w));
   }
 }
