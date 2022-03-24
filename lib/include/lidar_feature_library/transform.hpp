@@ -31,13 +31,22 @@
 
 #include <pcl/common/transforms.h>
 
+Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
+{
+  assert(std::abs(q.norm() - 1.0) < 1e-6);
+  Eigen::Isometry3d transform;
+  transform.linear() = q.toRotationMatrix();
+  transform.translation() = t;
+  return transform;
+}
+
 template<typename T>
-pcl::PointCloud<T> TransformPointCloud(
+typename pcl::PointCloud<T>::Ptr TransformPointCloud(
   const Eigen::Affine3d & transform,
   const typename pcl::PointCloud<T>::Ptr & cloud)
 {
-  pcl::PointCloud<T> transformed;
-  pcl::transformPointCloud(*cloud, transformed, transform);
+  typename pcl::PointCloud<T>::Ptr transformed(new pcl::PointCloud<T>());
+  pcl::transformPointCloud(*cloud, *transformed, transform);
   return transformed;
 }
 
