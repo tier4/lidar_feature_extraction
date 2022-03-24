@@ -117,7 +117,7 @@ public:
     }
 
     const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *edge_scan);
-    const std::vector<Eigen::Vector3d> points = PointCloudToEigen(pcl_points);
+    const std::vector<Eigen::Vector3d> points = PointsToEigen(pcl_points);
     const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
 
     const Eigen::Quaterniond q(point_to_map.rotation());

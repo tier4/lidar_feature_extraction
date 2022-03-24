@@ -58,11 +58,11 @@ Eigen::MatrixXd Get(
 }
 
 template<typename T>
-std::vector<Eigen::Vector3d> PointCloudToEigen(const std::vector<T> & cloud)
+std::vector<Eigen::Vector3d> PointsToEigen(const std::vector<T> & cloud)
 {
   auto get_xyz = [](const T & p) {
-    return Eigen::Vector3d(p.x, p.y, p.z);
-  };
+      return Eigen::Vector3d(p.x, p.y, p.z);
+    };
   return cloud | ranges::views::transform(get_xyz) | ranges::to_vector;
 }
 

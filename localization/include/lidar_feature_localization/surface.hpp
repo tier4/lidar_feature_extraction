@@ -108,7 +108,7 @@ public:
     }
 
     const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *surface_scan);
-    const std::vector<Eigen::Vector3d> points = PointCloudToEigen(pcl_points);
+    const std::vector<Eigen::Vector3d> points = PointsToEigen(pcl_points);
     const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
     const std::vector<double> b_filtered = Filter(flags, b_vector);
 
