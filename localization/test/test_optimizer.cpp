@@ -66,6 +66,29 @@ TEST(Optimizer, Alignment)
 
   {
     const AlignmentProblem problem;
+
+    const Eigen::Quaterniond initial_q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
+    const Eigen::Vector3d initial_t(-4, -6, 3);
+
+    const Eigen::Isometry3d initial = MakeIsometry3d(initial_q, initial_t);
+
+    const auto [J, r] = problem.Make(std::make_tuple(X, Y), initial);
+
+    const Eigen::Matrix<double, 7, 6> M = MakeM(initial_q);
+    const Vector6d dx = CalcUpdate(J * M, r);
+    const Eigen::Quaterniond dq = MakeQuaternionFromXYZ(dx.head(3));
+    const Eigen::Vector3d dt = dx.tail(3);
+
+    const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
+
+    const auto r_initial = MakeResidual(initial, X, Y);
+    const auto r_updated = MakeResidual(updated, X, Y);
+
+    EXPECT_TRUE(r_updated.squaredNorm() < r_initial.squaredNorm());
+  }
+
+  {
+    const AlignmentProblem problem;
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
 
     const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), transform_true);
