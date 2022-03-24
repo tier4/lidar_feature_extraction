@@ -82,13 +82,10 @@ TEST(Alignment, MakeResidual)
   const Eigen::VectorXd residual = MakeResidual(transform, source, target);
 
   ASSERT_EQ(residual.size(), 3 * N);
-  const Eigen::Vector3d x0 = source.row(0);
-  const Eigen::Vector3d y0 = target.row(0);
-  const Eigen::Vector3d r0 = residual.segment(0, 3);
-  EXPECT_THAT((q * x0 + t - y0 - r0).norm(), testing::Le(1e-4));
 
-  const Eigen::Vector3d x1 = source.row(1);
-  const Eigen::Vector3d y1 = target.row(1);
-  const Eigen::Vector3d r1 = residual.segment(3, 3);
-  EXPECT_THAT((q * x1 + t - y1 - r1).norm(), testing::Le(1e-4));
+  const Eigen::Vector3d expected0 = q * source.row(0).transpose() + t - target.row(0).transpose();
+  const Eigen::Vector3d expected1 = q * source.row(1).transpose() + t - target.row(1).transpose();
+  const Eigen::VectorXd expected = (Eigen::VectorXd(3 * N) << expected0, expected1).finished();
+
+  EXPECT_THAT((residual - expected).norm(), testing::Le(1e-4));
 }
