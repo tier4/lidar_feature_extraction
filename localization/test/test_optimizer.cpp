@@ -74,10 +74,7 @@ TEST(Optimizer, Alignment)
 
     const auto [J, r] = problem.Make(std::make_tuple(X, Y), initial);
 
-    const Eigen::Matrix<double, 7, 6> M = MakeM(initial_q);
-    const Vector6d dx = CalcUpdate(J * M, r);
-    const Eigen::Quaterniond dq = MakeQuaternionFromXYZ(dx.head(3));
-    const Eigen::Vector3d dt = dx.tail(3);
+    const auto [dq, dt] = CalcUpdate(J, r, initial_q);
 
     const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
 
