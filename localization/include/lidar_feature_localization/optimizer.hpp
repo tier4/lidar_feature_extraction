@@ -51,7 +51,7 @@ Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
 {
   const Eigen::MatrixXd JtJ = J.transpose() * J;
   const Eigen::VectorXd JtB = J.transpose() * b;
-  return SolveLinear(JtJ, JtB);
+  return SolveLinear(JtJ, -JtB);
 }
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
@@ -95,7 +95,7 @@ public:
       const Vector6d dx = CalcUpdate(J * M, r);
       const Eigen::Quaterniond dq = MakeQuaternionFromXYZ(dx.head(3));
       q = q * dq;
-      t = t - dx.tail(3);
+      t = t + dx.tail(3);
 
       if (CheckConvergence(dx)) {
         break;
