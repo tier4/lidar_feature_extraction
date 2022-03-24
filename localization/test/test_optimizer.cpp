@@ -35,6 +35,7 @@
 
 #include "lidar_feature_localization/alignment.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
+#include "lidar_feature_localization/transform.hpp"
 
 
 const Eigen::Isometry3d MakeTransform(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
@@ -81,9 +82,7 @@ TEST(Optimizer, Alignment)
     const AlignmentProblem problem;
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
 
-    Eigen::Isometry3d initial;
-    initial.linear() = q_true.toRotationMatrix();
-    initial.translation() = Eigen::Vector3d(2, 4, 1);
+    const Eigen::Isometry3d initial = MakeIsometry3d(q_true, Eigen::Vector3d(2, 4, 1));
 
     const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
 
@@ -102,9 +101,7 @@ TEST(Optimizer, Alignment)
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
 
     const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
-    Eigen::Isometry3d initial;
-    initial.linear() = q.toRotationMatrix();
-    initial.translation() = t_true;
+    const Eigen::Isometry3d initial = MakeIsometry3d(q, t_true);
 
     const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
 
@@ -123,9 +120,7 @@ TEST(Optimizer, Alignment)
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
 
     const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
-    Eigen::Isometry3d initial;
-    initial.linear() = q.toRotationMatrix();
-    initial.translation() = Eigen::Vector3d(-4, -6, 3);;
+    const Eigen::Isometry3d initial = MakeIsometry3d(q, Eigen::Vector3d(-4, -6, 3));
 
     const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
 
