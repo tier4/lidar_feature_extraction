@@ -46,28 +46,25 @@ TEST(KDTree, KDTree)
 
   {
     const auto [indices, squared_distances] = kdtree.RadiusSearch(pcl::PointXYZ(2, 0, 1), 1.0);
-
-    EXPECT_EQ(indices.size(), static_cast<long unsigned int>(1));
-    EXPECT_EQ(squared_distances.size(), static_cast<long unsigned int>(1));
     EXPECT_THAT(indices, testing::ElementsAre(0));
     EXPECT_THAT(squared_distances, testing::ElementsAre(0.));
   }
 
   {
     const auto [indices, squared_distances] = kdtree.RadiusSearch(pcl::PointXYZ(2, 0, 1), 1.2);
-
-    EXPECT_EQ(indices.size(), static_cast<long unsigned int>(2));
-    EXPECT_EQ(squared_distances.size(), static_cast<long unsigned int>(2));
     EXPECT_THAT(indices, testing::ElementsAre(0, 1));
     EXPECT_THAT(squared_distances, testing::ElementsAre(0., 1.));
   }
 
   {
     const auto [indices, squared_distances] = kdtree.NearestKSearch(pcl::PointXYZ(0, 0, 0), 2);
-
-    EXPECT_EQ(indices.size(), static_cast<long unsigned int>(2));
-    EXPECT_EQ(squared_distances.size(), static_cast<long unsigned int>(2));
     EXPECT_THAT(indices, testing::ElementsAre(1, 0));
     EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5.));
+  }
+
+  {
+    const auto [indices, squared_distances] = kdtree.NearestKSearch(pcl::PointXYZ(0, 0, 0), 4);
+    EXPECT_THAT(indices, testing::ElementsAre(1, 0, 2, 3));
+    EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5., 16., 20.));
   }
 }
