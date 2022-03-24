@@ -41,9 +41,15 @@
 
 const double plane_bias = 1.0;
 
+double SignedPointPlaneDistance(const Eigen::VectorXd & w, const Eigen::VectorXd & x)
+{
+  assert(w.size() == x.size());
+  return (w.dot(x) + plane_bias) / w.norm();
+}
+
 double PointPlaneDistance(const Eigen::VectorXd & w, const Eigen::VectorXd & x)
 {
-  return std::abs(w.dot(x) + plane_bias) / w.norm();
+  return std::abs(SignedPointPlaneDistance(w, x));
 }
 
 bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::VectorXd & w)
@@ -99,7 +105,7 @@ public:
       const double norm = w.norm();
 
       coeffs[i] = w / norm;
-      b_vector[i] = -(w.dot(p) + plane_bias) / norm;
+      b_vector[i] = -SignedPointPlaneDistance(w, p);
       flags[i] = true;
     }
 
