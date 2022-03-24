@@ -39,6 +39,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <tuple>
+
 
 bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
 {

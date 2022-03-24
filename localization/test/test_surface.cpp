@@ -29,6 +29,11 @@
 
 #include <gmock/gmock.h>
 
+#include <pcl/common/transforms.h>
+
+#include "lidar_feature_library/transform.hpp"
+
+#include "lidar_feature_localization/optimizer.hpp"
 #include "lidar_feature_localization/surface.hpp"
 
 
