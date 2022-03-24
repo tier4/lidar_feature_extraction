@@ -34,7 +34,7 @@
 
 TEST(Surface, EstimatePlaneCoefficients)
 {
-  const Eigen::MatrixXd A =
+  const Eigen::MatrixXd X =
     (Eigen::MatrixXd(4, 2) <<
       2, 3,
       3, 4,
@@ -42,7 +42,34 @@ TEST(Surface, EstimatePlaneCoefficients)
       5, 6
     ).finished();
 
-  const Eigen::Vector2d x = EstimatePlaneCoefficients(A);
+  const Eigen::Vector2d w = EstimatePlaneCoefficients(X);
   const Eigen::Vector2d expected(1, -1);
-  EXPECT_THAT((x - expected).norm(), testing::Le(1e-6));
+  EXPECT_THAT((w - expected).norm(), testing::Le(1e-6));
+}
+
+TEST(Surface, ValidatePlane)
+{
+  {
+    const Eigen::MatrixXd X =
+      (Eigen::MatrixXd(4, 2) <<
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6
+      ).finished();
+    const Eigen::Vector2d w(1, -1);
+    EXPECT_TRUE(ValidatePlane(X, w));
+  }
+
+  {
+    const Eigen::MatrixXd X =
+      (Eigen::MatrixXd(4, 2) <<
+        2, 3,
+        3, 4,
+        5, 5,
+        5, 6
+      ).finished();
+    const Eigen::Vector2d w(1, -1);
+    EXPECT_FALSE(ValidatePlane(X, w));
+  }
 }

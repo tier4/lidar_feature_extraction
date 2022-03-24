@@ -41,15 +41,15 @@
 
 const double plane_bias = 1.0;
 
-double PointPlaneDistance(const Eigen::Vector3d & w, const Eigen::Vector3d & x)
+double PointPlaneDistance(const Eigen::VectorXd & w, const Eigen::VectorXd & x)
 {
   return std::abs(w.dot(x) + plane_bias) / w.norm();
 }
 
-bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::Vector3d & w)
+bool ValidatePlane(const Eigen::MatrixXd & X, const Eigen::VectorXd & w)
 {
   for (int j = 0; j < X.rows(); j++) {
-    const Eigen::Vector3d x = X.row(j);
+    const Eigen::VectorXd x = X.row(j);
     if (PointPlaneDistance(w, x) > 0.2) {
       return false;
     }
