@@ -33,11 +33,14 @@
 #include <tuple>
 #include <vector>
 
+#include "lidar_feature_library/pcl_utils.hpp"
+#include "lidar_feature_library/eigen.hpp"
+
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/math.hpp"
-#include "lidar_feature_localization/pcl_utils.hpp"
+#include "lidar_feature_localization/matrix_type.hpp"
 
 const double plane_bias = 1.0;
 
@@ -69,12 +72,21 @@ Eigen::VectorXd EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
   return SolveLinear(X, g);
 }
 
+Vector7d MakeJacobianRow(
+  const Eigen::Vector3d & w,
+  const Eigen::Quaterniond & q,
+  const Eigen::Vector3d & p)
+{
+  const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, p);
+  const Eigen::Vector3d u = w / w.norm();
+  return (Vector7d() << drpdq.transpose() * u, u).finished();
+}
+
 class Surface
 {
 public:
   Surface(const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_map, const int n_neighbors)
-  : surface_map_(surface_map),
-    surface_kdtree_(KDTree<pcl::PointXYZ>(surface_map)),
+  : kdtree_(KDTreeEigen(surface_map)),
     n_neighbors_(n_neighbors)
   {
   }
@@ -83,44 +95,38 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
-    std::vector<Eigen::Vector3d> coeffs(surface_scan->size());
+    std::vector<Vector7d> jacobian_rows(surface_scan->size());
     std::vector<double> b_vector(surface_scan->size());
     std::vector<bool> flags(surface_scan->size(), false);
 
+    const Eigen::Quaterniond q(point_to_map.rotation());
+
     for (unsigned int i = 0; i < surface_scan->size(); i++) {
-      const Eigen::Vector3d p = point_to_map * GetXYZ(surface_scan->at(i));
-      const pcl::PointXYZ q = MakePointXYZ(p);
-      const auto [indices, squared_distances] = surface_kdtree_.NearestKSearch(q, n_neighbors_);
+      const Eigen::Vector3d p = GetXYZ(surface_scan->at(i));
+      const Eigen::Vector3d point_on_map = point_to_map * p;
+
+      const auto [X, squared_distances] = kdtree_.NearestKSearch(point_on_map, n_neighbors_);
       if (squared_distances.back() >= 1.0) {
         continue;
       }
 
-      const Eigen::MatrixXd X = Get(surface_map_, indices);
       const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
-
       if (!CheckPointsDistributeAlongPlane(X, w)) {
         continue;
       }
 
-      coeffs[i] = w / w.norm();
-      b_vector[i] = -SignedPointPlaneDistance(w, p);
+      jacobian_rows[i] = MakeJacobianRow(w, q, p);
+      b_vector[i] = SignedPointPlaneDistance(w, point_on_map);
       flags[i] = true;
     }
 
-    const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *surface_scan);
-    const std::vector<Eigen::Vector3d> points = PointsToEigen(pcl_points);
-    const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
-    const std::vector<double> b_filtered = Filter(flags, b_vector);
-
-    const Eigen::Quaterniond q(point_to_map.rotation());
-    const Eigen::MatrixXd J = MakeJacobian(points, coeffs_filtered, q);
-    const Eigen::Map<const Eigen::VectorXd> b(b_filtered.data(), b_filtered.size());
+    const Eigen::MatrixXd J = VectorsToEigen<7>(Filter(flags, jacobian_rows));
+    const Eigen::VectorXd b = VectorToEigen(Filter(flags, b_vector));
     return {J, b};
   }
 
 private:
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map_;
-  const KDTree<pcl::PointXYZ> surface_kdtree_;
+  const KDTreeEigen kdtree_;
   const int n_neighbors_;
 };
 

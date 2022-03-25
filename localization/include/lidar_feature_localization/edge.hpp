@@ -34,10 +34,11 @@
 #include <tuple>
 #include <vector>
 
+#include "lidar_feature_library/pcl_utils.hpp"
+
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
-#include "lidar_feature_localization/pcl_utils.hpp"
 
 Eigen::VectorXd Center(const Eigen::MatrixXd & X)
 {
