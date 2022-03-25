@@ -68,18 +68,19 @@ private:
   pcl::KdTreeFLANN<T> kdtree_;
 };
 
-class KDTreeEigen {
+class KDTreeEigen
+{
 public:
-  KDTreeEigen(const pcl::PointCloud<pcl::PointXYZ>::Ptr & map)
+  explicit KDTreeEigen(const pcl::PointCloud<pcl::PointXYZ>::Ptr & map)
   : map_(map), kdtree_(KDTree<pcl::PointXYZ>(map_))
   {
   }
 
   std::tuple<Eigen::MatrixXd, std::vector<float>> RadiusSearch(
-    const Eigen::Vector3d & point, const int n_neighbors) const
+    const Eigen::Vector3d & point, const double radius) const
   {
     const pcl::PointXYZ q = MakePointXYZ(point);
-    const auto [indices, squared_distances] = kdtree_.RadiusSearch(q, n_neighbors);
+    const auto [indices, squared_distances] = kdtree_.RadiusSearch(q, radius);
     const Eigen::MatrixXd X = Get(map_, indices);
     return std::make_tuple(X, squared_distances);
   }

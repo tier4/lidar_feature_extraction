@@ -82,6 +82,8 @@ TEST(KDTree, KDTreeEigen)
   {
     const auto [X, squared_distances] = kdtree.RadiusSearch(Eigen::Vector3d(2, 0, 1), 1.0);
     const Eigen::MatrixXd expected = (Eigen::MatrixXd(1, 3) << 2, 0, 1).finished();
+    ASSERT_THAT(X.rows(), 1);
+    ASSERT_THAT(X.cols(), 3);
     EXPECT_THAT(squared_distances, testing::ElementsAre(0.));
   }
 
@@ -92,6 +94,8 @@ TEST(KDTree, KDTreeEigen)
         2, 0, 1,
         2, 0, 0
       ).finished();
+    ASSERT_THAT(X.rows(), 2);
+    ASSERT_THAT(X.cols(), 3);
     EXPECT_THAT((X - expected).norm(), 0.);
     EXPECT_THAT(squared_distances, testing::ElementsAre(0., 1.));
   }
@@ -103,6 +107,8 @@ TEST(KDTree, KDTreeEigen)
         2, 0, 0,
         2, 0, 1
       ).finished();
+    ASSERT_THAT(X.rows(), 2);
+    ASSERT_THAT(X.cols(), 3);
     EXPECT_EQ((X - expected).norm(), 0.);
     EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5.));
   }
@@ -117,6 +123,8 @@ TEST(KDTree, KDTreeEigen)
         0, 0, 4,
         0, 2, 4
       ).finished();
+    ASSERT_THAT(X.rows(), 4);
+    ASSERT_THAT(X.cols(), 3);
     EXPECT_EQ((X - expected).norm(), 0.);
     EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5., 16., 20.));
   }
