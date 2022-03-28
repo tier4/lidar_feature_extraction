@@ -72,14 +72,14 @@ Eigen::VectorXd EstimatePlaneCoefficients(const Eigen::MatrixXd & X)
   return SolveLinear(X, g);
 }
 
-Vector7d MakeJacobianRow(
+Eigen::Matrix<double, 1, 7> MakeJacobianRow(
   const Eigen::Vector3d & w,
   const Eigen::Quaterniond & q,
   const Eigen::Vector3d & p)
 {
   const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, p);
   const Eigen::Vector3d u = w / w.norm();
-  return (Vector7d() << drpdq.transpose() * u, u).finished();
+  return (Eigen::Matrix<double, 1, 7>() << u.transpose() * drpdq, u.transpose()).finished();
 }
 
 class Surface
