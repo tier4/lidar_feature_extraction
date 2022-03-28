@@ -34,9 +34,17 @@
 
 #include "lidar_feature_localization/matrix_type.hpp"
 
-Eigen::Quaterniond MakeQuaternionFromXYZ(const Eigen::Vector3d & xyz)
+Eigen::Quaterniond AngleAxisToQuaternion(const Eigen::Vector3d & theta)
 {
-  const double w = std::sqrt(1 - xyz.squaredNorm());
+  const double k = theta.norm();
+  if (k < 1e-8) {
+    return Eigen::Quaterniond::Identity();
+  }
+
+  const Eigen::Vector3d u = theta / k;
+
+  const double w = std::cos(k / 2.);
+  const Eigen::Vector3d xyz = u * std::sin(k / 2.);
   return Eigen::Quaterniond(w, xyz(0), xyz(1), xyz(2));
 }
 

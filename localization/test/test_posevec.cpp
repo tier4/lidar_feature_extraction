@@ -30,18 +30,22 @@
 
 #include "lidar_feature_localization/posevec.hpp"
 
-TEST(Posevec, MakeQuaternionFromXYZ)
+TEST(Posevec, AngleAxisToQuaternion)
 {
   {
-    const Eigen::Quaterniond q = MakeQuaternionFromXYZ(Eigen::Vector3d(0, 0, 0));
+    const Eigen::Quaterniond q = AngleAxisToQuaternion(Eigen::Vector3d(0, 0, 0));
     EXPECT_EQ(q.norm(), 1.0);
     EXPECT_EQ(q.w(), 1.0);
   }
 
   {
-    const Eigen::Quaterniond q = MakeQuaternionFromXYZ(Eigen::Vector3d(0.2, 0.3, 0.4));
-    const std::vector<double> xyz{q.x(), q.y(), q.z()};
-    EXPECT_THAT(std::abs(q.w() - 0.842614977), testing::Le(1e-8));
-    EXPECT_THAT(xyz, testing::ElementsAre(0.2, 0.3, 0.4));
+    const Eigen::Vector3d theta = Eigen::Vector3d(0.2, 0.3, 0.4);
+    const Eigen::Quaterniond q = AngleAxisToQuaternion(theta);
+
+    const double k = theta.norm();
+    const Eigen::Matrix3d E = Eigen::AngleAxisd(k, theta / k).toRotationMatrix();
+
+    EXPECT_THAT(std::abs(q.norm() - 1.), testing::Le(1e-8));
+    EXPECT_THAT((q.toRotationMatrix() - E).norm(), testing::Le(1e-8));
   }
 }

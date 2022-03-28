@@ -56,7 +56,7 @@ Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
 {
-  const Eigen::Matrix<double, 4, 3> Q = LeftMultiplicationMatrix(q).block<4, 3>(0, 1);
+  const Eigen::Matrix<double, 4, 3> Q = 0.5 * LeftMultiplicationMatrix(q).block<4, 3>(0, 1);
 
   Eigen::Matrix<double, 7, 6> M;
   M.block<4, 3>(0, 0) = Q;
@@ -73,7 +73,7 @@ std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
 {
   const Eigen::Matrix<double, 7, 6> M = MakeM(q);
   const Vector6d dx = CalcUpdate(J * M, r);
-  const Eigen::Quaterniond dq = MakeQuaternionFromXYZ(dx.head(3));
+  const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
   const Eigen::Vector3d dt = dx.tail(3);
   return {dq, dt};
 }

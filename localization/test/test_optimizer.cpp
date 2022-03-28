@@ -163,17 +163,17 @@ TEST(Optimizer, MakeM)
     const Eigen::Matrix<double, 7, 6> M = MakeM(q);
     Eigen::Matrix<double, 7, 6> expected;
     expected <<
-       0, 0, 0, 0, 0, 0,
-       1, 0, 0, 0, 0, 0,
-       0, 1, 0, 0, 0, 0,
-       0, 0, 1, 0, 0, 0,
-       0, 0, 0, 1, 0, 0,
-       0, 0, 0, 0, 1, 0,
-       0, 0, 0, 0, 0, 1;
+       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+       0.5, 0.0, 0.0, 0.0, 0.0, 0.0,
+       0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
+       0.0, 0.0, 0.5, 0.0, 0.0, 0.0,
+       0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+       0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+       0.0, 0.0, 0.0, 0.0, 0.0, 1.0;
     EXPECT_THAT((M - expected).norm(), testing::Le(1e-8));
   }
   {
-    const Eigen::Quaterniond q(1, 2, 3, 4);
+    const Eigen::Quaterniond q(2, 4, 6, 8);
     const Eigen::Matrix<double, 7, 6> M = MakeM(q);
     Eigen::Matrix<double, 7, 6> expected;
     expected <<
