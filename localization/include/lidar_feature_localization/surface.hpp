@@ -96,7 +96,7 @@ public:
     const Eigen::Isometry3d & point_to_map) const
   {
     std::vector<Vector7d> jacobian_rows(surface_scan->size());
-    std::vector<double> b_vector(surface_scan->size());
+    std::vector<double> r_vector(surface_scan->size());
     std::vector<bool> flags(surface_scan->size(), false);
 
     const Eigen::Quaterniond q(point_to_map.rotation());
@@ -116,13 +116,13 @@ public:
       }
 
       jacobian_rows[i] = MakeJacobianRow(w, q, p);
-      b_vector[i] = SignedPointPlaneDistance(w, point_on_map);
+      r_vector[i] = SignedPointPlaneDistance(w, point_on_map);
       flags[i] = true;
     }
 
-    const Eigen::MatrixXd J = VectorsToEigen<7>(Filter(flags, jacobian_rows));
-    const Eigen::VectorXd b = VectorToEigen(Filter(flags, b_vector));
-    return {J, b};
+    const Eigen::MatrixXd drdqt = VectorsToEigen<7>(Filter(flags, jacobian_rows));
+    const Eigen::VectorXd r = VectorToEigen(Filter(flags, r_vector));
+    return {drdqt, r};
   }
 
 private:

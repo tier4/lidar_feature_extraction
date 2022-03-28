@@ -47,11 +47,9 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
   return dq.vec().norm() < 1e-3 && dt.norm() < 1e-3;
 }
 
-Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & b)
+Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & r)
 {
-  const Eigen::MatrixXd JtJ = J.transpose() * J;
-  const Eigen::VectorXd JtB = J.transpose() * b;
-  return SolveLinear(JtJ, -JtB);
+  return (J.transpose() * J).ldlt().solve(-J.transpose() * r);
 }
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
