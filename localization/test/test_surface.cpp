@@ -39,17 +39,33 @@
 
 TEST(Surface, EstimatePlaneCoefficients)
 {
-  const Eigen::MatrixXd X =
-    (Eigen::MatrixXd(4, 2) <<
-      2, 3,
-      3, 4,
-      4, 5,
-      5, 6
-    ).finished();
+  {
+    const Eigen::MatrixXd X =
+      (Eigen::MatrixXd(4, 2) <<
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6
+      ).finished();
 
-  const Eigen::Vector2d w = EstimatePlaneCoefficients(X);
-  const Eigen::Vector2d expected(1, -1);
-  EXPECT_THAT((w - expected).norm(), testing::Le(1e-6));
+    const Eigen::Vector2d w = EstimatePlaneCoefficients(X);
+    const Eigen::Vector2d expected(1, -1);
+    EXPECT_THAT((w - expected).norm(), testing::Le(1e-6));
+  }
+
+  {
+    const Eigen::MatrixXd X =
+      (Eigen::MatrixXd(4, 3) <<
+        1, 1, -1,
+        2, 1, -2,
+        2, -1, 0,
+        4, -2, -1
+      ).finished();
+    const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
+    const Eigen::Vector3d expected(1, 1, 1);
+    const Eigen::Vector4d bias = Eigen::Vector4d::Ones();
+    EXPECT_THAT((X * w + bias).norm(), testing::Le(1e-6));
+  }
 }
 
 TEST(Surface, CheckPointsDistributeAlongPlane)
