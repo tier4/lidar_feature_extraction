@@ -31,6 +31,9 @@
 #include <vector>
 
 #include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/optimizer.hpp"
+
+#include "lidar_feature_library/transform.hpp"
 
 using testing::ElementsAre;
 using testing::DoubleEq;
@@ -124,4 +127,115 @@ TEST(Edge, CalcCovariance)
   ASSERT_EQ(C.rows(), 3);
   ASSERT_EQ(C.cols(), 3);
   EXPECT_EQ((C - expected).norm(), 0.);
+}
+
+TEST(Edge, ApproximateError)
+{
+  auto residual = [](
+    const Eigen::Vector3d & p0,
+    const Eigen::Vector3d & p1,
+    const Eigen::Vector3d & p2,
+    const Eigen::Vector3d & theta,
+    const Eigen::Vector3d & t) {
+      const Eigen::Quaterniond q = AngleAxisToQuaternion(theta);
+
+      Eigen::Isometry3d transform;
+      transform.linear() = q.toRotationMatrix();
+      transform.translation() = t;
+
+      return MakeEdgeResidual(transform, p0, p1, p2);
+    };
+
+  const Eigen::MatrixXd X =
+    (Eigen::MatrixXd(5, 3) <<
+    0, 0, 0,
+    1, 0, 0,
+    2, 0, 0,
+    3, 0, 0,
+    4, 0, 0).finished();
+
+  const Eigen::Vector3d theta0(0., 0., 0.);
+  const Eigen::Vector3d t0(3, 2., 1.);
+
+  const Eigen::Vector3d dtheta(0.1, 0.1, 0.1);
+  const Eigen::Vector3d dt(0.2, -0.1, 0.5);
+
+  const Eigen::Vector3d theta1 = theta0 + dtheta;
+  const Eigen::Vector3d t1 = t0 + dt;
+
+  const Eigen::Vector3d p0(2, 1, 0);
+
+  const Eigen::Quaterniond q0 = AngleAxisToQuaternion(theta0);
+
+  const Eigen::Vector3d center = Center(X);
+  const Eigen::Vector3d principal(1, 0, 0);
+
+  const Eigen::Vector3d p1 = center - principal;
+  const Eigen::Vector3d p2 = center + principal;
+
+  const Eigen::Matrix<double, 3, 6> J = MakeEdgeJacobianRow(q0, p0, p1, p2) * MakeM(q0);
+
+  const Eigen::Vector3d r0 = residual(p0, p1, p2, theta0, t0);
+  const Eigen::Vector3d r1 = residual(p0, p1, p2, theta1, t1);
+
+  const Vector6d delta = (Vector6d() << dtheta, dt).finished();
+  const double threshold = 0.1 * (r1 - r0).norm();
+  std::cerr << "(r1 - (r0 + J * delta)).norm() = " << (r1 - (r0 + J * delta)).norm() << std::endl;
+  std::cerr << "threshold = " << threshold << std::endl;
+  EXPECT_THAT((r1 - (r0 + J * delta)).norm(), testing::Le(threshold));
+}
+
+TEST(Edge, Convergence)
+{
+  std::default_random_engine generator;
+  std::normal_distribution<double> distribution(0., 0.01);
+
+  auto normal = [&]() {
+      return distribution(generator);
+    };
+
+  auto make_lines = [&](const int n) {
+      pcl::PointCloud<pcl::PointXYZ>::Ptr lines(new pcl::PointCloud<pcl::PointXYZ>());
+
+      for (int x = 0; x < n; x++) {
+        lines->push_back(pcl::PointXYZ(0.1 * x, normal(), normal()));
+      }
+
+      for (int y = 0; y < n; y++) {
+        lines->push_back(pcl::PointXYZ(normal(), 0.1 * y, normal()));
+      }
+
+      for (int z = 0; z < n; z++) {
+        lines->push_back(pcl::PointXYZ(normal(), normal(), 0.1 * z));
+      }
+
+      return lines;
+    };
+
+  const auto map = make_lines(20);
+
+  const Eigen::Quaterniond q_ture = Eigen::Quaterniond(1.0, 0.1, 0.1, -0.1).normalized();
+  const Eigen::Vector3d t_true(0.7, -0.3, 0.5);
+
+  const Eigen::Isometry3d transform_true = MakeIsometry3d(q_ture, t_true);
+
+  const auto scan = TransformPointCloud<pcl::PointXYZ>(transform_true.inverse(), map);
+
+  const int n_neighbors = 5;
+  const Edge edge(map, n_neighbors);
+
+  const Eigen::Quaterniond q_initial = Eigen::Quaterniond::Identity();
+  const Eigen::Vector3d t_initial = Eigen::Vector3d::Zero();
+  const Eigen::Isometry3d initial_pose = MakeIsometry3d(q_initial, t_initial);
+
+  const Optimizer<Edge, pcl::PointCloud<pcl::PointXYZ>::Ptr> optimizer(edge);
+  const Eigen::Isometry3d transform_pred = optimizer.Run(scan, initial_pose);
+  const auto transformed = TransformPointCloud<pcl::PointXYZ>(transform_pred, scan);
+
+  EXPECT_THAT(
+    (transform_true.linear() - transform_pred.linear()).norm(),
+    testing::Le(0.1));
+  EXPECT_THAT(
+    (transform_true.translation() - transform_pred.translation()).norm(),
+    testing::Le(0.05));
 }
