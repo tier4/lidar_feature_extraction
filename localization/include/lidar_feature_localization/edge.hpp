@@ -34,11 +34,13 @@
 #include <tuple>
 #include <vector>
 
+#include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/pcl_utils.hpp"
 
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
+#include "lidar_feature_localization/matrix_type.hpp"
 
 Eigen::VectorXd Center(const Eigen::MatrixXd & X)
 {
@@ -75,12 +77,20 @@ std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Ma
   return {solver.eigenvalues(), solver.eigenvectors()};
 }
 
+Eigen::Matrix<double, 1, 7> MakeEdgeJacobianRow(
+  const Eigen::Vector3d & coeff,
+  const Eigen::Quaterniond & q,
+  const Eigen::Vector3d & p)
+{
+  const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, p);
+  return (Eigen::Matrix<double, 1, 7>() << coeff.transpose() * drpdq, coeff.transpose()).finished();
+}
+
 class Edge
 {
 public:
   Edge(const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map, const int n_neighbors)
-  : edge_map_(edge_map),
-    edge_kdtree_(KDTree<pcl::PointXYZ>(edge_map)),
+  : kdtree_(KDTreeEigen(edge_map)),
     n_neighbors_(n_neighbors)
   {
   }
@@ -89,23 +99,26 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
+
     // f(dx) \approx f(0) + J * dx + dx^T * H * dx
     // dx can be obtained by solving H * dx = -J
 
     std::vector<Eigen::Vector3d> coeffs(edge_scan->size());
+    std::vector<Vector7d> jacobian_rows(edge_scan->size());
     std::vector<bool> flags(edge_scan->size(), false);
+
+    const Eigen::Quaterniond q(point_to_map.rotation());
 
     assert(Eigen::isfinite(point_to_map.translation().array()).all());
     for (unsigned int i = 0; i < edge_scan->size(); i++) {
-      const Eigen::Vector3d p0 = point_to_map * GetXYZ(edge_scan->at(i));
-      const pcl::PointXYZ q = MakePointXYZ(p0);
-      const auto [indices, squared_distances] = edge_kdtree_.NearestKSearch(q, n_neighbors_);
+      const Eigen::Vector3d p = GetXYZ(edge_scan->at(i));
+      const Eigen::Vector3d point_on_map = point_to_map * p;
+      const auto [X, squared_distances] = kdtree_.NearestKSearch(point_on_map, n_neighbors_);
       if (squared_distances.back() >= 1.0) {
         continue;
       }
 
-      const Eigen::MatrixXd neighbors = Get(edge_map_, indices);
-      const Eigen::Matrix3d C = CalcCovariance(neighbors);
+      const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 
       if (eigenvalues(2) <= 3 * eigenvalues(1)) {
@@ -113,23 +126,18 @@ public:
       }
 
       const Eigen::Vector3d principal = eigenvectors.col(2);
-      coeffs[i] = EdgeCoefficient(p0, Center(neighbors), principal);
+      const Eigen::Vector3d coeff = EdgeCoefficient(point_on_map, Center(X), principal);
+      jacobian_rows[i] = MakeEdgeJacobianRow(coeff, q, p);
       flags[i] = true;
     }
 
-    const std::vector<pcl::PointXYZ> pcl_points = Filter(flags, *edge_scan);
-    const std::vector<Eigen::Vector3d> points = PointsToEigen(pcl_points);
-    const std::vector<Eigen::Vector3d> coeffs_filtered = Filter(flags, coeffs);
-
-    const Eigen::Quaterniond q(point_to_map.rotation());
-    const Eigen::MatrixXd J = MakeJacobian(points, coeffs, q);
-    const Eigen::VectorXd b = Eigen::VectorXd::Constant(points.size(), -1.0);
+    const Eigen::MatrixXd J = VectorsToEigen<7>(Filter(flags, jacobian_rows));
+    const Eigen::VectorXd b = Eigen::VectorXd::Constant(J.rows(), -1.0);
     return {J, b};
   }
 
 private:
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map_;
-  const KDTree<pcl::PointXYZ> edge_kdtree_;
+  const KDTreeEigen kdtree_;
   const int n_neighbors_;
 };
 
