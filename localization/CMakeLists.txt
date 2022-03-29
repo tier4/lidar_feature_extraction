@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 project(lidar_feature_localization)
 
 set(CMAKE_BUILD_TYPE "Debug")
@@ -15,6 +15,8 @@ file(GLOB SRC_FILES src/*)
 ament_auto_add_executable(${PROJECT_NAME} ${SRC_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+file(GLOB HEADER_FILES include/lidar_feature_localization/*)
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${HEADER_FILES})
 
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
