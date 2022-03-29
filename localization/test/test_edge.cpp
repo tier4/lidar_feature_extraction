@@ -180,8 +180,6 @@ TEST(Edge, ApproximateError)
 
   const Vector6d delta = (Vector6d() << dtheta, dt).finished();
   const double threshold = 0.1 * (r1 - r0).norm();
-  std::cerr << "(r1 - (r0 + J * delta)).norm() = " << (r1 - (r0 + J * delta)).norm() << std::endl;
-  std::cerr << "threshold = " << threshold << std::endl;
   EXPECT_THAT((r1 - (r0 + J * delta)).norm(), testing::Le(threshold));
 }
 

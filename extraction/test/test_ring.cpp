@@ -73,10 +73,6 @@ TEST(Ring, RemoveInsufficientNumRing)
     rings[6] = {0, 1, 2};
     RemoveInsufficientNumRing(rings, 4);
 
-    for (auto & [key, indices] : rings) {
-      std::cerr << "key = " << key << std::endl;
-    }
-
     EXPECT_THAT(rings.size(), 1);
     EXPECT_THAT(rings.at(2).size(), 4);
   }
