@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="input_scan_edge_topic" default="/scan_edge" />
+  <arg name="input_scan_surface_topic" default="/scan_surface" />
+  <arg name="initial_pose_topic" default="initial_pose" />
+  <arg name="output_estimated_pose_topic" default="estimated_pose" />
+
+  <arg name="node_name" default="lidar_feature_localization" />
+
+  <node pkg="lidar_feature_localization" exec="lidar_feature_localization" name="$(var node_name)" output="log">
+    <remap from="scan_edge" to="$(var input_scan_edge_topic)" />
+    <remap from="scan_surface" to="$(var input_scan_surface_topic)" />
+    <remap from="initial_pose" to="$(var initial_pose_topic)" />
+    <remap from="estimated_pose" to="$(var output_estimated_pose_topic)" />
+  </node>
+</launch>
