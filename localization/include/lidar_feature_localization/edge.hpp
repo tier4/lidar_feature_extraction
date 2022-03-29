@@ -115,9 +115,6 @@ public:
     for (unsigned int i = 0; i < edge_scan->size(); i++) {
       const Eigen::Vector3d p0 = GetXYZ(edge_scan->at(i));
       const auto [X, squared_distances] = kdtree_.NearestKSearch(point_to_map * p0, n_neighbors_);
-      if (squared_distances.back() >= 1.0) {
-        continue;
-      }
 
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);

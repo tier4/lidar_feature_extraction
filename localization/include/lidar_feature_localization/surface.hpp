@@ -106,9 +106,6 @@ public:
       const Eigen::Vector3d point_on_map = point_to_map * p;
 
       const auto [X, squared_distances] = kdtree_.NearestKSearch(point_on_map, n_neighbors_);
-      if (squared_distances.back() >= 1.0) {
-        continue;
-      }
 
       const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
       if (!CheckPointsDistributeAlongPlane(X, w)) {
