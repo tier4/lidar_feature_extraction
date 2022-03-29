@@ -263,24 +263,6 @@ TEST(Surface, CalcUpdate)
   EXPECT_THAT(r1.squaredNorm(), testing::Le(r0.squaredNorm()));
 }
 
-template<typename T>
-double SumSquaredDistance(
-  const typename pcl::PointCloud<T>::Ptr & cloud0,
-  const typename pcl::PointCloud<T>::Ptr & cloud1)
-{
-  assert(cloud0->size() == cloud1->size());
-  double distance = 0;
-  for (unsigned int i = 0; i < cloud0->size(); i++) {
-    const T p0 = cloud0->at(i);
-    const T p1 = cloud1->at(i);
-    distance +=
-      (p0.x - p1.x) * (p0.x - p1.x) +
-      (p0.y - p1.y) * (p0.y - p1.y) +
-      (p0.z - p1.z) * (p0.z - p1.z);
-  }
-  return distance;
-}
-
 TEST(Surface, Convergence)
 {
   std::default_random_engine generator;
@@ -334,10 +316,6 @@ TEST(Surface, Convergence)
   const Eigen::Isometry3d transform_pred = optimizer.Run(scan, initial_pose);
   const auto transformed = TransformPointCloud<pcl::PointXYZ>(transform_pred, scan);
 
-  const double threshold = SumSquaredDistance<pcl::PointXYZ>(map, scan);
-  const double distance = SumSquaredDistance<pcl::PointXYZ>(map, transformed);
-
-  EXPECT_THAT(distance, testing::Le(threshold));
   EXPECT_THAT(
     (transform_true.linear() - transform_pred.linear()).norm(),
     testing::Le(0.1));
