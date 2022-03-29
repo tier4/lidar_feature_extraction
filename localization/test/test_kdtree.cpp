@@ -91,8 +91,8 @@ TEST(KDTree, KDTreeEigen)
     const auto [X, squared_distances] = kdtree.RadiusSearch(Eigen::Vector3d(2, 0, 1), 1.2);
     const Eigen::MatrixXd expected =
       (Eigen::MatrixXd(2, 3) <<
-        2, 0, 1,
-        2, 0, 0
+      2, 0, 1,
+      2, 0, 0
       ).finished();
     ASSERT_THAT(X.rows(), 2);
     ASSERT_THAT(X.cols(), 3);
@@ -104,8 +104,8 @@ TEST(KDTree, KDTreeEigen)
     const auto [X, squared_distances] = kdtree.NearestKSearch(Eigen::Vector3d(0, 0, 0), 2);
     const Eigen::MatrixXd expected =
       (Eigen::MatrixXd(2, 3) <<
-        2, 0, 0,
-        2, 0, 1
+      2, 0, 0,
+      2, 0, 1
       ).finished();
     ASSERT_THAT(X.rows(), 2);
     ASSERT_THAT(X.cols(), 3);
@@ -118,10 +118,10 @@ TEST(KDTree, KDTreeEigen)
 
     const Eigen::MatrixXd expected =
       (Eigen::MatrixXd(4, 3) <<
-        2, 0, 0,
-        2, 0, 1,
-        0, 0, 4,
-        0, 2, 4
+      2, 0, 0,
+      2, 0, 1,
+      0, 0, 4,
+      0, 2, 4
       ).finished();
     ASSERT_THAT(X.rows(), 4);
     ASSERT_THAT(X.cols(), 3);

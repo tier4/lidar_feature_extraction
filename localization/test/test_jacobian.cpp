@@ -35,9 +35,9 @@ TEST(Jacobian, FillJacobianRow)
   Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, 7);
   Eigen::Matrix<double, 3, 4> drpdq;
   drpdq <<
-      0, 1, 2, 0,
-      1, 0, 1, 1,
-      0, 2, 0, -2;
+    0, 1, 2, 0,
+    1, 0, 1, 1,
+    0, 2, 0, -2;
   const Eigen::Vector3d coeff(1, -1, 2);
   const int i = 1;
   FillJacobianRow(J, i, drpdq, coeff);

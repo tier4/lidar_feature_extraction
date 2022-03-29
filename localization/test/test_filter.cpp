@@ -28,6 +28,8 @@
 
 #include <gmock/gmock.h>
 
+#include <vector>
+
 #include "lidar_feature_localization/filter.hpp"
 
 

@@ -35,8 +35,8 @@ TEST(Math, SolveLinear)
   {
     const Eigen::MatrixXd A =
       (Eigen::Matrix2d() <<
-        3, -1,
-        2, 3
+      3, -1,
+      2, 3
       ).finished();
     const Eigen::Vector2d b(7, 1);
 
@@ -49,10 +49,10 @@ TEST(Math, SolveLinear)
   {
     const Eigen::MatrixXd A =
       (Eigen::MatrixXd(4, 2) <<
-         2, 1,
-         3, 3,
-         2, 4,
-         1, 2
+      2, 1,
+      3, 3,
+      2, 4,
+      1, 2
       ).finished();
     const Eigen::Vector4d b(7, 9, 4, 2);
 

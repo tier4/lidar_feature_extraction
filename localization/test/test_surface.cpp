@@ -31,21 +31,22 @@
 
 #include <pcl/common/transforms.h>
 
+#include <vector>
+
 #include "lidar_feature_library/transform.hpp"
 
 #include "lidar_feature_localization/optimizer.hpp"
 #include "lidar_feature_localization/surface.hpp"
-
 
 TEST(Surface, EstimatePlaneCoefficients)
 {
   {
     const Eigen::MatrixXd X =
       (Eigen::MatrixXd(4, 2) <<
-        2, 3,
-        3, 4,
-        4, 5,
-        5, 6
+      2, 3,
+      3, 4,
+      4, 5,
+      5, 6
       ).finished();
 
     const Eigen::Vector2d w = EstimatePlaneCoefficients(X);
@@ -56,10 +57,10 @@ TEST(Surface, EstimatePlaneCoefficients)
   {
     const Eigen::MatrixXd X =
       (Eigen::MatrixXd(4, 3) <<
-        1, 1, -1,
-        2, 1, -2,
-        2, -1, 0,
-        4, -2, -1
+      1, 1, -1,
+      2, 1, -2,
+      2, -1, 0,
+      4, -2, -1
       ).finished();
     const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
     const Eigen::Vector3d expected(1, 1, 1);
@@ -73,10 +74,10 @@ TEST(Surface, CheckPointsDistributeAlongPlane)
   {
     const Eigen::MatrixXd X =
       (Eigen::MatrixXd(4, 2) <<
-        2, 3,
-        3, 4,
-        4, 5,
-        5, 6
+      2, 3,
+      3, 4,
+      4, 5,
+      5, 6
       ).finished();
     const Eigen::Vector2d w(1, -1);
     EXPECT_TRUE(CheckPointsDistributeAlongPlane(X, w));
@@ -85,10 +86,10 @@ TEST(Surface, CheckPointsDistributeAlongPlane)
   {
     const Eigen::MatrixXd X =
       (Eigen::MatrixXd(4, 2) <<
-        2, 3,
-        3, 4,
-        5, 5,
-        5, 6
+      2, 3,
+      3, 4,
+      5, 5,
+      5, 6
       ).finished();
     const Eigen::Vector2d w(1, -1);
     EXPECT_FALSE(CheckPointsDistributeAlongPlane(X, w));
@@ -178,14 +179,15 @@ Eigen::VectorXd Residuals(
   Eigen::VectorXd r(weights.size());
   for (unsigned int i = 0; i < weights.size(); i++) {
     r(i) = SignedPointPlaneDistance(weights[i], transform * points[i]);
-  };
+  }
   return r;
 }
 
 Eigen::MatrixXd DrDqt(
   const std::vector<Eigen::Vector3d> & weights,
   const std::vector<Eigen::Vector3d> & points,
-  const Eigen::Quaterniond & q) {
+  const Eigen::Quaterniond & q)
+{
   Eigen::MatrixXd J(weights.size(), 7);
   for (unsigned int i = 0; i < weights.size(); i++) {
     J.row(i) = MakeJacobianRow(weights[i], q, points[i]);
@@ -252,7 +254,8 @@ TEST(Surface, CalcUpdate)
   const Eigen::VectorXd r0 = Residuals(weights, points, q0, t0);
   const Vector6d delta = CalcUpdate(J, r0);
 
-  const Eigen::Quaterniond q1 = AngleAxisToQuaternion(theta0) * AngleAxisToQuaternion(delta.head(3));
+  const Eigen::Quaterniond dq = AngleAxisToQuaternion(delta.head(3));
+  const Eigen::Quaterniond q1 = q0 * dq;
   // const Eigen::Quaterniond q1 = AngleAxisToQuaternion(theta0 + delta.head(3));
   const Eigen::Vector3d t1 = t0 + delta.tail(3);
 
@@ -284,32 +287,32 @@ TEST(Surface, Convergence)
   std::normal_distribution<double> distribution(0., 0.01);
 
   auto normal = [&]() {
-    return distribution(generator);
-  };
+      return distribution(generator);
+    };
 
   auto make_walls = [&](const int n) {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr walls(new pcl::PointCloud<pcl::PointXYZ>());
+      pcl::PointCloud<pcl::PointXYZ>::Ptr walls(new pcl::PointCloud<pcl::PointXYZ>());
 
-    for (int y = 0; y < n; y++) {
-      for (int x = 0; x < n; x++) {
-        walls->push_back(pcl::PointXYZ(0.1 * x, 0.1 * y, normal()));
+      for (int y = 0; y < n; y++) {
+        for (int x = 0; x < n; x++) {
+          walls->push_back(pcl::PointXYZ(0.1 * x, 0.1 * y, normal()));
+        }
       }
-    }
 
-    for (int z = 0; z < n; z++) {
-      for (int x = 0; x < n; x++) {
-        walls->push_back(pcl::PointXYZ(0.1 * x, normal(), 0.1 * z));
-      }
-    }
-
-    for (int y = 0; y < n; y++) {
       for (int z = 0; z < n; z++) {
-        walls->push_back(pcl::PointXYZ(normal(), 0.1 * y, 0.1 * z));
+        for (int x = 0; x < n; x++) {
+          walls->push_back(pcl::PointXYZ(0.1 * x, normal(), 0.1 * z));
+        }
       }
-    }
 
-    return walls;
-  };
+      for (int y = 0; y < n; y++) {
+        for (int z = 0; z < n; z++) {
+          walls->push_back(pcl::PointXYZ(normal(), 0.1 * y, 0.1 * z));
+        }
+      }
+
+      return walls;
+    };
 
   const auto map = make_walls(20);
 
