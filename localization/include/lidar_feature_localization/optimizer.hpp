@@ -91,15 +91,29 @@ public:
     const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
   {
+    auto error = [](const Eigen::VectorXd & residual) {
+        return residual.dot(residual);
+      };
+
     Eigen::Quaterniond q(initial_pose.linear());
     Eigen::Vector3d t(initial_pose.translation());
+
+    Eigen::VectorXd r_prev;
 
     for (int iter = 0; iter < 10; iter++) {
       const Eigen::Isometry3d pose = MakePose(q, t);
       const auto [J, r] = problem_.Make(x, pose);
+      assert(J.rows() == r.size());
+
       if (J.rows() == 0) {
-        continue;
+        break;
       }
+
+      if (iter != 0 && error(r) > error(r_prev)) {
+        return MakePose(q, t);
+      }
+
+      r_prev = r;
 
       const auto [dq, dt] = CalcUpdate(J, r, q);
 
