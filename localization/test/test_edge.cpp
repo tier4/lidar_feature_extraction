@@ -56,21 +56,37 @@ TEST(Edge, TripletCross)
 
 TEST(Edge, PrincipalComponents)
 {
-  const Eigen::Matrix3d A = Eigen::Matrix3d::Random();
-  const Eigen::Matrix3d C = A * A.transpose();
-  const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
+  {
+    const Eigen::Matrix3d A = Eigen::Matrix3d::Random();
+    const Eigen::Matrix3d C = A * A.transpose();
+    const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 
-  EXPECT_THAT(eigenvalues(0), testing::Le(eigenvalues(1)));
-  EXPECT_THAT(eigenvalues(1), testing::Le(eigenvalues(2)));
+    EXPECT_THAT(eigenvalues(0), testing::Le(eigenvalues(1)));
+    EXPECT_THAT(eigenvalues(1), testing::Le(eigenvalues(2)));
 
-  const Eigen::Matrix3d D = eigenvalues.asDiagonal();
-  const Eigen::Matrix3d V = eigenvectors;
+    const Eigen::Matrix3d D = eigenvalues.asDiagonal();
+    const Eigen::Matrix3d V = eigenvectors;
 
-  EXPECT_THAT((C - V * D * V.inverse()).norm(), testing::Le(1e-4));
+    EXPECT_THAT((C - V * D * V.inverse()).norm(), testing::Le(1e-4));
 
-  const double lambda = eigenvalues(2);
-  const Eigen::Vector3d u = eigenvectors.col(2);
-  EXPECT_THAT((C * u - lambda * u).norm(), testing::Le(1e-4));
+    const double lambda = eigenvalues(2);
+    const Eigen::Vector3d u = eigenvectors.col(2);
+    EXPECT_THAT((C * u - lambda * u).norm(), testing::Le(1e-4));
+  }
+
+  {
+    Eigen::MatrixXd X(10, 3);
+    for (int i = 0; i < X.rows(); i++) {
+      const double x = 0.1 * i;
+      X.row(i) = Eigen::Vector3d(x, 0., 0.);
+    }
+    const Eigen::Matrix3d C = CalcCovariance(X);
+    const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
+    EXPECT_EQ((eigenvectors.col(2) - Eigen::Vector3d(1, 0, 0)).norm(), 0.);
+    EXPECT_EQ(eigenvalues(0), 0.);
+    EXPECT_EQ(eigenvalues(1), 0.);
+    EXPECT_THAT(eigenvalues(2), testing::Gt(0.));
+  }
 }
 
 TEST(Edge, Center)
