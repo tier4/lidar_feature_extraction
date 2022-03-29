@@ -43,6 +43,16 @@ Eigen::MatrixXd VectorsToEigen(const std::vector<Eigen::Matrix<double, N, 1>> & 
   return X;
 }
 
+template<int N, int M>
+Eigen::MatrixXd HorizontalStack(const std::vector<Eigen::Matrix<double, N, M>> & matrices)
+{
+  Eigen::MatrixXd X(N * matrices.size(), M);
+  for (unsigned int i = 0; i < matrices.size(); i++) {
+    X.block<N, M>(i * N, 0) = matrices[i];
+  }
+  return X;
+}
+
 Eigen::VectorXd VectorToEigen(const std::vector<double> & values)
 {
   Eigen::VectorXd v(values.size());

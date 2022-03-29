@@ -55,6 +55,36 @@ TEST(Eigen, VectorsToEigen)
   EXPECT_EQ((M - expected).norm(), 0.);
 }
 
+TEST(Eigen, HorizontalStack)
+{
+  const Eigen::Matrix<double, 2, 3> M0 = (
+    Eigen::Matrix<double, 2, 3>() <<
+    0, 1, 2,
+    3, 4, 5).finished();
+
+  const Eigen::Matrix<double, 2, 3> M1 = (
+    Eigen::Matrix<double, 2, 3>() <<
+    1, 3, 5,
+    2, 4, 6).finished();
+
+  const std::vector<Eigen::Matrix<double, 2, 3>> vectors{M0, M1};
+
+  const Eigen::MatrixXd M = HorizontalStack(vectors);
+
+  const Eigen::MatrixXd expected =
+    (Eigen::MatrixXd(4, 3) <<
+      0, 1, 2,
+      3, 4, 5,
+      1, 3, 5,
+      2, 4, 6
+  ).finished();
+
+  EXPECT_EQ(M.rows(), 4);
+  EXPECT_EQ(M.cols(), 3);
+
+  EXPECT_EQ((M - expected).norm(), 0.);
+}
+
 TEST(Eigen, VectorToEigen)
 {
   const std::vector<double> vector{0, 1, 2, 3};
