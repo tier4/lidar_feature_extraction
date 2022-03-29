@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 project(lidar_feature_library)
 
 set(CMAKE_BUILD_TYPE "Debug")
@@ -14,6 +14,9 @@ find_package(fmt REQUIRED)
 ament_auto_find_build_dependencies()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED src/lib.cpp)
+
+file(GLOB HEADER_FILES include/lidar_feature_library/*)
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${HEADER_FILES})
 
 function(add_testcase filepath)
   find_package(ament_cmake_gmock REQUIRED)
