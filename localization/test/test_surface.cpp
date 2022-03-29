@@ -265,6 +265,7 @@ TEST(Surface, CalcUpdate)
 
 TEST(Surface, Convergence)
 {
+  srand(3939);
   std::default_random_engine generator;
   std::normal_distribution<double> distribution(0., 0.01);
 

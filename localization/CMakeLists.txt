@@ -41,13 +41,13 @@ if(BUILD_TESTING)
 
   ament_lint_auto_find_test_dependencies()
 
-  file(GLOB SOURCE_AND_HEADER src/* include/*)
+  file(GLOB FILES_TO_CHECK src/* include/* test/*)
 
   find_package(ament_cmake_cpplint)
-  ament_cpplint(${SOURCE_AND_HEADER})
+  ament_cpplint(${FILES_TO_CHECK})
 
   find_package(ament_cmake_uncrustify)
-  ament_uncrustify(${SOURCE_AND_HEADER})
+  ament_uncrustify(${FILES_TO_CHECK})
 
   file(GLOB TEST_FILES test/*)
   foreach(filepath ${TEST_FILES})
