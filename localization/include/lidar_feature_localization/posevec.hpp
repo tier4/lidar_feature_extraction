@@ -48,11 +48,6 @@ Eigen::Quaterniond AngleAxisToQuaternion(const Eigen::Vector3d & theta)
   return Eigen::Quaterniond(w, xyz(0), xyz(1), xyz(2));
 }
 
-Eigen::Vector3d GetXYZ(const Eigen::Quaterniond & q)
-{
-  return Eigen::Vector3d(q.x(), q.y(), q.z());
-}
-
 Eigen::Isometry3d MakePose(
   const Eigen::Quaterniond & q,
   const Eigen::Vector3d & t)
