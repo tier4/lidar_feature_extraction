@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project(rotationlib)
 
+set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -50,4 +55,4 @@ if(BUILD_TESTING)
   endforeach()
 endif()
 
-ament_auto_package(INSTALL_TO_SHARE include)
+ament_auto_package()
