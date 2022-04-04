@@ -41,8 +41,6 @@ if(BUILD_TESTING)
 
   file(GLOB_RECURSE SOURCE_AND_HEADER src/* include/*)
 
-  message("SOURCE_AND_HEADER = ${SOURCE_AND_HEADER}")
-
   find_package(ament_cmake_cpplint)
   ament_cpplint(${SOURCE_AND_HEADER})
 
