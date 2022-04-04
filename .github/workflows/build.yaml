@@ -31,7 +31,7 @@ jobs:
         run: |
           DEBIAN_FRONTEND=noninteractive sudo apt-get update \
             && sudo rm -rf /etc/ros/rosdep/* \
-            && rosdep init \
+            && sudo rosdep init \
             && rosdep update \
             && rosdep install -y --rosdistro galactic -i --from-paths . \
             && sudo rm -rf /var/lib/apt/lists/*
