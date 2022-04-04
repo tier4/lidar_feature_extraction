@@ -14,27 +14,27 @@ jobs:
           DEBIAN_FRONTEND=noninteractive \
           sudo sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu focal main" \
             > /etc/apt/sources.list.d/ros2-latest.list' \
-          && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
+          && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
             --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-          && apt-get update \
-          && apt-get install -y --no-install-recommends ros-galactic-ros-base \
-          && rm -rf /var/lib/apt/lists/*
+          && sudo apt-get update \
+          && sudo apt-get install -y --no-install-recommends ros-galactic-ros-base \
+          && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Install colcon and rosdep
         run: |
           DEBIAN_FRONTEND=noninteractive apt-get update \
-            && apt-get install -y python3-pip \
+            && sudo apt-get install -y python3-pip \
             && python3 -m pip install colcon-common-extensions rosdep pytest-rerunfailures \
-            && rm -rf /var/lib/apt/lists/*
+            && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Run rosdep install
         run: |
           DEBIAN_FRONTEND=noninteractive apt-get update \
-            && rm -rf /etc/ros/rosdep/* \
+            && sudo rm -rf /etc/ros/rosdep/* \
             && rosdep init \
             && rosdep update \
             && rosdep install -y --rosdistro galactic -i --from-paths . \
-            && rm -rf /var/lib/apt/lists/*
+            && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Build
         run: |
