@@ -1,0 +1,40 @@
+name: build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install ROS
+        run: |
+          echo "deb http://packages.ros.org/ros2/ubuntu focal main" \
+            > /etc/apt/sources.list.d/ros2-latest.list
+          apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+          apt-get update && apt-get install -y --no-install-recommends ros-galactic-ros-base \
+            && rm -rf /var/lib/apt/lists/*
+
+      - name: Install colcon and rosdep
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get update \
+            && apt-get install -y python3-pip \
+            && python3 -m pip install colcon-common-extensions rosdep pytest-rerunfailures \
+            && rm -rf /var/lib/apt/lists/*
+
+      - name: Run rosdep install
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get update \
+            && rm -rf /etc/ros/rosdep/* \
+            && rosdep init \
+            && rosdep update \
+            && rosdep install -y --rosdistro galactic -i --from-paths . \
+            && rm -rf /var/lib/apt/lists/*
+
+      - name: Build
+        run: |
+          . /opt/ros/galactic/setup.sh
+          colcon build
