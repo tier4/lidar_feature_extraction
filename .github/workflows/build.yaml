@@ -22,14 +22,14 @@ jobs:
 
       - name: Install colcon and rosdep
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get update \
+          DEBIAN_FRONTEND=noninteractive sudo apt-get update \
             && sudo apt-get install -y python3-pip \
             && python3 -m pip install colcon-common-extensions rosdep pytest-rerunfailures \
             && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Run rosdep install
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get update \
+          DEBIAN_FRONTEND=noninteractive sudo apt-get update \
             && sudo rm -rf /etc/ros/rosdep/* \
             && rosdep init \
             && rosdep update \
