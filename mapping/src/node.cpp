@@ -59,9 +59,10 @@ class MapSubscriber : public rclcpp::Node
 public:
   MapSubscriber(
     std::shared_ptr<MapBuilder> & builder,
+    const std::string & node_name,
     const std::string & cloud_topic_name,
     const std::string & pose_topic_name)
-  : rclcpp::Node("lidar_feature_mapping"),
+  : rclcpp::Node(node_name),
     cloud_subscriber_(this, cloud_topic_name, qos_profile),
     pose_subscriber_(this, pose_topic_name, qos_profile),
     sync_(std::make_shared<Synchronizer>(Exact(10), cloud_subscriber_, pose_subscriber_))
@@ -85,8 +86,10 @@ int main(int argc, char * argv[])
   auto edge_map_builder = std::make_shared<MapBuilder>();
   auto surface_map_builder = std::make_shared<MapBuilder>();
 
-  auto edge_sub = std::make_shared<MapSubscriber>(edge_map_builder, "scan_edge", "pose");
-  auto surface_sub = std::make_shared<MapSubscriber>(surface_map_builder, "scan_surface", "pose");
+  auto edge_sub = std::make_shared<MapSubscriber>(
+    edge_map_builder, "edge_map_builder", "scan_edge", "pose");
+  auto surface_sub = std::make_shared<MapSubscriber>(
+    surface_map_builder, "surface_map_builder", "scan_surface", "pose");
 
   rclcpp::executors::MultiThreadedExecutor exec;
   exec.add_node(edge_sub);
