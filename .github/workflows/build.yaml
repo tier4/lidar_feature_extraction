@@ -24,7 +24,7 @@ jobs:
         run: |
           DEBIAN_FRONTEND=noninteractive sudo apt-get update \
             && sudo apt-get install -y python3-pip \
-            && python3 -m pip install colcon-common-extensions rosdep pytest-rerunfailures \
+            && sudo python3 -m pip install colcon-common-extensions rosdep pytest-rerunfailures \
             && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Run rosdep install
