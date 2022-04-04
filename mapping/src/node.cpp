@@ -96,8 +96,8 @@ int main(int argc, char * argv[])
   exec.add_node(surface_sub);
   exec.spin();
 
-  edge_map_builder->SaveMap("edge.pcd");
-  surface_map_builder->SaveMap("surface.pcd");
+  edge_map_builder->SaveMap("maps/edge.pcd");
+  surface_map_builder->SaveMap("maps/surface.pcd");
 
   rclcpp::shutdown();
 

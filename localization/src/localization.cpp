@@ -225,8 +225,8 @@ int main(int argc, char * argv[])
 
   pcl::PointCloud<PointXYZIR>::Ptr edge_map(new pcl::PointCloud<PointXYZIR>());
   pcl::PointCloud<PointXYZIR>::Ptr surface_map(new pcl::PointCloud<PointXYZIR>());
-  pcl::io::loadPCDFile("edge.pcd", *edge_map);
-  pcl::io::loadPCDFile("surface.pcd", *surface_map);
+  pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
+  pcl::io::loadPCDFile("maps/surface.pcd", *surface_map);
 
   const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map_xyz = ToPointXYZ<PointXYZIR>(edge_map);
   const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map_xyz = ToPointXYZ<PointXYZIR>(surface_map);
