@@ -35,7 +35,7 @@ def generate_launch_description():
     mapping = Node(
         package="lidar_feature_mapping",
         executable="lidar_feature_mapping",
-        name="lidar_feature_mapping",
+        namespace="lidar_feature_mapping",
         remappings=[
             ("scan_edge", scan_edge_topic),
             ("scan_surface", scan_surface_topic),
