@@ -3,11 +3,23 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-scan_edge_topic = "/lidar_feature/scan_edge"
-scan_surface_topic = "/lidar_feature/scan_surface"
-colored_scan_topic = "/lidar_feature/colored_scan"
-curvature_scan_topic = "/lidar_feature/curvature_scan"
+scan_edge_topic = "/scan_edge"
+scan_surface_topic = "/scan_surface"
+colored_scan_topic = "/colored_scan"
+curvature_scan_topic = "/curvature_scan"
 
+input_sensor_points_topic = LaunchConfiguration(
+    "input_sensor_points_topic",
+    default="/points_raw"
+)
+initial_pose_topic = LaunchConfiguration(
+    "initial_pose_topic",
+    default="/initial_pose"
+)
+output_estimated_pose_topic = LaunchConfiguration(
+    "output_estimated_pose_topic",
+    default="/estimated_pose"
+)
 
 def generate_launch_description():
     extraction = Node(
@@ -16,7 +28,7 @@ def generate_launch_description():
         name="lidar_feature_extraction",
         parameters=["config/lidar_feature_library.param.yaml"],
         remappings=[
-            ("points_raw", LaunchConfiguration("input_sensor_points_topic")),
+            ("points_raw", input_sensor_points_topic),
             ("colored_scan", colored_scan_topic),
             ("curvature_scan", curvature_scan_topic),
             ("scan_edge", scan_edge_topic),
@@ -31,8 +43,8 @@ def generate_launch_description():
         remappings=[
             ("scan_edge", scan_edge_topic),
             ("scan_surface", scan_surface_topic),
-            ("initial_pose", LaunchConfiguration("initial_pose_topic")),
-            ("estimated_pose", LaunchConfiguration("output_estimated_pose_topic")),
+            ("initial_pose", initial_pose_topic),
+            ("estimated_pose", output_estimated_pose_topic),
         ]
     )
 
