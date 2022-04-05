@@ -42,7 +42,7 @@ ros2 play lidar-feature-dataset.bag
 
 ```bash
 sudo apt install pcl-tools
-pcl_viewer edge.pcd surface.pcd
+pcl_viewer maps/edge.pcd maps/surface.pcd
 ```
 
 #### Localization
