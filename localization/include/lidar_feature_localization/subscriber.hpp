@@ -131,7 +131,7 @@ public:
 private:
   const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr initial_pose_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
-  LocalizerT & localizer_;
+  LocalizerT localizer_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> surface_subscriber_;
   std::shared_ptr<Synchronizer> sync_;
