@@ -114,8 +114,6 @@ using Exact = message_filters::sync_policies::ExactTime<
   sensor_msgs::msg::PointCloud2>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
-const rmw_qos_profile_t qos_profile = rclcpp::SensorDataQoS().keep_last(1).get_rmw_qos_profile();
-
 geometry_msgs::msg::Pose MakePose(
   const geometry_msgs::msg::Quaternion & orientation,
   const geometry_msgs::msg::Point & position)
@@ -142,6 +140,8 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr ToPointXYZ(const typename pcl::PointCloud<T>
   return ConvertPointCloudType<T, pcl::PointXYZ>(cloud);
 }
 
+const rclcpp::QoS qos_profile = rclcpp::SensorDataQoS().keep_all();
+
 class Subscriber : public rclcpp::Node
 {
 public:
@@ -151,13 +151,13 @@ public:
   : Node("lidar_feature_localization"),
     initial_pose_subscriber_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "initial_pose", rclcpp::SensorDataQoS().keep_last(1),
+        "initial_pose", qos_profile,
         std::bind(&Subscriber::PoseInitializationCallback, this, std::placeholders::_1),
         this->MakeInitialSubscriptionOption())),
     pose_publisher_(
       this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10)),
-    edge_subscriber_(this, "scan_edge", qos_profile),
-    surface_subscriber_(this, "scan_surface", qos_profile),
+    edge_subscriber_(this, "scan_edge", qos_profile.get_rmw_qos_profile()),
+    surface_subscriber_(this, "scan_surface", qos_profile.get_rmw_qos_profile()),
     sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_)),
     localizer_(std::make_shared<Localizer>(edge_map, surface_map))
   {
