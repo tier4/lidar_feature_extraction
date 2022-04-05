@@ -98,42 +98,33 @@ public:
   }
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan,
     const Eigen::Isometry3d & point_to_map) const
   {
     // f(dx) \approx f(0) + J * dx + dx^T * H * dx
     // dx can be obtained by solving H * dx = -J
 
-    std::vector<Eigen::Vector3d> coeffs(edge_scan->size());
-    std::vector<Eigen::Matrix<double, 3, 7>> jacobian_rows(edge_scan->size());
-    std::vector<Eigen::Vector3d> residuals(edge_scan->size());
-    std::vector<bool> flags(edge_scan->size(), false);
-
+    const int n = scan->size();
     const Eigen::Quaterniond q(point_to_map.rotation());
 
-    assert(Eigen::isfinite(point_to_map.translation().array()).all());
-    for (unsigned int i = 0; i < edge_scan->size(); i++) {
-      const Eigen::Vector3d p0 = GetXYZ(edge_scan->at(i));
+    Eigen::MatrixXd J(3 * n, 7);
+    Eigen::VectorXd r(3 * n);
+
+    for (int i = 0; i < n; i++) {
+      const Eigen::Vector3d p0 = GetXYZ(scan->at(i));
       const auto [X, squared_distances] = kdtree_.NearestKSearch(point_to_map * p0, n_neighbors_);
 
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 
-      if (eigenvalues(2) <= 3 * eigenvalues(1)) {
-        continue;
-      }
-
       const Eigen::Vector3d center = Center(X);
       const Eigen::Vector3d principal = eigenvectors.col(2);
       const Eigen::Vector3d p1 = center - principal;
       const Eigen::Vector3d p2 = center + principal;
-      jacobian_rows[i] = MakeEdgeJacobianRow(q, p0, p1, p2);
-      residuals[i] = MakeEdgeResidual(point_to_map, p0, p1, p2);
-      flags[i] = true;
+      J.block<3, 7>(3 * i, 0) = MakeEdgeJacobianRow(q, p0, p1, p2);
+      r.segment(3 * i, 3) = MakeEdgeResidual(point_to_map, p0, p1, p2);
     }
 
-    const Eigen::MatrixXd J = HorizontalStack<3, 7>(Filter(flags, jacobian_rows));
-    const Eigen::VectorXd r = HorizontalStack<3, 1>(Filter(flags, residuals));
     return {J, r};
   }
 

@@ -92,33 +92,27 @@ public:
   }
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan,
     const Eigen::Isometry3d & point_to_map) const
   {
-    std::vector<Vector7d> jacobian_rows(surface_scan->size());
-    std::vector<double> r_vector(surface_scan->size());
-    std::vector<bool> flags(surface_scan->size(), false);
-
+    const int n = scan->size();
     const Eigen::Quaterniond q(point_to_map.rotation());
 
-    for (unsigned int i = 0; i < surface_scan->size(); i++) {
-      const Eigen::Vector3d p = GetXYZ(surface_scan->at(i));
+    Eigen::MatrixXd drdqt(n, 7);
+    Eigen::VectorXd r(n);
+
+    for (int i = 0; i < n; i++) {
+      const Eigen::Vector3d p = GetXYZ(scan->at(i));
       const Eigen::Vector3d point_on_map = point_to_map * p;
 
       const auto [X, squared_distances] = kdtree_.NearestKSearch(point_on_map, n_neighbors_);
 
       const Eigen::Vector3d w = EstimatePlaneCoefficients(X);
-      if (!CheckPointsDistributeAlongPlane(X, w)) {
-        continue;
-      }
 
-      jacobian_rows[i] = MakeJacobianRow(w, q, p);
-      r_vector[i] = SignedPointPlaneDistance(w, point_on_map);
-      flags[i] = true;
+      drdqt.row(i) = MakeJacobianRow(w, q, p);
+      r(i) = SignedPointPlaneDistance(w, point_on_map);
     }
 
-    const Eigen::MatrixXd drdqt = VectorsToEigen<7>(Filter(flags, jacobian_rows));
-    const Eigen::VectorXd r = VectorToEigen(Filter(flags, r_vector));
     return {drdqt, r};
   }
 
