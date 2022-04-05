@@ -39,6 +39,7 @@
 #include <geometry_msgs/msg/pose.hpp>
 
 #include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/localizer.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 #include "lidar_feature_localization/posevec.hpp"
@@ -51,63 +52,6 @@
 #include <memory>
 #include <string>
 #include <tuple>
-
-using ArgumentType = std::tuple<
-  pcl::PointCloud<pcl::PointXYZ>::Ptr,
-  pcl::PointCloud<pcl::PointXYZ>::Ptr>;
-
-class Localizer
-{
-public:
-  Localizer(
-    const typename pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map,
-    const typename pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_map)
-  : edge_map_(edge_map),
-    surface_map_(surface_map),
-    is_initialized_(false),
-    pose_(Eigen::Isometry3d::Identity())
-  {
-  }
-
-  void Init(const Eigen::Isometry3d & initial_pose)
-  {
-    pose_ = initial_pose;
-    is_initialized_ = true;
-  }
-
-  bool Run(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_xyz,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_xyz)
-  {
-    const LOAMOptimizationProblem problem(edge_map_, surface_map_);
-    if (problem.IsDegenerate(edge_xyz, surface_xyz, pose_)) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("lidar_feature_localization"),
-        "The optimization problem is degenerate. Pose not optimized");
-      return false;
-    }
-
-    const Optimizer<LOAMOptimizationProblem, ArgumentType> optimizer(problem);
-    pose_ = optimizer.Run(std::make_tuple(edge_xyz, surface_xyz), pose_);
-    return true;
-  }
-
-  Eigen::Isometry3d Get() const
-  {
-    return pose_;
-  }
-
-  bool IsInitialized() const
-  {
-    return is_initialized_;
-  }
-
-private:
-  const typename pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map_;
-  const typename pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map_;
-  bool is_initialized_;
-  Eigen::Isometry3d pose_;
-};
 
 using Exact = message_filters::sync_policies::ExactTime<
   sensor_msgs::msg::PointCloud2,
