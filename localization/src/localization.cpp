@@ -142,12 +142,11 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr ToPointXYZ(const typename pcl::PointCloud<T>
 
 const rclcpp::QoS qos_profile = rclcpp::SensorDataQoS().keep_all();
 
+template<typename LocalizerT>
 class Subscriber : public rclcpp::Node
 {
 public:
-  Subscriber(
-    const typename pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map,
-    const typename pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_map)
+  Subscriber(LocalizerT & localizer)
   : Node("lidar_feature_localization"),
     initial_pose_subscriber_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
@@ -156,10 +155,10 @@ public:
         this->MakeInitialSubscriptionOption())),
     pose_publisher_(
       this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10)),
+    localizer_(localizer),
     edge_subscriber_(this, "scan_edge", qos_profile.get_rmw_qos_profile()),
     surface_subscriber_(this, "scan_surface", qos_profile.get_rmw_qos_profile()),
-    sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_)),
-    localizer_(std::make_shared<Localizer>(edge_map, surface_map))
+    sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_))
   {
     sync_->registerCallback(
       std::bind(
@@ -180,13 +179,13 @@ public:
   void PoseInitializationCallback(
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr initial_pose)
   {
-    if (localizer_->IsInitialized()) {
+    if (localizer_.IsInitialized()) {
       return;
     }
 
     Eigen::Isometry3d transform;
     tf2::fromMsg(initial_pose->pose, transform);
-    localizer_->Init(transform);
+    localizer_.Init(transform);
 
     RCLCPP_INFO(this->get_logger(), "Initialized");
   }
@@ -203,8 +202,8 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_xyz = ToPointXYZ<PointXYZIR>(edge);
     const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_xyz = ToPointXYZ<PointXYZIR>(surface);
 
-    localizer_->Run(edge_xyz, surface_xyz);
-    const Eigen::Isometry3d pose = localizer_->Get();
+    localizer_.Run(edge_xyz, surface_xyz);
+    const Eigen::Isometry3d pose = localizer_.Get();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
 
     RCLCPP_INFO(this->get_logger(), "Pose update done");
@@ -213,10 +212,10 @@ public:
 private:
   const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr initial_pose_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
+  LocalizerT & localizer_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> surface_subscriber_;
   std::shared_ptr<Synchronizer> sync_;
-  std::shared_ptr<Localizer> localizer_;
 };
 
 int main(int argc, char * argv[])
@@ -230,7 +229,9 @@ int main(int argc, char * argv[])
 
   const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map_xyz = ToPointXYZ<PointXYZIR>(edge_map);
   const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map_xyz = ToPointXYZ<PointXYZIR>(surface_map);
-  rclcpp::spin(std::make_shared<Subscriber>(edge_map_xyz, surface_map_xyz));
+
+  Localizer localizer(edge_map_xyz, surface_map_xyz);
+  rclcpp::spin(std::make_shared<Subscriber<Localizer>>(localizer));
   rclcpp::shutdown();
   return 0;
 }
