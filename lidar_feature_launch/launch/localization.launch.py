@@ -20,6 +20,14 @@ output_estimated_pose_topic = LaunchConfiguration(
     "output_estimated_pose_topic",
     default="/estimated_pose"
 )
+edge_map_topic = LaunchConfiguration(
+    "edge_map_topic",
+    default="/edge_map"
+)
+surface_map_topic = LaunchConfiguration(
+    "surface_map_topic",
+    default="/surface_map"
+)
 
 def generate_launch_description():
     extraction = Node(
@@ -48,4 +56,29 @@ def generate_launch_description():
         ]
     )
 
-    return LaunchDescription([extraction, localization])
+    map_loader = Node(
+        package="lidar_feature_map_loader",
+        executable="lidar_feature_map_loader",
+        name="lidar_feature_map_loader",
+        remappings=[
+            ("/edge_map", edge_map_topic),
+            ("/surface_map", surface_map_topic),
+        ]
+    )
+
+    map_tf_generator = Node(
+        package="map_tf_generator",
+        executable="map_tf_generator",
+        name="map_tf_generator",
+        parameters=[
+            {
+                "map_frame": "map",
+                "viewer_frame": "viewer",
+            }
+        ],
+        remappings=[
+            ("/pointcloud_map", "/edge_map")
+        ]
+    )
+
+    return LaunchDescription([extraction, localization, map_loader, map_tf_generator])
