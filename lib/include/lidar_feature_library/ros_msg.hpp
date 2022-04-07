@@ -37,6 +37,9 @@
 
 #include <tf2/convert.h>
 #include <tf2_eigen/tf2_eigen.h>
+#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_ros/transform_broadcaster.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <string>
@@ -73,6 +76,19 @@ Eigen::Affine3d GetAffine(const geometry_msgs::msg::Pose & pose)
 {
   Eigen::Affine3d transform;
   tf2::fromMsg(pose, transform);
+  return transform;
+}
+
+geometry_msgs::msg::TransformStamped EigenToTransform(
+  const Eigen::Isometry3d & eigen_transform,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id,
+  const std::string & child_frame_id)
+{
+  geometry_msgs::msg::TransformStamped transform = tf2::eigenToTransform(eigen_transform);
+  transform.header.stamp = stamp;
+  transform.header.frame_id = frame_id;
+  transform.child_frame_id = child_frame_id;
   return transform;
 }
 

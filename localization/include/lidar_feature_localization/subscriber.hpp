@@ -77,6 +77,7 @@ public:
     pose_publisher_(
       this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10)),
     localizer_(localizer),
+    tf_broadcaster_(*this),
     edge_subscriber_(this, "scan_edge", qos_profile.get_rmw_qos_profile()),
     surface_subscriber_(this, "scan_surface", qos_profile.get_rmw_qos_profile()),
     sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_))
@@ -125,6 +126,10 @@ public:
     const Eigen::Isometry3d pose = localizer_.Get();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
 
+    tf_broadcaster_.sendTransform(
+      EigenToTransform(pose, edge_msg->header.stamp, "map", "base_link")
+    );
+
     RCLCPP_INFO(this->get_logger(), "Pose update done");
   }
 
@@ -132,6 +137,7 @@ private:
   const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr initial_pose_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
   LocalizerT localizer_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> surface_subscriber_;
   std::shared_ptr<Synchronizer> sync_;
