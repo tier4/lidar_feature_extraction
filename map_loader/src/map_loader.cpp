@@ -40,6 +40,13 @@
 
 const rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
 
+sensor_msgs::msg::PointCloud2 LoadMap(const std::string & filepath)
+{
+  sensor_msgs::msg::PointCloud2 map;
+  pcl::io::loadPCDFile(filepath, map);
+  map.header.frame_id = "map";
+  return map;
+}
 
 class MapPublisherNode : public rclcpp::Node
 {
@@ -69,13 +76,8 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  sensor_msgs::msg::PointCloud2 edge_map;
-  sensor_msgs::msg::PointCloud2 surface_map;
-  pcl::io::loadPCDFile("maps/edge.pcd", edge_map);
-  pcl::io::loadPCDFile("maps/surface.pcd", surface_map);
-
-  edge_map.header.frame_id = "map";
-  surface_map.header.frame_id = "map";
+  const sensor_msgs::msg::PointCloud2 edge_map = LoadMap("maps/edge.pcd");
+  const sensor_msgs::msg::PointCloud2 surface_map = LoadMap("maps/surface.pcd");
   rclcpp::spin(std::make_shared<MapPublisherNode>(edge_map, surface_map));
   rclcpp::shutdown();
   return 0;
