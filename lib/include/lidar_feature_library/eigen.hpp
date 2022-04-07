@@ -62,4 +62,11 @@ Eigen::VectorXd VectorToEigen(const std::vector<double> & values)
   return v;
 }
 
+std::string EigenToString(const Eigen::MatrixXd & matrix)
+{
+  std::stringstream ss;
+  ss << matrix;
+  return ss.str();
+}
+
 #endif  // EIGEN_HPP_
