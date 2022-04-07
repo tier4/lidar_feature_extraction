@@ -2,7 +2,6 @@ from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-
 scan_edge_topic = "/scan_edge"
 scan_surface_topic = "/scan_surface"
 colored_scan_topic = "/colored_scan"
@@ -17,12 +16,15 @@ input_pose_topic = LaunchConfiguration(
     default="/pose"
 )
 
+
 def generate_launch_description():
     extraction = Node(
         package="lidar_feature_extraction",
         executable="lidar_feature_extraction",
         name="lidar_feature_extraction",
-        parameters=["config/lidar_feature_library.param.yaml"],
+        parameters=[
+            "lidar_feature_launch/config/lidar_feature_extraction.param.yaml"
+        ],
         remappings=[
             ("points_raw", input_sensor_points_topic),
             ("colored_scan", colored_scan_topic),

@@ -34,7 +34,9 @@ def generate_launch_description():
         package="lidar_feature_extraction",
         executable="lidar_feature_extraction",
         name="lidar_feature_extraction",
-        parameters=["config/lidar_feature_library.param.yaml"],
+        parameters=[
+            "lidar_feature_launch/config/lidar_feature_extraction.param.yaml"
+        ],
         remappings=[
             ("points_raw", input_sensor_points_topic),
             ("colored_scan", colored_scan_topic),
