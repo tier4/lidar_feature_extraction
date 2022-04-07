@@ -52,14 +52,18 @@ class MapPublisherNode : public rclcpp::Node
 {
  public:
   MapPublisherNode(
-    const sensor_msgs::msg::PointCloud2 & edge_map,
-    const sensor_msgs::msg::PointCloud2 & surface_map) :
-    Node("map_loader"),
-    edge_publisher_(this->MakePublisher<sensor_msgs::msg::PointCloud2>("/edge_map")),
-    surface_publisher_(this->MakePublisher<sensor_msgs::msg::PointCloud2>("/surface_map"))
+    const std::string & node_name,
+    const std::string & topic_name,
+    const std::string & pcd_filename) :
+    Node(node_name),
+    publisher_(this->MakePublisher<sensor_msgs::msg::PointCloud2>(topic_name))
   {
-    edge_publisher_->publish(edge_map);
-    surface_publisher_->publish(surface_map);
+    const auto map = LoadMap(pcd_filename);
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Loaded point cloud map from %s of size (width = %u, height = %u)",
+      pcd_filename.c_str(), map.width, map.height);
+    publisher_->publish(map);
   }
 
 private:
@@ -69,16 +73,21 @@ private:
     return this->create_publisher<T>(topic_name, qos);
   }
 
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
+  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
 };
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  const sensor_msgs::msg::PointCloud2 edge_map = LoadMap("maps/edge.pcd");
-  const sensor_msgs::msg::PointCloud2 surface_map = LoadMap("maps/surface.pcd");
-  rclcpp::spin(std::make_shared<MapPublisherNode>(edge_map, surface_map));
+
+  rclcpp::executors::MultiThreadedExecutor exec;
+  const auto edge_node = std::make_shared<MapPublisherNode>(
+    "edge_map_publisher", "/edge_map", "maps/edge.pcd");
+  const auto surface_node = std::make_shared<MapPublisherNode>(
+    "surface_map_publisher", "/surface_map", "maps/surface.pcd");
+  exec.add_node(edge_node);
+  exec.add_node(surface_node);
+  exec.spin();
   rclcpp::shutdown();
   return 0;
 }

@@ -61,7 +61,7 @@ def generate_launch_description():
     map_loader = Node(
         package="lidar_feature_map_loader",
         executable="lidar_feature_map_loader",
-        name="lidar_feature_map_loader",
+        namespace="lidar_feature_map_loader",
         remappings=[
             ("/edge_map", edge_map_topic),
             ("/surface_map", surface_map_topic),
