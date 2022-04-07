@@ -46,6 +46,17 @@
 #include "lidar_feature_library/transform.hpp"
 
 
+bool PoseDiffIsSufficientlySmall(
+  const Eigen::Affine3d & pose0,
+  const Eigen::Affine3d & pose1,
+  const double translation_threshold,
+  const double rotation_threshold)
+{
+  const Eigen::Affine3d d = pose0.inverse() * pose1;
+  const Eigen::Quaterniond dq(d.rotation());
+  return d.translation().norm() < translation_threshold && dq.vec().norm() < rotation_threshold;
+}
+
 template<typename T>
 class Map
 {
@@ -74,6 +85,9 @@ public:
   typename pcl::PointCloud<T>::Ptr map_ptr_;
 };
 
+const double translation_threshold = 1.0;
+const double rotation_threshold = 0.1;
+
 class MapBuilder
 {
 public:
@@ -94,7 +108,16 @@ public:
       cloud_msg->header.stamp.sec,
       cloud_msg->header.stamp.nanosec);
 
+    const bool pose_diff_small = PoseDiffIsSufficientlySmall(
+      prev_transform_, transform, translation_threshold, rotation_threshold
+    );
+
+    if (!map_->IsEmpty() && pose_diff_small) {
+      return;
+    }
+
     map_->TransformAdd(transform, cloud);
+    prev_transform_ = transform;
   }
 
   void SaveMap(const std::string & pcd_filename) const
@@ -114,6 +137,7 @@ public:
   }
 
   std::shared_ptr<Map<PointXYZIR>> map_;
+  Eigen::Affine3d prev_transform_;
 };
 
 #endif  // MAP_HPP_

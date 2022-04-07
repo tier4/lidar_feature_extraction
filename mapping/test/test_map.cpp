@@ -31,6 +31,38 @@
 #include "lidar_feature_mapping/map.hpp"
 
 
+TEST(Map, PoseDiffIsSufficientlySmall)
+{
+  const Eigen::Quaterniond q0 = Eigen::Quaterniond(1., 0.1, 0.1, -0.1).normalized();
+  const Eigen::Vector3d t0(2.0, 1.0, -1.0);
+
+  Eigen::Affine3d pose0;
+  pose0.linear() = q0.toRotationMatrix();
+  pose0.translation() = t0;
+
+  {
+    const Eigen::Vector3d dt(1.0, 0.0, 0.0);
+
+    Eigen::Affine3d pose1;
+    pose1.linear() = pose0.linear();
+    pose1.translation() = pose0.translation() + dt;
+
+    EXPECT_FALSE(PoseDiffIsSufficientlySmall(pose0, pose1, 1.0, 1e-8));
+    EXPECT_TRUE(PoseDiffIsSufficientlySmall(pose0, pose1, 1.1, 1e-8));
+  }
+
+  {
+    const Eigen::Quaterniond dq = Eigen::Quaterniond(1.0, 0.1, 0.1, 0.1).normalized();
+
+    Eigen::Affine3d pose1;
+    pose1.linear() = pose0.linear() * dq.toRotationMatrix();
+    pose1.translation() = pose0.translation();
+
+    EXPECT_FALSE(PoseDiffIsSufficientlySmall(pose0, pose1, 1e-8, 0.1));
+    EXPECT_TRUE(PoseDiffIsSufficientlySmall(pose0, pose1, 1e-8, 0.2));
+  }
+}
+
 TEST(Map, TransformAdd)
 {
   Map<pcl::PointXYZ> map;
