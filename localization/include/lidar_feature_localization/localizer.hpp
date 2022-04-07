@@ -76,7 +76,10 @@ public:
   {
     const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_xyz = ToPointXYZ<PointXYZIR>(edge);
     const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_xyz = ToPointXYZ<PointXYZIR>(surface);
-    return this->Run(edge_xyz, surface_xyz);
+    const auto [pose, success] = this->Run(edge_xyz, surface_xyz, pose_);
+
+    pose_ = pose;
+    return success;
   }
 
   Eigen::Isometry3d Get() const
@@ -91,26 +94,28 @@ public:
 
 private:
 
-  bool Run(
+  std::tuple<Eigen::Isometry3d, bool> Run(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface)
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface,
+    const Eigen::Isometry3d & pose) const
   {
     const LOAMOptimizationProblem problem(edge_map_, surface_map_);
 
-    if (problem.IsDegenerate(edge, surface, pose_)) {
+    if (problem.IsDegenerate(edge, surface, pose)) {
       RCLCPP_WARN(
         rclcpp::get_logger("lidar_feature_localization"),
         "The optimization problem is degenerate. Pose not optimized");
-      return false;
+      return std::make_tuple(pose, false);
     }
 
     const Optimizer<LOAMOptimizationProblem, ArgumentType> optimizer(problem);
-    pose_ = optimizer.Run(std::make_tuple(edge, surface), pose_);
-    return true;
+    const Eigen::Isometry3d new_pose = optimizer.Run(std::make_tuple(edge, surface), pose);
+    return std::make_tuple(new_pose, true);
   }
 
   const typename pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map_;
   const typename pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map_;
+
   bool is_initialized_;
   Eigen::Isometry3d pose_;
 };
