@@ -91,12 +91,12 @@ Visualization Manager:
       Class: rviz_default_plugins/Pose
       Color: 255; 25; 0
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
+      Head Length: 4
+      Head Radius: 3
       Name: Pose
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
-      Shape: Axes
+      Shaft Length: 4
+      Shaft Radius: 1
+      Shape: Arrow
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -171,16 +171,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 240.02700805664062
+      Distance: 104.68588256835938
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 24.99287986755371
-        Y: -43.95036315917969
-        Z: 4.50829553604126
+        X: 20.615543365478516
+        Y: -47.04745864868164
+        Z: 4.502946376800537
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
