@@ -26,8 +26,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef TRANSFORM_HPP_
-#define TRANSFORM_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__TRANSFORM_HPP_
+#define LIDAR_FEATURE_LIBRARY__TRANSFORM_HPP_
+
+#include <Eigen/Geometry>
 
 #include <pcl/common/transforms.h>
 
@@ -50,4 +52,4 @@ typename pcl::PointCloud<T>::Ptr TransformPointCloud(
   return transformed;
 }
 
-#endif  // TRANSFORM_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__TRANSFORM_HPP_

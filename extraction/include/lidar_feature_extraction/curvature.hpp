@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef CURVATURE_HPP_
-#define CURVATURE_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__CURVATURE_HPP_
+#define LIDAR_FEATURE_EXTRACTION__CURVATURE_HPP_
 
 #include <range/v3/all.hpp>
 
@@ -54,4 +54,4 @@ std::vector<double> CalcCurvature(const std::vector<double> & range, const int p
   return weighted | ranges::views::transform(f) | ranges::to_vector;
 }
 
-#endif  // CURVATURE_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__CURVATURE_HPP_

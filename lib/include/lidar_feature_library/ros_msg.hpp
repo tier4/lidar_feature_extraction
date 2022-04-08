@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef ROS_MSG_HPP_
-#define ROS_MSG_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__ROS_MSG_HPP_
+#define LIDAR_FEATURE_LIBRARY__ROS_MSG_HPP_
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -36,7 +36,6 @@
 #include <sensor_msgs/msg/point_field.hpp>
 
 #include <tf2/convert.h>
-#include <tf2_eigen/tf2_eigen.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <tf2_ros/transform_broadcaster.h>
 
@@ -92,4 +91,4 @@ geometry_msgs::msg::TransformStamped EigenToTransform(
   return transform;
 }
 
-#endif   // ROS_MSG_HPP_
+#endif   // LIDAR_FEATURE_LIBRARY__ROS_MSG_HPP_

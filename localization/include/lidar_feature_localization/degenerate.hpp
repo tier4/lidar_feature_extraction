@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OPTIMIZATION_PROBLEM_
-#define OPTIMIZATION_PROBLEM_
+#ifndef LIDAR_FEATURE_LOCALIZATION__DEGENERATE_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__DEGENERATE_HPP_
 
 #include <Eigen/Eigenvalues>
 
@@ -53,4 +53,4 @@ bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1)
   return (eigenvalues.array().abs() < threshold).any();
 }
 
-#endif  // OPTIMIZATION_PROBLEM_
+#endif  // LIDAR_FEATURE_LOCALIZATION__DEGENERATE_HPP_

@@ -26,11 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef EIGEN_HPP_
-#define EIGEN_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
+#define LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
 
 #include <Eigen/Core>
 
+#include <string>
 #include <vector>
 
 template<int N>
@@ -69,4 +70,4 @@ std::string EigenToString(const Eigen::MatrixXd & matrix)
   return ss.str();
 }
 
-#endif  // EIGEN_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__EIGEN_HPP_

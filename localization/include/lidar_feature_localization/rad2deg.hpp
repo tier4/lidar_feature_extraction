@@ -28,12 +28,12 @@
 
 #include "lidar_feature_localization/math.hpp"
 
-#ifndef RAD2DEG_HPP_
-#define RAD2DEG_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__RAD2DEG_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__RAD2DEG_HPP_
 
 inline Eigen::MatrixXd Rad2Deg(const Eigen::MatrixXd & x)
 {
   return x * (180.0 / M_PI);
 }
 
-#endif  // RAD2DEG_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__RAD2DEG_HPP_

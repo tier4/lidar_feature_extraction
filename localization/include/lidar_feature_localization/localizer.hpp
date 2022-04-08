@@ -26,13 +26,15 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LOCALIZER_HPP_
-#define LOCALIZER_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__LOCALIZER_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__LOCALIZER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+
+#include <tuple>
 
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
@@ -93,7 +95,6 @@ public:
   }
 
 private:
-
   std::tuple<Eigen::Isometry3d, bool> Run(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface,
@@ -120,4 +121,4 @@ private:
   Eigen::Isometry3d pose_;
 };
 
-#endif  // LOCALIZER_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__LOCALIZER_HPP_

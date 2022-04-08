@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef POSEVEC_HPP_
-#define POSEVEC_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__POSEVEC_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__POSEVEC_HPP_
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -58,4 +58,4 @@ Eigen::Isometry3d MakePose(
   return pose;
 }
 
-#endif  // POSEVEC_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__POSEVEC_HPP_

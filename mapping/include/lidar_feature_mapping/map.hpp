@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MAP_HPP_
-#define MAP_HPP_
+#ifndef LIDAR_FEATURE_MAPPING__MAP_HPP_
+#define LIDAR_FEATURE_MAPPING__MAP_HPP_
 
 #include <pcl/io/auto_io.h>
 #include <pcl/point_cloud.h>
@@ -140,4 +140,4 @@ public:
   Eigen::Affine3d prev_transform_;
 };
 
-#endif  // MAP_HPP_
+#endif  // LIDAR_FEATURE_MAPPING__MAP_HPP_

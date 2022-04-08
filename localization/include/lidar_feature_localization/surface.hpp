@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef SURFACE_HPP_
-#define SURFACE_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__SURFACE_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__SURFACE_HPP_
 
 #include <tuple>
 #include <vector>
@@ -121,4 +121,4 @@ private:
   const int n_neighbors_;
 };
 
-#endif  // SURFACE_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__SURFACE_HPP_

@@ -34,6 +34,9 @@
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include <string>
+#include <memory>
+
 #include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
@@ -50,12 +53,12 @@ sensor_msgs::msg::PointCloud2 LoadMap(const std::string & filepath)
 
 class MapPublisherNode : public rclcpp::Node
 {
- public:
+public:
   MapPublisherNode(
     const std::string & node_name,
     const std::string & topic_name,
-    const std::string & pcd_filename) :
-    Node(node_name),
+    const std::string & pcd_filename)
+  : Node(node_name),
     publisher_(this->MakePublisher<sensor_msgs::msg::PointCloud2>(topic_name))
   {
     const auto map = LoadMap(pcd_filename);

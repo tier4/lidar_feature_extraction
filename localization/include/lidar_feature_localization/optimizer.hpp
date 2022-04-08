@@ -26,8 +26,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OPTIMIZER_HPP_
-#define OPTIMIZER_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__OPTIMIZER_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__OPTIMIZER_HPP_
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+#include <tuple>
 
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/math.hpp"
@@ -35,11 +40,6 @@
 #include "lidar_feature_localization/rad2deg.hpp"
 
 #include "rotationlib/quaternion.hpp"
-
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-
-#include <tuple>
 
 
 bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
@@ -131,4 +131,4 @@ private:
   const ProblemType problem_;
 };
 
-#endif  // OPTIMIZER_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__OPTIMIZER_HPP_

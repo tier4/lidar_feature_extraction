@@ -26,9 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-
-#ifndef ITERATOR_HPP_
-#define ITERATOR_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__ITERATOR_HPP_
+#define LIDAR_FEATURE_EXTRACTION__ITERATOR_HPP_
 
 #include <range/v3/all.hpp>
 
@@ -42,4 +41,4 @@ std::vector<int> irange(const int size)
   return ranges::views::ints(0, size) | ranges::to_vector;
 }
 
-#endif  // ITERATOR_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__ITERATOR_HPP_

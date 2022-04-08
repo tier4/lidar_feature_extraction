@@ -28,6 +28,10 @@
 
 #include <gmock/gmock.h>
 
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+
+#include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
 #include "lidar_feature_extraction/color_points.hpp"
 

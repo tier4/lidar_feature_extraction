@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef ALGORITHM_HPP_
-#define ALGORITHM_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__ALGORITHM_HPP_
+#define LIDAR_FEATURE_EXTRACTION__ALGORITHM_HPP_
 
 #include <range/v3/all.hpp>
 
@@ -70,4 +70,4 @@ std::vector<int> Argsort(const Iterator & values_begin, const Iterator & values_
   return indices;
 }
 
-#endif  // ALGORITHM_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__ALGORITHM_HPP_

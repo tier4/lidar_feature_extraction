@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef KDTREE_HPP_
-#define KDTREE_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_
 
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_cloud.h>
@@ -99,4 +99,4 @@ private:
   const KDTree<pcl::PointXYZ> kdtree_;
 };
 
-#endif
+#endif  // LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_

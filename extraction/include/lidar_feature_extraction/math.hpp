@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef MATH_HPP_
-#define MATH_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__MATH_HPP_
+#define LIDAR_FEATURE_EXTRACTION__MATH_HPP_
 
 inline double XYNorm(const double x, const double y)
 {
@@ -61,4 +61,4 @@ double InnerProduct(T1 first1, T1 last1, T2 first2)
   return sum;
 }
 
-#endif  // MATH_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__MATH_HPP_

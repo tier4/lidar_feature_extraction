@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MATH_HPP_
-#define MATH_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__MATH_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__MATH_HPP_
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -39,4 +39,4 @@ Eigen::VectorXd SolveLinear(const Eigen::MatrixXd & A, const Eigen::VectorXd & b
   return A.householderQr().solve(b);
 }
 
-#endif  // MATH_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__MATH_HPP_

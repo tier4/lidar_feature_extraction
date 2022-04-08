@@ -27,13 +27,14 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef SPAN_HPP_
-#define SPAN_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__SPAN_HPP_
+#define LIDAR_FEATURE_LIBRARY__SPAN_HPP_
+
+#include <fmt/core.h>
 
 #include <iterator>
 #include <vector>
 
-#include <fmt/core.h>
 
 template<typename T, typename Iterator>
 class span_base
@@ -111,4 +112,4 @@ public:
   }
 };
 
-#endif  // SPAN_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__SPAN_HPP_

@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from setuptools import setup
 
 package_name = 'lidar_feature_launch'

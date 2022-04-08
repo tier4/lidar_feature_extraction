@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef RANGE_MESSAGE_HPP_
-#define RANGE_MESSAGE_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__RANGE_MESSAGE_HPP_
+#define LIDAR_FEATURE_EXTRACTION__RANGE_MESSAGE_HPP_
 
 #include <fmt/core.h>
 
@@ -82,4 +82,4 @@ std::string RangeMessageSmallerThan(
     value_name, value, range_name, range_max);
 }
 
-#endif  // RANGE_MESSAGE_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__RANGE_MESSAGE_HPP_

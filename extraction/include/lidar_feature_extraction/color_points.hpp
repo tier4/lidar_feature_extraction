@@ -26,10 +26,11 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef COLOR_POINTS_HPP_
-#define COLOR_POINTS_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__COLOR_POINTS_HPP_
+#define LIDAR_FEATURE_EXTRACTION__COLOR_POINTS_HPP_
 
 #include <fmt/format.h>
+#include <pcl/point_types.h>
 
 #include <vector>
 
@@ -122,4 +123,4 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByValue(
   return colored;
 }
 
-#endif  // COLOR_POINTS_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__COLOR_POINTS_HPP_

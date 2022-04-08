@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef CONVOLUTION_HPP_
-#define CONVOLUTION_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__CONVOLUTION_HPP_
+#define LIDAR_FEATURE_EXTRACTION__CONVOLUTION_HPP_
 
 #include <fmt/core.h>
 
@@ -69,4 +69,4 @@ std::vector<double> Convolution1D(
   return result;
 }
 
-#endif  // CONVOLUTION_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__CONVOLUTION_HPP_

@@ -32,17 +32,17 @@
 #include <pcl/point_types.h>
 #include <pcl/common/io.h>
 
+#include <limits>
+#include <memory>
+#include <string>
+#include <tuple>
+
 #include "lidar_feature_localization/localizer.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
 #include "lidar_feature_library/point_type.hpp"
-
-#include <limits>
-#include <memory>
-#include <string>
-#include <tuple>
 
 int main(int argc, char * argv[])
 {

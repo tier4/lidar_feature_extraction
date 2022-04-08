@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef RING_HPP_
-#define RING_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__RING_HPP_
+#define LIDAR_FEATURE_EXTRACTION__RING_HPP_
 
 #include <fmt/core.h>
 #include <pcl/point_cloud.h>
@@ -121,4 +121,4 @@ std::unordered_map<int, std::vector<int>> ExtractAngleSortedRings(const Iter & i
   return point_indices;
 }
 
-#endif  // RING_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__RING_HPP_

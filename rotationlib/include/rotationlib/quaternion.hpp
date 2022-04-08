@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef ROTATIONLIB_QUATERNION_HPP
-#define ROTATIONLIB_QUATERNION_HPP
+#ifndef ROTATIONLIB__QUATERNION_HPP_
+#define ROTATIONLIB__QUATERNION_HPP_
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
@@ -77,4 +77,4 @@ Eigen::Matrix4d RightMultiplicationMatrix(const Eigen::Quaterniond & q)
   return Q;
 }
 
-#endif  // ROTATIONLIB_QUATERNION_HPP
+#endif  // ROTATIONLIB__QUATERNION_HPP_

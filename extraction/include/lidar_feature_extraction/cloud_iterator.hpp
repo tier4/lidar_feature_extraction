@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef CLOUD_ITERATOR_HPP_
-#define CLOUD_ITERATOR_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__CLOUD_ITERATOR_HPP_
+#define LIDAR_FEATURE_EXTRACTION__CLOUD_ITERATOR_HPP_
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -39,4 +39,4 @@ using CloudIterator = typename pcl::PointCloud<PointT>::iterator;
 template<typename PointT>
 using CloudConstIterator = typename pcl::PointCloud<PointT>::const_iterator;
 
-#endif  // CLOUD_ITERATOR_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__CLOUD_ITERATOR_HPP_

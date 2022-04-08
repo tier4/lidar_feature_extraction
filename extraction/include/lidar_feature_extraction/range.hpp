@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef RANGE_HPP_
-#define RANGE_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__RANGE_HPP_
+#define LIDAR_FEATURE_EXTRACTION__RANGE_HPP_
 
 #include <vector>
 
@@ -73,4 +73,4 @@ private:
   const MappedPoints<PointT> ref_points_;
 };
 
-#endif  // RANGE_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__RANGE_HPP_

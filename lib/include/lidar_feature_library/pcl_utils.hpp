@@ -26,14 +26,14 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef PCL_UTILS_HPP_
-#define PCL_UTILS_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
+#define LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
+
+#include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <tuple>
 #include <vector>
-
-#include <range/v3/all.hpp>
 
 
 Eigen::Vector3d GetXYZ(const pcl::PointXYZ & point)
@@ -66,4 +66,4 @@ std::vector<Eigen::Vector3d> PointsToEigen(const std::vector<T> & cloud)
   return cloud | ranges::views::transform(get_xyz) | ranges::to_vector;
 }
 
-#endif  //  PCL_UTILS_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_

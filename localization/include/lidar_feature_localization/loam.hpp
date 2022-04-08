@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LOAM_HPP_
-#define LOAM_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
 
 
 #include <Eigen/Eigenvalues>
@@ -71,8 +71,9 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
-    const auto [J, b] = this->Make(std::make_tuple(edge_scan, surface_scan), point_to_map);
+    const auto [J, r] = this->Make(std::make_tuple(edge_scan, surface_scan), point_to_map);
     const Eigen::MatrixXd JtJ = J.transpose() * J;
+
     return ::IsDegenerate(JtJ);
   }
 
@@ -99,4 +100,4 @@ private:
   const Surface surface_;
 };
 
-#endif  // LOAM_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_

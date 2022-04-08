@@ -27,13 +27,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef MAPPED_POINTS_HPP_
-#define MAPPED_POINTS_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__MAPPED_POINTS_HPP_
+#define LIDAR_FEATURE_EXTRACTION__MAPPED_POINTS_HPP_
+
+#include <pcl/point_cloud.h>
 
 #include <functional>
 #include <vector>
-
-#include <pcl/point_cloud.h>
 
 #include "iterator.hpp"
 
@@ -69,4 +69,4 @@ private:
   const std::vector<int> indices_;
 };
 
-#endif  // MAPPED_POINTS_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__MAPPED_POINTS_HPP_

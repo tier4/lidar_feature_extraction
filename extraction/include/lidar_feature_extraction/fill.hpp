@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef FILL_HPP_
-#define FILL_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__FILL_HPP_
+#define LIDAR_FEATURE_EXTRACTION__FILL_HPP_
 
 #include <algorithm>
 
@@ -116,4 +116,4 @@ void FillNeighbors(
   FillFromLeft(labels, is_neighbor, index, max, label);
 }
 
-#endif  // FILL_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__FILL_HPP_

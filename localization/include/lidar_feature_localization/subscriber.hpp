@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef SUBSCRIBER_HPP_
-#define SUBSCRIBER_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -41,6 +41,9 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/exact_time.h>
+
+#include <memory>
+#include <string>
 
 #include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
@@ -67,7 +70,7 @@ template<typename LocalizerT>
 class Subscriber : public rclcpp::Node
 {
 public:
-  Subscriber(LocalizerT & localizer)
+  explicit Subscriber(LocalizerT & localizer)
   : Node("lidar_feature_localization"),
     initial_pose_subscriber_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
@@ -143,4 +146,4 @@ private:
   std::shared_ptr<Synchronizer> sync_;
 };
 
-#endif  // SUBSCRIBER_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_

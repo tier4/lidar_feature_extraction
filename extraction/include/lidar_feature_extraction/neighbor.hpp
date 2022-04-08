@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef NEIGHBOR_HPP_
-#define NEIGHBOR_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__NEIGHBOR_HPP_
+#define LIDAR_FEATURE_EXTRACTION__NEIGHBOR_HPP_
 
 #include <fmt/core.h>
 
@@ -135,4 +135,4 @@ private:
   const std::vector<int> values_;
 };
 
-#endif  // NEIGHBOR_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__NEIGHBOR_HPP_

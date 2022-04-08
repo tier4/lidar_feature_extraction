@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef DOWNSAMPLE_HPP_
-#define DOWNSAMPLE_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__DOWNSAMPLE_HPP_
+#define LIDAR_FEATURE_LIBRARY__DOWNSAMPLE_HPP_
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -48,4 +48,4 @@ typename pcl::PointCloud<T>::Ptr downsample(
   return downsampled;
 }
 
-#endif  // DOWNSAMPLE_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__DOWNSAMPLE_HPP_

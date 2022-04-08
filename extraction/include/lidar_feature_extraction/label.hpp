@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef LABEL_HPP_
-#define LABEL_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__LABEL_HPP_
+#define LIDAR_FEATURE_EXTRACTION__LABEL_HPP_
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <pcl/point_cloud.h>
@@ -179,4 +179,4 @@ void ExtractByLabel(
   }
 }
 
-#endif  // LABEL_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__LABEL_HPP_

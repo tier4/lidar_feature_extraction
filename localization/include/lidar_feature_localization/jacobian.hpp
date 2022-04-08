@@ -26,14 +26,15 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef JACOBIAN_HPP_
-#define JACOBIAN_HPP_
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
 
 #include <Eigen/Core>
 
 #include <vector>
+
+#include "rotationlib/jacobian/quaternion.hpp"
+
 
 void FillJacobianRow(
   Eigen::MatrixXd & J,
@@ -59,4 +60,4 @@ Eigen::MatrixXd MakeJacobian(
   return J;
 }
 
-#endif  // JACOBIAN_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_

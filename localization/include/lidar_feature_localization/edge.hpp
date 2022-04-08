@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef EDGE_HPP_
-#define EDGE_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__EDGE_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__EDGE_HPP_
 
 #include <algorithm>
 #include <tuple>
@@ -133,4 +133,4 @@ private:
   const int n_neighbors_;
 };
 
-#endif  // EDGE_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__EDGE_HPP_

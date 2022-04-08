@@ -26,13 +26,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OCCLUSION_HPP_
-#define OCCLUSION_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__OCCLUSION_HPP_
+#define LIDAR_FEATURE_EXTRACTION__OCCLUSION_HPP_
+
+#include <vector>
 
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
-
-#include <vector>
 
 
 template<typename PointT>
@@ -64,4 +64,4 @@ void LabelOccludedPoints(
   }
 }
 
-#endif  // OCCLUSION_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__OCCLUSION_HPP_

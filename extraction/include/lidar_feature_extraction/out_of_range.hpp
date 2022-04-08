@@ -26,13 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LABEL_OUT_OF_RANGE_HPP_
-#define LABEL_OUT_OF_RANGE_HPP_
-
-#include "lidar_feature_extraction/label.hpp"
+#ifndef LIDAR_FEATURE_EXTRACTION__OUT_OF_RANGE_HPP_
+#define LIDAR_FEATURE_EXTRACTION__OUT_OF_RANGE_HPP_
 
 #include <vector>
 
+#include "lidar_feature_extraction/label.hpp"
 
 template<typename PointT>
 void LabelOutOfRange(
@@ -48,4 +47,4 @@ void LabelOutOfRange(
   }
 }
 
-#endif  // LABEL_OUT_OF_RANGE_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__OUT_OF_RANGE_HPP_
