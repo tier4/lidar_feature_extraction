@@ -31,21 +31,6 @@
 
 #include <Eigen/Eigenvalues>
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
-
-#include <range/v3/all.hpp>
-
-#include <algorithm>
-#include <tuple>
-#include <vector>
-
-#include "lidar_feature_localization/kdtree.hpp"
-#include "lidar_feature_localization/jacobian.hpp"
-#include "lidar_feature_localization/math.hpp"
-
-
 bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1)
 {
   const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(C);

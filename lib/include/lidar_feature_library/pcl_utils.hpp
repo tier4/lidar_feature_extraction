@@ -29,6 +29,10 @@
 #ifndef LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
 #define LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/common/eigen.h>
+
 #include <range/v3/all.hpp>
 
 #include <algorithm>
