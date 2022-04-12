@@ -42,7 +42,7 @@ input_sensor_points_topic = LaunchConfiguration(
 )
 initial_pose_topic = LaunchConfiguration(
     'initial_pose_topic',
-    default='/initial_pose'
+    default='/pose'
 )
 output_estimated_pose_topic = LaunchConfiguration(
     'output_estimated_pose_topic',
