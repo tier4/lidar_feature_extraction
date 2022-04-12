@@ -99,7 +99,7 @@ public:
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
   {
     const Eigen::Affine3d transform = GetAffine(pose_msg->pose);
-    const pcl::PointCloud<PointXYZIR>::Ptr cloud = getPointCloud<PointXYZIR>(*cloud_msg);
+    const pcl::PointCloud<PointXYZIR>::Ptr cloud = GetPointCloud<PointXYZIR>(*cloud_msg);
 
     RCLCPP_INFO(
       rclcpp::get_logger("lidar_feature_mapping"),

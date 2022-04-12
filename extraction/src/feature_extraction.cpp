@@ -115,7 +115,7 @@ private:
 
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg) const
   {
-    const pcl::PointCloud<PointXYZIR>::Ptr input_cloud = getPointCloud<PointXYZIR>(*cloud_msg);
+    const pcl::PointCloud<PointXYZIR>::Ptr input_cloud = GetPointCloud<PointXYZIR>(*cloud_msg);
 
     if (!input_cloud->is_dense) {
       RCLCPP_ERROR(
@@ -173,10 +173,10 @@ private:
 
     const std::string lidar_frame = "base_link";
     const auto stamp = cloud_msg->header.stamp;
-    const auto colored_msg = toRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
-    const auto curvature_msg = toRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
-    const auto cloud_edge = toRosMsg<PointXYZIR>(edge, stamp, lidar_frame);
-    const auto cloud_surface = toRosMsg<PointXYZIR>(surface, stamp, lidar_frame);
+    const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
+    const auto curvature_msg = ToRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
+    const auto cloud_edge = ToRosMsg<PointXYZIR>(edge, stamp, lidar_frame);
+    const auto cloud_surface = ToRosMsg<PointXYZIR>(surface, stamp, lidar_frame);
     colored_scan_publisher_->publish(colored_msg);
     curvature_cloud_publisher_->publish(curvature_msg);
     edge_publisher_->publish(cloud_edge);

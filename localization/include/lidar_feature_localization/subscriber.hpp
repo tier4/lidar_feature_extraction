@@ -121,8 +121,8 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "Pose update called");
 
-    const pcl::PointCloud<PointXYZIR>::Ptr edge = getPointCloud<PointXYZIR>(*edge_msg);
-    const pcl::PointCloud<PointXYZIR>::Ptr surface = getPointCloud<PointXYZIR>(*surface_msg);
+    const pcl::PointCloud<PointXYZIR>::Ptr edge = GetPointCloud<PointXYZIR>(*edge_msg);
+    const pcl::PointCloud<PointXYZIR>::Ptr surface = GetPointCloud<PointXYZIR>(*surface_msg);
 
     localizer_.Run(edge, surface);
 

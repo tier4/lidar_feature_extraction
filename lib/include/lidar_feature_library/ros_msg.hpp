@@ -44,7 +44,7 @@
 #include <string>
 
 template<typename T>
-sensor_msgs::msg::PointCloud2 toRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
+sensor_msgs::msg::PointCloud2 ToRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
 {
   sensor_msgs::msg::PointCloud2 msg;
   pcl::toROSMsg(*cloud_ptr, msg);
@@ -52,19 +52,19 @@ sensor_msgs::msg::PointCloud2 toRosMsg(const typename pcl::PointCloud<T>::Ptr & 
 }
 
 template<typename T>
-sensor_msgs::msg::PointCloud2 toRosMsg(
+sensor_msgs::msg::PointCloud2 ToRosMsg(
   const typename pcl::PointCloud<T>::Ptr & cloud_ptr,
   const rclcpp::Time & stamp,
   const std::string frame)
 {
-  sensor_msgs::msg::PointCloud2 msg = toRosMsg<T>(cloud_ptr);
+  sensor_msgs::msg::PointCloud2 msg = ToRosMsg<T>(cloud_ptr);
   msg.header.stamp = stamp;
   msg.header.frame_id = frame;
   return msg;
 }
 
 template<typename T>
-typename pcl::PointCloud<T>::Ptr getPointCloud(const sensor_msgs::msg::PointCloud2 & roscloud)
+typename pcl::PointCloud<T>::Ptr GetPointCloud(const sensor_msgs::msg::PointCloud2 & roscloud)
 {
   typename pcl::PointCloud<T>::Ptr pclcloud(new pcl::PointCloud<T>());
   pcl::fromROSMsg(roscloud, *pclcloud);
