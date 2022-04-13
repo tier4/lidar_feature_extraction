@@ -42,13 +42,6 @@
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/point_type.hpp"
 
-
-template<typename T>
-pcl::PointCloud<pcl::PointXYZ>::Ptr ToPointXYZ(const typename pcl::PointCloud<T>::Ptr & cloud)
-{
-  return ConvertPointCloudType<T, pcl::PointXYZ>(cloud);
-}
-
 using ArgumentType = std::tuple<
   pcl::PointCloud<pcl::PointXYZ>::Ptr,
   pcl::PointCloud<pcl::PointXYZ>::Ptr>;

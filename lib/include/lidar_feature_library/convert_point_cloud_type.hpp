@@ -42,4 +42,10 @@ typename pcl::PointCloud<TargetPointType>::Ptr ConvertPointCloudType(
   return target;
 }
 
+template<typename T>
+pcl::PointCloud<pcl::PointXYZ>::Ptr ToPointXYZ(const typename pcl::PointCloud<T>::Ptr & cloud)
+{
+  return ConvertPointCloudType<T, pcl::PointXYZ>(cloud);
+}
+
 #endif  // LIDAR_FEATURE_LIBRARY__CONVERT_POINT_CLOUD_TYPE_HPP_
