@@ -124,7 +124,7 @@ public:
     const pcl::PointCloud<PointXYZIR>::Ptr edge = GetPointCloud<PointXYZIR>(*edge_msg);
     const pcl::PointCloud<PointXYZIR>::Ptr surface = GetPointCloud<PointXYZIR>(*surface_msg);
 
-    localizer_.Run(edge, surface);
+    localizer_.Update(edge, surface);
 
     const Eigen::Isometry3d pose = localizer_.Get();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));

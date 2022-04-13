@@ -65,13 +65,13 @@ public:
     is_initialized_ = true;
   }
 
-  bool Run(
-    const pcl::PointCloud<PointXYZIR>::Ptr & edge,
-    const pcl::PointCloud<PointXYZIR>::Ptr & surface)
+  bool Update(
+    const pcl::PointCloud<PointXYZIR>::Ptr & edge_scan,
+    const pcl::PointCloud<PointXYZIR>::Ptr & surface_scan)
   {
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_xyz = ToPointXYZ<PointXYZIR>(edge);
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_xyz = ToPointXYZ<PointXYZIR>(surface);
-    const auto [pose, success] = this->Run(edge_xyz, surface_xyz, pose_);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_xyz = ToPointXYZ<PointXYZIR>(edge_scan);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_xyz = ToPointXYZ<PointXYZIR>(surface_scan);
+    const auto [pose, success] = this->Update(edge_xyz, surface_xyz, pose_);
 
     pose_ = pose;
     return success;
@@ -88,7 +88,7 @@ public:
   }
 
 private:
-  std::tuple<Eigen::Isometry3d, bool> Run(
+  std::tuple<Eigen::Isometry3d, bool> Update(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface,
     const Eigen::Isometry3d & pose) const
