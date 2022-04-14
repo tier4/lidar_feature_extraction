@@ -112,6 +112,8 @@ public:
     tf2::fromMsg(initial_pose->pose, transform);
     localizer_.Init(transform);
 
+    pose_publisher_->publish(*initial_pose);
+
     RCLCPP_INFO(this->get_logger(), "Initialized");
   }
 
