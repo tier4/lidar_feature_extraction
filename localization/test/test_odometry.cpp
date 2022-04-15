@@ -50,7 +50,7 @@ public:
     const Eigen::Isometry3d & pose) const
   {
     Eigen::Isometry3d dpose;
-    dpose.linear() = Eigen::Quaterniond::Identity().toRotationMatrix();
+    dpose.linear() = Eigen::Matrix3d::Identity();
     dpose.translation() = Eigen::Vector3d(1., 2., 0.);
     return dpose * pose;
   }
@@ -80,9 +80,7 @@ public:
 
   void Add(const Eigen::Isometry3d & pose, const Eigen::Vector3d & point)
   {
-    std::cerr << "Add point " << point.transpose() << " to map" << std::endl;
     map_.push_back(pose * point);
-    std::cerr << "Map size is " << this->Size() << std::endl;
   }
 
 private:
