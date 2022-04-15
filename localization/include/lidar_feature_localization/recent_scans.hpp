@@ -31,7 +31,7 @@
 
 #include <Eigen/Core>
 
-#include <deque>
+#include <vector>
 
 #include "lidar_feature_library/transform.hpp"
 
@@ -41,7 +41,7 @@
 
 template<typename PointType>
 typename pcl::PointCloud<PointType>::Ptr MergeClouds(
-  const std::deque<typename pcl::PointCloud<PointType>::Ptr> & scans)
+  const std::vector<typename pcl::PointCloud<PointType>::Ptr> & scans)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr merged(new pcl::PointCloud<pcl::PointXYZ>());
   for (const auto scan : scans) {
@@ -55,11 +55,6 @@ class RecentScans
 {
 public:
   RecentScans() {}
-
-  void Pop()
-  {
-    scans_.pop_front();
-  }
 
   void Add(
     const Eigen::Isometry3d & point_to_map,
@@ -76,7 +71,7 @@ public:
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr GetRecent(const int n) const
   {
-    std::deque recent(scans_.end() - n, scans_.end());
+    std::vector recent(scans_.end() - n, scans_.end());
     return MergeClouds<pcl::PointXYZ>(recent);
   }
 
@@ -86,7 +81,7 @@ public:
   }
 
 private:
-  std::deque<pcl::PointCloud<pcl::PointXYZ>::Ptr> scans_;
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> scans_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__RECENT_SCANS_HPP_
