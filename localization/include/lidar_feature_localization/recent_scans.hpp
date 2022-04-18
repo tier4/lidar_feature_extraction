@@ -31,6 +31,7 @@
 
 #include <Eigen/Core>
 
+#include <algorithm>
 #include <vector>
 
 #include "lidar_feature_library/transform.hpp"
@@ -71,7 +72,8 @@ public:
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr GetRecent(const int n) const
   {
-    std::vector recent(scans_.end() - n, scans_.end());
+    const int n_recent = std::min(n, static_cast<int>(scans_.size()));
+    std::vector recent(scans_.end() - n_recent, scans_.end());
     return MergeClouds<pcl::PointXYZ>(recent);
   }
 

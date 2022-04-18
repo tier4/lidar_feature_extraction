@@ -100,4 +100,12 @@ TEST(RecentScans, RecentScans)
     EXPECT_TRUE(Equal(result.at(0), expected->at(1)));
     EXPECT_TRUE(Equal(result.at(1), expected->at(2)));
   }
+
+  {
+    const pcl::PointCloud<pcl::PointXYZ> result = *scans.GetRecent(4);
+    EXPECT_EQ(static_cast<int>(result.size()), 3);
+    EXPECT_TRUE(Equal(result.at(0), expected->at(0)));
+    EXPECT_TRUE(Equal(result.at(1), expected->at(1)));
+    EXPECT_TRUE(Equal(result.at(2), expected->at(2)));
+  }
 }
