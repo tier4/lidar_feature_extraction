@@ -54,7 +54,7 @@ int main(int argc, char * argv[])
   pcl::io::loadPCDFile("maps/surface.pcd", *surface_map);
 
   Localizer localizer(edge_map, surface_map);
-  rclcpp::spin(std::make_shared<Subscriber<Localizer>>(localizer));
+  rclcpp::spin(std::make_shared<LocalizationSubscriber<Localizer>>(localizer));
   rclcpp::shutdown();
   return 0;
 }
