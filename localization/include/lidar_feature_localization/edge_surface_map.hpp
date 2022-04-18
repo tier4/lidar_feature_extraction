@@ -55,6 +55,14 @@ public:
     surface_scans_.Add(pose, surface_scan);
   }
 
+  EdgeSurfaceTuple GetRecent() const
+  {
+    return std::make_tuple(
+      edge_scans_.GetRecent(n_local_scans_),
+      surface_scans_.GetRecent(n_local_scans_)
+    );
+  }
+
   void Save(const std::string & dirname) const
   {
     SaveMapIfNotEmpty<pcl::PointXYZ>(dirname + "/" + "edge.pcd", edge_scans_.GetAll());
