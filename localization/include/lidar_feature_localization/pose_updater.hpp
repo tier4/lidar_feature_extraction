@@ -35,14 +35,12 @@
 #include <tuple>
 
 #include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/edge_surface_tuple.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
-using ArgumentType = std::tuple<
-  pcl::PointCloud<pcl::PointXYZ>::Ptr,
-  pcl::PointCloud<pcl::PointXYZ>::Ptr>;
-using LOAMOptimizer = Optimizer<LOAMOptimizationProblem, ArgumentType>;
+using LOAMOptimizer = Optimizer<LOAMOptimizationProblem, EdgeSurfaceTuple>;
 
-LOAMOptimizer MakeLOAMOptimizer(const ArgumentType & map)
+LOAMOptimizer MakeLOAMOptimizer(const EdgeSurfaceTuple & map)
 {
   const auto [edge_map, surface_map] = map;
   return LOAMOptimizer(LOAMOptimizationProblem(edge_map, surface_map));
@@ -51,20 +49,20 @@ LOAMOptimizer MakeLOAMOptimizer(const ArgumentType & map)
 class LOAMPoseUpdater
 {
 public:
-  explicit LOAMPoseUpdater(const ArgumentType & local_map)
+  explicit LOAMPoseUpdater(const EdgeSurfaceTuple & local_map)
   : optimizer_(MakeLOAMOptimizer(local_map))
   {
   }
 
   Eigen::Isometry3d operator()(
-    const ArgumentType & scan,
+    const EdgeSurfaceTuple & scan,
     const Eigen::Isometry3d & pose) const
   {
     return optimizer_.Run(scan, pose);
   }
 
 private:
-  const Optimizer<LOAMOptimizationProblem, ArgumentType> optimizer_;
+  const Optimizer<LOAMOptimizationProblem, EdgeSurfaceTuple> optimizer_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__POSE_UPDATER_HPP_
