@@ -31,11 +31,36 @@
 
 #include "lidar_feature_extraction/occlusion.hpp"
 
+const double radian_threshold = 0.2;
+const double distance_threshold = 2.0;
 
-TEST(Label, LabelOccludedPoints)
+
+TEST(Label, FromLeft)
 {
-  const double radian_threshold = 0.2;
-  const double distance_threshold = 2.0;
+  {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(4.03, 1.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.04, 2.0, 0.0));  // occlusion
+    cloud->push_back(pcl::PointXYZ(8.05, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
+
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const Range<pcl::PointXYZ> range(ref_points);
+
+    {
+      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 2, distance_threshold);
+
+      EXPECT_THAT(
+        labels,
+        testing::ElementsAre(
+          PointLabel::Default,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Occluded));
+    }
+  }
 
   {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -86,6 +111,33 @@ TEST(Label, LabelOccludedPoints)
           PointLabel::Occluded,
           PointLabel::Occluded,
           PointLabel::Default,
+          PointLabel::Default));
+    }
+  }
+}
+
+TEST(Label, FromRight)
+{
+  {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    cloud->push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.07, 2.0, 0.0));
+    cloud->push_back(pcl::PointXYZ(8.08, 2.0, 0.0));  // occlusion
+    cloud->push_back(pcl::PointXYZ(4.09, 1.0, 0.0));
+
+    const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const Range<pcl::PointXYZ> range(ref_points);
+
+    {
+      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 2, distance_threshold);
+      EXPECT_THAT(
+        labels,
+        testing::ElementsAre(
+          PointLabel::Occluded,
+          PointLabel::Occluded,
+          PointLabel::Occluded,
           PointLabel::Default));
     }
   }

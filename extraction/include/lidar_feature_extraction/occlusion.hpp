@@ -34,19 +34,15 @@
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/neighbor.hpp"
 
-
 template<typename PointT>
-void LabelOccludedPoints(
+void FromLeft(
   std::vector<PointLabel> & labels,
   const NeighborCheckXY<PointT> & is_neighbor,
   const Range<PointT> & range,
-  const int padding,
+  const unsigned int padding,
   const double distance_diff_threshold)
 {
-  assert(is_neighbor.Size() == static_cast<int>(labels.size()));
-  assert(is_neighbor.Size() == range.Size());
-
-  for (unsigned int i = padding; i < labels.size() - padding - 1; i++) {
+  for (unsigned int i = 0; i < labels.size() - padding - 1; i++) {
     if (!is_neighbor(i + 0, i + 1)) {
       continue;
     }
@@ -54,14 +50,44 @@ void LabelOccludedPoints(
     const double range0 = range(i + 0);
     const double range1 = range(i + 1);
 
-    if (range0 > range1 + distance_diff_threshold) {
-      FillFromRight(labels, is_neighbor, i - padding - 1, i, PointLabel::Occluded);
-    }
-
     if (range1 > range0 + distance_diff_threshold) {
       FillFromLeft(labels, is_neighbor, i + 1, i + padding + 2, PointLabel::Occluded);
     }
   }
+}
+
+template<typename PointT>
+void FromRight(
+  std::vector<PointLabel> & labels,
+  const NeighborCheckXY<PointT> & is_neighbor,
+  const Range<PointT> & range,
+  const unsigned int padding,
+  const double distance_diff_threshold)
+{
+  for (unsigned int i = labels.size() - 1; i >= padding + 1; i--) {
+    if (!is_neighbor(i - 0, i - 1)) {
+      continue;
+    }
+
+    const double range1 = range(i - 1);
+    const double range0 = range(i - 0);
+
+    if (range1 > range0 + distance_diff_threshold) {
+      FillFromRight(labels, is_neighbor, i - padding - 2, i - 1, PointLabel::Occluded);
+    }
+  }
+}
+
+template<typename PointT>
+void LabelOccludedPoints(
+  std::vector<PointLabel> & labels,
+  const NeighborCheckXY<PointT> & is_neighbor,
+  const Range<PointT> & range,
+  const unsigned int padding,
+  const double distance_diff_threshold)
+{
+  FromLeft(labels, is_neighbor, range, padding, distance_diff_threshold);
+  FromRight(labels, is_neighbor, range, padding, distance_diff_threshold);
 }
 
 #endif  // LIDAR_FEATURE_EXTRACTION__OCCLUSION_HPP_
