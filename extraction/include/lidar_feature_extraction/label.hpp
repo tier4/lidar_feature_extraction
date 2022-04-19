@@ -85,7 +85,7 @@ public:
     const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
     for (const int index : boost::adaptors::reverse(indices)) {
-      if (labels.at(index) != PointLabel::Default || !is_edge(index)) {
+      if (!(labels.at(index) == PointLabel::Default && is_edge(index))) {
         continue;
       }
 
@@ -124,7 +124,7 @@ public:
     const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
 
     for (const int index : indices) {
-      if (labels.at(index) != PointLabel::Default || !is_surface(index)) {
+      if (!(labels.at(index) == PointLabel::Default && is_surface(index))) {
         continue;
       }
 
