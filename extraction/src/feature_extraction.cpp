@@ -151,15 +151,16 @@ private:
 
       try {
         std::vector<PointLabel> labels = InitLabels(ref_points.Size());
-        LabelOutOfRange(labels, range, min_range_, max_range_);
-        LabelOccludedPoints(labels, is_neighbor, range, padding_, distance_diff_threshold_);
-        LabelParallelBeamPoints(labels, range, range_ratio_threshold_);
 
         const std::vector<double> ranges = range(0, range.Size());
         const std::vector<double> curvature = CalcCurvature(ranges, padding_);
         const PaddedIndexRange index_range(range.Size(), n_blocks_, padding_);
 
         AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_, surface_label_);
+
+        LabelOccludedPoints(labels, is_neighbor, range, padding_, distance_diff_threshold_);
+        LabelOutOfRange(labels, range, min_range_, max_range_);
+        LabelParallelBeamPoints(labels, range, range_ratio_threshold_);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
