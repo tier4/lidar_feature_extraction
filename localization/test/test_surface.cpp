@@ -276,21 +276,23 @@ TEST(Surface, Convergence)
   auto make_walls = [&](const int n) {
       pcl::PointCloud<pcl::PointXYZ>::Ptr walls(new pcl::PointCloud<pcl::PointXYZ>());
 
+      const double scale = 0.1;
+
       for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
-          walls->push_back(pcl::PointXYZ(0.1 * x, 0.1 * y, normal()));
+          walls->push_back(pcl::PointXYZ(scale * x, scale * y, normal()));
         }
       }
 
       for (int z = 0; z < n; z++) {
         for (int x = 0; x < n; x++) {
-          walls->push_back(pcl::PointXYZ(0.1 * x, normal(), 0.1 * z));
+          walls->push_back(pcl::PointXYZ(scale * x, normal(), scale * z));
         }
       }
 
       for (int y = 0; y < n; y++) {
         for (int z = 0; z < n; z++) {
-          walls->push_back(pcl::PointXYZ(normal(), 0.1 * y, 0.1 * z));
+          walls->push_back(pcl::PointXYZ(normal(), scale * y, scale * z));
         }
       }
 
