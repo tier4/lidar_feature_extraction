@@ -31,7 +31,7 @@
 
 #include "lidar_feature_extraction/occlusion.hpp"
 
-const double radian_threshold = 0.2;
+const double neighbor_radian_threshold = 0.2;
 const double distance_threshold = 2.0;
 
 
@@ -45,7 +45,7 @@ TEST(Label, FromLeft)
     cloud->push_back(pcl::PointXYZ(8.06, 2.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, neighbor_radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
@@ -75,7 +75,7 @@ TEST(Label, FromLeft)
     cloud->push_back(pcl::PointXYZ(8.08, 8.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, neighbor_radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
@@ -126,7 +126,7 @@ TEST(Label, FromRight)
     cloud->push_back(pcl::PointXYZ(4.09, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, neighbor_radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
@@ -156,7 +156,7 @@ TEST(Label, FromRight)
     cloud->push_back(pcl::PointXYZ(4.12, 1.0, 0.0));
 
     const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
-    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, radian_threshold);
+    const NeighborCheckXY<pcl::PointXYZ> is_neighbor(ref_points, neighbor_radian_threshold);
     const Range<pcl::PointXYZ> range(ref_points);
 
     {

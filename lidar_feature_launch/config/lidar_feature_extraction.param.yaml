@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     convolution_padding: 5
-    radian_threshold: 2.0
+    neighbor_degree_threshold: 3.0
     distance_diff_threshold: 0.3
     range_ratio_threshold: 0.02
     edge_threshold: 100.0

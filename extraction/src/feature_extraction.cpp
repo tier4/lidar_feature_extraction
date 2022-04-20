@@ -55,6 +55,7 @@
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/ring.hpp"
 
+#include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 
@@ -64,7 +65,7 @@ public:
   FeatureExtraction()
   : Node("lidar_feature_extraction"),
     padding_(this->declare_parameter("convolution_padding", 5)),
-    radian_threshold_(this->declare_parameter("radian_threshold", 2.0)),
+    neighbor_degree_threshold_(this->declare_parameter("neighbor_degree_threshold", 2.0)),
     distance_diff_threshold_(this->declare_parameter("distance_diff_threshold", 0.3)),
     range_ratio_threshold_(this->declare_parameter("range_ratio_threshold", 0.02)),
     edge_threshold_(this->declare_parameter("edge_threshold", 0.05)),
@@ -87,7 +88,7 @@ public:
     surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
     assert(padding_ > 0);
-    assert(radian_threshold_ > 0);
+    assert(neighbor_degree_threshold_ > 0);
     assert(distance_diff_threshold_ > 0);
     assert(range_ratio_threshold_ > 0);
     assert(edge_threshold_ > 0);
@@ -146,7 +147,8 @@ private:
 
     for (const auto & [ring, indices] : rings) {
       const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
-      const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold_);
+      const double radian_threshold = DegreeToRadian(neighbor_degree_threshold_);
+      const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold);
       const Range<PointXYZIR> range(ref_points);
 
       try {
@@ -185,7 +187,7 @@ private:
   }
 
   const int padding_;
-  const double radian_threshold_;
+  const double neighbor_degree_threshold_;
   const double distance_diff_threshold_;
   const double range_ratio_threshold_;
   const double edge_threshold_;
