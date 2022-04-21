@@ -29,10 +29,7 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__ODOMETRY_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__ODOMETRY_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 
