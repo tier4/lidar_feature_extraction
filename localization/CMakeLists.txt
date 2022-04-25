@@ -11,7 +11,8 @@ find_package(ament_cmake_auto REQUIRED)
 
 ament_auto_find_build_dependencies()
 
-ament_auto_add_executable(${PROJECT_NAME} DIRECTORY src)
+ament_auto_add_executable("lidar_feature_localization" src/localization.cpp)
+ament_auto_add_executable("lidar_feature_odometry" src/odometry.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB HEADER_FILES include/lidar_feature_localization/*)
