@@ -299,9 +299,9 @@ TEST(Surface, Convergence)
       return walls;
     };
 
-  const auto map = make_walls(20);
+  const auto map = make_walls(40);
 
-  const Eigen::Quaterniond q_ture = Eigen::Quaterniond(1.0, 0.1, 0.1, -0.1).normalized();
+  const Eigen::Quaterniond q_ture = Eigen::Quaterniond(0.9, 0.1, 0.1, -0.1).normalized();
   const Eigen::Vector3d t_true(0.7, -0.3, 0.5);
 
   const Eigen::Isometry3d transform_true = MakeIsometry3d(q_ture, t_true);
@@ -324,5 +324,5 @@ TEST(Surface, Convergence)
     testing::Le(0.1));
   EXPECT_THAT(
     (transform_true.translation() - transform_pred.translation()).norm(),
-    testing::Le(0.05));
+    testing::Le(0.1));
 }

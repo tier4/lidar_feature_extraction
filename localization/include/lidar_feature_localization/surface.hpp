@@ -33,8 +33,9 @@
 #include <tuple>
 #include <vector>
 
-#include "lidar_feature_library/pcl_utils.hpp"
+#include "lidar_feature_library/downsample.hpp"
 #include "lidar_feature_library/eigen.hpp"
+#include "lidar_feature_library/pcl_utils.hpp"
 
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
@@ -95,6 +96,16 @@ public:
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan,
     const Eigen::Isometry3d & point_to_map) const
   {
+    // TODO(IshitaTakeshi) Make the leaf size specifiable
+    const auto downsampled = Downsample<pcl::PointXYZ>(scan, 1.0);
+    return this->MakeFromDownsampled(downsampled, point_to_map);
+  }
+
+private:
+  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> MakeFromDownsampled(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan,
+    const Eigen::Isometry3d & point_to_map) const
+  {
     const int n = scan->size();
     const Eigen::Quaterniond q(point_to_map.rotation());
 
@@ -116,7 +127,6 @@ public:
     return {drdqt, r};
   }
 
-private:
   const KDTreeEigen kdtree_;
   const int n_neighbors_;
 };
