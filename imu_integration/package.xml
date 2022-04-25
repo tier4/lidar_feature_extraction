@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>imu_integration</name>
+  <version>0.0.0</version>
+  <description>IMU integration</description>
+
+  <license>BSD-3 Close</license>
+  <maintainer email="takeshi.ishita@tier4.jp">Takeshi Ishita</maintainer>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>eigen</depend>
+  <depend>rotationlib</depend>
+  <depend>rclcpp</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_gmock</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>
