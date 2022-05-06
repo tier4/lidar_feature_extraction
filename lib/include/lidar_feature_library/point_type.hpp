@@ -30,6 +30,9 @@
 #ifndef LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
 #define LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
 
+#include <pcl/point_types.h>
+#include <Eigen/Core>
+
 struct PointXYZIR
 {
   PCL_ADD_POINT4D PCL_ADD_INTENSITY
