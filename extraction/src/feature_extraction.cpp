@@ -68,27 +68,54 @@ rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
   return main_sub_opt;
 }
 
+struct HyperParameters
+{
+  explicit HyperParameters(rclcpp::Node & node)
+  : padding(node.declare_parameter("convolution_padding", 5)),
+    neighbor_degree_threshold(node.declare_parameter("neighbor_degree_threshold", 2.0)),
+    distance_diff_threshold(node.declare_parameter("distance_diff_threshold", 0.3)),
+    range_ratio_threshold(node.declare_parameter("range_ratio_threshold", 0.02)),
+    edge_threshold(node.declare_parameter("edge_threshold", 0.05)),
+    surface_threshold(node.declare_parameter("surface_threshold", 0.05)),
+    min_range(node.declare_parameter("min_range", 0.1)),
+    max_range(node.declare_parameter("max_range", 100.0)),
+    n_blocks(node.declare_parameter("n_blocks", 6))
+  {
+    assert(padding > 0);
+    assert(neighbor_degree_threshold > 0);
+    assert(distance_diff_threshold > 0);
+    assert(range_ratio_threshold > 0);
+    assert(edge_threshold > 0);
+    assert(surface_threshold > 0);
+    assert(min_range > 0);
+    assert(max_range > 0);
+    assert(n_blocks > 0);
+  }
+
+  const int padding;
+  const double neighbor_degree_threshold;
+  const double distance_diff_threshold;
+  const double range_ratio_threshold;
+  const double edge_threshold;
+  const double surface_threshold;
+  const double min_range;
+  const double max_range;
+  const int n_blocks;
+};
+
 class FeatureExtraction : public rclcpp::Node
 {
 public:
   FeatureExtraction()
   : Node("lidar_feature_extraction"),
-    padding_(this->declare_parameter("convolution_padding", 5)),
-    neighbor_degree_threshold_(this->declare_parameter("neighbor_degree_threshold", 2.0)),
-    distance_diff_threshold_(this->declare_parameter("distance_diff_threshold", 0.3)),
-    range_ratio_threshold_(this->declare_parameter("range_ratio_threshold", 0.02)),
-    edge_threshold_(this->declare_parameter("edge_threshold", 0.05)),
-    surface_threshold_(this->declare_parameter("surface_threshold", 0.05)),
-    min_range_(this->declare_parameter("min_range", 0.1)),
-    max_range_(this->declare_parameter("max_range", 100.0)),
-    n_blocks_(this->declare_parameter("n_blocks", 6)),
-    edge_label_(padding_, edge_threshold_),
-    surface_label_(padding_, surface_threshold_),
+    params_(HyperParameters(*this)),
+    edge_label_(params_.padding, params_.edge_threshold),
+    surface_label_(params_.padding, params_.surface_threshold),
     cloud_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "points_raw", rclcpp::SensorDataQoS().keep_last(1),
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1),
-        this->MakeSubscriptionOption())),
+        MutuallyExclusiveOption(*this))),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
     curvature_cloud_publisher_(
@@ -96,18 +123,8 @@ public:
     edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
     surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
   {
-    assert(padding_ > 0);
-    assert(neighbor_degree_threshold_ > 0);
-    assert(distance_diff_threshold_ > 0);
-    assert(range_ratio_threshold_ > 0);
-    assert(edge_threshold_ > 0);
-    assert(surface_threshold_ > 0);
-    assert(min_range_ > 0);
-    assert(max_range_ > 0);
-    assert(n_blocks_ > 0);
-
-    RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", edge_threshold_);
-    RCLCPP_INFO(this->get_logger(), "surface_threshold_ : %lf", surface_threshold_);
+    RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", params_.edge_threshold);
+    RCLCPP_INFO(this->get_logger(), "surface_threshold_ : %lf", params_.surface_threshold);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
   }
 
@@ -141,13 +158,13 @@ private:
 
     const auto rings = [&] {
         auto rings = ExtractAngleSortedRings(*input_cloud);
-        RemoveInsufficientNumRing(rings, padding_ + 1);
+        RemoveInsufficientNumRing(rings, params_.padding + 1);
         return rings;
       } ();
 
     for (const auto & [ring, indices] : rings) {
       const MappedPoints<PointXYZIR> ref_points(input_cloud, indices);
-      const double radian_threshold = DegreeToRadian(neighbor_degree_threshold_);
+      const double radian_threshold = DegreeToRadian(params_.neighbor_degree_threshold);
       const NeighborCheckXY<PointXYZIR> is_neighbor(ref_points, radian_threshold);
       const Range<PointXYZIR> range(ref_points);
 
@@ -155,14 +172,16 @@ private:
         std::vector<PointLabel> labels = InitLabels(ref_points.Size());
 
         const std::vector<double> ranges = range(0, range.Size());
-        const std::vector<double> curvature = CalcCurvature(ranges, padding_);
-        const PaddedIndexRange index_range(range.Size(), n_blocks_, padding_);
+        const std::vector<double> curvature = CalcCurvature(ranges, params_.padding);
+        const PaddedIndexRange index_range(range.Size(), params_.n_blocks, params_.padding);
 
         AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_, surface_label_);
 
-        LabelOccludedPoints(labels, is_neighbor, range, padding_, distance_diff_threshold_);
-        LabelOutOfRange(labels, range, min_range_, max_range_);
-        LabelParallelBeamPoints(labels, range, range_ratio_threshold_);
+        LabelOccludedPoints(
+          labels, is_neighbor, range,
+          params_.padding, params_.distance_diff_threshold);
+        LabelOutOfRange(labels, range, params_.min_range, params_.max_range);
+        LabelParallelBeamPoints(labels, range, params_.range_ratio_threshold);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
@@ -186,15 +205,7 @@ private:
     surface_publisher_->publish(cloud_surface);
   }
 
-  const int padding_;
-  const double neighbor_degree_threshold_;
-  const double distance_diff_threshold_;
-  const double range_ratio_threshold_;
-  const double edge_threshold_;
-  const double surface_threshold_;
-  const double min_range_;
-  const double max_range_;
-  const int n_blocks_;
+  const HyperParameters params_;
   const EdgeLabel edge_label_;
   const SurfaceLabel surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
