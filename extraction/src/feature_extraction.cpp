@@ -44,6 +44,7 @@
 #include "lidar_feature_extraction/cloud_iterator.hpp"
 #include "lidar_feature_extraction/color_points.hpp"
 #include "lidar_feature_extraction/curvature.hpp"
+#include "lidar_feature_extraction/hyper_parameter.hpp"
 #include "lidar_feature_extraction/index_range.hpp"
 #include "lidar_feature_extraction/label.hpp"
 #include "lidar_feature_extraction/math.hpp"
@@ -54,54 +55,11 @@
 #include "lidar_feature_extraction/point_label.hpp"
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/ring.hpp"
+#include "lidar_feature_extraction/subscription.hpp"
 
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
-
-rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
-{
-  const rclcpp::CallbackGroup::SharedPtr callback_group =
-    node.create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto main_sub_opt = rclcpp::SubscriptionOptions();
-  main_sub_opt.callback_group = callback_group;
-  return main_sub_opt;
-}
-
-struct HyperParameters
-{
-  explicit HyperParameters(rclcpp::Node & node)
-  : padding(node.declare_parameter("convolution_padding", 5)),
-    neighbor_degree_threshold(node.declare_parameter("neighbor_degree_threshold", 2.0)),
-    distance_diff_threshold(node.declare_parameter("distance_diff_threshold", 0.3)),
-    range_ratio_threshold(node.declare_parameter("range_ratio_threshold", 0.02)),
-    edge_threshold(node.declare_parameter("edge_threshold", 0.05)),
-    surface_threshold(node.declare_parameter("surface_threshold", 0.05)),
-    min_range(node.declare_parameter("min_range", 0.1)),
-    max_range(node.declare_parameter("max_range", 100.0)),
-    n_blocks(node.declare_parameter("n_blocks", 6))
-  {
-    assert(padding > 0);
-    assert(neighbor_degree_threshold > 0);
-    assert(distance_diff_threshold > 0);
-    assert(range_ratio_threshold > 0);
-    assert(edge_threshold > 0);
-    assert(surface_threshold > 0);
-    assert(min_range > 0);
-    assert(max_range > 0);
-    assert(n_blocks > 0);
-  }
-
-  const int padding;
-  const double neighbor_degree_threshold;
-  const double distance_diff_threshold;
-  const double range_ratio_threshold;
-  const double edge_threshold;
-  const double surface_threshold;
-  const double min_range;
-  const double max_range;
-  const int n_blocks;
-};
 
 class FeatureExtraction : public rclcpp::Node
 {
