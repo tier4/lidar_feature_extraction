@@ -59,6 +59,15 @@
 #include "lidar_feature_library/ros_msg.hpp"
 
 
+rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
+{
+  const rclcpp::CallbackGroup::SharedPtr callback_group =
+    node.create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  auto main_sub_opt = rclcpp::SubscriptionOptions();
+  main_sub_opt.callback_group = callback_group;
+  return main_sub_opt;
+}
+
 class FeatureExtraction : public rclcpp::Node
 {
 public:
@@ -105,15 +114,6 @@ public:
   ~FeatureExtraction() {}
 
 private:
-  rclcpp::SubscriptionOptions MakeSubscriptionOption()
-  {
-    const rclcpp::CallbackGroup::SharedPtr callback_group =
-      this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    auto main_sub_opt = rclcpp::SubscriptionOptions();
-    main_sub_opt.callback_group = callback_group;
-    return main_sub_opt;
-  }
-
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg) const
   {
     const pcl::PointCloud<PointXYZIR>::Ptr input_cloud = GetPointCloud<PointXYZIR>(*cloud_msg);
