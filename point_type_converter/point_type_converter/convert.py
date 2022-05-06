@@ -145,6 +145,9 @@ def filter_point_data(point_tuples, input_fields, output_fields):
     return tuple(tuple(chunk[i] for i in indices) for chunk in point_tuples)
 
 
+output_point_step = 32
+
+
 def make_fields():
     return [
         make_point_field('x', 0, np.float32, 1),
@@ -159,7 +162,8 @@ def make_fields():
 class PointTypeConverter(Node):
 
     def __init__(self, *args, **kwargs):
-        super(PointTypeConverter, self).__init__('point_type_converter', *args, **kwargs)
+        super(PointTypeConverter, self).__init__(
+            'point_type_converter', *args, **kwargs)
         self.subscription = self.create_subscription(
             PointCloud2, '/os1_cloud_node/points', self.callback, 10)
         self.subscription  # prevent unused variable warning
@@ -169,40 +173,34 @@ class PointTypeConverter(Node):
         input_fields = input_cloud.fields
         input_fields.append(make_point_field('padding', 12, np.float32, 1))
         input_fields = sorted(input_fields, key=lambda f: f.offset)
-        self.get_logger().info('input_fields: {}'.format(input_fields))
         unpacked = unpack_point_bytes(
             input_cloud.data, input_fields,
             input_cloud.point_step, input_cloud.is_bigendian)
 
-        # self.get_logger().info('fields  : {}'.format([f.name for f in fields]))
-        self.get_logger().info('unpacked: {}'.format(unpacked))
-
-        point_step = 32
-
         output_fields = make_fields()
+        unpacked = tuple(c for c in unpacked if not (c[0] == 0. and c[1] == 0. and c[2] == 0.))
         filtered = filter_point_data(unpacked, input_fields, output_fields)
 
-        self.get_logger().info('filtered: {}'.format(filtered))
+        self.get_logger().info('len(filtered) = {}'.format(len(filtered)))
 
-        data = pack_point_data(filtered, output_fields, point_step, False)
+        data = pack_point_data(
+            filtered, output_fields, output_point_step, False)
 
         output_cloud = PointCloud2()
         output_cloud.header = input_cloud.header
 
-        output_cloud.height = input_cloud.height
-        output_cloud.width = input_cloud.width
+        output_cloud.height = 1
+        output_cloud.width = len(filtered)
 
         output_cloud.fields = output_fields
 
         output_cloud.is_bigendian = False
-        output_cloud.point_step = point_step
-        output_cloud.row_step = point_step * input_cloud.width
+        output_cloud.point_step = output_point_step
+        output_cloud.row_step = output_point_step * output_cloud.width
         output_cloud.data = data
-        output_cloud.is_dense = input_cloud.is_dense
+        output_cloud.is_dense = True
 
         self.publisher.publish(output_cloud)
-        # print("point_byte", point_byte)
-        # print(b.view(dtype=struct_type).view(dtype=np.recarray))
 
 
 def main(args=None):
