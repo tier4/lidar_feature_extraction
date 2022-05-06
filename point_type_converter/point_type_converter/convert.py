@@ -140,7 +140,7 @@ def find_indices(fields, retained_names):
 
 
 def filter_point_data(point_tuples, input_fields, output_fields):
-    output_names = [f.name for f in output_fields]
+    output_names = {f.name for f in output_fields}
     indices = find_indices(input_fields, output_names)
     return tuple(tuple(chunk[i] for i in indices) for chunk in point_tuples)
 
