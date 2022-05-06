@@ -71,9 +71,8 @@ public:
     surface_label_(params_.padding, params_.surface_threshold),
     cloud_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "points_raw", rclcpp::SensorDataQoS().keep_last(1),
-        std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1),
-        MutuallyExclusiveOption(*this))),
+        "points_raw", rclcpp::SensorDataQoS().keep_all().reliable(),
+        std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1))),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
     curvature_cloud_publisher_(

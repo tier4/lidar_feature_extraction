@@ -32,6 +32,7 @@ import numpy as np
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 
 from sensor_msgs.msg import PointCloud2, PointField
 
@@ -167,7 +168,12 @@ class PointTypeConverter(Node):
         self.subscription = self.create_subscription(
             PointCloud2, '/os1_cloud_node/points', self.callback, 10)
         self.subscription  # prevent unused variable warning
-        self.publisher = self.create_publisher(PointCloud2, '/points_raw', 10)
+
+        qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_ALL
+        )
+        self.publisher = self.create_publisher(PointCloud2, '/points_raw', qos)
 
     def callback(self, input_cloud):
         input_fields = input_cloud.fields
