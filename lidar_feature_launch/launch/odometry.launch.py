@@ -47,6 +47,12 @@ output_estimated_pose_topic = LaunchConfiguration(
 
 
 def generate_launch_description():
+    converter = Node(
+        package='point_type_converter',
+        name='point_type_converter',
+        executable='listener'
+    )
+
     extraction = Node(
         package='lidar_feature_extraction',
         executable='lidar_feature_extraction',
@@ -74,4 +80,4 @@ def generate_launch_description():
         ]
     )
 
-    return LaunchDescription([extraction, odometry])
+    return LaunchDescription([converter, extraction, odometry])
