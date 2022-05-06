@@ -193,7 +193,7 @@ def make_input_cloud():
     input_cloud.is_bigendian = False
     input_cloud.is_dense = True
     input_cloud.height = 1
-    input_cloud.width = 64
+    input_cloud.width = 2
     input_cloud.point_step = 32
     input_cloud.row_step = 64
     input_cloud.data = data
@@ -214,14 +214,15 @@ class TestPointTypeConverter(unittest.TestCase):
             result,
             ((1., 2., 3., 0., 10., 2), (4., 6., 8., 0., 20., 8)))
 
-        # self.assertFalse(output_cloud is None)
-        # self.assertFalse(output_cloud.is_bigendian)
-        # self.assertTrue(output_cloud.is_dense)
-        # self.assertEqual(output_cloud.height, 1)
-        # self.assertEqual(output_cloud.width, 64)
-        # self.assertEqual(output_cloud.point_step, 32)
-        # self.assertEqual(output_cloud.row_step, 32)
         self.has_called = True
+
+        self.assertFalse(output_cloud is None)
+        self.assertFalse(output_cloud.is_bigendian)
+        self.assertTrue(output_cloud.is_dense)
+        self.assertEqual(output_cloud.height, 1)
+        self.assertEqual(output_cloud.width, 2)
+        self.assertEqual(output_cloud.point_step, 32)
+        self.assertEqual(output_cloud.row_step, 64)
 
     def test_point_type_converter(self):
         context = rclpy.context.Context()
@@ -238,7 +239,7 @@ class TestPointTypeConverter(unittest.TestCase):
 
         pub = pub_node.create_publisher(PointCloud2, input_topic, 10)
         sub = sub_node.create_subscription(
-            PointCloud2, 'points_raw', self.check_output_cloud, 1)
+            PointCloud2, 'points_raw', self.check_output_cloud, 10)
         sub
 
         executor = MultiThreadedExecutor(context=context)
