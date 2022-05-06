@@ -13,14 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='sonicair',
+    maintainer='Takeshi Ishita',
     maintainer_email='ishitah.takeshi@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Point cloud conversion for the extraction module',
+    license='BSD3-Clause',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'listener = point_type_converter.convert:main',
         ],
-    },
+    }
 )
