@@ -3,9 +3,9 @@
 <package format="3">
   <name>lidar_feature_localization</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="ishitah.takeshi@gmail.com">sonicair</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Lidar feature based localization and odometry</description>
+  <maintainer email="ishitah.takeshi@gmail.com">Takeshi Ishita</maintainer>
+  <license>BSD 3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

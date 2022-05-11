@@ -4,7 +4,7 @@
   <version>0.0.0</version>
   <description>IMU integration</description>
 
-  <license>BSD-3 Close</license>
+  <license>BSD 3-Clause</license>
   <maintainer email="takeshi.ishita@tier4.jp">Takeshi Ishita</maintainer>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>

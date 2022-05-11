@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Tool to build a lidar-feature map</description>
   <maintainer email="ishitah.takeshi@gmail.com">Takeshi Ishita</maintainer>
-  <license>BSD-3 Close</license>
+  <license>BSD 3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

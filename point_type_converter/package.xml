@@ -3,9 +3,9 @@
 <package format="3">
   <name>point_type_converter</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>PointCloud data type converter</description>
   <maintainer email="ishitah.takeshi@gmail.com">sonicair</maintainer>
-  <license>BSD3 Clause</license>
+  <license>BSD 3-Clause</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

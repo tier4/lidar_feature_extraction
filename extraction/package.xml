@@ -4,7 +4,7 @@
   <version>0.0.1</version>
   <description>Lidar feature extraction</description>
 
-  <license>BSD-3 Close</license>
+  <license>BSD 3-Clause</license>
   <maintainer email="takeshi.ishita@tier4.jp">Takeshi Ishita</maintainer>
   <author email="shant@mit.edu">Tixiao Shan</author>
 
