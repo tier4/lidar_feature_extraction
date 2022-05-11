@@ -28,29 +28,3 @@
 
 #include <gmock/gmock.h>
 
-#include "imu_integration/rkmk.hpp"
-
-TEST(Psi, Psi)
-{
-  auto expected = [](const Eigen::Vector3d & u) -> Eigen::Matrix3d {
-      const double k = u.norm();
-      const Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
-      const Eigen::Matrix3d U = rotationlib::Hat(u);
-      return 0.5 * (I + U + (1. - k / tan(k)) / (k * k) * U * U);
-    };
-
-  {
-    const Eigen::Vector3d u(0., 0., 0.);
-    EXPECT_TRUE((Psi(u) - 0.5 * Eigen::Matrix3d::Identity()).norm() < 1e-6);
-  }
-
-  {
-    const Eigen::Vector3d u(3. * M_PI / 4., 0., 0.);
-    EXPECT_TRUE((Psi(u) - expected(u)).norm() < 1e-6);
-  }
-
-  {
-    const Eigen::Vector3d u(0., M_PI / 2., 0.);
-    EXPECT_TRUE((Psi(u) - expected(u)).norm() < 1e-6);
-  }
-}

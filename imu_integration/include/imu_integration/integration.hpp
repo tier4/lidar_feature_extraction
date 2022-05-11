@@ -30,6 +30,4 @@
 #ifndef IMU_INTEGRATION__INTEGRATION_HPP_
 #define IMU_INTEGRATION__INTEGRATION_HPP_
 
-#include "imu_integration/rkmk.hpp"
-
 #endif  // IMU_INTEGRATION__INTEGRATION_HPP_
