@@ -39,13 +39,13 @@ typename pcl::PointCloud<T>::Ptr Downsample(
   const typename pcl::PointCloud<T>::Ptr & input_cloud, const float leaf_size)
 {
   pcl::VoxelGrid<T> filter;
-  typename pcl::PointCloud<T>::Ptr Downsampled(new pcl::PointCloud<T>());
+  typename pcl::PointCloud<T>::Ptr downsampled(new pcl::PointCloud<T>());
 
   filter.setLeafSize(leaf_size, leaf_size, leaf_size);
   filter.setInputCloud(input_cloud);
-  filter.filter(*Downsampled);
+  filter.filter(*downsampled);
 
-  return Downsampled;
+  return downsampled;
 }
 
 #endif  // LIDAR_FEATURE_LIBRARY__DOWNSAMPLE_HPP_
