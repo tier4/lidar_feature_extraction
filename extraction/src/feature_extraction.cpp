@@ -60,6 +60,7 @@
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
+const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
 class FeatureExtraction : public rclcpp::Node
 {
@@ -71,14 +72,16 @@ public:
     surface_label_(params_.padding, params_.surface_threshold),
     cloud_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "points_raw", rclcpp::SensorDataQoS().keep_all().reliable(),
+        "points_raw", qos_keep_all,
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1))),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
     curvature_cloud_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("curvature_scan", 1)),
-    edge_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", 1)),
-    surface_publisher_(this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", 1))
+    edge_publisher_(
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", qos_keep_all)),
+    surface_publisher_(
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", qos_keep_all))
   {
     RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", params_.edge_threshold);
     RCLCPP_INFO(this->get_logger(), "surface_threshold_ : %lf", params_.surface_threshold);

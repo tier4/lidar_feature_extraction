@@ -64,7 +64,7 @@ using Exact = message_filters::sync_policies::ExactTime<
   sensor_msgs::msg::PointCloud2>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
-const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all();
+const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
 rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
 {

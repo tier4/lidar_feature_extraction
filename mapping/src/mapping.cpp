@@ -52,7 +52,8 @@ using Exact = message_filters::sync_policies::ExactTime<
   geometry_msgs::msg::PoseStamped>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
-const rmw_qos_profile_t qos_profile = rclcpp::SensorDataQoS().keep_all().get_rmw_qos_profile();
+const rmw_qos_profile_t qos_profile =
+  rclcpp::SensorDataQoS().keep_all().reliable().get_rmw_qos_profile();
 
 class MapSubscriber : public rclcpp::Node
 {
