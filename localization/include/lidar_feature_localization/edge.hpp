@@ -112,7 +112,7 @@ public:
 
     for (int i = 0; i < n; i++) {
       const Eigen::Vector3d p0 = GetXYZ(scan->at(i));
-      const auto [X, squared_distances] = kdtree_.NearestKSearch(point_to_map * p0, n_neighbors_);
+      const auto [X, _] = kdtree_.NearestKSearch(point_to_map * p0, n_neighbors_);
 
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
