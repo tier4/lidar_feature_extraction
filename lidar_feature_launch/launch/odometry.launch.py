@@ -44,6 +44,10 @@ output_estimated_pose_topic = LaunchConfiguration(
     'output_estimated_pose_topic',
     default='/estimated_pose'
 )
+output_estimated_path_topic = LaunchConfiguration(
+    'output_estimated_path_topic',
+    default='/estimated_path'
+)
 
 
 def generate_launch_description():
@@ -80,4 +84,18 @@ def generate_launch_description():
         ]
     )
 
-    return LaunchDescription([converter, extraction, odometry])
+    path_generator = Node(
+        package='path_generator',
+        executable='path_generator',
+        name='path_generator',
+        remappings=[
+            ('pose', output_estimated_pose_topic),
+            ('path', output_estimated_path_topic)
+        ]
+    )
+    return LaunchDescription([
+        converter,
+        extraction,
+        odometry,
+        path_generator
+    ])
