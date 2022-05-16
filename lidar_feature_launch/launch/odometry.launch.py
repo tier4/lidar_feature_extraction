@@ -90,12 +90,23 @@ def generate_launch_description():
         name='path_generator',
         remappings=[
             ('pose', output_estimated_pose_topic),
-            ('path', output_estimated_path_topic)
+            ('path', output_estimated_path_topic),
         ]
     )
+
+    tf_generator = Node(
+        package='tf_generator',
+        executable='tf_generator',
+        name='tf_generator',
+        remappings=[
+            ('input_pose', output_estimated_pose_topic),
+        ]
+    )
+
     return LaunchDescription([
         converter,
         extraction,
         odometry,
-        path_generator
+        path_generator,
+        tf_generator
     ])
