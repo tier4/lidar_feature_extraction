@@ -56,6 +56,10 @@ surface_map_topic = LaunchConfiguration(
     'surface_map_topic',
     default='/surface_map'
 )
+output_estimated_path_topic = LaunchConfiguration(
+    'output_estimated_path_topic',
+    default='/estimated_path'
+)
 
 
 def generate_launch_description():
@@ -112,4 +116,30 @@ def generate_launch_description():
         ]
     )
 
-    return LaunchDescription([extraction, localization, map_loader, map_tf_generator])
+    path_generator = Node(
+        package='path_generator',
+        executable='path_generator',
+        name='path_generator',
+        remappings=[
+            ('pose', output_estimated_pose_topic),
+            ('path', output_estimated_path_topic),
+        ]
+    )
+
+    tf_generator = Node(
+        package='tf_generator',
+        executable='tf_generator',
+        name='tf_generator',
+        remappings=[
+            ('input_pose', output_estimated_pose_topic),
+        ]
+    )
+
+    return LaunchDescription([
+        extraction,
+        localization,
+        map_loader,
+        map_tf_generator,
+        path_generator,
+        tf_generator
+    ])
