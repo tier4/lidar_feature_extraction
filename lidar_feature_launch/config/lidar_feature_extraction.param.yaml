@@ -3,7 +3,7 @@
     convolution_padding: 5
     neighbor_degree_threshold: 3.0
     distance_diff_threshold: 0.3
-    range_ratio_threshold: 0.02
+    parallel_beam_min_range_ratio: 0.02
     edge_threshold: 100.0
     surface_threshold: 0.01
     min_range: 0.1

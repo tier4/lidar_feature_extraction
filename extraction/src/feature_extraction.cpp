@@ -141,7 +141,7 @@ private:
           labels, is_neighbor, range,
           params_.padding, params_.distance_diff_threshold);
         LabelOutOfRange(labels, range, params_.min_range, params_.max_range);
-        LabelParallelBeamPoints(labels, range, params_.range_ratio_threshold);
+        LabelParallelBeamPoints(labels, range, params_.parallel_beam_min_range_ratio);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
         ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
