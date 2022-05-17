@@ -43,6 +43,10 @@ input_pose_topic = LaunchConfiguration(
     'input_pose_topic',
     default='/pose'
 )
+output_path_topic = LaunchConfiguration(
+    'output_path_topic',
+    default='/path'
+)
 
 
 def generate_launch_description():
@@ -73,4 +77,28 @@ def generate_launch_description():
         ]
     )
 
-    return LaunchDescription([extraction, mapping])
+    path_generator = Node(
+        package='path_generator',
+        executable='path_generator',
+        name='path_generator',
+        remappings=[
+            ('pose', input_pose_topic),
+            ('path', output_path_topic),
+        ]
+    )
+
+    tf_generator = Node(
+        package='tf_generator',
+        executable='tf_generator',
+        name='tf_generator',
+        remappings=[
+            ('input_pose', input_pose_topic),
+        ]
+    )
+
+    return LaunchDescription([
+        extraction,
+        mapping,
+        path_generator,
+        tf_generator
+    ])
