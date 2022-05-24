@@ -27,8 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
-#define LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
+#ifndef LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
+#define LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
 
 #include <pcl/point_types.h>
 #include <Eigen/Core>
@@ -45,4 +45,4 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
   (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
 )
 
-#endif  // LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
+#endif  // LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_

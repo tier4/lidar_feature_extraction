@@ -28,6 +28,5 @@
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/downsample.hpp"
-#include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 #include "lidar_feature_library/transform.hpp"

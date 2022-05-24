@@ -49,8 +49,7 @@
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/range_message.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
-
-#include "lidar_feature_library/point_type.hpp"
+#include "lidar_feature_extraction/point_type.hpp"
 
 
 std::vector<PointLabel> InitLabels(const int size)
