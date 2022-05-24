@@ -45,7 +45,6 @@
 #include <memory>
 #include <string>
 
-#include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 
@@ -123,8 +122,8 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "Pose update called");
 
-    const pcl::PointCloud<PointXYZIR>::Ptr edge = GetPointCloud<PointXYZIR>(*edge_msg);
-    const pcl::PointCloud<PointXYZIR>::Ptr surface = GetPointCloud<PointXYZIR>(*surface_msg);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr edge = GetPointCloud<pcl::PointXYZ>(*edge_msg);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr surface = GetPointCloud<pcl::PointXYZ>(*surface_msg);
 
     localizer_.Update(edge, surface);
 
@@ -175,15 +174,12 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback called");
 
-    const pcl::PointCloud<PointXYZIR>::Ptr edge_scan = GetPointCloud<PointXYZIR>(*edge_msg);
-    const pcl::PointCloud<PointXYZIR>::Ptr surface_scan = GetPointCloud<PointXYZIR>(*surface_msg);
-
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_xyz = ToPointXYZ<PointXYZIR>(edge_scan);
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_xyz = ToPointXYZ<PointXYZIR>(surface_scan);
+    const auto edge_scan = GetPointCloud<pcl::PointXYZ>(*edge_msg);
+    const auto surface_scan = GetPointCloud<pcl::PointXYZ>(*surface_msg);
 
     RCLCPP_INFO(this->get_logger(), "Call odometry update");
 
-    odometry_.Update(std::make_tuple(edge_xyz, surface_xyz));
+    odometry_.Update(std::make_tuple(edge_scan, surface_scan));
 
     const Eigen::Isometry3d pose = odometry_.CurrentPose();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));

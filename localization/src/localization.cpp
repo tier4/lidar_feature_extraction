@@ -42,14 +42,13 @@
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
-#include "lidar_feature_library/point_type.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  pcl::PointCloud<PointXYZIR>::Ptr edge_map(new pcl::PointCloud<PointXYZIR>());
-  pcl::PointCloud<PointXYZIR>::Ptr surface_map(new pcl::PointCloud<PointXYZIR>());
+  pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
   pcl::io::loadPCDFile("maps/surface.pcd", *surface_map);
 

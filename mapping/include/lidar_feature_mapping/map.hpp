@@ -41,7 +41,6 @@
 #include <memory>
 #include <string>
 
-#include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 #include "lidar_feature_library/transform.hpp"
 
@@ -92,14 +91,14 @@ class MapBuilder
 {
 public:
   MapBuilder()
-  : map_(std::make_shared<Map<PointXYZIR>>()) {}
+  : map_(std::make_shared<Map<pcl::PointXYZ>>()) {}
 
   void Callback(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr & cloud_msg,
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
   {
     const Eigen::Affine3d transform = GetAffine(pose_msg->pose);
-    const pcl::PointCloud<PointXYZIR>::Ptr cloud = GetPointCloud<PointXYZIR>(*cloud_msg);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = GetPointCloud<pcl::PointXYZ>(*cloud_msg);
 
     RCLCPP_INFO(
       rclcpp::get_logger("lidar_feature_mapping"),
@@ -136,7 +135,7 @@ public:
     map_->Save(pcd_filename);
   }
 
-  std::shared_ptr<Map<PointXYZIR>> map_;
+  std::shared_ptr<Map<pcl::PointXYZ>> map_;
   Eigen::Affine3d prev_transform_;
 };
 

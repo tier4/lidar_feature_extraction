@@ -40,7 +40,6 @@
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
-#include "lidar_feature_library/point_type.hpp"
 
 using ArgumentType = std::tuple<
   pcl::PointCloud<pcl::PointXYZ>::Ptr,
@@ -50,10 +49,10 @@ class Localizer
 {
 public:
   Localizer(
-    const typename pcl::PointCloud<PointXYZIR>::Ptr & edge_map,
-    const typename pcl::PointCloud<PointXYZIR>::Ptr & surface_map)
-  : edge_map_(ToPointXYZ<PointXYZIR>(edge_map)),
-    surface_map_(ToPointXYZ<PointXYZIR>(surface_map)),
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_map)
+  : edge_map_(edge_map),
+    surface_map_(surface_map),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
   {
@@ -66,12 +65,10 @@ public:
   }
 
   bool Update(
-    const pcl::PointCloud<PointXYZIR>::Ptr & edge_scan,
-    const pcl::PointCloud<PointXYZIR>::Ptr & surface_scan)
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan)
   {
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr edge_xyz = ToPointXYZ<PointXYZIR>(edge_scan);
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr surface_xyz = ToPointXYZ<PointXYZIR>(surface_scan);
-    const auto [pose, success] = this->Update(edge_xyz, surface_xyz, pose_);
+    const auto [pose, success] = this->Update(edge_scan, surface_scan, pose_);
 
     pose_ = pose;
     return success;

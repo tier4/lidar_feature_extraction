@@ -44,7 +44,7 @@ template<typename PointType>
 typename pcl::PointCloud<PointType>::Ptr MergeClouds(
   const std::vector<typename pcl::PointCloud<PointType>::Ptr> & scans)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr merged(new pcl::PointCloud<pcl::PointXYZ>());
+  typename pcl::PointCloud<PointType>::Ptr merged(new pcl::PointCloud<PointType>());
   for (const auto scan : scans) {
     *merged += *scan;
   }

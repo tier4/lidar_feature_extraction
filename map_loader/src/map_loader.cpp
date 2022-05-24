@@ -37,7 +37,6 @@
 #include <string>
 #include <memory>
 
-#include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 

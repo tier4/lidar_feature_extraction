@@ -57,6 +57,7 @@
 #include "lidar_feature_extraction/ring.hpp"
 #include "lidar_feature_extraction/subscription.hpp"
 
+#include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
@@ -157,8 +158,10 @@ private:
     const auto stamp = cloud_msg->header.stamp;
     const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
     const auto curvature_msg = ToRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
-    const auto cloud_edge = ToRosMsg<PointXYZIR>(edge, stamp, lidar_frame);
-    const auto cloud_surface = ToRosMsg<PointXYZIR>(surface, stamp, lidar_frame);
+    const auto edge_xyz = ToPointXYZ<PointXYZIR>(edge);
+    const auto surface_xyz = ToPointXYZ<PointXYZIR>(surface);
+    const auto cloud_edge = ToRosMsg<pcl::PointXYZ>(edge_xyz, stamp, lidar_frame);
+    const auto cloud_surface = ToRosMsg<pcl::PointXYZ>(surface_xyz, stamp, lidar_frame);
     colored_scan_publisher_->publish(colored_msg);
     curvature_cloud_publisher_->publish(curvature_msg);
     edge_publisher_->publish(cloud_edge);
