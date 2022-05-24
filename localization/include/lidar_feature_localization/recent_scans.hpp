@@ -26,6 +26,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef LIDAR_FEATURE_LOCALIZATION__RECENT_SCANS_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__RECENT_SCANS_HPP_
+
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
@@ -35,9 +38,6 @@
 #include <vector>
 
 #include "lidar_feature_library/transform.hpp"
-
-#ifndef LIDAR_FEATURE_LOCALIZATION__RECENT_SCANS_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__RECENT_SCANS_HPP_
 
 
 template<typename PointType>
