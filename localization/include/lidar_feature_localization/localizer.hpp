@@ -36,14 +36,11 @@
 
 #include <tuple>
 
+#include "lidar_feature_localization/edge_surface_tuple.hpp"
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
-
-using ArgumentType = std::tuple<
-  pcl::PointCloud<pcl::PointXYZ>::Ptr,
-  pcl::PointCloud<pcl::PointXYZ>::Ptr>;
 
 class Localizer
 {
@@ -99,7 +96,7 @@ private:
       return std::make_tuple(pose, false);
     }
 
-    const Optimizer<LOAMOptimizationProblem, ArgumentType> optimizer(problem);
+    const Optimizer<LOAMOptimizationProblem, EdgeSurfaceTuple> optimizer(problem);
     const Eigen::Isometry3d new_pose = optimizer.Run(std::make_tuple(edge, surface), pose);
     return std::make_tuple(new_pose, true);
   }
