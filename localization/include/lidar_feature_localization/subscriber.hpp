@@ -185,7 +185,7 @@ public:
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
 
     tf_broadcaster_.sendTransform(
-      EigenToTransform(pose, edge_msg->header.stamp, "odom", "base_link")
+      EigenToTransform(pose, edge_msg->header.stamp, "map", "base_link")
     );
 
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback finished");
