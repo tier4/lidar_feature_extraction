@@ -126,20 +126,10 @@ def generate_launch_description():
         ]
     )
 
-    tf_generator = Node(
-        package='tf_generator',
-        executable='tf_generator',
-        name='tf_generator',
-        remappings=[
-            ('input_pose', output_estimated_pose_topic),
-        ]
-    )
-
     return LaunchDescription([
         extraction,
         localization,
         map_loader,
         map_tf_generator,
         path_generator,
-        tf_generator
     ])
