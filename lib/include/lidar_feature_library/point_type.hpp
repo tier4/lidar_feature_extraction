@@ -33,16 +33,17 @@
 #include <pcl/point_types.h>
 #include <Eigen/Core>
 
-struct PointXYZIR
+struct PointXYZCR
 {
-  PCL_ADD_POINT4D PCL_ADD_INTENSITY
+  PCL_ADD_POINT4D
+  float curvature;
   std::uint16_t ring;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  PointXYZIR,
-  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
+  PointXYZCR,
+  (float, x, x)(float, y, y)(float, z, z)(float, curvature, curvature)(std::uint16_t, ring, ring)
 )
 
 #endif  // LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
