@@ -63,6 +63,19 @@
 
 const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
+pcl::PointCloud<PointXYZIR>::Ptr FilterByCoordinate(
+  const pcl::PointCloud<PointXYZIR>::Ptr & edge)
+{
+  pcl::PointCloud<PointXYZIR>::Ptr filtered(new pcl::PointCloud<PointXYZIR>());
+  for (const PointXYZIR & p : *edge) {
+    if (-5. < p.y && p.y < 1.0) {
+      continue;
+    }
+    filtered->push_back(p);
+  }
+  return filtered;
+}
+
 class FeatureExtraction : public rclcpp::Node
 {
 public:
@@ -70,7 +83,6 @@ public:
   : Node("lidar_feature_extraction"),
     params_(HyperParameters(*this)),
     edge_label_(params_.padding, params_.edge_threshold),
-    surface_label_(params_.padding, params_.surface_threshold),
     cloud_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "points_raw", qos_keep_all,
@@ -80,12 +92,9 @@ public:
     curvature_cloud_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("curvature_scan", 1)),
     edge_publisher_(
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", qos_keep_all)),
-    surface_publisher_(
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_surface", qos_keep_all))
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", qos_keep_all))
   {
     RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", params_.edge_threshold);
-    RCLCPP_INFO(this->get_logger(), "surface_threshold_ : %lf", params_.surface_threshold);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
   }
 
@@ -113,7 +122,6 @@ private:
     const double debug_max_curvature = 10.;
 
     pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
-    pcl::PointCloud<PointXYZIR>::Ptr surface(new pcl::PointCloud<PointXYZIR>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
@@ -136,7 +144,7 @@ private:
         const std::vector<double> curvature = CalcCurvature(ranges, params_.padding);
         const PaddedIndexRange index_range(range.Size(), params_.n_blocks, params_.padding);
 
-        AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_, surface_label_);
+        AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_);
 
         LabelOccludedPoints(
           labels, is_neighbor, range,
@@ -145,7 +153,6 @@ private:
         LabelParallelBeamPoints(labels, range, params_.parallel_beam_min_range_ratio);
 
         ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
-        ExtractByLabel<PointXYZIR>(surface, ref_points, labels, PointLabel::Surface);
 
         *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, labels);
         *curvature_cloud += *ColorPointsByValue(ref_points, curvature, 0., debug_max_curvature);
@@ -158,24 +165,19 @@ private:
     const auto stamp = cloud_msg->header.stamp;
     const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
     const auto curvature_msg = ToRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
-    const auto edge_xyz = ToPointXYZ<PointXYZIR>(edge);
-    const auto surface_xyz = ToPointXYZ<PointXYZIR>(surface);
-    const auto cloud_edge = ToRosMsg<pcl::PointXYZ>(edge_xyz, stamp, lidar_frame);
-    const auto cloud_surface = ToRosMsg<pcl::PointXYZ>(surface_xyz, stamp, lidar_frame);
+    const auto edge_xyz = ToPointXYZ<PointXYZIR>(FilterByCoordinate(edge));
+    const auto edge_msg = ToRosMsg<pcl::PointXYZ>(edge_xyz, stamp, lidar_frame);
     colored_scan_publisher_->publish(colored_msg);
     curvature_cloud_publisher_->publish(curvature_msg);
-    edge_publisher_->publish(cloud_edge);
-    surface_publisher_->publish(cloud_surface);
+    edge_publisher_->publish(edge_msg);
   }
 
   const HyperParameters params_;
   const EdgeLabel edge_label_;
-  const SurfaceLabel surface_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr colored_scan_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr curvature_cloud_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr surface_publisher_;
 };
 
 int main(int argc, char * argv[])

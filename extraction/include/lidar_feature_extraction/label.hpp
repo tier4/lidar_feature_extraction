@@ -98,53 +98,13 @@ private:
   const double threshold_;
 };
 
-class SurfaceLabel
-{
-public:
-  SurfaceLabel(
-    const int padding,
-    const double threshold)
-  : padding_(padding),
-    threshold_(threshold)
-  {
-  }
-
-  template<typename ContainerA, typename ContainerB>
-  void Assign(
-    ContainerA & labels,
-    const ContainerB & curvature,
-    const NeighborCheckBase & is_neighbor) const
-  {
-    assert(is_neighbor.Size());
-    auto is_surface = [&](const int i) {
-        return curvature.at(i) <= threshold_;
-      };
-
-    const std::vector<int> indices = Argsort(curvature.begin(), curvature.end());
-
-    for (const int index : indices) {
-      if (!(labels.at(index) == PointLabel::Default && is_surface(index))) {
-        continue;
-      }
-
-      FillNeighbors(labels, is_neighbor, index, padding_, PointLabel::SurfaceNeighbor);
-      labels.at(index) = PointLabel::Surface;
-    }
-  }
-
-private:
-  const int padding_;
-  const double threshold_;
-};
-
 template<typename PointT>
 void AssignLabel(
   std::vector<PointLabel> & labels,
   const std::vector<double> & curvature,
   const NeighborCheckXY<PointT> & is_neighbor,
   const PaddedIndexRange & index_range,
-  const EdgeLabel & edge_label,
-  const SurfaceLabel & surface_label)
+  const EdgeLabel & edge_label)
 {
   assert(curvature.size() == labels.size());
   assert(is_neighbor.Size() == static_cast<int>(labels.size()));
@@ -158,7 +118,6 @@ void AssignLabel(
     const NeighborCheckXY<PointT> sliced_neighbor = is_neighbor.Slice(begin, end);
 
     edge_label.Assign(label_view, curvature_view, sliced_neighbor);
-    surface_label.Assign(label_view, curvature_view, sliced_neighbor);
   }
 }
 

@@ -38,10 +38,6 @@
 #include <pcl/point_types.h>
 #include <tf2_eigen/tf2_eigen.h>
 
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/exact_time.h>
-
 #include <memory>
 #include <string>
 
@@ -57,11 +53,6 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
   pose_stamped_msg.header.frame_id = frame_id;
   return pose_stamped_msg;
 }
-
-using Exact = message_filters::sync_policies::ExactTime<
-  sensor_msgs::msg::PointCloud2,
-  sensor_msgs::msg::PointCloud2>;
-using Synchronizer = message_filters::Synchronizer<Exact>;
 
 const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
@@ -85,18 +76,16 @@ public:
         "initial_pose", qos_keep_all,
         std::bind(&LocalizationSubscriber::PoseInitializationCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
+    edge_subscriber_(
+      this->create_subscription<sensor_msgs::msg::PointCloud2>(
+        "scan_edge", qos_keep_all,
+        std::bind(&LocalizationSubscriber::PoseUpdateCallback, this, std::placeholders::_1),
+        MutuallyExclusiveOption(*this))),
     pose_publisher_(
       this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10)),
     localizer_(localizer),
-    tf_broadcaster_(*this),
-    edge_subscriber_(this, "scan_edge", qos_keep_all.get_rmw_qos_profile()),
-    surface_subscriber_(this, "scan_surface", qos_keep_all.get_rmw_qos_profile()),
-    sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_))
+    tf_broadcaster_(*this)
   {
-    sync_->registerCallback(
-      std::bind(
-        &LocalizationSubscriber::PoseUpdateCallback, this,
-        std::placeholders::_1, std::placeholders::_2));
     RCLCPP_INFO(this->get_logger(), "LocalizationSubscriber created");
   }
 
@@ -116,16 +105,13 @@ public:
     RCLCPP_INFO(this->get_logger(), "Initialized");
   }
 
-  void PoseUpdateCallback(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg,
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr surface_msg)
+  void PoseUpdateCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg)
   {
     RCLCPP_INFO(this->get_logger(), "Pose update called");
 
     const pcl::PointCloud<pcl::PointXYZ>::Ptr edge = GetPointCloud<pcl::PointXYZ>(*edge_msg);
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr surface = GetPointCloud<pcl::PointXYZ>(*surface_msg);
 
-    localizer_.Update(edge, surface);
+    localizer_.Update(edge);
 
     const Eigen::Isometry3d pose = localizer_.Get();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
@@ -139,12 +125,10 @@ public:
 
 private:
   const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr initial_pose_subscriber_;
+  const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
   LocalizerT localizer_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
-  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
-  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> surface_subscriber_;
-  std::shared_ptr<Synchronizer> sync_;
 };
 
 template<typename OdometryT>
@@ -153,33 +137,29 @@ class OdometrySubscriber : public rclcpp::Node
 public:
   explicit OdometrySubscriber(OdometryT & odometry)
   : Node("lidar_feature_odometry"),
+    edge_subscriber_(
+      this->create_subscription<sensor_msgs::msg::PointCloud2>(
+        "scan_edge", qos_keep_all,
+        std::bind(&OdometrySubscriber::PoseUpdateCallback, this, std::placeholders::_1),
+        MutuallyExclusiveOption(*this))),
     pose_publisher_(
       this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10)),
     odometry_(odometry),
-    tf_broadcaster_(*this),
-    edge_subscriber_(this, "scan_edge", qos_keep_all.get_rmw_qos_profile()),
-    surface_subscriber_(this, "scan_surface", qos_keep_all.get_rmw_qos_profile()),
-    sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_))
+    tf_broadcaster_(*this)
   {
-    sync_->registerCallback(
-      std::bind(
-        &OdometrySubscriber::PoseUpdateCallback, this,
-        std::placeholders::_1, std::placeholders::_2));
     RCLCPP_INFO(this->get_logger(), "LocalizationSubscriber created");
   }
 
   void PoseUpdateCallback(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg,
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr surface_msg)
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg)
   {
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback called");
 
     const auto edge_scan = GetPointCloud<pcl::PointXYZ>(*edge_msg);
-    const auto surface_scan = GetPointCloud<pcl::PointXYZ>(*surface_msg);
 
     RCLCPP_INFO(this->get_logger(), "Call odometry update");
 
-    odometry_.Update(std::make_tuple(edge_scan, surface_scan));
+    odometry_.Update(edge_scan);
 
     const Eigen::Isometry3d pose = odometry_.CurrentPose();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
@@ -192,12 +172,10 @@ public:
   }
 
 private:
+  const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
   OdometryT odometry_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
-  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
-  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> surface_subscriber_;
-  std::shared_ptr<Synchronizer> sync_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_

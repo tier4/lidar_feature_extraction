@@ -70,20 +70,6 @@ TEST(Extraction, ExtractByLabel)
     EXPECT_THAT(to_vector(output_cloud->at(0)), testing::ElementsAre(0., 0., 1.));
     EXPECT_THAT(to_vector(output_cloud->at(1)), testing::ElementsAre(0., 1., 1.));
   }
-
-  {
-    std::vector<PointLabel> labels = InitLabels(input_ref_points.Size());
-    labels.at(0) = PointLabel::Surface;
-    labels.at(1) = PointLabel::Surface;
-    labels.at(2) = PointLabel::Default;
-    labels.at(3) = PointLabel::Default;
-
-    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-    ExtractByLabel(output_cloud, input_ref_points, labels, PointLabel::Surface);
-    EXPECT_EQ(output_cloud->size(), static_cast<std::uint32_t>(2));
-    EXPECT_THAT(to_vector(output_cloud->at(0)), testing::ElementsAre(0., 0., 0.));
-    EXPECT_THAT(to_vector(output_cloud->at(1)), testing::ElementsAre(0., 0., 1.));
-  }
 }
 
 TEST(Extraction, EdgeLabel)
@@ -136,61 +122,6 @@ TEST(Extraction, EdgeLabel)
         PointLabel::Edge,
         PointLabel::EdgeNeighbor,
         PointLabel::EdgeNeighbor
-      )
-    );
-  }
-}
-
-TEST(Extraction, SurfaceLabel)
-{
-  {
-    const int padding = 2;
-    const double threshold = 0.5;
-
-    const SurfaceLabel label(padding, threshold);
-
-    std::vector<PointLabel> labels = InitLabels(8);
-    const std::vector<double> curvature{0, 1, 1, 0, 2, 0, 1, 1};
-    const NeighborCheckDebug is_neighbor({0, 0, 0, 0, 0, 0, 0, 0});
-    label.Assign(labels, curvature, is_neighbor);
-
-    EXPECT_THAT(
-      labels,
-      testing::ElementsAre(
-        PointLabel::Surface,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::Surface,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::Default,
-        PointLabel::Default
-      )
-    );
-  }
-
-  {
-    const int padding = 2;
-    const double threshold = 0.5;
-
-    const SurfaceLabel label(padding, threshold);
-
-    std::vector<PointLabel> labels = InitLabels(8);
-    const std::vector<double> curvature{1, 1, 1, 0, 1, 1, 0, 1};
-    const NeighborCheckDebug is_neighbor({0, 0, 1, 1, 1, 0, 0, 0});
-    label.Assign(labels, curvature, is_neighbor);
-
-    EXPECT_THAT(
-      labels,
-      testing::ElementsAre(
-        PointLabel::Default,
-        PointLabel::Default,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::Surface,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::SurfaceNeighbor,
-        PointLabel::Surface,
-        PointLabel::SurfaceNeighbor
       )
     );
   }

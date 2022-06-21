@@ -28,20 +28,19 @@
 
 #include <memory>
 
-#include "lidar_feature_localization/edge_surface_tuple.hpp"
 #include "lidar_feature_localization/edge_surface_map.hpp"
 #include "lidar_feature_localization/pose_updater.hpp"
 #include "lidar_feature_localization/odometry.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
 
-using LOAMOdometry = Odometry<LOAMPoseUpdater, EdgeSurfaceMap, EdgeSurfaceTuple>;
+using LOAMOdometry = Odometry<LOAMPoseUpdater, PointCloudMap, pcl::PointCloud<pcl::PointXYZ>::Ptr>;
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  std::shared_ptr<EdgeSurfaceMap> map = std::make_shared<EdgeSurfaceMap>(7);
+  std::shared_ptr<PointCloudMap> map = std::make_shared<PointCloudMap>(7);
   LOAMOdometry odometry(map);
 
   rclcpp::spin(std::make_shared<OdometrySubscriber<LOAMOdometry>>(odometry));

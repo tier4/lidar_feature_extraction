@@ -44,13 +44,10 @@
 
 #include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_localization/degenerate.hpp"
-#include "lidar_feature_localization/surface.hpp"
 #include "lidar_feature_localization/math.hpp"
 
 
-using EdgeSurfaceScan = std::tuple<
-  pcl::PointCloud<pcl::PointXYZ>::Ptr,
-  pcl::PointCloud<pcl::PointXYZ>::Ptr>;
+using PointCloudType = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
 
 const int n_neighbors = 5;
@@ -60,44 +57,29 @@ class LOAMOptimizationProblem
 {
 public:
   LOAMOptimizationProblem(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_map)
-  : edge_(edge_map, n_neighbors), surface_(surface_map, n_neighbors)
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map)
+  : edge_(edge_map, n_neighbors)
   {
   }
 
   bool IsDegenerate(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
-    const auto [J, r] = this->Make(std::make_tuple(edge_scan, surface_scan), point_to_map);
+    const auto [J, r] = this->Make(edge_scan, point_to_map);
     const Eigen::MatrixXd JtJ = J.transpose() * J;
 
     return ::IsDegenerate(JtJ);
   }
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(const EdgeSurfaceScan & edge_surface_scan, const Eigen::Isometry3d & point_to_map) const
+  Make(const PointCloudType & edge_scan, const Eigen::Isometry3d & point_to_map) const
   {
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan = std::get<0>(edge_surface_scan);
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_scan = std::get<1>(edge_surface_scan);
-    const auto [edge_jacobian, edge_residual] = edge_.Make(edge_scan, point_to_map);
-    const auto [surface_jacobian, surface_residual] = surface_.Make(surface_scan, point_to_map);
-
-    assert(edge_jacobian.cols() == surface_jacobian.cols());
-
-    Eigen::VectorXd b(edge_residual.size() + surface_residual.size());
-    Eigen::MatrixXd J(edge_jacobian.rows() + surface_jacobian.rows(), edge_jacobian.cols());
-
-    b << edge_residual, surface_residual;
-    J << edge_jacobian, surface_jacobian;
-    return {J, b};
+    return edge_.Make(edge_scan, point_to_map);
   }
 
 private:
   const Edge edge_;
-  const Surface surface_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_

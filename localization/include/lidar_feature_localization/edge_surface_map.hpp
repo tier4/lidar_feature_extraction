@@ -31,48 +31,40 @@
 
 #include <string>
 
-#include "lidar_feature_localization/edge_surface_tuple.hpp"
 #include "lidar_feature_localization/map_io.hpp"
 #include "lidar_feature_localization/recent_scans.hpp"
 
-class EdgeSurfaceMap
+using PointCloudType = pcl::PointCloud<pcl::PointXYZ>::Ptr;
+
+class PointCloudMap
 {
 public:
-  explicit EdgeSurfaceMap(const int n_local_scans)
+  explicit PointCloudMap(const int n_local_scans)
   : n_local_scans_(n_local_scans) {}
 
   bool IsEmpty() const
   {
-    return edge_scans_.IsEmpty() && surface_scans_.IsEmpty();
+    return scans_.IsEmpty();
   }
 
-  void Add(const Eigen::Isometry3d & pose, const EdgeSurfaceTuple & edge_surface_scan)
+  void Add(const Eigen::Isometry3d & pose, const PointCloudType & edge_scan)
   {
-    const auto edge_scan = std::get<0>(edge_surface_scan);
-    const auto surface_scan = std::get<1>(edge_surface_scan);
-
-    edge_scans_.Add(pose, edge_scan);
-    surface_scans_.Add(pose, surface_scan);
+    scans_.Add(pose, edge_scan);
   }
 
-  EdgeSurfaceTuple GetRecent() const
+  PointCloudType GetRecent() const
   {
-    return std::make_tuple(
-      edge_scans_.GetRecent(n_local_scans_),
-      surface_scans_.GetRecent(n_local_scans_)
-    );
+    return scans_.GetRecent(n_local_scans_);
   }
 
   void Save(const std::string & dirname) const
   {
-    SaveMapIfNotEmpty<pcl::PointXYZ>(dirname + "/" + "edge.pcd", edge_scans_.GetAll());
-    SaveMapIfNotEmpty<pcl::PointXYZ>(dirname + "/" + "surface.pcd", surface_scans_.GetAll());
+    SaveMapIfNotEmpty<pcl::PointXYZ>(dirname + "/" + "map.pcd", scans_.GetAll());
   }
 
 private:
   const int n_local_scans_;
-  RecentScans edge_scans_;
-  RecentScans surface_scans_;
+  RecentScans scans_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__EDGE_SURFACE_MAP_HPP_

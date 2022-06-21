@@ -85,10 +85,7 @@ int main(int argc, char * argv[])
   rclcpp::executors::MultiThreadedExecutor exec;
   const auto edge_node = std::make_shared<MapPublisherNode>(
     "edge_map_publisher", "/edge_map", "maps/edge.pcd");
-  const auto surface_node = std::make_shared<MapPublisherNode>(
-    "surface_map_publisher", "/surface_map", "maps/surface.pcd");
   exec.add_node(edge_node);
-  exec.add_node(surface_node);
   exec.spin();
   rclcpp::shutdown();
   return 0;

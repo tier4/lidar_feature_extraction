@@ -32,7 +32,6 @@ from launch_ros.actions import Node
 
 
 scan_edge_topic = '/scan_edge'
-scan_surface_topic = '/scan_surface'
 colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
 
@@ -51,10 +50,6 @@ output_estimated_pose_topic = LaunchConfiguration(
 edge_map_topic = LaunchConfiguration(
     'edge_map_topic',
     default='/edge_map'
-)
-surface_map_topic = LaunchConfiguration(
-    'surface_map_topic',
-    default='/surface_map'
 )
 output_estimated_path_topic = LaunchConfiguration(
     'output_estimated_path_topic',
@@ -75,7 +70,6 @@ def generate_launch_description():
             ('colored_scan', colored_scan_topic),
             ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
-            ('scan_surface', scan_surface_topic),
         ]
     )
 
@@ -85,7 +79,6 @@ def generate_launch_description():
         name='lidar_feature_localization',
         remappings=[
             ('scan_edge', scan_edge_topic),
-            ('scan_surface', scan_surface_topic),
             ('initial_pose', initial_pose_topic),
             ('estimated_pose', output_estimated_pose_topic),
         ]
@@ -97,7 +90,6 @@ def generate_launch_description():
         namespace='lidar_feature_map_loader',
         remappings=[
             ('/edge_map', edge_map_topic),
-            ('/surface_map', surface_map_topic),
         ]
     )
 

@@ -48,11 +48,9 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::PointCloud<pcl::PointXYZ>::Ptr surface_map(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
-  pcl::io::loadPCDFile("maps/surface.pcd", *surface_map);
 
-  Localizer localizer(edge_map, surface_map);
+  Localizer localizer(edge_map);
   rclcpp::spin(std::make_shared<LocalizationSubscriber<Localizer>>(localizer));
   rclcpp::shutdown();
   return 0;
