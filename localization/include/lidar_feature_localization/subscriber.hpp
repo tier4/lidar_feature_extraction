@@ -41,6 +41,7 @@
 #include <memory>
 #include <string>
 
+#include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 
@@ -65,7 +66,7 @@ rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
   return main_sub_opt;
 }
 
-template<typename LocalizerT>
+template<typename LocalizerT, typename PointType>
 class LocalizationSubscriber : public rclcpp::Node
 {
 public:
@@ -109,7 +110,7 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "Pose update called");
 
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr edge = GetPointCloud<pcl::PointXYZ>(*edge_msg);
+    const auto edge = GetPointCloud<PointType>(*edge_msg);
 
     localizer_.Update(edge);
 
@@ -131,7 +132,7 @@ private:
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 };
 
-template<typename OdometryT>
+template<typename OdometryT, typename PointType>
 class OdometrySubscriber : public rclcpp::Node
 {
 public:
@@ -155,7 +156,7 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback called");
 
-    const auto edge_scan = GetPointCloud<pcl::PointXYZ>(*edge_msg);
+    const auto edge_scan = GetPointCloud<PointType>(*edge_msg);
 
     RCLCPP_INFO(this->get_logger(), "Call odometry update");
 

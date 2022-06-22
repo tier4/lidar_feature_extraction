@@ -41,12 +41,15 @@
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 
-using PointCloudType = pcl::PointCloud<pcl::PointXYZ>::Ptr;
-
+template<typename PointType>
 class Localizer
 {
+using OptimizerType = Optimizer<
+  LOAMOptimizationProblem<PointType>,
+  typename pcl::PointCloud<PointType>::Ptr>;
+
 public:
-  explicit Localizer(const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map)
+  explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
   : edge_map_(edge_map),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
@@ -59,7 +62,7 @@ public:
     is_initialized_ = true;
   }
 
-  bool Update(const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan)
+  bool Update(const typename pcl::PointCloud<PointType>::Ptr & edge_scan)
   {
     const auto [pose, success] = this->Update(edge_scan, pose_);
 
@@ -79,10 +82,10 @@ public:
 
 private:
   std::tuple<Eigen::Isometry3d, bool> Update(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge,
+    const typename pcl::PointCloud<PointType>::Ptr & edge,
     const Eigen::Isometry3d & pose) const
   {
-    const LOAMOptimizationProblem problem(edge_map_);
+    const LOAMOptimizationProblem<PointType> problem(edge_map_);
 
     if (problem.IsDegenerate(edge, pose)) {
       RCLCPP_WARN(
@@ -91,12 +94,12 @@ private:
       return std::make_tuple(pose, false);
     }
 
-    const Optimizer<LOAMOptimizationProblem, PointCloudType> optimizer(problem);
+    const OptimizerType optimizer(problem);
     const Eigen::Isometry3d new_pose = optimizer.Run(edge, pose);
     return std::make_tuple(new_pose, true);
   }
 
-  const PointCloudType edge_map_;
+  const typename pcl::PointCloud<PointType>::Ptr edge_map_;
 
   bool is_initialized_;
   Eigen::Isometry3d pose_;

@@ -42,7 +42,6 @@
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
-
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
@@ -50,8 +49,8 @@ int main(int argc, char * argv[])
   pcl::PointCloud<pcl::PointXYZ>::Ptr edge_map(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
 
-  Localizer localizer(edge_map);
-  rclcpp::spin(std::make_shared<LocalizationSubscriber<Localizer>>(localizer));
+  Localizer<pcl::PointXYZ> localizer(edge_map);
+  rclcpp::spin(std::make_shared<LocalizationSubscriber<Localizer<pcl::PointXYZ>, pcl::PointXYZ>>(localizer));
   rclcpp::shutdown();
   return 0;
 }

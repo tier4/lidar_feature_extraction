@@ -88,17 +88,18 @@ Eigen::Vector3d MakeEdgeResidual(
   return (p - p1).cross(p - p2);
 }
 
+template<typename PointType>
 class Edge
 {
 public:
-  Edge(const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map, const int n_neighbors)
-  : kdtree_(KDTreeEigen(edge_map)),
+  Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int n_neighbors)
+  : kdtree_(KDTreeEigen<PointType>(edge_map)),
     n_neighbors_(n_neighbors)
   {
   }
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan,
+    const typename pcl::PointCloud<PointType>::Ptr & scan,
     const Eigen::Isometry3d & point_to_map) const
   {
     // f(dx) \approx f(0) + J * dx + dx^T * H * dx
@@ -129,7 +130,7 @@ public:
   }
 
 private:
-  const KDTreeEigen kdtree_;
+  const KDTreeEigen<PointType> kdtree_;
   const int n_neighbors_;
 };
 

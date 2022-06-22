@@ -47,23 +47,21 @@
 #include "lidar_feature_localization/math.hpp"
 
 
-using PointCloudType = pcl::PointCloud<pcl::PointXYZ>::Ptr;
-
-
 const int n_neighbors = 5;
 
 
+template<typename PointType>
 class LOAMOptimizationProblem
 {
 public:
   LOAMOptimizationProblem(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map)
+    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
   : edge_(edge_map, n_neighbors)
   {
   }
 
   bool IsDegenerate(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_scan,
+    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
     const auto [J, r] = this->Make(edge_scan, point_to_map);
@@ -73,13 +71,15 @@ public:
   }
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(const PointCloudType & edge_scan, const Eigen::Isometry3d & point_to_map) const
+  Make(
+    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
+    const Eigen::Isometry3d & point_to_map) const
   {
     return edge_.Make(edge_scan, point_to_map);
   }
 
 private:
-  const Edge edge_;
+  const Edge<PointType> edge_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_

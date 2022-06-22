@@ -34,8 +34,8 @@
 #include "lidar_feature_localization/map_io.hpp"
 #include "lidar_feature_localization/recent_scans.hpp"
 
-using PointCloudType = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
+template<typename PointType>
 class PointCloudMap
 {
 public:
@@ -47,24 +47,26 @@ public:
     return scans_.IsEmpty();
   }
 
-  void Add(const Eigen::Isometry3d & pose, const PointCloudType & edge_scan)
+  void Add(
+    const Eigen::Isometry3d & pose,
+    const typename pcl::PointCloud<PointType>::Ptr & edge_scan)
   {
     scans_.Add(pose, edge_scan);
   }
 
-  PointCloudType GetRecent() const
+  typename pcl::PointCloud<PointType>::Ptr GetRecent() const
   {
     return scans_.GetRecent(n_local_scans_);
   }
 
   void Save(const std::string & dirname) const
   {
-    SaveMapIfNotEmpty<pcl::PointXYZ>(dirname + "/" + "map.pcd", scans_.GetAll());
+    SaveMapIfNotEmpty<PointType>(dirname + "/" + "map.pcd", scans_.GetAll());
   }
 
 private:
   const int n_local_scans_;
-  RecentScans scans_;
+  RecentScans<PointType> scans_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__EDGE_SURFACE_MAP_HPP_

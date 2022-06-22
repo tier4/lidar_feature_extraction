@@ -37,17 +37,17 @@
 
 #include "lidar_feature_library/pcl_utils.hpp"
 
-template<typename T>
+template<typename PointType>
 class KDTree
 {
 public:
-  explicit KDTree(const typename pcl::PointCloud<T>::Ptr & points)
+  explicit KDTree(const typename pcl::PointCloud<PointType>::Ptr & points)
   {
     kdtree_.setInputCloud(points);
   }
 
   std::tuple<std::vector<int>, std::vector<float>> RadiusSearch(
-    const T & point, const double radius) const
+    const PointType & point, const double radius) const
   {
     std::vector<int> indices;
     std::vector<float> squared_distances;
@@ -56,7 +56,7 @@ public:
   }
 
   std::tuple<std::vector<int>, std::vector<float>> NearestKSearch(
-    const T & point, const int k) const
+    const PointType & point, const int k) const
   {
     std::vector<int> indices;
     std::vector<float> squared_distances;
@@ -65,19 +65,20 @@ public:
   }
 
 private:
-  pcl::KdTreeFLANN<T> kdtree_;
+  pcl::KdTreeFLANN<PointType> kdtree_;
 };
 
+template<typename PointType>
 class KDTreeEigen
 {
 public:
-  explicit KDTreeEigen(const pcl::PointCloud<pcl::PointXYZ>::Ptr & map)
-  : map_(map), kdtree_(KDTree<pcl::PointXYZ>(map_))
+  explicit KDTreeEigen(const typename pcl::PointCloud<PointType>::Ptr & map)
+  : map_(map), kdtree_(KDTree<PointType>(map_))
   {
   }
 
   std::tuple<Eigen::MatrixXd, std::vector<float>> RadiusSearch(
-    const Eigen::Vector3d & point, const double radius) const
+    const Eigen::VectorXd & point, const double radius) const
   {
     const pcl::PointXYZ q = MakePointXYZ(point);
     const auto [indices, squared_distances] = kdtree_.RadiusSearch(q, radius);
@@ -86,7 +87,7 @@ public:
   }
 
   std::tuple<Eigen::MatrixXd, std::vector<float>> NearestKSearch(
-    const Eigen::Vector3d & point, const int n_neighbors) const
+    const Eigen::VectorXd & point, const int n_neighbors) const
   {
     const pcl::PointXYZ q = MakePointXYZ(point);
     const auto [indices, squared_distances] = kdtree_.NearestKSearch(q, n_neighbors);
@@ -95,8 +96,8 @@ public:
   }
 
 private:
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr map_;
-  const KDTree<pcl::PointXYZ> kdtree_;
+  const typename pcl::PointCloud<PointType>::Ptr map_;
+  const KDTree<PointType> kdtree_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_

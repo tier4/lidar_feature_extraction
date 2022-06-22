@@ -220,13 +220,13 @@ TEST(Edge, Convergence)
   const auto scan = TransformPointCloud<pcl::PointXYZ>(transform_true.inverse(), map);
 
   const int n_neighbors = 5;
-  const Edge edge(map, n_neighbors);
+  const Edge<pcl::PointXYZ> edge(map, n_neighbors);
 
   const Eigen::Quaterniond q_initial = Eigen::Quaterniond::Identity();
   const Eigen::Vector3d t_initial = Eigen::Vector3d::Zero();
   const Eigen::Isometry3d initial_pose = MakeIsometry3d(q_initial, t_initial);
 
-  const Optimizer<Edge, pcl::PointCloud<pcl::PointXYZ>::Ptr> optimizer(edge);
+  const Optimizer<Edge<pcl::PointXYZ>, pcl::PointCloud<pcl::PointXYZ>::Ptr> optimizer(edge);
   const Eigen::Isometry3d transform_pred = optimizer.Run(scan, initial_pose);
   const auto transformed = TransformPointCloud<pcl::PointXYZ>(transform_pred, scan);
 

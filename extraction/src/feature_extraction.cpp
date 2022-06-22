@@ -61,13 +61,15 @@
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
+using PointType = PointXYZIR;
+
 const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
-pcl::PointCloud<PointXYZCR>::Ptr FilterByCoordinate(
-  const pcl::PointCloud<PointXYZCR>::Ptr & edge)
+pcl::PointCloud<PointType>::Ptr FilterByCoordinate(
+  const pcl::PointCloud<PointType>::Ptr & edge)
 {
-  pcl::PointCloud<PointXYZCR>::Ptr filtered(new pcl::PointCloud<PointXYZCR>());
-  for (const PointXYZCR & p : *edge) {
+  pcl::PointCloud<PointType>::Ptr filtered(new pcl::PointCloud<PointType>());
+  for (const PointType & p : *edge) {
     if (-5. < p.y && p.y < 1.0) {
       continue;
     }
@@ -103,7 +105,7 @@ public:
 private:
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg) const
   {
-    const pcl::PointCloud<PointXYZCR>::Ptr input_cloud = GetPointCloud<PointXYZCR>(*cloud_msg);
+    const pcl::PointCloud<PointType>::Ptr input_cloud = GetPointCloud<PointType>(*cloud_msg);
 
     if (!input_cloud->is_dense) {
       RCLCPP_ERROR(
@@ -121,7 +123,7 @@ private:
 
     const double debug_max_curvature = 10.;
 
-    pcl::PointCloud<PointXYZCR>::Ptr edge(new pcl::PointCloud<PointXYZCR>());
+    pcl::PointCloud<PointType>::Ptr edge(new pcl::PointCloud<PointType>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
@@ -132,10 +134,10 @@ private:
       } ();
 
     for (const auto & [ring, indices] : rings) {
-      const MappedPoints<PointXYZCR> ref_points(input_cloud, indices);
+      const MappedPoints<PointType> ref_points(input_cloud, indices);
       const double radian_threshold = DegreeToRadian(params_.neighbor_degree_threshold);
-      const NeighborCheckXY<PointXYZCR> is_neighbor(ref_points, radian_threshold);
-      const Range<PointXYZCR> range(ref_points);
+      const NeighborCheckXY<PointType> is_neighbor(ref_points, radian_threshold);
+      const Range<PointType> range(ref_points);
 
       try {
         std::vector<PointLabel> labels = InitLabels(ref_points.Size());
@@ -152,9 +154,9 @@ private:
         LabelOutOfRange(labels, range, params_.min_range, params_.max_range);
         LabelParallelBeamPoints(labels, range, params_.parallel_beam_min_range_ratio);
 
-        ExtractByLabel<PointXYZCR>(edge, ref_points, labels, PointLabel::Edge);
+        ExtractByLabel<PointType>(edge, ref_points, labels, PointLabel::Edge);
 
-        *colored_cloud += *ColorPointsByLabel<PointXYZCR>(ref_points, labels);
+        *colored_cloud += *ColorPointsByLabel<PointType>(ref_points, labels);
         *curvature_cloud += *ColorPointsByValue(ref_points, curvature, 0., debug_max_curvature);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
@@ -165,8 +167,7 @@ private:
     const auto stamp = cloud_msg->header.stamp;
     const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
     const auto curvature_msg = ToRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
-    const auto edge_xyz = ToPointXYZ<PointXYZCR>(FilterByCoordinate(edge));
-    const auto edge_msg = ToRosMsg<pcl::PointXYZ>(edge_xyz, stamp, lidar_frame);
+    const auto edge_msg = ToRosMsg<PointType>(FilterByCoordinate(edge), stamp, lidar_frame);
     colored_scan_publisher_->publish(colored_msg);
     curvature_cloud_publisher_->publish(curvature_msg);
     edge_publisher_->publish(edge_msg);

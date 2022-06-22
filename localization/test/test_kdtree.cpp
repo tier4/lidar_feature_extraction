@@ -77,7 +77,7 @@ TEST(KDTree, KDTreeEigen)
   cloud->push_back(pcl::PointXYZ(0, 0, 4)),
   cloud->push_back(pcl::PointXYZ(0, 2, 4));
 
-  const KDTreeEigen kdtree(cloud);
+  const KDTreeEigen<pcl::PointXYZ> kdtree(cloud);
 
   {
     const auto [X, squared_distances] = kdtree.RadiusSearch(Eigen::Vector3d(2, 0, 1), 1.0);

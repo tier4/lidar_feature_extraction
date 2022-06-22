@@ -33,17 +33,22 @@
 #include "lidar_feature_localization/odometry.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
+using PointType = PointXYZIR;
 
-using LOAMOdometry = Odometry<LOAMPoseUpdater, PointCloudMap, pcl::PointCloud<pcl::PointXYZ>::Ptr>;
+using LOAMOdometry = Odometry<
+  LOAMPoseUpdater<PointType>,
+  PointCloudMap<PointType>,
+  typename pcl::PointCloud<PointType>::Ptr
+>;
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  std::shared_ptr<PointCloudMap> map = std::make_shared<PointCloudMap>(7);
+  std::shared_ptr<PointCloudMap<PointType>> map = std::make_shared<PointCloudMap<PointType>>(7);
   LOAMOdometry odometry(map);
 
-  rclcpp::spin(std::make_shared<OdometrySubscriber<LOAMOdometry>>(odometry));
+  rclcpp::spin(std::make_shared<OdometrySubscriber<LOAMOdometry, PointType>>(odometry));
   map->Save("maps/");
 
   rclcpp::shutdown();
