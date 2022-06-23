@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  std::shared_ptr<PointCloudMap<PointType>> map = std::make_shared<PointCloudMap<PointType>>(7);
+  auto map = std::make_shared<PointCloudMap<PointType>>(7);
   LOAMOdometry odometry(map);
 
   rclcpp::spin(std::make_shared<OdometrySubscriber<LOAMOdometry, PointType>>(odometry));

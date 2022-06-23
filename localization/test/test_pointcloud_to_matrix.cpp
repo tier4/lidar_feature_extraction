@@ -28,6 +28,8 @@
 
 #include <gmock/gmock.h>
 
+#include "lidar_feature_library/point_type.hpp"
+
 #include "lidar_feature_localization/point_to_vector.hpp"
 #include "lidar_feature_localization/pointcloud_to_matrix.hpp"
 
@@ -40,7 +42,7 @@ TEST(PointCloudToMatrix, PointXYZCRToVector)
   map->push_back(PointXYZCR(1., 0., 1., 4., 1));
   map->push_back(PointXYZCR(2., 0., 3., 4., 2));
 
-  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointXYZCRToVector, PointXYZCR>(PointXYZCRToVector);
+  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointXYZCRToVector, PointXYZCR>(map);
 
   Eigen::MatrixXd expected(3, 4);
   expected <<
@@ -48,5 +50,5 @@ TEST(PointCloudToMatrix, PointXYZCRToVector)
     1., 0., 1., 4.,
     2., 0., 3., 4.;
 
-  EXPECT_EQ((C - expected).norm(), 0.);
+  EXPECT_EQ((matrix - expected).norm(), 0.);
 }

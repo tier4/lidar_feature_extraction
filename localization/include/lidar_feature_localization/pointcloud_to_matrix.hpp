@@ -29,6 +29,10 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__POINTCLOUD_TO_MATRIX_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__POINTCLOUD_TO_MATRIX_HPP_
 
+#include <Eigen/Core>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include "lidar_feature_localization/point_to_vector.hpp"
 
 template<typename PointToVector, typename PointType>
