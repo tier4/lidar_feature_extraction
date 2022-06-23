@@ -41,12 +41,12 @@
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 
-template<typename PointType>
+template<typename PointToVector, typename PointType>
 class Localizer
 {
-using OptimizerType = Optimizer<
-  LOAMOptimizationProblem<PointType>,
-  typename pcl::PointCloud<PointType>::Ptr>;
+  using OptimizerType = Optimizer<
+    LOAMOptimizationProblem<PointToVector, PointType>,
+    typename pcl::PointCloud<PointType>::Ptr>;
 
 public:
   explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
@@ -85,7 +85,7 @@ private:
     const typename pcl::PointCloud<PointType>::Ptr & edge,
     const Eigen::Isometry3d & pose) const
   {
-    const LOAMOptimizationProblem<PointType> problem(edge_map_);
+    const LOAMOptimizationProblem<PointToVector, PointType> problem(edge_map_);
 
     if (problem.IsDegenerate(edge, pose)) {
       RCLCPP_WARN(

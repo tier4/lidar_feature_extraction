@@ -34,71 +34,16 @@
 #include "lidar_feature_localization/kdtree.hpp"
 
 
-TEST(KDTree, KDTree)
-{
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  cloud->push_back(pcl::PointXYZ(2, 0, 1)),
-  cloud->push_back(pcl::PointXYZ(2, 0, 0)),
-  cloud->push_back(pcl::PointXYZ(0, 0, 4)),
-  cloud->push_back(pcl::PointXYZ(0, 2, 4));
-
-  const KDTree<pcl::PointXYZ> kdtree(cloud);
-
-  {
-    const auto [indices, squared_distances] = kdtree.RadiusSearch(pcl::PointXYZ(2, 0, 1), 1.0);
-    EXPECT_THAT(indices, testing::ElementsAre(0));
-    EXPECT_THAT(squared_distances, testing::ElementsAre(0.));
-  }
-
-  {
-    const auto [indices, squared_distances] = kdtree.RadiusSearch(pcl::PointXYZ(2, 0, 1), 1.2);
-    EXPECT_THAT(indices, testing::ElementsAre(0, 1));
-    EXPECT_THAT(squared_distances, testing::ElementsAre(0., 1.));
-  }
-
-  {
-    const auto [indices, squared_distances] = kdtree.NearestKSearch(pcl::PointXYZ(0, 0, 0), 2);
-    EXPECT_THAT(indices, testing::ElementsAre(1, 0));
-    EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5.));
-  }
-
-  {
-    const auto [indices, squared_distances] = kdtree.NearestKSearch(pcl::PointXYZ(0, 0, 0), 4);
-    EXPECT_THAT(indices, testing::ElementsAre(1, 0, 2, 3));
-    EXPECT_THAT(squared_distances, testing::ElementsAre(4., 5., 16., 20.));
-  }
-}
-
 TEST(KDTree, KDTreeEigen)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  cloud->push_back(pcl::PointXYZ(2, 0, 1)),
-  cloud->push_back(pcl::PointXYZ(2, 0, 0)),
-  cloud->push_back(pcl::PointXYZ(0, 0, 4)),
-  cloud->push_back(pcl::PointXYZ(0, 2, 4));
+  Eigen::MatrixXd points(4, 3);
+  points <<
+    2, 0, 1,
+    2, 0, 0,
+    0, 0, 4,
+    0, 2, 4;
 
-  const KDTreeEigen<pcl::PointXYZ> kdtree(cloud);
-
-  {
-    const auto [X, squared_distances] = kdtree.RadiusSearch(Eigen::Vector3d(2, 0, 1), 1.0);
-    const Eigen::MatrixXd expected = (Eigen::MatrixXd(1, 3) << 2, 0, 1).finished();
-    ASSERT_THAT(X.rows(), 1);
-    ASSERT_THAT(X.cols(), 3);
-    EXPECT_THAT(squared_distances, testing::ElementsAre(0.));
-  }
-
-  {
-    const auto [X, squared_distances] = kdtree.RadiusSearch(Eigen::Vector3d(2, 0, 1), 1.2);
-    const Eigen::MatrixXd expected =
-      (Eigen::MatrixXd(2, 3) <<
-      2, 0, 1,
-      2, 0, 0
-      ).finished();
-    ASSERT_THAT(X.rows(), 2);
-    ASSERT_THAT(X.cols(), 3);
-    EXPECT_THAT((X - expected).norm(), 0.);
-    EXPECT_THAT(squared_distances, testing::ElementsAre(0., 1.));
-  }
+  const KDTreeEigen kdtree(points, 1);
 
   {
     const auto [X, squared_distances] = kdtree.NearestKSearch(Eigen::Vector3d(0, 0, 0), 2);
@@ -107,6 +52,7 @@ TEST(KDTree, KDTreeEigen)
       2, 0, 0,
       2, 0, 1
       ).finished();
+
     ASSERT_THAT(X.rows(), 2);
     ASSERT_THAT(X.cols(), 3);
     EXPECT_EQ((X - expected).norm(), 0.);

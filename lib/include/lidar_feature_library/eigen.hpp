@@ -29,10 +29,12 @@
 #ifndef LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
 #define LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
 
+#include <range/v3/all.hpp>
 #include <Eigen/Core>
 
 #include <string>
 #include <vector>
+
 
 template<int N>
 Eigen::MatrixXd VectorsToEigen(const std::vector<Eigen::Matrix<double, N, 1>> & vectors)
@@ -68,6 +70,17 @@ std::string EigenToString(const Eigen::MatrixXd & matrix)
   std::stringstream ss;
   ss << matrix;
   return ss.str();
+}
+
+Eigen::MatrixXd GetRows(
+  const Eigen::MatrixXd & matrix,
+  const std::vector<std::int64_t> & indices)
+{
+  Eigen::MatrixXd A(indices.size(), matrix.cols());
+  for (const auto & [i, index] : ranges::views::enumerate(indices)) {
+    A.row(i) = matrix.row(index);
+  }
+  return A;
 }
 
 #endif  // LIDAR_FEATURE_LIBRARY__EIGEN_HPP_

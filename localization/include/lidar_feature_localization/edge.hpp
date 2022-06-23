@@ -41,6 +41,7 @@
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
+#include "lidar_feature_localization/pointcloud_to_matrix.hpp"
 
 Eigen::VectorXd Center(const Eigen::MatrixXd & X)
 {
@@ -89,11 +90,18 @@ Eigen::Vector3d MakeEdgeResidual(
 }
 
 template<typename PointType>
+KDTreeEigen MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
+{
+  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointXYZCRToVector, PointType>(map);
+  return KDTreeEigen(matrix, 10);
+}
+
+template<typename PointToVector, typename PointType>
 class Edge
 {
 public:
   Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int n_neighbors)
-  : kdtree_(KDTreeEigen<PointType>(edge_map)),
+  : kdtree_(MakeKDTree<PointType>(edge_map)),
     n_neighbors_(n_neighbors)
   {
   }
@@ -130,7 +138,7 @@ public:
   }
 
 private:
-  const KDTreeEigen<PointType> kdtree_;
+  const KDTreeEigen kdtree_;
   const int n_neighbors_;
 };
 

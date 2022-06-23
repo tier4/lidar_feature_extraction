@@ -33,10 +33,11 @@
 #include "lidar_feature_localization/odometry.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
-using PointType = PointXYZIR;
+using PointType = PointXYZCR;
+using PointToVector = PointXYZCRToVector;
 
 using LOAMOdometry = Odometry<
-  LOAMPoseUpdater<PointType>,
+  LOAMPoseUpdater<PointToVector, PointType>,
   PointCloudMap<PointType>,
   typename pcl::PointCloud<PointType>::Ptr
 >;

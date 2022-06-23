@@ -27,14 +27,27 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
-#define LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
+#define LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
 
 #include <pcl/point_types.h>
 #include <Eigen/Core>
 
 struct PointXYZCR
 {
+  inline PointXYZCR(float _x, float _y, float _z, float _curvature, std::uint16_t _ring)
+  {
+    x = _x; y = _y; z = _z;
+    data[3] = 1.0f;
+    curvature = _curvature;
+    ring = _ring;
+  }
+
+  inline PointXYZCR()
+  : PointXYZCR(0.f, 0.f, 0.f, 0.f, 0)
+  {
+  }
+
   PCL_ADD_POINT4D
   float curvature;
   std::uint16_t ring;
@@ -59,4 +72,4 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
   (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
 )
 
-#endif  // LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_

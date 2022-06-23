@@ -11,12 +11,22 @@ find_package(ament_cmake_auto REQUIRED)
 
 ament_auto_find_build_dependencies()
 
+set(INCLUDE_DIRS
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include/)
+
+file(GLOB HEADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/lidar_feature_localization/*)
+list(APPEND HEADER_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include/nanoflann.hpp)
+
 ament_auto_add_executable("lidar_feature_localization" src/localization.cpp)
 ament_auto_add_executable("lidar_feature_odometry" src/odometry.cpp)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-file(GLOB HEADER_FILES include/lidar_feature_localization/*)
-target_precompile_headers(${PROJECT_NAME} PUBLIC ${HEADER_FILES})
+target_include_directories("lidar_feature_localization" PUBLIC ${INCLUDE_DIRS})
+target_include_directories("lidar_feature_odometry" PUBLIC ${INCLUDE_DIRS})
+
+target_precompile_headers("lidar_feature_localization" PUBLIC ${HEADER_FILES})
+target_precompile_headers("lidar_feature_odometry" PUBLIC ${HEADER_FILES})
 
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
@@ -25,29 +35,24 @@ function(add_testcase filepath)
   message("test_name = ${test_name}")
 
   ament_add_gmock(${test_name} ${filepath})
-  target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(${test_name} PUBLIC ${INCLUDE_DIRS})
   ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
 endfunction()
 
-set(BUILD_TESTING ON)
-
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-
-  list(APPEND AMENT_LINT_AUTO_EXCLUDE
-    ament_cmake_cpplint
-    ament_cmake_uncrustify
-  )
-
-  ament_lint_auto_find_test_dependencies()
-
-  file(GLOB FILES_TO_CHECK src/* include/* test/*)
+  file(GLOB
+    FILES_TO_CHECK
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/*
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/*)
 
   find_package(ament_cmake_cpplint)
   ament_cpplint(${FILES_TO_CHECK})
 
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${FILES_TO_CHECK})
+
+  find_package(ament_cmake_gmock REQUIRED)
 
   file(GLOB TEST_FILES test/*)
   foreach(filepath ${TEST_FILES})

@@ -26,60 +26,27 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+#include <gmock/gmock.h>
+
+#include "lidar_feature_localization/point_to_vector.hpp"
+#include "lidar_feature_localization/pointcloud_to_matrix.hpp"
 
 
-#include <Eigen/Eigenvalues>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
-
-#include <range/v3/all.hpp>
-
-#include <algorithm>
-#include <tuple>
-#include <vector>
-
-#include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/degenerate.hpp"
-#include "lidar_feature_localization/math.hpp"
-
-
-const int n_neighbors = 5;
-
-
-template<typename PointToVector, typename PointType>
-class LOAMOptimizationProblem
+TEST(PointCloudToMatrix, PointXYZCRToVector)
 {
-public:
-  LOAMOptimizationProblem(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : edge_(edge_map, n_neighbors)
-  {
-  }
+  const pcl::PointCloud<PointXYZCR>::Ptr map(new pcl::PointCloud<PointXYZCR>());
 
-  bool IsDegenerate(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    const auto [J, r] = this->Make(edge_scan, point_to_map);
-    const Eigen::MatrixXd JtJ = J.transpose() * J;
+  map->push_back(PointXYZCR(0., 1., 0., 2., 0));
+  map->push_back(PointXYZCR(1., 0., 1., 4., 1));
+  map->push_back(PointXYZCR(2., 0., 3., 4., 2));
 
-    return ::IsDegenerate(JtJ);
-  }
+  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointXYZCRToVector, PointXYZCR>(PointXYZCRToVector);
 
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    return edge_.Make(edge_scan, point_to_map);
-  }
+  Eigen::MatrixXd expected(3, 4);
+  expected <<
+    0., 1., 0., 2.,
+    1., 0., 1., 4.,
+    2., 0., 3., 4.;
 
-private:
-  const Edge<PointToVector, PointType> edge_;
-};
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+  EXPECT_EQ((C - expected).norm(), 0.);
+}

@@ -34,6 +34,7 @@
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/transform.hpp"
+#include "lidar_feature_library/point_type.hpp"
 
 using testing::ElementsAre;
 using testing::DoubleEq;
@@ -186,25 +187,28 @@ TEST(Edge, ApproximateError)
 TEST(Edge, Convergence)
 {
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0., 0.01);
+  std::normal_distribution<float> distribution(0., 0.01);
 
   auto normal = [&]() {
       return distribution(generator);
     };
 
   auto make_lines = [&](const int n) {
-      pcl::PointCloud<pcl::PointXYZ>::Ptr lines(new pcl::PointCloud<pcl::PointXYZ>());
+      pcl::PointCloud<PointXYZCR>::Ptr lines(new pcl::PointCloud<PointXYZCR>());
 
       for (int x = 0; x < n; x++) {
-        lines->push_back(pcl::PointXYZ(0.1 * x, normal(), normal()));
+        const float fx = static_cast<float>(x);
+        lines->push_back(PointXYZCR(0.1 * x, normal(), normal(), fx, 0));
       }
 
       for (int y = 0; y < n; y++) {
-        lines->push_back(pcl::PointXYZ(normal(), 0.1 * y, normal()));
+        const float fy = static_cast<float>(y);
+        lines->push_back(PointXYZCR(normal(), 0.1 * y, normal(), fy, 1));
       }
 
       for (int z = 0; z < n; z++) {
-        lines->push_back(pcl::PointXYZ(normal(), normal(), 0.1 * z));
+        const float fz = static_cast<float>(z);
+        lines->push_back(PointXYZCR(normal(), normal(), 0.1 * z, fz, 2));
       }
 
       return lines;
@@ -217,18 +221,19 @@ TEST(Edge, Convergence)
 
   const Eigen::Isometry3d transform_true = MakeIsometry3d(q_ture, t_true);
 
-  const auto scan = TransformPointCloud<pcl::PointXYZ>(transform_true.inverse(), map);
+  const auto scan = TransformPointCloud<PointXYZCR>(transform_true.inverse(), map);
 
   const int n_neighbors = 5;
-  const Edge<pcl::PointXYZ> edge(map, n_neighbors);
+  using EdgeType = Edge<PointXYZCRToVector, PointXYZCR>;
+  const EdgeType edge(map, n_neighbors);
 
   const Eigen::Quaterniond q_initial = Eigen::Quaterniond::Identity();
   const Eigen::Vector3d t_initial = Eigen::Vector3d::Zero();
   const Eigen::Isometry3d initial_pose = MakeIsometry3d(q_initial, t_initial);
 
-  const Optimizer<Edge<pcl::PointXYZ>, pcl::PointCloud<pcl::PointXYZ>::Ptr> optimizer(edge);
+  const Optimizer<EdgeType, pcl::PointCloud<PointXYZCR>::Ptr> optimizer(edge);
   const Eigen::Isometry3d transform_pred = optimizer.Run(scan, initial_pose);
-  const auto transformed = TransformPointCloud<pcl::PointXYZ>(transform_pred, scan);
+  const auto transformed = TransformPointCloud<PointXYZCR>(transform_pred, scan);
 
   EXPECT_THAT(
     (transform_true.linear() - transform_pred.linear()).norm(),
