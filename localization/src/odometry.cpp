@@ -28,9 +28,9 @@
 
 #include <memory>
 
-#include "lidar_feature_localization/edge_surface_map.hpp"
-#include "lidar_feature_localization/pose_updater.hpp"
 #include "lidar_feature_localization/odometry.hpp"
+#include "lidar_feature_localization/point_cloud_map.hpp"
+#include "lidar_feature_localization/pose_updater.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
 using PointType = PointXYZCR;
