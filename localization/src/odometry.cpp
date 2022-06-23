@@ -50,7 +50,6 @@ int main(int argc, char * argv[])
   LOAMOdometry odometry(map);
 
   rclcpp::spin(std::make_shared<OdometrySubscriber<LOAMOdometry, PointType>>(odometry));
-  map->Save("maps/");
 
   rclcpp::shutdown();
   return 0;
