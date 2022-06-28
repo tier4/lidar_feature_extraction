@@ -8,6 +8,7 @@ set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
+find_package(fmt REQUIRED)
 
 ament_auto_find_build_dependencies()
 
@@ -19,14 +20,12 @@ file(GLOB HEADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/lidar_feature_localiz
 list(APPEND HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include/nanoflann.hpp)
 
-ament_auto_add_executable("lidar_feature_localization" src/localization.cpp)
-ament_auto_add_executable("lidar_feature_odometry" src/odometry.cpp)
-
-target_include_directories("lidar_feature_localization" PUBLIC ${INCLUDE_DIRS})
-target_include_directories("lidar_feature_odometry" PUBLIC ${INCLUDE_DIRS})
-
-target_precompile_headers("lidar_feature_localization" PUBLIC ${HEADER_FILES})
-target_precompile_headers("lidar_feature_odometry" PUBLIC ${HEADER_FILES})
+foreach(suffix IN ITEMS "localization" "odometry" "convergence")
+  ament_auto_add_executable("lidar_feature_${suffix}" src/${suffix}.cpp)
+  target_include_directories("lidar_feature_${suffix}" PUBLIC ${INCLUDE_DIRS})
+  target_link_libraries("lidar_feature_${suffix}" fmt)
+  target_precompile_headers("lidar_feature_${suffix}" PUBLIC ${HEADER_FILES})
+endforeach()
 
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
