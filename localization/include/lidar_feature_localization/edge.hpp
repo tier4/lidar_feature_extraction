@@ -36,6 +36,7 @@
 
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/pcl_utils.hpp"
+#include "lidar_feature_library/transform.hpp"
 
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
@@ -120,14 +121,16 @@ public:
     Eigen::VectorXd r(3 * n);
 
     for (int i = 0; i < n; i++) {
-      const Eigen::Vector3d p0 = GetXYZ(scan->at(i));
-      const auto [X, _] = kdtree_.NearestKSearch(point_to_map * p0, n_neighbors_);
+      const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
+      const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
+      const auto [X, _] = kdtree_.NearestKSearch(query, n_neighbors_);
 
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 
       const Eigen::Vector3d center = Center(X);
       const Eigen::Vector3d principal = eigenvectors.col(2);
+      const Eigen::Vector3d p0 = scan_point.head(3);
       const Eigen::Vector3d p1 = center - principal;
       const Eigen::Vector3d p2 = center + principal;
       J.block<3, 7>(3 * i, 0) = MakeEdgeJacobianRow(q, p0, p1, p2);

@@ -106,7 +106,7 @@ TEST(Eigen, GetRows)
       2, 4, 6
   ).finished();
 
-  std::vector<std::int64_t> indices{0, 2};
+  std::vector<std::uint64_t> indices{0, 2};
 
   const Eigen::MatrixXd rows = GetRows(matrix, indices);
   EXPECT_EQ(rows.rows(), 2);

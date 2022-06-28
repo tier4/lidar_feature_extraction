@@ -74,7 +74,7 @@ std::string EigenToString(const Eigen::MatrixXd & matrix)
 
 Eigen::MatrixXd GetRows(
   const Eigen::MatrixXd & matrix,
-  const std::vector<std::int64_t> & indices)
+  const std::vector<std::uint64_t> & indices)
 {
   Eigen::MatrixXd A(indices.size(), matrix.cols());
   for (const auto & [i, index] : ranges::views::enumerate(indices)) {

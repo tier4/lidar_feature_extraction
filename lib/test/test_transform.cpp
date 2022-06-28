@@ -65,3 +65,21 @@ TEST(Transform, TransformPointCloud)
     (q * to_vector(cloud->at(1)) + t - to_vector(transformed->at(1))).norm(),
     testing::Le(1e-4));
 }
+
+TEST(TransformXYZ, TransformXYZ)
+{
+  Eigen::VectorXd p0;
+  p0 << 1, 0, 2, 5, 4;
+
+  Eigen::Isometry3d transform;
+  transform.matrix() <<
+      -1., -0.,  0., 2,
+       0.,  1., -0., 4,
+       0.,  0., -1., 1;
+
+  const Eigen::VectorXd p1 = TransformXYZ(transform, p0);
+
+  Eigen::VectorXd expected;
+  expected << 1, 4, -1, 5, 4;
+  EXPECT_THAT((p1 - expected).norm(), 0);;
+}
