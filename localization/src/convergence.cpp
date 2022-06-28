@@ -57,15 +57,14 @@ using Exact = message_filters::sync_policies::ExactTime<
   geometry_msgs::msg::PoseStamped>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
-using OptimizationProblem = LOAMOptimizationProblem<PointXYZCRToVector, PointXYZCR>;
-
+template<typename PointToVector, typename PointType>
 class ConvergenceAnalysis : public rclcpp::Node
 {
 public:
   ConvergenceAnalysis(
     const std::string & edge_topic_name,
     const std::string & pose_topic_name,
-    const pcl::PointCloud<PointXYZCR>::Ptr & edge_map)
+    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
   : Node("lidar_feature_convergence"),
     edge_subscriber_(this, edge_topic_name, qos_profile),
     pose_subscriber_(this, pose_topic_name, qos_profile),
@@ -93,13 +92,15 @@ public:
     Eigen::Isometry3d pose;
     tf2::fromMsg(pose_msg->pose, pose);
 
-    const pcl::PointCloud<PointXYZCR>::Ptr edge = GetPointCloud<PointXYZCR>(*edge_msg);
+    const auto edge = GetPointCloud<PointType>(*edge_msg);
+
+    using OptimizationProblem = LOAMOptimizationProblem<PointToVector, PointType>;
 
     const OptimizationProblem problem(edge_map_);
 
     using OptimizerType = Optimizer<
       OptimizationProblem,
-      typename pcl::PointCloud<PointXYZCR>::Ptr>;
+      typename pcl::PointCloud<PointType>::Ptr>;
 
     const OptimizerType optimizer(problem);
 
@@ -152,7 +153,7 @@ private:
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
   message_filters::Subscriber<geometry_msgs::msg::PoseStamped> pose_subscriber_;
   std::shared_ptr<Synchronizer> sync_;
-  const typename pcl::PointCloud<PointXYZCR>::Ptr edge_map_;
+  const typename pcl::PointCloud<PointType>::Ptr edge_map_;
 };
 
 int main(int argc, char * argv[])
@@ -162,7 +163,8 @@ int main(int argc, char * argv[])
   pcl::PointCloud<PointXYZCR>::Ptr edge_map(new pcl::PointCloud<PointXYZCR>());
   pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
 
-  auto convergence = std::make_shared<ConvergenceAnalysis>("scan_edge", "pose", edge_map);
+  using Convergence = ConvergenceAnalysis<PointXYZCRToVector, PointXYZCR>;
+  auto convergence = std::make_shared<Convergence>("scan_edge", "pose", edge_map);
   rclcpp::spin(convergence);
   rclcpp::shutdown();
   return 0;
