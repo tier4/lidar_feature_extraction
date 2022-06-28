@@ -68,18 +68,21 @@ TEST(Transform, TransformPointCloud)
 
 TEST(TransformXYZ, TransformXYZ)
 {
-  Eigen::VectorXd p0;
+  Eigen::VectorXd p0(5);
   p0 << 1, 0, 2, 5, 4;
 
   Eigen::Isometry3d transform;
-  transform.matrix() <<
-      -1., -0.,  0., 2,
-       0.,  1., -0., 4,
-       0.,  0., -1., 1;
+  transform.linear() <<
+      -1., -0.,  0.,
+       0.,  1., -0.,
+       0.,  0., -1.;
+  transform.translation() <<
+      2, 4, 1;
 
   const Eigen::VectorXd p1 = TransformXYZ(transform, p0);
 
-  Eigen::VectorXd expected;
+  Eigen::VectorXd expected(5);
   expected << 1, 4, -1, 5, 4;
+
   EXPECT_THAT((p1 - expected).norm(), 0);;
 }

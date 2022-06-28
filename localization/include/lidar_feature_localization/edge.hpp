@@ -90,11 +90,17 @@ Eigen::Vector3d MakeEdgeResidual(
   return (p - p1).cross(p - p2);
 }
 
-template<typename PointType>
+template<typename PointToVector, typename PointType>
 KDTreeEigen MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
 {
-  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointXYZCRToVector, PointType>(map);
+  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
   return KDTreeEigen(matrix, 10);
+}
+
+Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix)
+{
+  const int rows = matrix.rows();
+  return matrix.block(0, 0, rows, 3);
 }
 
 template<typename PointToVector, typename PointType>
@@ -102,7 +108,7 @@ class Edge
 {
 public:
   Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int n_neighbors)
-  : kdtree_(MakeKDTree<PointType>(edge_map)),
+  : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map)),
     n_neighbors_(n_neighbors)
   {
   }
@@ -123,8 +129,8 @@ public:
     for (int i = 0; i < n; i++) {
       const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
       const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
-      const auto [X, _] = kdtree_.NearestKSearch(query, n_neighbors_);
-
+      const auto [neighbors, _] = kdtree_.NearestKSearch(query, n_neighbors_);
+      const Eigen::MatrixXd X = GetXYZ(neighbors);
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 

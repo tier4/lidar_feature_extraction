@@ -46,7 +46,7 @@ class KDTreeEigen
 public:
   explicit KDTreeEigen(const Eigen::MatrixXd & map, int max_leaf_size)
   : map_(map),
-    kdtree_(std::make_shared<KDTreeType>(map.cols(), std::cref(map), max_leaf_size))
+    kdtree_(std::make_shared<KDTreeType>(map_.cols(), map_, max_leaf_size))
   {
   }
 
