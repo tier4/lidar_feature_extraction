@@ -30,6 +30,7 @@
 #define LIDAR_FEATURE_LOCALIZATION__POINT_TO_VECTOR_HPP_
 
 #include <Eigen/Core>
+#include <pcl/point_types.h>
 
 #include "lidar_feature_library/point_type.hpp"
 
@@ -45,6 +46,20 @@ public:
   static size_t NumDimension()
   {
     return 4;
+  }
+};
+
+class PointXYZToVector
+{
+public:
+  static Eigen::VectorXd Convert(const pcl::PointXYZ & p)
+  {
+    return Eigen::Vector3d(p.x, p.y, p.z);
+  }
+
+  static size_t NumDimension()
+  {
+    return 3;
   }
 };
 
