@@ -55,7 +55,7 @@ using Synchronizer = message_filters::Synchronizer<Exact>;
 const rmw_qos_profile_t qos_profile =
   rclcpp::SensorDataQoS().keep_all().reliable().get_rmw_qos_profile();
 
-using PointType = PointXYZIR;
+using PointType = PointXYZCR;
 
 class MapSubscriber : public rclcpp::Node
 {

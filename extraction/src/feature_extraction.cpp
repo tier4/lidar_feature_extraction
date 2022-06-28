@@ -61,7 +61,7 @@
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
-using PointType = PointXYZIR;
+using PointType = PointXYZCR;
 
 const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
