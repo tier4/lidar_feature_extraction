@@ -50,7 +50,7 @@ class Localizer
 
 public:
   explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : edge_map_(edge_map),
+  : problem_(edge_map),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
   {
@@ -85,21 +85,19 @@ private:
     const typename pcl::PointCloud<PointType>::Ptr & edge,
     const Eigen::Isometry3d & pose) const
   {
-    const LOAMOptimizationProblem<PointToVector, PointType> problem(edge_map_);
-
-    if (problem.IsDegenerate(edge, pose)) {
+    if (problem_.IsDegenerate(edge, pose)) {
       RCLCPP_WARN(
         rclcpp::get_logger("lidar_feature_localization"),
         "The optimization problem is degenerate. Pose not optimized");
       return std::make_tuple(pose, false);
     }
 
-    const OptimizerType optimizer(problem);
+    const OptimizerType optimizer(problem_);
     const Eigen::Isometry3d new_pose = optimizer.Run(edge, pose);
     return std::make_tuple(new_pose, true);
   }
 
-  const typename pcl::PointCloud<PointType>::Ptr edge_map_;
+  const LOAMOptimizationProblem<PointToVector, PointType> problem_;
 
   bool is_initialized_;
   Eigen::Isometry3d pose_;
