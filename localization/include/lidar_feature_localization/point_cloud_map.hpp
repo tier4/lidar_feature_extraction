@@ -59,11 +59,6 @@ public:
     return scans_.GetRecent(n_local_scans_);
   }
 
-  void Save(const std::string & dirname) const
-  {
-    SaveMapIfNotEmpty<PointType>(dirname + "/" + "map.pcd", scans_.GetAll());
-  }
-
 private:
   const int n_local_scans_;
   RecentScans<PointType> scans_;
