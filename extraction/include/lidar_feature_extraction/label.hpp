@@ -122,19 +122,31 @@ void AssignLabel(
   }
 }
 
-template<typename PointT>
-void ExtractByLabel(
-  typename pcl::PointCloud<PointT>::Ptr output_cloud,
-  const MappedPoints<PointT> & ref_points,
+std::vector<size_t> GetIndicesByLabel(
   const std::vector<PointLabel> & labels,
   const PointLabel & label)
 {
-  assert(ref_points.Size() == static_cast<int>(labels.size()));
-
-  for (unsigned int i = 0; i < labels.size(); i++) {
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < labels.size(); i++) {
     if (labels.at(i) == label) {
-      output_cloud->push_back(ref_points.At(i));
+      indices.push_back(i);
     }
+  }
+  return indices;
+}
+
+template<typename InputPointT>
+void AppendXYZCR(
+  typename pcl::PointCloud<PointXYZCR>::Ptr output_cloud,
+  const std::vector<InputPointT> & points,
+  const std::vector<double> & curvature)
+{
+  assert(points.size() == curvature.size());
+
+  for (size_t i = 0; i < points.size(); i++) {
+    const InputPointT & p = points[i];
+    const PointXYZCR q(p.x, p.y, p.z, curvature[i], p.ring);
+    output_cloud->push_back(q);
   }
 }
 

@@ -61,6 +61,19 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 
 struct PointXYZIR
 {
+  inline PointXYZIR(float _x, float _y, float _z, float _intensity, std::uint16_t _ring)
+  {
+    x = _x; y = _y; z = _z;
+    data[3] = 1.0f;
+    intensity = _intensity;
+    ring = _ring;
+  }
+
+  inline PointXYZIR()
+  : PointXYZIR(0.f, 0.f, 0.f, 0.f, 0)
+  {
+  }
+
   PCL_ADD_POINT4D
   PCL_ADD_INTENSITY
   std::uint16_t ring;
