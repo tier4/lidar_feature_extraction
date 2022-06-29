@@ -36,6 +36,7 @@ function(add_testcase filepath)
   ament_add_gmock(${test_name} ${filepath})
   target_include_directories(${test_name} PUBLIC ${INCLUDE_DIRS})
   ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+  target_precompile_headers(${test_name} PUBLIC ${HEADER_FILES})
 endfunction()
 
 if(BUILD_TESTING)
