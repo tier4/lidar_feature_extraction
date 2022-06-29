@@ -123,7 +123,7 @@ private:
 
     const auto rings = [&] {
         auto rings = ExtractAngleSortedRings(*input_cloud);
-        RemoveInsufficientNumRing(rings, params_.padding + 1);
+        RemoveSparseRings(rings, params_.padding + 1);
         return rings;
       } ();
 
