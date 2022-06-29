@@ -90,8 +90,6 @@ public:
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1))),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
-    curvature_cloud_publisher_(
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("curvature_scan", 1)),
     edge_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", qos_keep_all))
   {
@@ -116,15 +114,12 @@ private:
     if (!RingIsAvailable(cloud_msg->fields)) {
       RCLCPP_ERROR(
         this->get_logger(),
-        "Point cloud ring channel could not be found");
+        "Ring channel could not be found");
       rclcpp::shutdown();
     }
 
-    const double debug_max_curvature = 10.;
-
     pcl::PointCloud<PointXYZCR>::Ptr edge(new pcl::PointCloud<PointXYZCR>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
     const auto rings = [&] {
         auto rings = ExtractAngleSortedRings(*input_cloud);
@@ -161,7 +156,6 @@ private:
         AppendXYZCR<PointXYZIR>(edge, edge_points, edge_curvature);
 
         *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, labels);
-        *curvature_cloud += *ColorPointsByValue(ref_points, curvature, 0., debug_max_curvature);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
@@ -170,13 +164,10 @@ private:
     const std::string lidar_frame = "base_link";
     const auto stamp = cloud_msg->header.stamp;
     const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
-    const auto curvature_msg = ToRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
-
     const auto filtered = FilterByCoordinate<PointXYZCR>(edge);
     const auto edge_msg = ToRosMsg<PointXYZCR>(filtered, stamp, lidar_frame);
 
     colored_scan_publisher_->publish(colored_msg);
-    curvature_cloud_publisher_->publish(curvature_msg);
     edge_publisher_->publish(edge_msg);
   }
 
@@ -184,7 +175,6 @@ private:
   const EdgeLabel edge_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr colored_scan_publisher_;
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr curvature_cloud_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
 };
 
