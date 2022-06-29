@@ -38,8 +38,16 @@
 
 #include "lidar_feature_library/eigen.hpp"
 
+constexpr bool row_major = true;
+constexpr int32_t dimension = -1;
+
 using matrix_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
-using KDTreeType = nanoflann::KDTreeEigenMatrixAdaptor<matrix_t>;
+using KDTreeType = nanoflann::KDTreeEigenMatrixAdaptor<
+  matrix_t,
+  dimension,
+  nanoflann::metric_L2,
+  row_major
+>;
 
 class KDTreeEigen
 {
