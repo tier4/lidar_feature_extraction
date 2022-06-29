@@ -28,7 +28,6 @@
 
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <deque>
@@ -57,6 +56,7 @@
 #include "lidar_feature_extraction/ring.hpp"
 #include "lidar_feature_extraction/subscription.hpp"
 
+#include "lidar_feature_library/algorithm.hpp"
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
@@ -155,14 +155,8 @@ private:
         assert(curvature.size() == static_cast<size_t>(ref_points.size()));
 
         const std::vector<size_t> indices = GetIndicesByLabel(labels, PointLabel::Edge);
-        const std::vector<PointXYZIR> edge_points =
-          indices |
-          ranges::views::transform([&](size_t i) {return ref_points.at(i);}) |
-          ranges::to_vector;
-        const std::vector<double> edge_curvature =
-          indices |
-          ranges::views::transform([&](size_t i) {return curvature[i];}) |
-          ranges::to_vector;
+        const std::vector<PointXYZIR> edge_points = Get(indices, ref_points);
+        const std::vector<double> edge_curvature = Get(indices, curvature);
 
         AppendXYZCR<PointXYZIR>(edge, edge_points, edge_curvature);
 

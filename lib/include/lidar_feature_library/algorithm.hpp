@@ -26,49 +26,20 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
+#define LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
 
-#ifndef LIDAR_FEATURE_EXTRACTION__MAPPED_POINTS_HPP_
-#define LIDAR_FEATURE_EXTRACTION__MAPPED_POINTS_HPP_
+#include <range/v3/all.hpp>
 
-#include <pcl/point_cloud.h>
-
-#include <functional>
-#include <vector>
-
-#include "iterator.hpp"
-
-template<typename PointT>
-class MappedPoints
+template<typename Collection>
+std::vector<typename Collection::value_type> Get(
+  const std::vector<size_t> & indices,
+  const Collection & array)
 {
-public:
-  using value_type = PointT;
+  return
+    indices |
+    ranges::views::transform([&](size_t i) {return array.at(i);}) |
+    ranges::to_vector;
+}
 
-  MappedPoints(
-    const typename pcl::PointCloud<PointT>::Ptr & cloud,
-    const std::vector<int> & indices)
-  : cloud_(cloud), indices_(indices)
-  {
-  }
-
-  int size() const
-  {
-    return indices_.size();
-  }
-
-  PointT at(const int index) const
-  {
-    return cloud_->at(indices_.at(index));
-  }
-
-  MappedPoints Slice(const int begin, const int end) const
-  {
-    const std::vector<int> indices(indices_.begin() + begin, indices_.begin() + end);
-    return MappedPoints<PointT>(cloud_, indices);
-  }
-
-private:
-  const typename pcl::PointCloud<PointT>::Ptr cloud_;
-  const std::vector<int> indices_;
-};
-
-#endif  // LIDAR_FEATURE_EXTRACTION__MAPPED_POINTS_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
