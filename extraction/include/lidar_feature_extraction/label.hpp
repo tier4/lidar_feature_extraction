@@ -122,19 +122,6 @@ void AssignLabel(
   }
 }
 
-std::vector<size_t> GetIndicesByLabel(
-  const std::vector<PointLabel> & labels,
-  const PointLabel & label)
-{
-  std::vector<size_t> indices;
-  for (size_t i = 0; i < labels.size(); i++) {
-    if (labels.at(i) == label) {
-      indices.push_back(i);
-    }
-  }
-  return indices;
-}
-
 template<typename InputPointT>
 void AppendXYZCR(
   typename pcl::PointCloud<PointXYZCR>::Ptr output_cloud,

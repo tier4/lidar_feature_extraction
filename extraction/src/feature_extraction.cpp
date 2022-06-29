@@ -149,9 +149,9 @@ private:
 
         assert(curvature.size() == static_cast<size_t>(ref_points.size()));
 
-        const std::vector<size_t> indices = GetIndicesByLabel(labels, PointLabel::Edge);
-        const std::vector<PointXYZIR> edge_points = Get(indices, ref_points);
-        const std::vector<double> edge_curvature = Get(indices, curvature);
+        const std::vector<size_t> indices = GetIndicesByValue(labels, PointLabel::Edge);
+        const std::vector<PointXYZIR> edge_points = GetByIndices(indices, ref_points);
+        const std::vector<double> edge_curvature = GetByIndices(indices, curvature);
 
         AppendXYZCR<PointXYZIR>(edge, edge_points, edge_curvature);
 

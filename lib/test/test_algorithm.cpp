@@ -26,37 +26,21 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
-#define LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
+#include <gmock/gmock.h>
 
-#include <range/v3/all.hpp>
+#include "lidar_feature_library/algorithm.hpp"
 
-#include <algorithm>
-#include <vector>
 
-template<typename Collection>
-std::vector<typename Collection::value_type> GetByIndices(
-  const std::vector<size_t> & indices,
-  const Collection & array)
+TEST(Algorithm, GetIndicesByValue)
 {
-  return
-    indices |
-    ranges::views::transform([&](size_t i) {return array.at(i);}) |
-    ranges::to_vector;
+  std::vector<int> array{0, 3, 2, 3, 4};
+  EXPECT_THAT(GetIndicesByValue(array, 3), testing::ElementsAre(1, 3));
+  EXPECT_THAT(GetIndicesByValue(array, 2), testing::ElementsAre(2));
 }
 
-template<typename Collection>
-std::vector<size_t> GetIndicesByValue(
-  const Collection & labels,
-  const typename Collection::value_type & label)
+TEST(Algorithm, GetByIndices)
 {
-  std::vector<size_t> indices;
-  for (size_t i = 0; i < labels.size(); i++) {
-    if (labels.at(i) == label) {
-      indices.push_back(i);
-    }
-  }
-  return indices;
+  std::vector<int> array{0, 3, 2, 3, 5};
+  EXPECT_THAT(GetByIndices(std::vector<size_t>{0, 1}, array), testing::ElementsAre(0, 3));
+  EXPECT_THAT(GetByIndices(std::vector<size_t>{2, 4}, array), testing::ElementsAre(2, 5));
 }
-
-#endif  // LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
