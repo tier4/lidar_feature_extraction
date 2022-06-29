@@ -63,7 +63,7 @@ TEST(Neighbor, NeighborCheckXY)
 
   {
     const NeighborCheckXY is_neighbor(ref_points, 1e-3);
-    EXPECT_EQ(is_neighbor.Size(), 4);
+    EXPECT_EQ(is_neighbor.size(), 4);
   }
 
   {
@@ -80,7 +80,7 @@ TEST(Neighbor, NeighborCheckXY)
   {
     const NeighborCheckXY is_neighbor(ref_points, M_PI / 4. + 1e-3);
     const NeighborCheckXY sliced = is_neighbor.Slice(1, 3);
-    EXPECT_EQ(sliced.Size(), 2);
+    EXPECT_EQ(sliced.size(), 2);
     EXPECT_FALSE(sliced(0, 1));
   }
 }
@@ -110,7 +110,7 @@ TEST(Neighbor, ThrowOutOfRange)
     try {
       is_neighbor(3, 0);
     } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "index1 (which is 3) >= this->Size() (which is 3)");
+      EXPECT_STREQ(e.what(), "index1 (which is 3) >= this->size() (which is 3)");
       throw e;
     },
     std::out_of_range
@@ -130,7 +130,7 @@ TEST(Neighbor, ThrowOutOfRange)
     try {
       is_neighbor(0, 3);
     } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "index2 (which is 3) >= this->Size() (which is 3)");
+      EXPECT_STREQ(e.what(), "index2 (which is 3) >= this->size() (which is 3)");
       throw e;
     },
     std::out_of_range
@@ -147,7 +147,7 @@ TEST(Neighbor, ThrowIfInsufficientPoints)
   EXPECT_THROW(
     try {
       const NeighborCheckXY is_neighbor(ref_points, 0.);
-      EXPECT_EQ(is_neighbor.Size(), 4);
+      EXPECT_EQ(is_neighbor.size(), 4);
     } catch(std::invalid_argument & e) {
       EXPECT_STREQ(e.what(), "The input point size (which is 1) cannot be smaller than 2");
       throw e;

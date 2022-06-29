@@ -139,11 +139,11 @@ private:
       const Range<PointXYZIR> range(ref_points);
 
       try {
-        std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+        std::vector<PointLabel> labels = InitLabels(ref_points.size());
 
-        const std::vector<double> ranges = range(0, range.Size());
+        const std::vector<double> ranges = range(0, range.size());
         const std::vector<double> curvature = CalcCurvature(ranges, params_.padding);
-        const PaddedIndexRange index_range(range.Size(), params_.n_blocks, params_.padding);
+        const PaddedIndexRange index_range(range.size(), params_.n_blocks, params_.padding);
 
         AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_);
 
@@ -152,12 +152,12 @@ private:
         LabelOutOfRange(labels, range, params_.min_range, params_.max_range);
         LabelParallelBeamPoints(labels, range, params_.parallel_beam_min_range_ratio);
 
-        assert(curvature.size() == static_cast<size_t>(ref_points.Size()));
+        assert(curvature.size() == static_cast<size_t>(ref_points.size()));
 
         const std::vector<size_t> indices = GetIndicesByLabel(labels, PointLabel::Edge);
         const std::vector<PointXYZIR> edge_points =
           indices |
-          ranges::views::transform([&](size_t i) {return ref_points.At(i);}) |
+          ranges::views::transform([&](size_t i) {return ref_points.at(i);}) |
           ranges::to_vector;
         const std::vector<double> edge_curvature =
           indices |

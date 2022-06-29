@@ -48,14 +48,14 @@ public:
   explicit ByValue(const Iterator & values_begin)
   : begin_(values_begin) {}
 
-  T At(const int i) const
+  T at(const int i) const
   {
     return *(begin_ + i);
   }
 
   bool operator()(const int & left, const int & right)
   {
-    return this->At(left) < this->At(right);
+    return this->at(left) < this->at(right);
   }
 
 private:

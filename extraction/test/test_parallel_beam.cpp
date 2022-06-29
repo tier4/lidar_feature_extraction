@@ -45,7 +45,7 @@ TEST(ParallelBeam, LabelParallelBeamPoints)
   const Range<pcl::PointXYZ> range(ref_points);
 
   {
-    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+    std::vector<PointLabel> labels = InitLabels(ref_points.size());
     LabelParallelBeamPoints(labels, range, 3.0);
 
     EXPECT_THAT(
@@ -59,7 +59,7 @@ TEST(ParallelBeam, LabelParallelBeamPoints)
   }
 
   {
-    std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+    std::vector<PointLabel> labels = InitLabels(ref_points.size());
     LabelParallelBeamPoints(labels, range, 2.9);
 
     EXPECT_THAT(

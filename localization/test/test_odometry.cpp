@@ -68,7 +68,7 @@ public:
     return map_;
   }
 
-  int Size() const
+  int size() const
   {
     return map_.size();
   }
@@ -94,19 +94,19 @@ TEST(Odometry, Update)
   EXPECT_TRUE(map->IsEmpty());
 
   Odometry<PoseUpdater, Map, Eigen::Vector3d> odometry(map);
-  EXPECT_EQ(map->Size(), 0);
+  EXPECT_EQ(map->size(), 0);
 
   odometry.Update(Eigen::Vector3d(0., 0., 0.));
   EXPECT_EQ((odometry.CurrentPose().translation() - Eigen::Vector3d(0., 0., 0.)).norm(), 0.);
-  EXPECT_EQ(map->Size(), 1);
+  EXPECT_EQ(map->size(), 1);
 
   odometry.Update(Eigen::Vector3d(0., 0., 0.));
   EXPECT_EQ((odometry.CurrentPose().translation() - Eigen::Vector3d(1., 2., 0.)).norm(), 0.);
-  EXPECT_EQ(map->Size(), 2);
+  EXPECT_EQ(map->size(), 2);
 
   odometry.Update(Eigen::Vector3d(0., 0., 0.));
   EXPECT_EQ((odometry.CurrentPose().translation() - Eigen::Vector3d(2., 4., 0.)).norm(), 0.);
-  EXPECT_EQ(map->Size(), 3);
+  EXPECT_EQ(map->size(), 3);
 
   const std::vector<Eigen::Vector3d> points = map->GetRecent();
   EXPECT_EQ((points.at(0) - Eigen::Vector3d(0., 0., 0.)).norm(), 0.);

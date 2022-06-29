@@ -76,7 +76,7 @@ public:
     const NeighborCheckBase & is_neighbor) const
   {
     assert(curvature.size() == labels.size());
-    assert(is_neighbor.Size() == static_cast<int>(labels.size()));
+    assert(is_neighbor.size() == static_cast<int>(labels.size()));
 
     auto is_edge = [&](const int i) {
         return curvature.at(i) >= threshold_;
@@ -108,7 +108,7 @@ void AssignLabel(
   const EdgeLabel & edge_label)
 {
   assert(curvature.size() == labels.size());
-  assert(is_neighbor.Size() == static_cast<int>(labels.size()));
+  assert(is_neighbor.size() == static_cast<int>(labels.size()));
 
   for (int j = 0; j < index_range.NBlocks(); j++) {
     const int begin = index_range.Begin(j);

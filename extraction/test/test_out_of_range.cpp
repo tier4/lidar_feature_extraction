@@ -43,7 +43,7 @@ TEST(Label, LabelOutOfRange)
   const MappedPoints<pcl::PointXYZ> ref_points(cloud, irange(cloud->size()));
   const Range<pcl::PointXYZ> range(ref_points);
 
-  std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+  std::vector<PointLabel> labels = InitLabels(ref_points.size());
   LabelOutOfRange(labels, range, 2.0, 8.0);
   EXPECT_THAT(
     labels,

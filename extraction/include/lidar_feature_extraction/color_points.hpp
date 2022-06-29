@@ -88,11 +88,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByLabel(
   const MappedPoints<PointT> & ref_points,
   const std::vector<PointLabel> & labels)
 {
-  assert(ref_points.Size() == static_cast<int>(labels.size()));
+  assert(ref_points.size() == static_cast<int>(labels.size()));
 
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGB>());
   for (unsigned int i = 0; i < labels.size(); i++) {
-    const PointT & p = ref_points.At(i);
+    const PointT & p = ref_points.at(i);
     const std::vector<uint8_t> rgb = LabelToColor(labels.at(i));
     colored->push_back(MakeXYZRGB(p, rgb));
   }
@@ -106,11 +106,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColorPointsByValue(
   const double min,
   const double max)
 {
-  assert(ref_points.Size() == static_cast<int>(values.size()));
+  assert(ref_points.size() == static_cast<int>(values.size()));
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGB>());
 
   for (unsigned int i = 0; i < values.size(); i++) {
-    const PointT & p = ref_points.At(i);
+    const PointT & p = ref_points.at(i);
     const std::vector<uint8_t> rgb = ValueToColor(values.at(i), min, max);
     colored->push_back(MakeXYZRGB(p, rgb));
   }

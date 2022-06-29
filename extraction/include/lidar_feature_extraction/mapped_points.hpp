@@ -48,12 +48,12 @@ public:
   {
   }
 
-  int Size() const
+  int size() const
   {
     return indices_.size();
   }
 
-  PointT At(const int index) const
+  PointT at(const int index) const
   {
     return cloud_->at(indices_.at(index));
   }
