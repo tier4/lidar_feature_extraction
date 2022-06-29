@@ -83,31 +83,6 @@ def generate_launch_description():
         ]
     )
 
-    map_loader = Node(
-        package='lidar_feature_map_loader',
-        executable='lidar_feature_map_loader',
-        namespace='lidar_feature_map_loader',
-        remappings=[
-            ('/edge_map', edge_map_topic),
-            ('/surface_map', surface_map_topic),
-        ]
-    )
-
-    map_tf_generator = Node(
-        package='map_tf_generator',
-        executable='map_tf_generator',
-        name='map_tf_generator',
-        parameters=[
-            {
-                'map_frame': 'map',
-                'viewer_frame': 'viewer',
-            }
-        ],
-        remappings=[
-            ('/pointcloud_map', '/edge_map')
-        ]
-    )
-
     path_generator = Node(
         package='path_generator',
         executable='path_generator',
@@ -121,7 +96,5 @@ def generate_launch_description():
     return LaunchDescription([
         extraction,
         convergence,
-        map_loader,
-        map_tf_generator,
         path_generator,
     ])
