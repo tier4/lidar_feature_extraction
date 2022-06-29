@@ -46,14 +46,8 @@ std::vector<uint8_t> LabelToColor(const PointLabel & label)
   if (label == PointLabel::Edge) {
     return std::vector<uint8_t>{255, 0, 0};
   }
-  if (label == PointLabel::Surface) {
-    return std::vector<uint8_t>{0, 0, 255};
-  }
   if (label == PointLabel::EdgeNeighbor) {
     return std::vector<uint8_t>{255, 63, 0};
-  }
-  if (label == PointLabel::SurfaceNeighbor) {
-    return std::vector<uint8_t>{0, 63, 255};
   }
   if (label == PointLabel::OutOfRange) {
     return std::vector<uint8_t>{127, 127, 127};

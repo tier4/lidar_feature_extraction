@@ -32,7 +32,6 @@ from launch_ros.actions import Node
 
 
 scan_edge_topic = '/scan_edge'
-scan_surface_topic = '/scan_surface'
 colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
 
@@ -69,7 +68,6 @@ def generate_launch_description():
             ('colored_scan', colored_scan_topic),
             ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
-            ('scan_surface', scan_surface_topic),
         ]
     )
 
@@ -79,7 +77,6 @@ def generate_launch_description():
         name='lidar_feature_localization',
         remappings=[
             ('scan_edge', scan_edge_topic),
-            ('scan_surface', scan_surface_topic),
             ('estimated_pose', output_estimated_pose_topic),
         ]
     )
