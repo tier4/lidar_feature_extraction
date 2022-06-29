@@ -84,11 +84,6 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "OnScanObserved is called");
 
-    if (std::rand() % 10 >= 1) {
-      RCLCPP_INFO(this->get_logger(), "Pass this time");
-      return;
-    }
-
     Eigen::Isometry3d pose;
     tf2::fromMsg(pose_msg->pose, pose);
 
@@ -112,6 +107,12 @@ public:
         pose_msg->header.stamp.nanosec));
     file.precision(10);
 
+    RCLCPP_INFO(
+      this->get_logger(),
+      "%d.%d",
+      pose_msg->header.stamp.sec,
+      pose_msg->header.stamp.nanosec);
+
     for (int Y = -2; Y <= 2; Y += 1) {
       for (int X = -2; X <= 2; X += 1) {
         const double x = 0.1 * X;
@@ -127,7 +128,7 @@ public:
 
         RCLCPP_INFO(
           this->get_logger(),
-          "x0 = %+.2f y0 = %+.2f x1 = %+.2f y1 = %+.2f",
+          "  x0 = %+.2f y0 = %+.2f x1 = %+.2f y1 = %+.2f",
           t0(0), t0(1), t1(0), t1(1));
 
         file <<
@@ -141,7 +142,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "Saved the convegrence result");
 
     const std::string edge_filename = fmt::format(
-      "convergence/{}-{}-edge.pcd",
+      "convergence/{:10d}-{:10d}-edge.pcd",
       pose_msg->header.stamp.sec,
       pose_msg->header.stamp.nanosec);
     pcl::io::save(edge_filename, *edge);

@@ -43,7 +43,7 @@
 #include "lidar_feature_localization/subscriber.hpp"
 
 using PointType = PointXYZCR;
-using PointToVector = PointXYZCRToVector;
+using PointToVector = PointXYZCRToXYZVector;
 using Subscriber = LocalizationSubscriber<Localizer<PointToVector, PointType>, PointType>;
 
 int main(int argc, char * argv[])
@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
   pcl::PointCloud<PointType>::Ptr edge_map(new pcl::PointCloud<PointType>());
   pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
 
-  Localizer<PointXYZCRToVector, PointType> localizer(edge_map);
+  Localizer<PointToVector, PointType> localizer(edge_map);
   rclcpp::spin(std::make_shared<Subscriber>(localizer));
   rclcpp::shutdown();
   return 0;

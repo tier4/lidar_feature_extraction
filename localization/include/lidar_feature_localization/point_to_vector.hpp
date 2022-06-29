@@ -49,6 +49,20 @@ public:
   }
 };
 
+class PointXYZCRToXYZVector
+{
+public:
+  static Eigen::VectorXd Convert(const PointXYZCR & p)
+  {
+    return Eigen::Vector3d(p.x, p.y, p.z);
+  }
+
+  static size_t NumDimension()
+  {
+    return 3;
+  }
+};
+
 class PointXYZToVector
 {
 public:
