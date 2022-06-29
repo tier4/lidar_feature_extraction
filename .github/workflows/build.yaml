@@ -9,7 +9,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
         with:
-          submodules: recursive
+          submodules: true
 
       - name: Install ROS
         run: |
