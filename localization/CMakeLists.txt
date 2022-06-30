@@ -3,7 +3,8 @@ project(lidar_feature_localization)
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-pg -g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS
+  "-pg -g -Wall -Wextra -Wpedantic -Werror -Wno-dev -fprofile-arcs -ftest-coverage")
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 
 find_package(ament_cmake REQUIRED)
