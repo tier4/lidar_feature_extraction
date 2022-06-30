@@ -29,74 +29,61 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_
 
-#include <pcl/kdtree/kdtree_flann.h>
+#include <nanoflann.hpp>
 #include <pcl/point_cloud.h>
 
+#include <memory>
 #include <tuple>
 #include <vector>
 
-#include "lidar_feature_library/pcl_utils.hpp"
+#include "lidar_feature_library/eigen.hpp"
 
-template<typename T>
-class KDTree
-{
-public:
-  explicit KDTree(const typename pcl::PointCloud<T>::Ptr & points)
-  {
-    kdtree_.setInputCloud(points);
-  }
+constexpr bool row_major = true;
+constexpr int32_t dimension = -1;
 
-  std::tuple<std::vector<int>, std::vector<float>> RadiusSearch(
-    const T & point, const double radius) const
-  {
-    std::vector<int> indices;
-    std::vector<float> squared_distances;
-    kdtree_.radiusSearch(point, radius, indices, squared_distances);
-    return {indices, squared_distances};
-  }
-
-  std::tuple<std::vector<int>, std::vector<float>> NearestKSearch(
-    const T & point, const int k) const
-  {
-    std::vector<int> indices;
-    std::vector<float> squared_distances;
-    kdtree_.nearestKSearch(point, k, indices, squared_distances);
-    return {indices, squared_distances};
-  }
-
-private:
-  pcl::KdTreeFLANN<T> kdtree_;
-};
+using matrix_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+using KDTreeType = nanoflann::KDTreeEigenMatrixAdaptor<
+  matrix_t,
+  dimension,
+  nanoflann::metric_L2,
+  row_major
+>;
 
 class KDTreeEigen
 {
 public:
-  explicit KDTreeEigen(const pcl::PointCloud<pcl::PointXYZ>::Ptr & map)
-  : map_(map), kdtree_(KDTree<pcl::PointXYZ>(map_))
+  explicit KDTreeEigen(const Eigen::MatrixXd & map, int max_leaf_size)
+  : map_(map),
+    kdtree_(std::make_shared<KDTreeType>(map_.cols(), map_, max_leaf_size))
   {
   }
 
-  std::tuple<Eigen::MatrixXd, std::vector<float>> RadiusSearch(
-    const Eigen::Vector3d & point, const double radius) const
+  std::tuple<Eigen::MatrixXd, std::vector<double>> NearestKSearch(
+    const Eigen::VectorXd & query, const int n_neighbors) const
   {
-    const pcl::PointXYZ q = MakePointXYZ(point);
-    const auto [indices, squared_distances] = kdtree_.RadiusSearch(q, radius);
-    const Eigen::MatrixXd X = Get(map_, indices);
-    return std::make_tuple(X, squared_distances);
-  }
+    assert(map_.cols() == query.size());
 
-  std::tuple<Eigen::MatrixXd, std::vector<float>> NearestKSearch(
-    const Eigen::Vector3d & point, const int n_neighbors) const
-  {
-    const pcl::PointXYZ q = MakePointXYZ(point);
-    const auto [indices, squared_distances] = kdtree_.NearestKSearch(q, n_neighbors);
-    const Eigen::MatrixXd X = Get(map_, indices);
-    return std::make_tuple(X, squared_distances);
+    std::vector<std::uint64_t> indices(n_neighbors);
+    std::vector<double> distances(n_neighbors);
+
+    nanoflann::KNNResultSet<double> result(n_neighbors);
+
+    result.init(&indices[0], &distances[0]);
+    std::vector<double> queryvec(query.size());
+    Eigen::VectorXd::Map(&queryvec[0], query.size()) = query;
+    kdtree_->index->findNeighbors(result, &queryvec[0], nanoflann::SearchParams(10));
+    // kdtree_->query(&query[0], n_neighbors, &indices[0], &distances[0]);
+
+    indices.resize(n_neighbors);
+    distances.resize(n_neighbors);
+
+    const Eigen::MatrixXd X = GetRows(map_, indices);
+    return std::make_tuple(X, distances);
   }
 
 private:
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr map_;
-  const KDTree<pcl::PointXYZ> kdtree_;
+  const Eigen::MatrixXd map_;
+  const std::shared_ptr<KDTreeType> kdtree_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_

@@ -28,7 +28,6 @@
 
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <deque>
@@ -57,17 +56,19 @@
 #include "lidar_feature_extraction/ring.hpp"
 #include "lidar_feature_extraction/subscription.hpp"
 
+#include "lidar_feature_library/algorithm.hpp"
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/degree_to_radian.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
-pcl::PointCloud<PointXYZIR>::Ptr FilterByCoordinate(
-  const pcl::PointCloud<PointXYZIR>::Ptr & edge)
+template<typename PointType>
+typename pcl::PointCloud<PointType>::Ptr FilterByCoordinate(
+  const typename pcl::PointCloud<PointType>::Ptr & edge)
 {
-  pcl::PointCloud<PointXYZIR>::Ptr filtered(new pcl::PointCloud<PointXYZIR>());
-  for (const PointXYZIR & p : *edge) {
+  typename pcl::PointCloud<PointType>::Ptr filtered(new pcl::PointCloud<PointType>());
+  for (const PointType & p : *edge) {
     if (-5. < p.y && p.y < 1.0) {
       continue;
     }
@@ -89,8 +90,6 @@ public:
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1))),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
-    curvature_cloud_publisher_(
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("curvature_scan", 1)),
     edge_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", qos_keep_all))
   {
@@ -103,7 +102,7 @@ public:
 private:
   void Callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg) const
   {
-    const pcl::PointCloud<PointXYZIR>::Ptr input_cloud = GetPointCloud<PointXYZIR>(*cloud_msg);
+    const auto input_cloud = GetPointCloud<PointXYZIR>(*cloud_msg);
 
     if (!input_cloud->is_dense) {
       RCLCPP_ERROR(
@@ -115,19 +114,16 @@ private:
     if (!RingIsAvailable(cloud_msg->fields)) {
       RCLCPP_ERROR(
         this->get_logger(),
-        "Point cloud ring channel could not be found");
+        "Ring channel could not be found");
       rclcpp::shutdown();
     }
 
-    const double debug_max_curvature = 10.;
-
-    pcl::PointCloud<PointXYZIR>::Ptr edge(new pcl::PointCloud<PointXYZIR>());
+    pcl::PointCloud<PointXYZCR>::Ptr edge(new pcl::PointCloud<PointXYZCR>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr curvature_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
     const auto rings = [&] {
         auto rings = ExtractAngleSortedRings(*input_cloud);
-        RemoveInsufficientNumRing(rings, params_.padding + 1);
+        RemoveSparseRings(rings, params_.padding + 1);
         return rings;
       } ();
 
@@ -138,24 +134,28 @@ private:
       const Range<PointXYZIR> range(ref_points);
 
       try {
-        std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+        std::vector<PointLabel> labels = InitLabels(ref_points.size());
 
-        const std::vector<double> ranges = range(0, range.Size());
+        const std::vector<double> ranges = range(0, range.size());
         const std::vector<double> curvature = CalcCurvature(ranges, params_.padding);
-        const PaddedIndexRange index_range(range.Size(), params_.n_blocks, params_.padding);
+        const PaddedIndexRange index_range(range.size(), params_.n_blocks, params_.padding);
 
         AssignLabel(labels, curvature, is_neighbor, index_range, edge_label_);
 
         LabelOccludedPoints(
-          labels, is_neighbor, range,
-          params_.padding, params_.distance_diff_threshold);
+          labels, is_neighbor, range, params_.padding, params_.distance_diff_threshold);
         LabelOutOfRange(labels, range, params_.min_range, params_.max_range);
         LabelParallelBeamPoints(labels, range, params_.parallel_beam_min_range_ratio);
 
-        ExtractByLabel<PointXYZIR>(edge, ref_points, labels, PointLabel::Edge);
+        assert(curvature.size() == static_cast<size_t>(ref_points.size()));
+
+        const std::vector<size_t> indices = GetIndicesByValue(labels, PointLabel::Edge);
+        const std::vector<PointXYZIR> edge_points = GetByIndices(indices, ref_points);
+        const std::vector<double> edge_curvature = GetByIndices(indices, curvature);
+
+        AppendXYZCR<PointXYZIR>(edge, edge_points, edge_curvature);
 
         *colored_cloud += *ColorPointsByLabel<PointXYZIR>(ref_points, labels);
-        *curvature_cloud += *ColorPointsByValue(ref_points, curvature, 0., debug_max_curvature);
       } catch (const std::invalid_argument & e) {
         RCLCPP_WARN(this->get_logger(), e.what());
       }
@@ -164,11 +164,10 @@ private:
     const std::string lidar_frame = "base_link";
     const auto stamp = cloud_msg->header.stamp;
     const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
-    const auto curvature_msg = ToRosMsg<pcl::PointXYZRGB>(curvature_cloud, stamp, lidar_frame);
-    const auto edge_xyz = ToPointXYZ<PointXYZIR>(FilterByCoordinate(edge));
-    const auto edge_msg = ToRosMsg<pcl::PointXYZ>(edge_xyz, stamp, lidar_frame);
+    const auto filtered = FilterByCoordinate<PointXYZCR>(edge);
+    const auto edge_msg = ToRosMsg<PointXYZCR>(filtered, stamp, lidar_frame);
+
     colored_scan_publisher_->publish(colored_msg);
-    curvature_cloud_publisher_->publish(curvature_msg);
     edge_publisher_->publish(edge_msg);
   }
 
@@ -176,7 +175,6 @@ private:
   const EdgeLabel edge_label_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_subscriber_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr colored_scan_publisher_;
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr curvature_cloud_publisher_;
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr edge_publisher_;
 };
 

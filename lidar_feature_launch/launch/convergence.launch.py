@@ -39,9 +39,17 @@ input_sensor_points_topic = LaunchConfiguration(
     'input_sensor_points_topic',
     default='/points_raw'
 )
+initial_pose_topic = LaunchConfiguration(
+    'initial_pose_topic',
+    default='/pose'
+)
 output_estimated_pose_topic = LaunchConfiguration(
     'output_estimated_pose_topic',
     default='/estimated_pose'
+)
+edge_map_topic = LaunchConfiguration(
+    'edge_map_topic',
+    default='/edge_map'
 )
 output_estimated_path_topic = LaunchConfiguration(
     'output_estimated_path_topic',
@@ -50,12 +58,6 @@ output_estimated_path_topic = LaunchConfiguration(
 
 
 def generate_launch_description():
-    converter = Node(
-        package='point_type_converter',
-        name='point_type_converter',
-        executable='listener'
-    )
-
     extraction = Node(
         package='lidar_feature_extraction',
         executable='lidar_feature_extraction',
@@ -71,13 +73,13 @@ def generate_launch_description():
         ]
     )
 
-    odometry = Node(
+    convergence = Node(
         package='lidar_feature_localization',
-        executable='lidar_feature_odometry',
-        name='lidar_feature_localization',
+        executable='lidar_feature_convergence',
+        name='lidar_feature_convergence',
         remappings=[
             ('scan_edge', scan_edge_topic),
-            ('estimated_pose', output_estimated_pose_topic),
+            ('initial_pose', initial_pose_topic),
         ]
     )
 
@@ -92,8 +94,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        converter,
         extraction,
-        odometry,
+        convergence,
         path_generator,
     ])

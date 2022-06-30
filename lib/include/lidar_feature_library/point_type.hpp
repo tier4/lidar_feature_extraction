@@ -26,60 +26,63 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
 
+#ifndef LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
+#define LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_
 
-#include <Eigen/Eigenvalues>
-
-#include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
+#include <Eigen/Core>
 
-#include <range/v3/all.hpp>
-
-#include <algorithm>
-#include <tuple>
-#include <vector>
-
-#include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/degenerate.hpp"
-#include "lidar_feature_localization/math.hpp"
-
-
-const int n_neighbors = 5;
-
-
-template<typename PointToVector, typename PointType>
-class LOAMOptimizationProblem
+struct PointXYZCR
 {
-public:
-  LOAMOptimizationProblem(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : edge_(edge_map, n_neighbors)
+  inline PointXYZCR(float _x, float _y, float _z, float _curvature, std::uint16_t _ring)
+  {
+    x = _x; y = _y; z = _z;
+    data[3] = 1.0f;
+    curvature = _curvature;
+    ring = _ring;
+  }
+
+  inline PointXYZCR()
+  : PointXYZCR(0.f, 0.f, 0.f, 0.f, 0)
   {
   }
 
-  bool IsDegenerate(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    const auto [J, r] = this->Make(edge_scan, point_to_map);
-    const Eigen::MatrixXd JtJ = J.transpose() * J;
+  PCL_ADD_POINT4D
+  float curvature;
+  std::uint16_t ring;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
 
-    return ::IsDegenerate(JtJ);
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  PointXYZCR,
+  (float, x, x)(float, y, y)(float, z, z)(float, curvature, curvature)(std::uint16_t, ring, ring)
+)
+
+struct PointXYZIR
+{
+  inline PointXYZIR(float _x, float _y, float _z, float _intensity, std::uint16_t _ring)
+  {
+    x = _x; y = _y; z = _z;
+    data[3] = 1.0f;
+    intensity = _intensity;
+    ring = _ring;
   }
 
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
+  inline PointXYZIR()
+  : PointXYZIR(0.f, 0.f, 0.f, 0.f, 0)
   {
-    return edge_.Make(edge_scan, point_to_map);
   }
 
-private:
-  const Edge<PointToVector, PointType> edge_;
-};
+  PCL_ADD_POINT4D
+  PCL_ADD_INTENSITY
+  std::uint16_t ring;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  PointXYZIR,
+  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
+)
+
+#endif  // LIDAR_FEATURE_LIBRARY__POINT_TYPE_HPP_

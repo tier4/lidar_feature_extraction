@@ -52,4 +52,15 @@ typename pcl::PointCloud<T>::Ptr TransformPointCloud(
   return transformed;
 }
 
+Eigen::VectorXd TransformXYZ(const Eigen::Isometry3d & transform, const Eigen::VectorXd & p0)
+{
+  assert(p0.size() >= 3);
+  const size_t d = p0.size();
+  Eigen::VectorXd p1(d);
+  Eigen::Vector3d head = p0.head(3);
+  p1.head(3) = transform * head;
+  p1.tail(d - 3) = p0.tail(d - 3);
+  return p1;
+}
+
 #endif  // LIDAR_FEATURE_LIBRARY__TRANSFORM_HPP_

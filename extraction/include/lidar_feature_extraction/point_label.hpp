@@ -33,9 +33,7 @@ enum class PointLabel : uint8_t
 {
   Default,
   Edge,
-  Surface,
   EdgeNeighbor,
-  SurfaceNeighbor,
   OutOfRange,
   Occluded,
   ParallelBeam

@@ -26,60 +26,21 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+#include <gmock/gmock.h>
+
+#include "lidar_feature_library/algorithm.hpp"
 
 
-#include <Eigen/Eigenvalues>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
-
-#include <range/v3/all.hpp>
-
-#include <algorithm>
-#include <tuple>
-#include <vector>
-
-#include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/degenerate.hpp"
-#include "lidar_feature_localization/math.hpp"
-
-
-const int n_neighbors = 5;
-
-
-template<typename PointToVector, typename PointType>
-class LOAMOptimizationProblem
+TEST(Algorithm, GetIndicesByValue)
 {
-public:
-  LOAMOptimizationProblem(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : edge_(edge_map, n_neighbors)
-  {
-  }
+  std::vector<int> array{0, 3, 2, 3, 4};
+  EXPECT_THAT(GetIndicesByValue(array, 3), testing::ElementsAre(1, 3));
+  EXPECT_THAT(GetIndicesByValue(array, 2), testing::ElementsAre(2));
+}
 
-  bool IsDegenerate(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    const auto [J, r] = this->Make(edge_scan, point_to_map);
-    const Eigen::MatrixXd JtJ = J.transpose() * J;
-
-    return ::IsDegenerate(JtJ);
-  }
-
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    return edge_.Make(edge_scan, point_to_map);
-  }
-
-private:
-  const Edge<PointToVector, PointType> edge_;
-};
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+TEST(Algorithm, GetByIndices)
+{
+  std::vector<int> array{0, 3, 2, 3, 5};
+  EXPECT_THAT(GetByIndices(std::vector<size_t>{0, 1}, array), testing::ElementsAre(0, 3));
+  EXPECT_THAT(GetByIndices(std::vector<size_t>{2, 4}, array), testing::ElementsAre(2, 5));
+}

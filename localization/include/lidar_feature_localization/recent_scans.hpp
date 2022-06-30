@@ -52,6 +52,7 @@ typename pcl::PointCloud<PointType>::Ptr MergeClouds(
 }
 
 
+template<typename PointType>
 class RecentScans
 {
 public:
@@ -59,9 +60,9 @@ public:
 
   void Add(
     const Eigen::Isometry3d & point_to_map,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan)
+    const typename pcl::PointCloud<PointType>::Ptr & scan)
   {
-    const auto transformed = TransformPointCloud<pcl::PointXYZ>(point_to_map, scan);
+    const auto transformed = TransformPointCloud<PointType>(point_to_map, scan);
     scans_.push_back(transformed);
   }
 
@@ -70,20 +71,20 @@ public:
     return scans_.size() == 0;
   }
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr GetRecent(const int n) const
+  typename pcl::PointCloud<PointType>::Ptr GetRecent(const int n) const
   {
     const int n_recent = std::min(n, static_cast<int>(scans_.size()));
     std::vector recent(scans_.end() - n_recent, scans_.end());
-    return MergeClouds<pcl::PointXYZ>(recent);
+    return MergeClouds<PointType>(recent);
   }
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr GetAll() const
+  typename pcl::PointCloud<PointType>::Ptr GetAll() const
   {
-    return MergeClouds<pcl::PointXYZ>(scans_);
+    return MergeClouds<PointType>(scans_);
   }
 
 private:
-  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> scans_;
+  std::vector<typename pcl::PointCloud<PointType>::Ptr> scans_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__RECENT_SCANS_HPP_

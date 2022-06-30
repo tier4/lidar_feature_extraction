@@ -36,11 +36,13 @@
 
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/pcl_utils.hpp"
+#include "lidar_feature_library/transform.hpp"
 
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
+#include "lidar_feature_localization/pointcloud_to_matrix.hpp"
 
 Eigen::VectorXd Center(const Eigen::MatrixXd & X)
 {
@@ -88,17 +90,31 @@ Eigen::Vector3d MakeEdgeResidual(
   return (p - p1).cross(p - p2);
 }
 
+template<typename PointToVector, typename PointType>
+KDTreeEigen MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
+{
+  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
+  return KDTreeEigen(matrix, 10);
+}
+
+Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix)
+{
+  const int rows = matrix.rows();
+  return matrix.block(0, 0, rows, 3);
+}
+
+template<typename PointToVector, typename PointType>
 class Edge
 {
 public:
-  Edge(const pcl::PointCloud<pcl::PointXYZ>::Ptr & edge_map, const int n_neighbors)
-  : kdtree_(KDTreeEigen(edge_map)),
+  Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int n_neighbors)
+  : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map)),
     n_neighbors_(n_neighbors)
   {
   }
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr & scan,
+    const typename pcl::PointCloud<PointType>::Ptr & scan,
     const Eigen::Isometry3d & point_to_map) const
   {
     // f(dx) \approx f(0) + J * dx + dx^T * H * dx
@@ -111,14 +127,16 @@ public:
     Eigen::VectorXd r(3 * n);
 
     for (int i = 0; i < n; i++) {
-      const Eigen::Vector3d p0 = GetXYZ(scan->at(i));
-      const auto [X, _] = kdtree_.NearestKSearch(point_to_map * p0, n_neighbors_);
-
+      const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
+      const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
+      const auto [neighbors, _] = kdtree_.NearestKSearch(query, n_neighbors_);
+      const Eigen::MatrixXd X = GetXYZ(neighbors);
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
 
       const Eigen::Vector3d center = Center(X);
       const Eigen::Vector3d principal = eigenvectors.col(2);
+      const Eigen::Vector3d p0 = scan_point.head(3);
       const Eigen::Vector3d p1 = center - principal;
       const Eigen::Vector3d p2 = center + principal;
       J.block<3, 7>(3 * i, 0) = MakeEdgeJacobianRow(q, p0, p1, p2);

@@ -45,7 +45,7 @@ void FillFromLeft(
   const int end_index,
   const PointLabel & label)
 {
-  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
+  assert(static_cast<int>(labels.size()) == is_neighbor.size());
 
   if (end_index > static_cast<int>(labels.size())) {
     auto s = RangeMessageLargerThan("end_index", "labels.size()", end_index, labels.size());
@@ -75,7 +75,7 @@ void FillFromRight(
   const int end_index,
   const PointLabel & label)
 {
-  assert(static_cast<int>(labels.size()) == is_neighbor.Size());
+  assert(static_cast<int>(labels.size()) == is_neighbor.size());
 
   if (end_index >= static_cast<int>(labels.size())) {
     auto s = RangeMessageLargerThanOrEqualTo(
@@ -107,7 +107,7 @@ void FillNeighbors(
   const PointLabel & label)
 {
   const int label_size = static_cast<int>(labels.size());
-  assert(label_size == is_neighbor.Size());
+  assert(label_size == is_neighbor.size());
 
   const int min = std::max(-1, index - padding - 1);
   const int max = std::min(index + 1 + padding, label_size);

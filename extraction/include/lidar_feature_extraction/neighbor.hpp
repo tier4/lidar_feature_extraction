@@ -55,7 +55,7 @@ public:
     return index1 == index2;
   }
 
-  virtual int Size() const
+  virtual int size() const
   {
     return -1;
   }
@@ -68,9 +68,9 @@ public:
   NeighborCheckXY(const MappedPoints<PointT> & ref_points, const double radian_threshold)
   : ref_points_(ref_points), radian_threshold_(radian_threshold)
   {
-    if (ref_points.Size() < 2) {
+    if (ref_points.size() < 2) {
       auto s = fmt::format(
-        "The input point size (which is {}) cannot be smaller than 2", ref_points.Size());
+        "The input point size (which is {}) cannot be smaller than 2", ref_points.size());
       throw std::invalid_argument(s);
     }
   }
@@ -80,14 +80,14 @@ public:
     CheckIndex("index1", index1);
     CheckIndex("index2", index2);
 
-    const PointT & p1 = ref_points_.At(index1);
-    const PointT & p2 = ref_points_.At(index2);
+    const PointT & p1 = ref_points_.at(index1);
+    const PointT & p2 = ref_points_.at(index2);
     return IsNeighborXY(p1, p2, radian_threshold_);
   }
 
-  int Size() const override
+  int size() const override
   {
-    return ref_points_.Size();
+    return ref_points_.size();
   }
 
   NeighborCheckXY Slice(const int begin, const int end) const
@@ -102,9 +102,9 @@ private:
       throw std::out_of_range(RangeMessageSmallerThan(name, "0", index, 0));
     }
 
-    if (index >= this->Size()) {
+    if (index >= this->size()) {
       throw std::out_of_range(
-              RangeMessageLargerThanOrEqualTo(name, "this->Size()", index, this->Size()));
+              RangeMessageLargerThanOrEqualTo(name, "this->size()", index, this->size()));
     }
   }
 
@@ -126,7 +126,7 @@ public:
     return values_.at(index1) == values_.at(index2);
   }
 
-  int Size() const override
+  int size() const override
   {
     return values_.size();
   }

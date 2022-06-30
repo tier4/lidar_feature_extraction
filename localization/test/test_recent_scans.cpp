@@ -39,7 +39,7 @@ TEST(RecentScans, RecentScans)
       return p0.x == p1.x && p0.y == p1.y && p0.z == p1.z;
     };
 
-  RecentScans scans;
+  RecentScans<pcl::PointXYZ> scans;
   pcl::PointCloud<pcl::PointXYZ>::Ptr expected(new pcl::PointCloud<pcl::PointXYZ>());
 
   EXPECT_TRUE(scans.IsEmpty());

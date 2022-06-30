@@ -95,3 +95,20 @@ TEST(Eigen, VectorToEigen)
   EXPECT_EQ(v.size(), 4);
   EXPECT_EQ((v - expected).norm(), 0.);
 }
+
+TEST(Eigen, GetRows)
+{
+  const Eigen::MatrixXd matrix =
+    (Eigen::MatrixXd(4, 3) <<
+      0, 1, 2,
+      3, 4, 5,
+      1, 3, 5,
+      2, 4, 6
+  ).finished();
+
+  std::vector<std::uint64_t> indices{0, 2};
+
+  const Eigen::MatrixXd rows = GetRows(matrix, indices);
+  EXPECT_EQ(rows.rows(), 2);
+  EXPECT_EQ(rows.cols(), 3);
+}

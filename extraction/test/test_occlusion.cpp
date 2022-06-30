@@ -49,7 +49,7 @@ TEST(Label, FromLeft)
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
-      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      std::vector<PointLabel> labels = InitLabels(ref_points.size());
       LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 2, distance_threshold);
 
       EXPECT_THAT(
@@ -79,7 +79,7 @@ TEST(Label, FromLeft)
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
-      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      std::vector<PointLabel> labels = InitLabels(ref_points.size());
       LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 1, distance_threshold);
 
       EXPECT_THAT(
@@ -97,7 +97,7 @@ TEST(Label, FromLeft)
     }
 
     {
-      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      std::vector<PointLabel> labels = InitLabels(ref_points.size());
       LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 3, distance_threshold);
 
       EXPECT_THAT(
@@ -130,7 +130,7 @@ TEST(Label, FromRight)
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
-      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      std::vector<PointLabel> labels = InitLabels(ref_points.size());
       LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 2, distance_threshold);
       EXPECT_THAT(
         labels,
@@ -160,7 +160,7 @@ TEST(Label, FromRight)
     const Range<pcl::PointXYZ> range(ref_points);
 
     {
-      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      std::vector<PointLabel> labels = InitLabels(ref_points.size());
       LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 1, distance_threshold);
       EXPECT_THAT(
         labels,
@@ -178,7 +178,7 @@ TEST(Label, FromRight)
     }
 
     {
-      std::vector<PointLabel> labels = InitLabels(ref_points.Size());
+      std::vector<PointLabel> labels = InitLabels(ref_points.size());
       LabelOccludedPoints<pcl::PointXYZ>(labels, is_neighbor, range, 3, distance_threshold);
       EXPECT_THAT(
         labels,

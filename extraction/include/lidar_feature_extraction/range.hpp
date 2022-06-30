@@ -51,7 +51,7 @@ public:
 
   double operator()(const int index) const
   {
-    const PointT & p = ref_points_.At(index);
+    const PointT & p = ref_points_.at(index);
     return XYNorm(p.x, p.y);
   }
 
@@ -64,9 +64,9 @@ public:
     return ranges;
   }
 
-  int Size() const
+  int size() const
   {
-    return ref_points_.Size();
+    return ref_points_.size();
   }
 
 private:

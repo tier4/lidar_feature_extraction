@@ -49,7 +49,8 @@
 #include "lidar_feature_extraction/range.hpp"
 #include "lidar_feature_extraction/range_message.hpp"
 #include "lidar_feature_extraction/point_label.hpp"
-#include "lidar_feature_extraction/point_type.hpp"
+
+#include "lidar_feature_library/point_type.hpp"
 
 
 std::vector<PointLabel> InitLabels(const int size)
@@ -75,7 +76,7 @@ public:
     const NeighborCheckBase & is_neighbor) const
   {
     assert(curvature.size() == labels.size());
-    assert(is_neighbor.Size() == static_cast<int>(labels.size()));
+    assert(is_neighbor.size() == static_cast<int>(labels.size()));
 
     auto is_edge = [&](const int i) {
         return curvature.at(i) >= threshold_;
@@ -107,7 +108,7 @@ void AssignLabel(
   const EdgeLabel & edge_label)
 {
   assert(curvature.size() == labels.size());
-  assert(is_neighbor.Size() == static_cast<int>(labels.size()));
+  assert(is_neighbor.size() == static_cast<int>(labels.size()));
 
   for (int j = 0; j < index_range.NBlocks(); j++) {
     const int begin = index_range.Begin(j);
@@ -121,19 +122,18 @@ void AssignLabel(
   }
 }
 
-template<typename PointT>
-void ExtractByLabel(
-  typename pcl::PointCloud<PointT>::Ptr output_cloud,
-  const MappedPoints<PointT> & ref_points,
-  const std::vector<PointLabel> & labels,
-  const PointLabel & label)
+template<typename InputPointT>
+void AppendXYZCR(
+  typename pcl::PointCloud<PointXYZCR>::Ptr output_cloud,
+  const std::vector<InputPointT> & points,
+  const std::vector<double> & curvature)
 {
-  assert(ref_points.Size() == static_cast<int>(labels.size()));
+  assert(points.size() == curvature.size());
 
-  for (unsigned int i = 0; i < labels.size(); i++) {
-    if (labels.at(i) == label) {
-      output_cloud->push_back(ref_points.At(i));
-    }
+  for (size_t i = 0; i < points.size(); i++) {
+    const InputPointT & p = points[i];
+    const PointXYZCR q(p.x, p.y, p.z, curvature[i], p.ring);
+    output_cloud->push_back(q);
   }
 }
 

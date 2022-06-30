@@ -37,7 +37,6 @@ struct HyperParameters
     distance_diff_threshold(node.declare_parameter("distance_diff_threshold", 0.3)),
     parallel_beam_min_range_ratio(node.declare_parameter("parallel_beam_min_range_ratio", 0.02)),
     edge_threshold(node.declare_parameter("edge_threshold", 0.05)),
-    surface_threshold(node.declare_parameter("surface_threshold", 0.05)),
     min_range(node.declare_parameter("min_range", 0.1)),
     max_range(node.declare_parameter("max_range", 100.0)),
     n_blocks(node.declare_parameter("n_blocks", 6))
@@ -47,7 +46,6 @@ struct HyperParameters
     assert(distance_diff_threshold > 0);
     assert(parallel_beam_min_range_ratio > 0);
     assert(edge_threshold > 0);
-    assert(surface_threshold > 0);
     assert(min_range > 0);
     assert(max_range > 0);
     assert(n_blocks > 0);
@@ -58,7 +56,6 @@ struct HyperParameters
   const double distance_diff_threshold;
   const double parallel_beam_min_range_ratio;
   const double edge_threshold;
-  const double surface_threshold;
   const double min_range;
   const double max_range;
   const int n_blocks;

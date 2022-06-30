@@ -42,34 +42,35 @@ TEST(Label, InitLabels)
     testing::ElementsAre(PointLabel::Default, PointLabel::Default));
 }
 
-TEST(Extraction, ExtractByLabel)
+bool equal(const PointXYZCR & p0, const PointXYZCR & p1)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  input_cloud->push_back(pcl::PointXYZ{0., 0., 0.});
-  input_cloud->push_back(pcl::PointXYZ{0., 0., 1.});
-  input_cloud->push_back(pcl::PointXYZ{0., 1., 0.});
-  input_cloud->push_back(pcl::PointXYZ{0., 1., 1.});
+  return
+    p0.x == p1.x &&
+    p0.y == p1.y &&
+    p0.z == p1.z &&
+    p0.curvature == p1.curvature &&
+    p0.ring == p1.ring;
+}
 
-  const std::vector<int> indices = irange(input_cloud->size());
-  const MappedPoints<pcl::PointXYZ> input_ref_points(input_cloud, indices);
+TEST(Extraction, AppendXYZCR)
+{
+  std::vector<PointXYZIR> points;
+  points.push_back(PointXYZIR(0., 1., 2., 10., 0));
+  points.push_back(PointXYZIR(3., 4., 5., 20., 1));
+  points.push_back(PointXYZIR(6., 7., 8., 30., 2));
+  points.push_back(PointXYZIR(2., 4., 6., 40., 3));
 
-  auto to_vector = [](const pcl::PointXYZ & p) {
-    return std::vector<double>{p.x, p.y, p.z};
-  };
+  const std::vector<double> curvature{0., 2., 4., 6.};
 
-  {
-    std::vector<PointLabel> labels = InitLabels(input_ref_points.Size());
-    labels.at(0) = PointLabel::Default;
-    labels.at(1) = PointLabel::Edge;
-    labels.at(2) = PointLabel::Default;
-    labels.at(3) = PointLabel::Edge;
+  pcl::PointCloud<PointXYZCR>::Ptr output_cloud(new pcl::PointCloud<PointXYZCR>());
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-    ExtractByLabel(output_cloud, input_ref_points, labels, PointLabel::Edge);
-    EXPECT_EQ(output_cloud->size(), static_cast<std::uint32_t>(2));
-    EXPECT_THAT(to_vector(output_cloud->at(0)), testing::ElementsAre(0., 0., 1.));
-    EXPECT_THAT(to_vector(output_cloud->at(1)), testing::ElementsAre(0., 1., 1.));
-  }
+  AppendXYZCR(output_cloud, points, curvature);
+
+  EXPECT_EQ(output_cloud->size(), static_cast<size_t>(4));
+  EXPECT_TRUE(equal(output_cloud->at(0), PointXYZCR(0., 1., 2., 0., 0)));
+  EXPECT_TRUE(equal(output_cloud->at(1), PointXYZCR(3., 4., 5., 2., 1)));
+  EXPECT_TRUE(equal(output_cloud->at(2), PointXYZCR(6., 7., 8., 4., 2)));
+  EXPECT_TRUE(equal(output_cloud->at(3), PointXYZCR(2., 4., 6., 6., 3)));
 }
 
 TEST(Extraction, EdgeLabel)

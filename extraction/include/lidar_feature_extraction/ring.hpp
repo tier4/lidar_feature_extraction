@@ -88,7 +88,7 @@ MakeReferenceVectorsPerRing(const Iter & points)
   return point_indices;
 }
 
-void RemoveInsufficientNumRing(
+void RemoveSparseRings(
   std::unordered_map<int, std::vector<int>> & rings,
   const int n_min_points)
 {

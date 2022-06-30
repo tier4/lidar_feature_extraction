@@ -1,0 +1,3 @@
+[submodule "localization/thirdparty/nanoflann"]
+	path = localization/thirdparty/nanoflann
+	url = https://github.com/jlblancoc/nanoflann.git

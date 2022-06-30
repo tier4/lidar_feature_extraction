@@ -31,7 +31,6 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 scan_edge_topic = '/scan_edge'
-scan_surface_topic = '/scan_surface'
 colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
 
@@ -62,7 +61,6 @@ def generate_launch_description():
             ('colored_scan', colored_scan_topic),
             ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
-            ('scan_surface', scan_surface_topic),
         ]
     )
 
@@ -72,7 +70,6 @@ def generate_launch_description():
         namespace='lidar_feature_mapping',
         remappings=[
             ('scan_edge', scan_edge_topic),
-            ('scan_surface', scan_surface_topic),
             ('pose', input_pose_topic),
         ]
     )

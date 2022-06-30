@@ -26,23 +26,55 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef LIDAR_FEATURE_LOCALIZATION__POINT_TO_VECTOR_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__POINT_TO_VECTOR_HPP_
 
-#ifndef LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
-#define LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
-
-#include <pcl/point_types.h>
 #include <Eigen/Core>
+#include <pcl/point_types.h>
 
-struct PointXYZIR
+#include "lidar_feature_library/point_type.hpp"
+
+
+class PointXYZCRToVector
 {
-  PCL_ADD_POINT4D PCL_ADD_INTENSITY
-  std::uint16_t ring;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+public:
+  static Eigen::VectorXd Convert(const PointXYZCR & p)
+  {
+    return Eigen::Vector4d(p.x, p.y, p.z, p.curvature);
+  }
 
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  PointXYZIR,
-  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)
-)
+  static size_t NumDimension()
+  {
+    return 4;
+  }
+};
 
-#endif  // LIDAR_FEATURE_EXTRACTION__POINT_TYPE_HPP_
+class PointXYZCRToXYZVector
+{
+public:
+  static Eigen::VectorXd Convert(const PointXYZCR & p)
+  {
+    return Eigen::Vector3d(p.x, p.y, p.z);
+  }
+
+  static size_t NumDimension()
+  {
+    return 3;
+  }
+};
+
+class PointXYZToVector
+{
+public:
+  static Eigen::VectorXd Convert(const pcl::PointXYZ & p)
+  {
+    return Eigen::Vector3d(p.x, p.y, p.z);
+  }
+
+  static size_t NumDimension()
+  {
+    return 3;
+  }
+};
+
+#endif  // LIDAR_FEATURE_LOCALIZATION__POINT_TO_VECTOR_HPP_

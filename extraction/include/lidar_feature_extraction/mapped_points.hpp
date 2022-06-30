@@ -41,6 +41,8 @@ template<typename PointT>
 class MappedPoints
 {
 public:
+  using value_type = PointT;
+
   MappedPoints(
     const typename pcl::PointCloud<PointT>::Ptr & cloud,
     const std::vector<int> & indices)
@@ -48,12 +50,12 @@ public:
   {
   }
 
-  int Size() const
+  int size() const
   {
     return indices_.size();
   }
 
-  PointT At(const int index) const
+  PointT at(const int index) const
   {
     return cloud_->at(indices_.at(index));
   }

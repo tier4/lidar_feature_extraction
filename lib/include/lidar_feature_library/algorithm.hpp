@@ -26,60 +26,37 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
-
-
-#include <Eigen/Eigenvalues>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
+#ifndef LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
+#define LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
 
 #include <range/v3/all.hpp>
 
 #include <algorithm>
-#include <tuple>
 #include <vector>
 
-#include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/degenerate.hpp"
-#include "lidar_feature_localization/math.hpp"
-
-
-const int n_neighbors = 5;
-
-
-template<typename PointToVector, typename PointType>
-class LOAMOptimizationProblem
+template<typename Collection>
+std::vector<typename Collection::value_type> GetByIndices(
+  const std::vector<size_t> & indices,
+  const Collection & array)
 {
-public:
-  LOAMOptimizationProblem(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : edge_(edge_map, n_neighbors)
-  {
+  return
+    indices |
+    ranges::views::transform([&](size_t i) {return array.at(i);}) |
+    ranges::to_vector;
+}
+
+template<typename Collection>
+std::vector<size_t> GetIndicesByValue(
+  const Collection & labels,
+  const typename Collection::value_type & label)
+{
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < labels.size(); i++) {
+    if (labels.at(i) == label) {
+      indices.push_back(i);
+    }
   }
+  return indices;
+}
 
-  bool IsDegenerate(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    const auto [J, r] = this->Make(edge_scan, point_to_map);
-    const Eigen::MatrixXd JtJ = J.transpose() * J;
-
-    return ::IsDegenerate(JtJ);
-  }
-
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    return edge_.Make(edge_scan, point_to_map);
-  }
-
-private:
-  const Edge<PointToVector, PointType> edge_;
-};
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_

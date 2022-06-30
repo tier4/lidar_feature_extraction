@@ -41,7 +41,7 @@ TEST(Label, FillFromLeft)
 {
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromLeft(labels, is_neighbor, 1, 4, PointLabel::Edge);
 
@@ -57,7 +57,7 @@ TEST(Label, FillFromLeft)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 1, 1});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromLeft(labels, is_neighbor, 1, 5, PointLabel::Edge);
 
@@ -73,7 +73,7 @@ TEST(Label, FillFromLeft)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromLeft(labels, is_neighbor, 1, 3, PointLabel::Default);
 
@@ -104,7 +104,7 @@ TEST(Label, FillFromRight)
 {
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromRight(labels, is_neighbor, 0, 2, PointLabel::Edge);
 
@@ -120,7 +120,7 @@ TEST(Label, FillFromRight)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromRight(labels, is_neighbor, 1, 3, PointLabel::Edge);
 
@@ -136,7 +136,7 @@ TEST(Label, FillFromRight)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 1, 1});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromRight(labels, is_neighbor, 1, 4, PointLabel::Edge);
 
@@ -152,7 +152,7 @@ TEST(Label, FillFromRight)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillFromRight(labels, is_neighbor, 1, 2, PointLabel::Default);
     EXPECT_THROW(
@@ -182,7 +182,7 @@ TEST(Label, FillNeighbors)
 {
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillNeighbors(labels, is_neighbor, 3, 2, PointLabel::EdgeNeighbor);
 
@@ -199,7 +199,7 @@ TEST(Label, FillNeighbors)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 1, 1, 1, 1, 2, 2});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillNeighbors(labels, is_neighbor, 3, 2, PointLabel::EdgeNeighbor);
 
@@ -218,7 +218,7 @@ TEST(Label, FillNeighbors)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{0, 0, 0, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillNeighbors(labels, is_neighbor, 1, 2, PointLabel::EdgeNeighbor);
 
@@ -235,7 +235,7 @@ TEST(Label, FillNeighbors)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{1, 1, 1, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillNeighbors(labels, is_neighbor, 4, 2, PointLabel::EdgeNeighbor);
 
@@ -252,7 +252,7 @@ TEST(Label, FillNeighbors)
 
   {
     const NeighborCheckDebug is_neighbor(std::vector<int>{1, 1, 1, 0, 0, 0});
-    std::vector<PointLabel> labels = InitLabels(is_neighbor.Size());
+    std::vector<PointLabel> labels = InitLabels(is_neighbor.size());
 
     FillNeighbors(labels, is_neighbor, 2, 2, PointLabel::EdgeNeighbor);
 

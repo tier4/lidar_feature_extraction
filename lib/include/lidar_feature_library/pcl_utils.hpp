@@ -39,8 +39,8 @@
 #include <tuple>
 #include <vector>
 
-
-Eigen::Vector3d GetXYZ(const pcl::PointXYZ & point)
+template<typename PointType>
+Eigen::Vector3d GetXYZ(const PointType & point)
 {
   return Eigen::Vector3d(point.x, point.y, point.z);
 }

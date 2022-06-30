@@ -26,60 +26,24 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__POINTCLOUD_TO_MATRIX_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__POINTCLOUD_TO_MATRIX_HPP_
 
-
-#include <Eigen/Eigenvalues>
-
+#include <Eigen/Core>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
 
-#include <range/v3/all.hpp>
-
-#include <algorithm>
-#include <tuple>
-#include <vector>
-
-#include "lidar_feature_localization/edge.hpp"
-#include "lidar_feature_localization/degenerate.hpp"
-#include "lidar_feature_localization/math.hpp"
-
-
-const int n_neighbors = 5;
-
+#include "lidar_feature_localization/point_to_vector.hpp"
 
 template<typename PointToVector, typename PointType>
-class LOAMOptimizationProblem
+Eigen::MatrixXd PointCloudToMatrix(
+  const typename pcl::PointCloud<PointType>::Ptr & map)
 {
-public:
-  LOAMOptimizationProblem(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : edge_(edge_map, n_neighbors)
-  {
+  Eigen::MatrixXd points(map->size(), PointToVector::NumDimension());
+  for (size_t i = 0; i < map->size(); i++) {
+    points.row(i) = PointToVector::Convert(map->at(i));
   }
+  return points;
+}
 
-  bool IsDegenerate(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    const auto [J, r] = this->Make(edge_scan, point_to_map);
-    const Eigen::MatrixXd JtJ = J.transpose() * J;
-
-    return ::IsDegenerate(JtJ);
-  }
-
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    return edge_.Make(edge_scan, point_to_map);
-  }
-
-private:
-  const Edge<PointToVector, PointType> edge_;
-};
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
+#endif  // LIDAR_FEATURE_LOCALIZATION__POINTCLOUD_TO_MATRIX_HPP_

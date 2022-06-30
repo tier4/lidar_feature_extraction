@@ -55,11 +55,13 @@ using Synchronizer = message_filters::Synchronizer<Exact>;
 const rmw_qos_profile_t qos_profile =
   rclcpp::SensorDataQoS().keep_all().reliable().get_rmw_qos_profile();
 
+using PointType = PointXYZCR;
+
 class MapSubscriber : public rclcpp::Node
 {
 public:
   MapSubscriber(
-    std::shared_ptr<MapBuilder> & builder,
+    std::shared_ptr<MapBuilder<PointType>> & builder,
     const std::string & node_name,
     const std::string & cloud_topic_name,
     const std::string & pose_topic_name)
@@ -69,7 +71,9 @@ public:
     sync_(std::make_shared<Synchronizer>(Exact(10), cloud_subscriber_, pose_subscriber_))
   {
     sync_->registerCallback(
-      std::bind(&MapBuilder::Callback, builder, std::placeholders::_1, std::placeholders::_2));
+      std::bind(
+        &MapBuilder<PointType>::Callback, builder,
+        std::placeholders::_1, std::placeholders::_2));
   }
 
 private:
@@ -84,7 +88,7 @@ int main(int argc, char * argv[])
 
   RCLCPP_DEBUG(rclcpp::get_logger("lidar_feature_mapping"), "Start nodes");
 
-  auto edge_map_builder = std::make_shared<MapBuilder>();
+  auto edge_map_builder = std::make_shared<MapBuilder<PointType>>();
 
   auto edge_sub = std::make_shared<MapSubscriber>(
     edge_map_builder, "edge_map_builder", "scan_edge", "pose");

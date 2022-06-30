@@ -40,7 +40,7 @@ void LabelOutOfRange(
   const double min_range,
   const double max_range)
 {
-  for (int i = 0; i < range.Size(); i++) {
+  for (int i = 0; i < range.size(); i++) {
     if (!IsInInclusiveRange(range(i), min_range, max_range)) {
       labels.at(i) = PointLabel::OutOfRange;
     }
