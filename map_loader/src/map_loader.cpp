@@ -27,6 +27,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -40,8 +41,6 @@
 #include "lidar_feature_library/ros_msg.hpp"
 
 
-const rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
-
 sensor_msgs::msg::PointCloud2 LoadMap(const std::string & filepath)
 {
   sensor_msgs::msg::PointCloud2 map;
@@ -50,43 +49,35 @@ sensor_msgs::msg::PointCloud2 LoadMap(const std::string & filepath)
   return map;
 }
 
-class MapPublisherNode : public rclcpp::Node
+class MapLoaderNode : public rclcpp::Node
 {
 public:
-  MapPublisherNode(
-    const std::string & node_name,
-    const std::string & topic_name,
-    const std::string & pcd_filename)
-  : Node(node_name),
-    publisher_(this->MakePublisher<sensor_msgs::msg::PointCloud2>(topic_name))
+  explicit MapLoaderNode(const rclcpp::NodeOptions & options)
+  : Node("map_loader", options)
   {
-    const auto map = LoadMap(pcd_filename);
+    const std::string pcd_filename = this->declare_parameter("pcd_filename", "");
+
+    if (pcd_filename.size() == 0) {
+      throw std::invalid_argument("pcd_filename is not set");
+    }
+
+    const sensor_msgs::msg::PointCloud2 map = LoadMap(pcd_filename);
+
     RCLCPP_INFO(
       this->get_logger(),
       "Loaded point cloud map from %s of size (width = %u, height = %u)",
       pcd_filename.c_str(), map.width, map.height);
+
+    const rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
+
+    publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("map_topic", qos);
     publisher_->publish(map);
+
+    RCLCPP_INFO(this->get_logger(), "The map point cloud has been published");
   }
 
 private:
-  template<typename T>
-  typename rclcpp::Publisher<T>::SharedPtr MakePublisher(const std::string & topic_name)
-  {
-    return this->create_publisher<T>(topic_name, qos);
-  }
-
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
 };
 
-int main(int argc, char * argv[])
-{
-  rclcpp::init(argc, argv);
-
-  rclcpp::executors::MultiThreadedExecutor exec;
-  const auto edge_node = std::make_shared<MapPublisherNode>(
-    "edge_map_publisher", "/edge_map", "maps/edge.pcd");
-  exec.add_node(edge_node);
-  exec.spin();
-  rclcpp::shutdown();
-  return 0;
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(MapLoaderNode)

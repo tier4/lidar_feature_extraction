@@ -34,6 +34,7 @@ from launch_ros.actions import Node
 scan_edge_topic = '/scan_edge'
 colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
+map_path = 'maps/edge.pcd'
 
 input_sensor_points_topic = LaunchConfiguration(
     'input_sensor_points_topic',
@@ -87,9 +88,11 @@ def generate_launch_description():
         package='lidar_feature_map_loader',
         executable='lidar_feature_map_loader',
         namespace='lidar_feature_map_loader',
+        parameters=[
+            {'pcd_filename': map_path}
+        ],
         remappings=[
-            ('/edge_map', edge_map_topic),
-            ('/surface_map', surface_map_topic),
+            ('map_topic', edge_map_topic)
         ]
     )
 
