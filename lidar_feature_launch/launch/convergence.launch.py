@@ -107,7 +107,7 @@ def generate_launch_description():
             }
         ],
         remappings=[
-            ('/pointcloud_map', '/edge_map')
+            ('/pointcloud_map', edge_map_topic)
         ]
     )
 
