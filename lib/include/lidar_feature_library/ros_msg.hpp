@@ -71,9 +71,9 @@ typename pcl::PointCloud<T>::Ptr GetPointCloud(const sensor_msgs::msg::PointClou
   return pclcloud;
 }
 
-Eigen::Affine3d GetAffine(const geometry_msgs::msg::Pose & pose)
+Eigen::Isometry3d GetIsometry3d(const geometry_msgs::msg::Pose & pose)
 {
-  Eigen::Affine3d transform;
+  Eigen::Isometry3d transform;
   tf2::fromMsg(pose, transform);
   return transform;
 }

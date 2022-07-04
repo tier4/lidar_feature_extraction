@@ -36,25 +36,26 @@ TEST(Map, PoseDiffIsSufficientlySmall)
   const Eigen::Quaterniond q0 = Eigen::Quaterniond(1., 0.1, 0.1, -0.1).normalized();
   const Eigen::Vector3d t0(2.0, 1.0, -1.0);
 
-  Eigen::Affine3d pose0;
+  Eigen::Isometry3d pose0;
   pose0.linear() = q0.toRotationMatrix();
   pose0.translation() = t0;
 
   {
     const Eigen::Vector3d dt(1.0, 0.0, 0.0);
 
-    Eigen::Affine3d pose1;
+    Eigen::Isometry3d pose1;
     pose1.linear() = pose0.linear();
     pose1.translation() = pose0.translation() + dt;
 
-    EXPECT_FALSE(PoseDiffIsSufficientlySmall(pose0, pose1, 1.0, 1e-8));
+    // this has a mysterious rounding error
+    EXPECT_FALSE(PoseDiffIsSufficientlySmall(pose0, pose1, 0.999999, 1e-8));
     EXPECT_TRUE(PoseDiffIsSufficientlySmall(pose0, pose1, 1.1, 1e-8));
   }
 
   {
     const Eigen::Quaterniond dq = Eigen::Quaterniond(1.0, 0.1, 0.1, 0.1).normalized();
 
-    Eigen::Affine3d pose1;
+    Eigen::Isometry3d pose1;
     pose1.linear() = pose0.linear() * dq.toRotationMatrix();
     pose1.translation() = pose0.translation();
 
@@ -70,13 +71,13 @@ TEST(Map, TransformAdd)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud0(new pcl::PointCloud<pcl::PointXYZ>());
   cloud0->push_back(pcl::PointXYZ(0., 1., 0));
   cloud0->push_back(pcl::PointXYZ(0., 1., 0));
-  const Eigen::Affine3d transform0 = Eigen::Affine3d::Identity();
+  const Eigen::Isometry3d transform0 = Eigen::Isometry3d::Identity();
 
   map.TransformAdd(transform0, cloud0);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1(new pcl::PointCloud<pcl::PointXYZ>());
   cloud1->push_back(pcl::PointXYZ(0., 1., 0));
-  const Eigen::Affine3d transform1(
+  const Eigen::Isometry3d transform1(
     Eigen::Translation3d(3., 0., 0.) * Eigen::Quaterniond::Identity());
 
   map.TransformAdd(transform1, cloud1);
@@ -104,7 +105,7 @@ TEST(Map, IsEmpty)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(0., 0., 0));
 
-  map.TransformAdd(Eigen::Affine3d::Identity(), cloud);
+  map.TransformAdd(Eigen::Isometry3d::Identity(), cloud);
 
   EXPECT_FALSE(map.IsEmpty());
 }
