@@ -7,7 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /PointCloud21
-        - /PointCloud22
       Splitter Ratio: 0.5
     Tree Height: 485
   - Class: rviz_common/Views
@@ -19,7 +18,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Visualization Manager:
   Class: ""
   Displays:
@@ -32,7 +31,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
-      Color: 110; 143; 231
+      Color: 248; 253; 21
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -44,16 +43,16 @@ Visualization Manager:
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 1
-      Size (m): 0.03999999910593033
+      Size (Pixels): 3
+      Size (m): 0.10000000149011612
       Style: Flat Squares
       Topic:
         Depth: 5
-        Durability Policy: Transient Local
+        Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /edge_map
+        Value: /scan_edge
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -66,8 +65,8 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: RGB8
+      Color: 210; 226; 242
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -78,16 +77,16 @@ Visualization Manager:
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.07999999821186066
+      Size (Pixels): 1
+      Size (m): 0.05999999865889549
       Style: Flat Squares
       Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /colored_scan
+        Value: /edge_map
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -119,6 +118,19 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /estimated_path
       Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /convergence_marker
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 10; 10; 10
@@ -137,21 +149,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
-      Class: rviz_default_plugins/TopDownOrtho
+      Class: rviz_default_plugins/Orbit
+      Distance: 500
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: false
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 10
+      Pitch: 0.7853981852531433
       Target Frame: viewer
-      Value: TopDownOrtho (rviz_default_plugins)
-      X: 0
-      Y: 0
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 0.7853981852531433
     Saved: ~
 Window Geometry:
   Displays:
