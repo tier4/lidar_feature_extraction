@@ -57,6 +57,93 @@ using Exact = message_filters::sync_policies::ExactTime<
   geometry_msgs::msg::PoseStamped>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
 
+std::ofstream OpenFile(const std::string & filename)
+{
+  std::ofstream file;
+  file.open(filename);
+  file.precision(10);
+  return file;
+}
+
+void WritePose(std::ofstream & file, const Eigen::Isometry3d & p0, const Eigen::Isometry3d & p1)
+{
+  const Eigen::Vector3d t0 = p0.translation();
+  const Eigen::Vector3d t1 = p1.translation();
+  const Eigen::Quaterniond q0(p0.rotation());
+  const Eigen::Quaterniond q1(p1.rotation());
+
+  file <<
+    t0(0) << "," << t0(1) << "," << t0(2) << "," <<
+    q0.x() << "," << q0.y() << "," << q0.z() << "," << q0.w() << "," <<
+    t1(0) << "," << t1(1) << "," << t1(2) << "," <<
+    q1.x() << "," << q1.y() << "," << q1.z() << "," << q1.w() << std::endl;
+}
+
+void SaveOrigin(const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
+{
+  std::ofstream file = OpenFile(
+    fmt::format(
+      "convergence/{}-{}.origin.csv",
+      pose_msg->header.stamp.sec,
+      pose_msg->header.stamp.nanosec));
+
+  const Eigen::Isometry3d pose = GetIsometry3d(pose_msg->pose);
+
+  const Eigen::Vector3d t = pose.translation();
+  const Eigen::Quaterniond q(pose.rotation());
+
+  file <<
+    t(0) << "," << t(1) << "," << t(2) << "," <<
+    q.x() << "," << q.y() << "," << q.z() << "," << q.w() << std::endl;
+
+  file.close();
+}
+
+template<typename OptimizerType, typename PointType>
+void AnalyzeAndSaveConvergence(
+  const OptimizerType optimizer,
+  const typename pcl::PointCloud<PointType>::Ptr & edge,
+  const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
+{
+  const std::string filename = fmt::format(
+    "convergence/{}-{}.convergence.csv",
+    pose_msg->header.stamp.sec,
+    pose_msg->header.stamp.nanosec);
+
+  std::ofstream file = OpenFile(filename);
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("lidar_feature_convergence"),
+    "%d.%d",
+    pose_msg->header.stamp.sec,
+    pose_msg->header.stamp.nanosec);
+
+  Eigen::Isometry3d groundtruth_pose;
+  tf2::fromMsg(pose_msg->pose, groundtruth_pose);
+
+  for (int Y = -2; Y <= 2; Y += 1) {
+    for (int X = -2; X <= 2; X += 1) {
+      const double x = 0.4 * X;
+      const double y = 0.4 * Y;
+
+      const Eigen::Vector3d dt(x, y, 0.);
+
+      Eigen::Isometry3d initial_pose;
+      initial_pose.linear() = groundtruth_pose.rotation();
+      initial_pose.translation() = groundtruth_pose.translation() + dt;
+      const Eigen::Isometry3d estimated = optimizer.Run(edge, initial_pose);
+
+      RCLCPP_INFO(
+        rclcpp::get_logger("lidar_feature_convergence"),
+        "  dx0 = %+.2f dy0 = %+.2f", dt(0), dt(1));
+
+      WritePose(file, initial_pose, estimated);
+    }
+  }
+
+  file.close();
+}
+
 template<typename PointToVector, typename PointType>
 class ConvergenceAnalysis : public rclcpp::Node
 {
@@ -104,50 +191,13 @@ public:
 
     const OptimizerType optimizer(problem);
 
-    std::ofstream file;
-    file.open(
-      fmt::format(
-        "convergence/{}-{}.csv",
-        pose_msg->header.stamp.sec,
-        pose_msg->header.stamp.nanosec));
-    file.precision(10);
-
-    RCLCPP_INFO(
-      this->get_logger(),
-      "%d.%d",
-      pose_msg->header.stamp.sec,
-      pose_msg->header.stamp.nanosec);
-
-    for (int Y = -2; Y <= 2; Y += 1) {
-      for (int X = -2; X <= 2; X += 1) {
-        const double x = 0.1 * X;
-        const double y = 0.1 * Y;
-
-        Eigen::Isometry3d initial_pose;
-        initial_pose.linear() = pose.rotation();
-        initial_pose.translation() = pose.translation() + Eigen::Vector3d(x, y, 0.);
-        const Eigen::Isometry3d estimated = optimizer.Run(edge, initial_pose);
-
-        const Eigen::Vector3d t0 = initial_pose.translation();
-        const Eigen::Vector3d t1 = estimated.translation();
-
-        RCLCPP_INFO(
-          this->get_logger(),
-          "  x0 = %+.2f y0 = %+.2f x1 = %+.2f y1 = %+.2f",
-          t0(0), t0(1), t1(0), t1(1));
-
-        file <<
-          t0(0) << "," << t0(1) << "," << t0(2) << "," <<
-          t1(0) << "," << t1(1) << "," << t1(2) << std::endl;
-      }
-    }
-
-    file.close();
+    SaveOrigin(pose_msg);
+    AnalyzeAndSaveConvergence<OptimizerType, PointType>(optimizer, edge, pose_msg);
 
     RCLCPP_INFO(this->get_logger(), "Saved the convegrence result");
 
     const std::string edge_filename = fmt::format(
-      "convergence/{:10d}-{:10d}-edge.pcd",
+      "convergence/{:10d}-{:>09d}.edge.pcd",
       pose_msg->header.stamp.sec,
       pose_msg->header.stamp.nanosec);
     pcl::io::save(edge_filename, *edge);
