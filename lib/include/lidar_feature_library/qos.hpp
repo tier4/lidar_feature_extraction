@@ -29,6 +29,8 @@
 #ifndef LIDAR_FEATURE_LIBRARY__QOS_HPP_
 #define LIDAR_FEATURE_LIBRARY__QOS_HPP_
 
+#include <rclcpp/rclcpp.hpp>
+
 const rclcpp::QoS QOS_RELIABLE_VOLATILE =
   rclcpp::SensorDataQoS().reliable().durability_volatile();
 const rclcpp::QoS QOS_RELIABLE_TRANSIENT_LOCAL =
