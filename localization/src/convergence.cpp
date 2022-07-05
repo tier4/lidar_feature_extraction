@@ -70,10 +70,10 @@ visualization_msgs::msg::Marker AnalyzeConvergence(
   SetColor(lines, 0.8, 0.8, 1.0, 1.);
   SetWidth(lines, 0.02);
 
-  for (int Y = -2; Y <= 2; Y += 1) {
-    for (int X = -2; X <= 2; X += 1) {
-      const double x = 0.4 * X;
-      const double y = 0.4 * Y;
+  for (int Y = -1; Y <= 1; Y += 1) {
+    for (int X = -1; X <= 1; X += 1) {
+      const double x = 0.8 * X;
+      const double y = 0.8 * Y;
 
       RCLCPP_INFO(rclcpp::get_logger("lidar_feature_convergence"), "  dx = %+.2f dy = %+.2f", x, y);
 
