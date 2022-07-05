@@ -47,7 +47,7 @@ public:
   : Node("path_generator"),
     pose_subscription_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        pose_topic_name, rclcpp::SensorDataQoS().reliable().transient_local().keep_all(),
+        pose_topic_name, rclcpp::SensorDataQoS().reliable().durability_volatile().keep_all(),
         std::bind(&PathGenerator::Callback, this, std::placeholders::_1))),
     path_publisher_(
       this->create_publisher<nav_msgs::msg::Path>(

@@ -33,7 +33,6 @@ from launch_ros.actions import Node
 
 scan_edge_topic = '/scan_edge'
 colored_scan_topic = '/colored_scan'
-curvature_scan_topic = '/curvature_scan'
 map_path = 'maps/edge.pcd'
 
 input_sensor_points_topic = LaunchConfiguration(
@@ -44,17 +43,13 @@ initial_pose_topic = LaunchConfiguration(
     'initial_pose_topic',
     default='/pose'
 )
-output_estimated_pose_topic = LaunchConfiguration(
-    'output_estimated_pose_topic',
-    default='/estimated_pose'
-)
 edge_map_topic = LaunchConfiguration(
     'edge_map_topic',
     default='/edge_map'
 )
-output_estimated_path_topic = LaunchConfiguration(
-    'output_estimated_path_topic',
-    default='/estimated_path'
+output_path_topic = LaunchConfiguration(
+    'output_path_topic',
+    default='/path'
 )
 
 
@@ -69,7 +64,6 @@ def generate_launch_description():
         remappings=[
             ('points_raw', input_sensor_points_topic),
             ('colored_scan', colored_scan_topic),
-            ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
         ]
     )
@@ -116,8 +110,8 @@ def generate_launch_description():
         executable='path_generator',
         name='path_generator',
         remappings=[
-            ('pose', output_estimated_pose_topic),
-            ('path', output_estimated_path_topic),
+            ('pose', initial_pose_topic),
+            ('path', output_path_topic),
         ]
     )
 
