@@ -102,7 +102,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -111,7 +111,7 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
-      Position Transformer: ""
+      Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -182,11 +182,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 12.155405044555664
-      Target Frame: base_link
+      Scale: 10
+      Target Frame: viewer
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 15.180572509765625
-      Y: 1.8053512573242188
+      X: 0
+      Y: 0
     Saved: ~
 Window Geometry:
   Displays:
