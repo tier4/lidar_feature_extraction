@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <depend>libpcl-all-dev</depend>
+  <depend>lidar_feature_library</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>

@@ -34,45 +34,45 @@
 #include <chrono>
 #include <thread>
 
+#include "lidar_feature_library/qos.hpp"
+
 #include "path_generator/path_generator.hpp"
+
 
 class PathEvaluator
 {
 public:
   PathEvaluator()
-  : expected_size_(0)
+  : n_received_(0)
   {
   }
 
   void Callback(const nav_msgs::msg::Path::ConstSharedPtr path)
   {
-    expected_size_ += 1;
+    n_received_ += 1;
 
     const size_t size = path->poses.size();
     const auto pose = path->poses.at(size - 1);
-    ASSERT_EQ(size, expected_size_);
-    EXPECT_EQ(pose.pose.position.x, static_cast<double>(expected_size_));
+    EXPECT_EQ(pose.pose.position.x, static_cast<double>(size));
   }
 
-  size_t expected_size_;
+  size_t n_received_;
 };
 
 TEST(PathGenerator, NodeIntegrationTest)
 {
   rclcpp::init(0, {});
 
-  const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
-
   const size_t n_spin = 100;
 
   auto node = std::make_shared<rclcpp::Node>("test_node");
   auto evaluator = std::make_shared<PathEvaluator>();
 
+  const auto qos = rclcpp::SensorDataQoS().reliable().transient_local().keep_all();
+
+  auto pose_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>("pose", qos);
   auto path_subscription = node->create_subscription<nav_msgs::msg::Path>(
-    "path", qos_keep_all,
-    std::bind(&PathEvaluator::Callback, evaluator, std::placeholders::_1));
-  auto pose_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>(
-    "pose", qos_keep_all);
+    "path", qos, std::bind(&PathEvaluator::Callback, evaluator, std::placeholders::_1));
 
   auto generator = std::make_shared<PathGenerator>("path", "pose");
 
@@ -85,9 +85,9 @@ TEST(PathGenerator, NodeIntegrationTest)
     geometry_msgs::msg::PoseStamped pose;
     pose.pose.position.set__x(i + 1);
     pose_publisher->publish(pose);
-    executor.spin_once(std::chrono::milliseconds(10));
+    executor.spin_once(std::chrono::milliseconds(100));
   }
 
-  EXPECT_THAT(evaluator->expected_size_, testing::Gt(0U));
+  EXPECT_THAT(evaluator->n_received_, testing::Gt(0U));
   rclcpp::shutdown();
 }

@@ -25,6 +25,9 @@
 #include <memory>
 #include <string>
 
+#include "lidar_feature_library/qos.hpp"
+
+
 class MapTFGeneratorNode : public rclcpp::Node
 {
 public:
@@ -36,7 +39,7 @@ public:
     viewer_frame_ = declare_parameter("viewer_frame", "viewer");
 
     sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
-      "/pointcloud_map", rclcpp::QoS{1}.transient_local(),
+      "/pointcloud_map", QOS_RELIABLE_TRANSIENT_LOCAL,
       std::bind(&MapTFGeneratorNode::onPointCloud, this, std::placeholders::_1));
 
     static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);

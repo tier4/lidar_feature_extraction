@@ -38,7 +38,7 @@
 #include <memory>
 #include <string>
 
-const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
+#include "lidar_feature_library/qos.hpp"
 
 class PathGenerator : public rclcpp::Node
 {
@@ -47,10 +47,11 @@ public:
   : Node("path_generator"),
     pose_subscription_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        pose_topic_name, qos_keep_all,
+        pose_topic_name, rclcpp::SensorDataQoS().reliable().transient_local().keep_all(),
         std::bind(&PathGenerator::Callback, this, std::placeholders::_1))),
     path_publisher_(
-      this->create_publisher<nav_msgs::msg::Path>(path_topic_name, qos_keep_all))
+      this->create_publisher<nav_msgs::msg::Path>(
+        path_topic_name, QOS_RELIABLE_TRANSIENT_LOCAL))
   {
   }
 

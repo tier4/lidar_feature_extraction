@@ -46,12 +46,12 @@
 #include <memory>
 #include <string>
 
+#include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
+
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
-const rmw_qos_profile_t qos_profile =
-  rclcpp::SensorDataQoS().keep_all().reliable().get_rmw_qos_profile();
 
 using Exact = message_filters::sync_policies::ExactTime<
   sensor_msgs::msg::PointCloud2,
@@ -100,8 +100,8 @@ public:
     const std::string & marker_topic_name,
     const typename pcl::PointCloud<PointType>::Ptr & edge_map)
   : Node("lidar_feature_convergence"),
-    edge_subscriber_(this, edge_topic_name, qos_profile),
-    pose_subscriber_(this, pose_topic_name, qos_profile),
+    edge_subscriber_(this, edge_topic_name, QOS_RELIABLE_VOLATILE.get_rmw_qos_profile()),
+    pose_subscriber_(this, pose_topic_name, QOS_RELIABLE_VOLATILE.get_rmw_qos_profile()),
     sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, pose_subscriber_)),
     marker_publisher_(
       this->create_publisher<visualization_msgs::msg::Marker>(marker_topic_name, 10)),

@@ -38,6 +38,7 @@
 #include <string>
 #include <memory>
 
+#include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 
@@ -68,9 +69,8 @@ public:
       "Loaded point cloud map from %s of size (width = %u, height = %u)",
       pcd_filename.c_str(), map.width, map.height);
 
-    const rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
-
-    publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("map_topic", qos);
+    publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "map_topic", QOS_RELIABLE_TRANSIENT_LOCAL);
     publisher_->publish(map);
 
     RCLCPP_INFO(this->get_logger(), "The map point cloud has been published");
