@@ -69,7 +69,8 @@ public:
     edge_subscriber_(this, edge_topic_name, qos_profile),
     pose_subscriber_(this, pose_topic_name, qos_profile),
     sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, pose_subscriber_)),
-    edge_map_(edge_map)
+    edge_map_(edge_map),
+    tf_broadcaster_(*this)
   {
     std::srand(3939);
 
@@ -86,6 +87,10 @@ public:
 
     Eigen::Isometry3d pose;
     tf2::fromMsg(pose_msg->pose, pose);
+
+    tf_broadcaster_.sendTransform(
+      EigenToTransform(pose, edge_msg->header.stamp, "map", "base_link")
+    );
 
     const auto edge = GetPointCloud<PointType>(*edge_msg);
 
@@ -155,6 +160,7 @@ private:
   message_filters::Subscriber<geometry_msgs::msg::PoseStamped> pose_subscriber_;
   std::shared_ptr<Synchronizer> sync_;
   const typename pcl::PointCloud<PointType>::Ptr edge_map_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
 };
 
 int main(int argc, char * argv[])
