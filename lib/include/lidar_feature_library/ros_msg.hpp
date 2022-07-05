@@ -32,14 +32,16 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <sensor_msgs/msg/point_field.hpp>
+
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <tf2/convert.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <tf2_ros/transform_broadcaster.h>
 
-#include <pcl_conversions/pcl_conversions.h>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/point_field.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 #include <string>
 
@@ -89,6 +91,58 @@ geometry_msgs::msg::TransformStamped EigenToTransform(
   transform.header.frame_id = frame_id;
   transform.child_frame_id = child_frame_id;
   return transform;
+}
+
+geometry_msgs::msg::Point MakePoint(const Eigen::Vector3d & p)
+{
+  geometry_msgs::msg::Point q;
+  q.x = p(0);
+  q.y = p(1);
+  q.z = p(2);
+  return q;
+}
+
+visualization_msgs::msg::Marker InitLines(const rclcpp::Time & stamp, const std::string & frame_id)
+{
+  visualization_msgs::msg::Marker lines;
+  lines.type = visualization_msgs::msg::Marker::LINE_LIST;
+  lines.header.stamp = stamp;
+  lines.header.frame_id = frame_id;
+  return lines;
+}
+
+void SetWidth(visualization_msgs::msg::Marker & lines, const float width)
+{
+  assert(0. <= width && width <= 1.);
+  lines.scale.x = width;
+}
+
+void SetColor(
+  visualization_msgs::msg::Marker & lines,
+  const float r,
+  const float g,
+  const float b,
+  const float a)
+{
+  assert(0. <= r && r <= 1.);
+  assert(0. <= g && g <= 1.);
+  assert(0. <= b && b <= 1.);
+  assert(0. <= a && a <= 1.);
+
+  lines.color.r = r;
+  lines.color.g = g;
+  lines.color.b = b;
+  lines.color.a = a;
+}
+
+void AddLine(
+  visualization_msgs::msg::Marker & lines,
+  const Eigen::Vector3d & line_start,
+  const Eigen::Vector3d & line_end)
+{
+  // The line list needs two points for each line
+  lines.points.push_back(MakePoint(line_start));
+  lines.points.push_back(MakePoint(line_end));
 }
 
 #endif   // LIDAR_FEATURE_LIBRARY__ROS_MSG_HPP_
