@@ -26,68 +26,58 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <gmock/gmock.h>
-#include <nav_msgs/msg/path.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/auto_io.h>
+
+#include <sensor_msgs/msg/point_cloud2.hpp>
+
+#include <string>
 #include <memory>
-#include <chrono>
-#include <thread>
 
 #include "lidar_feature_library/qos.hpp"
+#include "lidar_feature_library/ros_msg.hpp"
 
-#include "path_generator/path_generator.hpp"
 
+sensor_msgs::msg::PointCloud2 LoadMap(const std::string & filepath)
+{
+  sensor_msgs::msg::PointCloud2 map;
+  pcl::io::loadPCDFile(filepath, map);
+  map.header.frame_id = "map";
+  return map;
+}
 
-class PathEvaluator
+class MapLoaderNode : public rclcpp::Node
 {
 public:
-  PathEvaluator()
-  : n_received_(0)
+  explicit MapLoaderNode(const rclcpp::NodeOptions & options)
+  : Node("map_loader", options)
   {
+    const std::string pcd_filename = this->declare_parameter("pcd_filename", "");
+
+    if (pcd_filename.size() == 0) {
+      throw std::invalid_argument("pcd_filename is not set");
+    }
+
+    const sensor_msgs::msg::PointCloud2 map = LoadMap(pcd_filename);
+
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Loaded point cloud map from %s of size (width = %u, height = %u)",
+      pcd_filename.c_str(), map.width, map.height);
+
+    publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "map_topic", QOS_RELIABLE_TRANSIENT_LOCAL);
+    publisher_->publish(map);
+
+    RCLCPP_INFO(this->get_logger(), "The map point cloud has been published");
   }
 
-  void Callback(const nav_msgs::msg::Path::ConstSharedPtr path)
-  {
-    n_received_ += 1;
-
-    const size_t size = path->poses.size();
-    const auto pose = path->poses.at(size - 1);
-    EXPECT_EQ(pose.pose.position.x, static_cast<double>(size));
-  }
-
-  size_t n_received_;
+private:
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
 };
 
-TEST(PathGenerator, NodeIntegrationTest)
-{
-  rclcpp::init(0, {});
-
-  const size_t n_spin = 100;
-
-  auto node = std::make_shared<rclcpp::Node>("test_node");
-  auto evaluator = std::make_shared<PathEvaluator>();
-
-  const auto qos = rclcpp::SensorDataQoS().reliable().transient_local().keep_all();
-
-  auto pose_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>("pose", qos);
-  auto path_subscription = node->create_subscription<nav_msgs::msg::Path>(
-    "path", qos, std::bind(&PathEvaluator::Callback, evaluator, std::placeholders::_1));
-
-  auto generator = std::make_shared<PathGenerator>("path", "pose");
-
-  rclcpp::ExecutorOptions options;
-
-  rclcpp::executors::MultiThreadedExecutor executor(options);
-  executor.add_node(node);
-  executor.add_node(generator);
-  for (size_t i = 0; i < n_spin; i++) {
-    geometry_msgs::msg::PoseStamped pose;
-    pose.pose.position.set__x(i + 1);
-    pose_publisher->publish(pose);
-    executor.spin_once(std::chrono::milliseconds(100));
-  }
-
-  EXPECT_THAT(evaluator->n_received_, testing::Gt(0U));
-  rclcpp::shutdown();
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(MapLoaderNode)

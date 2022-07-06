@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /PointCloud21
+        - /Path1
       Splitter Ratio: 0.5
     Tree Height: 485
   - Class: rviz_common/Views
@@ -30,7 +32,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
-      Color: 110; 143; 231
+      Color: 248; 253; 21
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -42,16 +44,16 @@ Visualization Manager:
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 1
-      Size (m): 0.03999999910593033
+      Size (Pixels): 3
+      Size (m): 0.800000011920929
       Style: Flat Squares
       Topic:
         Depth: 5
-        Durability Policy: Transient Local
+        Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /edge_map
+        Value: /scan_edge
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -64,8 +66,8 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: RGB8
+      Color: 210; 226; 242
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -76,16 +78,16 @@ Visualization Manager:
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.07999999821186066
+      Size (Pixels): 1
+      Size (m): 0.05999999865889549
       Style: Flat Squares
       Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /colored_scan
+        Value: /edge_map
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -115,7 +117,20 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /estimated_path
+        Value: /path
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /convergence_marker
       Value: true
   Enabled: true
   Global Options:
@@ -145,11 +160,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 33.79933547973633
+      Scale: 3
       Target Frame: viewer
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 247.62527465820312
-      Y: -54.885894775390625
+      X: 0
+      Y: 0
     Saved: ~
 Window Geometry:
   Displays:

@@ -59,9 +59,8 @@
 #include "lidar_feature_library/algorithm.hpp"
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 #include "lidar_feature_library/degree_to_radian.hpp"
+#include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
-
-const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
 template<typename PointType>
 typename pcl::PointCloud<PointType>::Ptr FilterByCoordinate(
@@ -86,12 +85,12 @@ public:
     edge_label_(params_.padding, params_.edge_threshold),
     cloud_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "points_raw", qos_keep_all,
+        "points_raw", QOS_RELIABLE_VOLATILE,
         std::bind(&FeatureExtraction::Callback, this, std::placeholders::_1))),
     colored_scan_publisher_(
       this->create_publisher<sensor_msgs::msg::PointCloud2>("colored_scan", 1)),
     edge_publisher_(
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", qos_keep_all))
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("scan_edge", QOS_RELIABLE_VOLATILE))
   {
     RCLCPP_INFO(this->get_logger(), "edge_threshold_ : %lf", params_.edge_threshold);
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);

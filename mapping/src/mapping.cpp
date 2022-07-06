@@ -44,6 +44,7 @@
 #include <memory>
 #include <string>
 
+#include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_mapping/map.hpp"
 
 
@@ -51,11 +52,8 @@ using Exact = message_filters::sync_policies::ExactTime<
   sensor_msgs::msg::PointCloud2,
   geometry_msgs::msg::PoseStamped>;
 using Synchronizer = message_filters::Synchronizer<Exact>;
-
-const rmw_qos_profile_t qos_profile =
-  rclcpp::SensorDataQoS().keep_all().reliable().get_rmw_qos_profile();
-
 using PointType = PointXYZCR;
+
 
 class MapSubscriber : public rclcpp::Node
 {
@@ -66,8 +64,8 @@ public:
     const std::string & cloud_topic_name,
     const std::string & pose_topic_name)
   : rclcpp::Node(node_name),
-    cloud_subscriber_(this, cloud_topic_name, qos_profile),
-    pose_subscriber_(this, pose_topic_name, qos_profile),
+    cloud_subscriber_(this, cloud_topic_name, QOS_RELIABLE_VOLATILE.get_rmw_qos_profile()),
+    pose_subscriber_(this, pose_topic_name, QOS_RELIABLE_VOLATILE.get_rmw_qos_profile()),
     sync_(std::make_shared<Synchronizer>(Exact(10), cloud_subscriber_, pose_subscriber_))
   {
     sync_->registerCallback(

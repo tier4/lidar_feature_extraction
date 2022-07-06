@@ -42,6 +42,7 @@
 #include <string>
 
 #include "lidar_feature_library/point_type.hpp"
+#include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 
@@ -54,8 +55,6 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
   pose_stamped_msg.header.frame_id = frame_id;
   return pose_stamped_msg;
 }
-
-const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
 
 rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
 {
@@ -74,12 +73,12 @@ public:
   : Node("lidar_feature_localization"),
     initial_pose_subscriber_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "initial_pose", qos_keep_all,
+        "initial_pose", QOS_RELIABLE_VOLATILE,
         std::bind(&LocalizationSubscriber::PoseInitializationCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
     edge_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "scan_edge", qos_keep_all,
+        "scan_edge", QOS_RELIABLE_VOLATILE,
         std::bind(&LocalizationSubscriber::PoseUpdateCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
     pose_publisher_(
@@ -140,7 +139,7 @@ public:
   : Node("lidar_feature_odometry"),
     edge_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "scan_edge", qos_keep_all,
+        "scan_edge", QOS_RELIABLE_VOLATILE,
         std::bind(&OdometrySubscriber::PoseUpdateCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
     pose_publisher_(

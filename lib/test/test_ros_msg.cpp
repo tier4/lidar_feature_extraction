@@ -1,4 +1,4 @@
-// Copyright 2022 Takeshi Ishita
+// Copyright 2022 Tixiao Shan, Takeshi Ishita
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -10,7 +10,7 @@
 //      notice, this list of conditions and the following disclaimer in the
 //      documentation and/or other materials provided with the distribution.
 //
-//    * Neither the name of the Takeshi Ishita nor the names of its
+//    * Neither the name of the Tixiao Shan, Takeshi Ishita nor the names of its
 //      contributors may be used to endorse or promote products derived from
 //      this software without specific prior written permission.
 //
@@ -27,45 +27,15 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#ifndef PATH_GENERATOR__PATH_GENERATOR_HPP_
-#define PATH_GENERATOR__PATH_GENERATOR_HPP_
+#include <gmock/gmock.h>
 
-#include <nav_msgs/msg/path.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include "lidar_feature_library/ros_msg.hpp"
 
-#include <functional>
-#include <memory>
-#include <string>
-
-#include "lidar_feature_library/qos.hpp"
-
-class PathGenerator : public rclcpp::Node
+TEST(RosMsg, MakePoint)
 {
-public:
-  PathGenerator(const std::string & path_topic_name, const std::string & pose_topic_name)
-  : Node("path_generator"),
-    pose_subscription_(
-      this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        pose_topic_name, rclcpp::SensorDataQoS().reliable().durability_volatile().keep_all(),
-        std::bind(&PathGenerator::Callback, this, std::placeholders::_1))),
-    path_publisher_(
-      this->create_publisher<nav_msgs::msg::Path>(
-        path_topic_name, QOS_RELIABLE_TRANSIENT_LOCAL))
-  {
-  }
-
-  void Callback(const geometry_msgs::msg::PoseStamped::ConstSharedPtr pose)
-  {
-    path_.header = pose->header;
-    path_.poses.push_back(*pose);
-    path_publisher_->publish(path_);
-  }
-
-private:
-  nav_msgs::msg::Path path_;
-  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
-  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
-};
-
-#endif  // PATH_GENERATOR__PATH_GENERATOR_HPP_
+  Eigen::Vector3d p(2, 4, 6);
+  const geometry_msgs::msg::Point q = MakePoint(p);
+  EXPECT_EQ(q.x, 2);
+  EXPECT_EQ(q.y, 4);
+  EXPECT_EQ(q.z, 6);
+}

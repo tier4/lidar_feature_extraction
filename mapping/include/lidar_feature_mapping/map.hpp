@@ -47,14 +47,15 @@
 
 
 bool PoseDiffIsSufficientlySmall(
-  const Eigen::Affine3d & pose0,
-  const Eigen::Affine3d & pose1,
+  const Eigen::Isometry3d & pose0,
+  const Eigen::Isometry3d & pose1,
   const double translation_threshold,
   const double rotation_threshold)
 {
-  const Eigen::Affine3d d = pose0.inverse() * pose1;
+  const Eigen::Isometry3d d = pose0.inverse() * pose1;
   const Eigen::Quaterniond dq(d.rotation());
-  return d.translation().norm() < translation_threshold && dq.vec().norm() < rotation_threshold;
+  const Eigen::Vector3d dt = d.translation();
+  return dt.norm() < translation_threshold && dq.vec().norm() < rotation_threshold;
 }
 
 template<typename T>
@@ -65,7 +66,7 @@ public:
   : map_ptr_(new pcl::PointCloud<T>()) {}
 
   void TransformAdd(
-    const Eigen::Affine3d & transform,
+    const Eigen::Isometry3d & transform,
     const typename pcl::PointCloud<T>::Ptr & cloud)
   {
     const auto transformed = TransformPointCloud<T>(transform, cloud);
@@ -99,7 +100,7 @@ public:
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr & cloud_msg,
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr & pose_msg)
   {
-    const Eigen::Affine3d transform = GetAffine(pose_msg->pose);
+    const Eigen::Isometry3d transform = GetIsometry3d(pose_msg->pose);
     const auto cloud = GetPointCloud<PointType>(*cloud_msg);
 
     RCLCPP_INFO(
@@ -138,7 +139,7 @@ public:
   }
 
   std::shared_ptr<Map<PointType>> map_;
-  Eigen::Affine3d prev_transform_;
+  Eigen::Isometry3d prev_transform_;
 };
 
 #endif  // LIDAR_FEATURE_MAPPING__MAP_HPP_
