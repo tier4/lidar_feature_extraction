@@ -98,12 +98,6 @@ public:
   {
     test_current_twist_ptr_ = std::make_shared<geometry_msgs::msg::TwistStamped>(*twist);
   }
-
-  void resetCurrentPoseAndTwist()
-  {
-    test_current_pose_ptr_ = nullptr;
-    test_current_twist_ptr_ = nullptr;
-  }
 };
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
@@ -155,7 +149,6 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
   is_succeeded = !(std::isnan(ekf_x) || std::isinf(ekf_x));
   ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
 
-  ekf->resetCurrentPoseAndTwist();
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
@@ -198,8 +191,6 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
   ekf_vx = ekf->test_current_twist_ptr_->twist.linear.x;
   is_succeeded = !(std::isnan(ekf_vx) || std::isinf(ekf_vx));
   ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
-
-  ekf->resetCurrentPoseAndTwist();
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdatePoseWithCovariance)
@@ -254,8 +245,6 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePoseWithCovariance)
   }
   is_succeeded = !(std::isnan(ekf_x) || std::isinf(ekf_x));
   ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
-
-  ekf->resetCurrentPoseAndTwist();
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdateTwistWithCovariance)
