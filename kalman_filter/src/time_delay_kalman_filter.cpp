@@ -32,8 +32,15 @@ void TimeDelayKalmanFilter::init(
   }
 }
 
-void TimeDelayKalmanFilter::getLatestX(Eigen::MatrixXd & x) { x = x_.block(0, 0, dim_x_, 1); }
-void TimeDelayKalmanFilter::getLatestP(Eigen::MatrixXd & P) { P = P_.block(0, 0, dim_x_, dim_x_); }
+void TimeDelayKalmanFilter::getLatestX(Eigen::MatrixXd & x) const
+{
+  x = x_.block(0, 0, dim_x_, 1);
+}
+
+void TimeDelayKalmanFilter::getLatestP(Eigen::MatrixXd & P) const
+{
+  P = P_.block(0, 0, dim_x_, dim_x_);
+}
 
 bool TimeDelayKalmanFilter::predictWithDelay(
   const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
