@@ -17,20 +17,19 @@ ament_auto_add_executable(ekf_localizer
 )
 ament_target_dependencies(ekf_localizer kalman_filter)
 
-# if(BUILD_TESTING)
-#   find_package(ament_cmake_ros REQUIRED)
-#   ament_add_ros_isolated_gtest(ekf_localizer-test test/test_ekf_localizer.test
-#     test/src/test_ekf_localizer.cpp
-#     src/ekf_localizer.cpp
-#     src/kalman_filter/kalman_filter.cpp
-#     src/kalman_filter/time_delay_kalman_filter.cpp
-#   )
-#   target_include_directories(ekf_localizer-test
-#     PRIVATE
-#     include
-#   )
-#   ament_target_dependencies(ekf_localizer-test geometry_msgs rclcpp tf2 tf2_ros)
-# endif()
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(ekf_localizer-test test/test_ekf_localizer.test
+    test/src/test_ekf_localizer.cpp
+    src/ekf_localizer.cpp
+  )
+  target_include_directories(ekf_localizer-test
+    PRIVATE
+    include
+  )
+  ament_target_dependencies(
+    ekf_localizer-test geometry_msgs kalman_filter nav_msgs rclcpp tf2 tf2_ros)
+endif()
 
 ament_auto_package(
   INSTALL_TO_SHARE
