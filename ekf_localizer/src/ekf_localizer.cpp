@@ -15,7 +15,6 @@
 #include "ekf_localizer/ekf_localizer.hpp"
 
 #include <rclcpp/logging.hpp>
-#include <tier4_autoware_utils/math/unit_conversion.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -32,6 +31,16 @@
 // clang-format on
 
 using std::placeholders::_1;
+
+// Revival of tf::createQuaternionFromRPY
+// https://answers.ros.org/question/304397/recommended-way-to-construct-quaternion-from-rollpitchyaw-with-tf2/
+inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
+  const double roll, const double pitch, const double yaw)
+{
+  tf2::Quaternion q;
+  q.setRPY(roll, pitch, yaw);
+  return tf2::toMsg(q);
+}
 
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options), dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */)
@@ -87,7 +96,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pub_twist_ = create_publisher<geometry_msgs::msg::TwistStamped>("ekf_twist", 1);
   pub_twist_cov_ = create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
     "ekf_twist_with_covariance", 1);
-  pub_yaw_bias_ = create_publisher<tier4_debug_msgs::msg::Float64Stamped>("estimated_yaw_bias", 1);
   pub_pose_no_yawbias_ =
     create_publisher<geometry_msgs::msg::PoseStamped>("ekf_pose_without_yawbias", 1);
   pub_pose_cov_no_yawbias_ = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -110,8 +118,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   roll_filter_.set_proc_stddev(0.1);
   pitch_filter_.set_proc_stddev(0.1);
 
-  /* debug */
-  pub_debug_ = create_publisher<tier4_debug_msgs::msg::Float64MultiArrayStamped>("debug", 1);
   pub_measured_pose_ = create_publisher<geometry_msgs::msg::PoseStamped>("debug/measured_pose", 1);
 }
 
@@ -149,16 +155,13 @@ void EKFLocalizer::timerCallback()
   updatePredictFrequency();
 
   /* predict model in EKF */
-  stop_watch_.tic();
   DEBUG_INFO(get_logger(), "------------------------- start prediction -------------------------");
   predictKinematicsModel();
-  DEBUG_INFO(get_logger(), "[EKF] predictKinematicsModel calc time = %f [ms]", stop_watch_.toc());
   DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
 
   /* pose measurement update */
   if (!current_pose_info_queue_.empty()) {
     DEBUG_INFO(get_logger(), "------------------------- start Pose -------------------------");
-    stop_watch_.tic();
 
     int pose_info_queue_size = static_cast<int>(current_pose_info_queue_.size());
     for (int i = 0; i < pose_info_queue_size; ++i) {
@@ -170,14 +173,12 @@ void EKFLocalizer::timerCallback()
         current_pose_info_queue_.push(pose_info);
       }
     }
-    DEBUG_INFO(get_logger(), "[EKF] measurementUpdatePose calc time = %f [ms]", stop_watch_.toc());
     DEBUG_INFO(get_logger(), "------------------------- end Pose -------------------------\n");
   }
 
   /* twist measurement update */
   if (!current_twist_info_queue_.empty()) {
     DEBUG_INFO(get_logger(), "------------------------- start Twist -------------------------");
-    stop_watch_.tic();
 
     int twist_info_queue_size = static_cast<int>(current_twist_info_queue_.size());
     for (int i = 0; i < twist_info_queue_size; ++i) {
@@ -189,7 +190,6 @@ void EKFLocalizer::timerCallback()
         current_twist_info_queue_.push(twist_info);
       }
     }
-    DEBUG_INFO(get_logger(), "[EKF] measurementUpdateTwist calc time = %f [ms]", stop_watch_.toc());
     DEBUG_INFO(get_logger(), "------------------------- end Twist -------------------------\n");
   }
 
@@ -222,12 +222,11 @@ void EKFLocalizer::setCurrentResult()
   double roll = roll_filter_.get_x();
   double pitch = pitch_filter_.get_x();
   double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
-  current_ekf_pose_.pose.orientation =
-    tier4_autoware_utils::createQuaternionFromRPY(roll, pitch, yaw);
+  current_ekf_pose_.pose.orientation = createQuaternionFromRPY(roll, pitch, yaw);
 
   current_ekf_pose_no_yawbias_ = current_ekf_pose_;
   current_ekf_pose_no_yawbias_.pose.orientation =
-    tier4_autoware_utils::createQuaternionFromRPY(roll, pitch, ekf_.getXelement(IDX::YAW));
+    createQuaternionFromRPY(roll, pitch, ekf_.getXelement(IDX::YAW));
 
   current_ekf_twist_.header.frame_id = "base_link";
   current_ekf_twist_.header.stamp = this->now();
@@ -713,12 +712,6 @@ void EKFLocalizer::publishEstimateResult()
   twist_cov.twist.covariance[35] = P(IDX::WZ, IDX::WZ);
   pub_twist_cov_->publish(twist_cov);
 
-  /* publish yaw bias */
-  tier4_debug_msgs::msg::Float64Stamped yawb;
-  yawb.stamp = current_time;
-  yawb.data = X(IDX::YAWB);
-  pub_yaw_bias_->publish(yawb);
-
   /* publish latest odometry */
   nav_msgs::msg::Odometry odometry;
   odometry.header.stamp = current_time;
@@ -741,13 +734,6 @@ void EKFLocalizer::publishEstimateResult()
   if (!current_pose_info_queue_.empty()) {
     pose_yaw = tf2::getYaw(current_pose_info_queue_.back().pose->pose.pose.orientation);
   }
-
-  tier4_debug_msgs::msg::Float64MultiArrayStamped msg;
-  msg.stamp = current_time;
-  msg.data.push_back(tier4_autoware_utils::rad2deg(X(IDX::YAW)));   // [0] ekf yaw angle
-  msg.data.push_back(tier4_autoware_utils::rad2deg(pose_yaw));      // [1] measurement yaw angle
-  msg.data.push_back(tier4_autoware_utils::rad2deg(X(IDX::YAWB)));  // [2] yaw bias
-  pub_debug_->publish(msg);
 }
 
 double EKFLocalizer::normalizeYaw(const double & yaw) const
