@@ -304,15 +304,6 @@ void EKFLocalizer::timerCallback()
     pub_pose_cov_no_yawbias_, pub_twist_, pub_measured_pose_);
 }
 
-void EKFLocalizer::showCurrentX()
-{
-  if (show_debug_info_) {
-    Eigen::MatrixXd X(dim_x_, 1);
-    ekf_.getLatestX(X);
-    DEBUG_PRINT_MAT(X.transpose());
-  }
-}
-
 /*
  * timerTFCallback
  */

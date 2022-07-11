@@ -285,11 +285,6 @@ private:
    */
   double normalizeYaw(const double & yaw) const;
 
-  /**
-   * @brief for debug
-   */
-  void showCurrentX();
-
   void updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose);
 
   friend class EKFLocalizerTestSuite;  // for test code
