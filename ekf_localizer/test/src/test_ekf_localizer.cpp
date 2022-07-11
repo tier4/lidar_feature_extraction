@@ -132,8 +132,8 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
   ASSERT_NE(ekf->test_current_twist_ptr_, nullptr);
 
   double ekf_x = ekf->test_current_pose_ptr_->pose.position.x;
-  bool is_succeeded = !(std::isnan(ekf_x) || std::isinf(ekf_x));
-  ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
+  ASSERT_FALSE(std::isnan(ekf_x)) << "ekf result includes invalid value.";
+  ASSERT_FALSE(std::isinf(ekf_x)) << "ekf result includes invalid value.";
 
   ASSERT_TRUE(std::fabs(ekf_x - pos_x) < 0.1)
     << "ekf pos x: " << ekf_x << " should be close to " << pos_x;
@@ -146,9 +146,8 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
     rclcpp::spin_some(ekf);
     rclcpp::sleep_for(std::chrono::milliseconds(100));
   }
-  is_succeeded = !(std::isnan(ekf_x) || std::isinf(ekf_x));
-  ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
-
+  ASSERT_FALSE(std::isnan(ekf_x)) << "ekf result includes invalid value.";
+  ASSERT_FALSE(std::isinf(ekf_x)) << "ekf result includes invalid value.";
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
