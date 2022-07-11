@@ -63,7 +63,7 @@ public:
 
   void testTimerCallback()
   {
-    const std::string frame_id_a_ = "world";
+    const std::string frame_id_a_ = "map";
     const std::string frame_id_b_ = "base_link";
 
     /* !!! this should be defined before sendTransform() !!! */
@@ -106,21 +106,22 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
   auto ekf = std::make_shared<TestEKFLocalizerNode>("EKFLocalizerTestSuite", node_options);
 
   auto node = std::make_shared<rclcpp::Node>("publisher_node");
-  auto pub_pose = node->create_publisher<geometry_msgs::msg::PoseStamped>("/in_pose", 1);
+  auto pub_pose = node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+      "/in_pose_with_covariance", 1);
 
-  geometry_msgs::msg::PoseStamped in_pose;
-  in_pose.header.frame_id = "world";
-  in_pose.pose.position.x = 1.0;
-  in_pose.pose.position.y = 2.0;
-  in_pose.pose.position.z = 3.0;
-  in_pose.pose.orientation.x = 0.0;
-  in_pose.pose.orientation.y = 0.0;
-  in_pose.pose.orientation.z = 0.0;
-  in_pose.pose.orientation.w = 1.0;
+  geometry_msgs::msg::PoseWithCovarianceStamped in_pose;
+  in_pose.header.frame_id = "map";
+  in_pose.pose.pose.position.x = 1.0;
+  in_pose.pose.pose.position.y = 2.0;
+  in_pose.pose.pose.position.z = 3.0;
+  in_pose.pose.pose.orientation.x = 0.0;
+  in_pose.pose.pose.orientation.y = 0.0;
+  in_pose.pose.pose.orientation.z = 0.0;
+  in_pose.pose.pose.orientation.w = 1.0;
 
   /* test for valid value */
   const double pos_x = 12.3;
-  in_pose.pose.position.x = pos_x;  // for valid value
+  in_pose.pose.pose.position.x = pos_x;  // for valid value
 
   for (int i = 0; i < 20; ++i) {
     in_pose.header.stamp = ekf->now();
@@ -203,7 +204,7 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePoseWithCovariance)
   auto pub_pose = ekf->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "/in_pose_with_covariance", 1);
   geometry_msgs::msg::PoseWithCovarianceStamped in_pose;
-  in_pose.header.frame_id = "world";
+  in_pose.header.frame_id = "map";
   in_pose.pose.pose.position.x = 1.0;
   in_pose.pose.pose.position.y = 2.0;
   in_pose.pose.pose.position.z = 3.0;
