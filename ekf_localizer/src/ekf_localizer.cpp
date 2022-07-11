@@ -277,8 +277,24 @@ void EKFLocalizer::timerCallback()
     DEBUG_INFO(get_logger(), "------------------------- end Twist -------------------------\n");
   }
 
-  /* set current pose, twist */
-  setCurrentResult();
+  current_ekf_pose_.header.frame_id = pose_frame_id_;
+  current_ekf_pose_.header.stamp = this->now();
+  current_ekf_pose_.pose.position.x = ekf_.getXelement(IDX::X);
+  current_ekf_pose_.pose.position.y = ekf_.getXelement(IDX::Y);
+  current_ekf_pose_.pose.position.z = z_filter_.get_x();
+  double roll = roll_filter_.get_x();
+  double pitch = pitch_filter_.get_x();
+  double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
+  current_ekf_pose_.pose.orientation = createQuaternionFromRPY(roll, pitch, yaw);
+
+  geometry_msgs::msg::PoseStamped current_ekf_pose_no_yawbias_ = current_ekf_pose_;
+  current_ekf_pose_no_yawbias_.pose.orientation =
+    createQuaternionFromRPY(roll, pitch, ekf_.getXelement(IDX::YAW));
+  geometry_msgs::msg::TwistStamped current_ekf_twist_;  //!< @brief current estimated twist
+  current_ekf_twist_.header.frame_id = "base_link";
+  current_ekf_twist_.header.stamp = this->now();
+  current_ekf_twist_.twist.linear.x = ekf_.getXelement(IDX::VX);
+  current_ekf_twist_.twist.angular.z = ekf_.getXelement(IDX::WZ);
 
   /* publish ekf result */
   publishEstimateResult(
@@ -295,31 +311,6 @@ void EKFLocalizer::showCurrentX()
     ekf_.getLatestX(X);
     DEBUG_PRINT_MAT(X.transpose());
   }
-}
-
-/*
- * setCurrentResult
- */
-void EKFLocalizer::setCurrentResult()
-{
-  current_ekf_pose_.header.frame_id = pose_frame_id_;
-  current_ekf_pose_.header.stamp = this->now();
-  current_ekf_pose_.pose.position.x = ekf_.getXelement(IDX::X);
-  current_ekf_pose_.pose.position.y = ekf_.getXelement(IDX::Y);
-  current_ekf_pose_.pose.position.z = z_filter_.get_x();
-  double roll = roll_filter_.get_x();
-  double pitch = pitch_filter_.get_x();
-  double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
-  current_ekf_pose_.pose.orientation = createQuaternionFromRPY(roll, pitch, yaw);
-
-  current_ekf_pose_no_yawbias_ = current_ekf_pose_;
-  current_ekf_pose_no_yawbias_.pose.orientation =
-    createQuaternionFromRPY(roll, pitch, ekf_.getXelement(IDX::YAW));
-
-  current_ekf_twist_.header.frame_id = "base_link";
-  current_ekf_twist_.header.stamp = this->now();
-  current_ekf_twist_.twist.linear.x = ekf_.getXelement(IDX::VX);
-  current_ekf_twist_.twist.angular.z = ekf_.getXelement(IDX::WZ);
 }
 
 /*

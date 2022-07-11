@@ -201,9 +201,6 @@ private:
   std::queue<TwistInfo> current_twist_info_queue_;    //!< @brief current measured pose
   std::queue<PoseInfo> current_pose_info_queue_;      //!< @brief current measured pose
   geometry_msgs::msg::PoseStamped current_ekf_pose_;  //!< @brief current estimated pose
-  geometry_msgs::msg::PoseStamped
-    current_ekf_pose_no_yawbias_;  //!< @brief current estimated pose w/o yaw bias
-  geometry_msgs::msg::TwistStamped current_ekf_twist_;  //!< @brief current estimated twist
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
 
@@ -287,11 +284,6 @@ private:
    * @return normalized yaw
    */
   double normalizeYaw(const double & yaw) const;
-
-  /**
-   * @brief set current EKF estimation result to current_ekf_pose_ & current_ekf_twist_
-   */
-  void setCurrentResult();
 
   /**
    * @brief for debug
