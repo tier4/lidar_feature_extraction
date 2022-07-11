@@ -41,24 +41,20 @@ class TestEKFLocalizerNode : public EKFLocalizer
 {
 public:
   TestEKFLocalizerNode(const std::string & node_name, const rclcpp::NodeOptions & node_options)
-  : EKFLocalizer(node_name, node_options)
+  : EKFLocalizer(node_name, node_options),
+    sub_twist(this->create_subscription<geometry_msgs::msg::TwistStamped>(
+      "/ekf_twist", 1, std::bind(&TestEKFLocalizerNode::testCallbackTwist, this, _1))),
+    sub_pose(this->create_subscription<geometry_msgs::msg::PoseStamped>(
+      "/ekf_pose", 1, std::bind(&TestEKFLocalizerNode::testCallbackPose, this, _1)))
   {
-    sub_twist = this->create_subscription<geometry_msgs::msg::TwistStamped>(
-      "/ekf_twist", 1, std::bind(&TestEKFLocalizerNode::testCallbackTwist, this, _1));
-    sub_pose = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-      "/ekf_pose", 1, std::bind(&TestEKFLocalizerNode::testCallbackPose, this, _1));
-
     using std::chrono_literals::operator""ms;
     test_timer_ = rclcpp::create_timer(
       this, get_clock(), 100ms, std::bind(&TestEKFLocalizerNode::testTimerCallback, this));
   }
   ~TestEKFLocalizerNode() {}
 
-  std::string frame_id_a_ = "world";
-  std::string frame_id_b_ = "base_link";
-
-  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_twist;
-  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pose;
+  const rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_twist;
+  const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pose;
 
   rclcpp::TimerBase::SharedPtr test_timer_;
 
@@ -67,6 +63,9 @@ public:
 
   void testTimerCallback()
   {
+    const std::string frame_id_a_ = "world";
+    const std::string frame_id_b_ = "base_link";
+
     /* !!! this should be defined before sendTransform() !!! */
     static std::shared_ptr<tf2_ros::TransformBroadcaster> br =
       std::make_shared<tf2_ros::TransformBroadcaster>(shared_from_this());
