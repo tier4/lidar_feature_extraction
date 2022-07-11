@@ -103,6 +103,15 @@ private:
   rclcpp::Time latest_time_;
 };
 
+enum IDX {
+  X = 0,
+  Y = 1,
+  YAW = 2,
+  YAWB = 3,
+  VX = 4,
+  WZ = 5,
+};
+
 class EKFLocalizer : public rclcpp::Node
 {
 public:
@@ -157,7 +166,7 @@ private:
                                      //!< if true,publish /estimate_yaw_bias
   std::string pose_frame_id_;
 
-  int dim_x_;              //!< @brief  dimension of EKF state
+  const int dim_x_;              //!< @brief  dimension of EKF state
   int extend_state_step_;  //!< @brief  for time delay compensation
   int dim_x_ex_;  //!< @brief  dimension of extended EKF state (dim_x_ * extended_state_step)
 
@@ -187,15 +196,6 @@ private:
   double proc_cov_yaw_bias_d_;  //!< @brief  discrete yaw bias process noise
   double proc_cov_vx_d_;        //!< @brief  discrete process noise in d_vx=0
   double proc_cov_wz_d_;        //!< @brief  discrete process noise in d_wz=0
-
-  enum IDX {
-    X = 0,
-    Y = 1,
-    YAW = 2,
-    YAWB = 3,
-    VX = 4,
-    WZ = 5,
-  };
 
   /* for model prediction */
   std::queue<TwistInfo> current_twist_info_queue_;    //!< @brief current measured pose
@@ -292,11 +292,6 @@ private:
    * @brief set current EKF estimation result to current_ekf_pose_ & current_ekf_twist_
    */
   void setCurrentResult();
-
-  /**
-   * @brief publish current EKF estimation result
-   */
-  void publishEstimateResult();
 
   /**
    * @brief for debug

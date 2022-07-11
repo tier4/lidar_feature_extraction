@@ -42,6 +42,90 @@ inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
   return tf2::toMsg(q);
 }
 
+void publishEstimateResult(
+  const int dim_x_,
+  const TimeDelayKalmanFilter & ekf_,
+  const rclcpp::Time & current_time,
+  const geometry_msgs::msg::PoseStamped & current_ekf_pose_,
+  const geometry_msgs::msg::PoseStamped & current_ekf_pose_no_yawbias_,
+  const geometry_msgs::msg::TwistStamped & current_ekf_twist_,
+  const std::queue<PoseInfo> & current_pose_info_queue_,
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_pose_,
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_pose_no_yawbias_,
+  rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr & pub_twist_cov_,
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_,
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_no_yawbias_,
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr & pub_twist_,
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_measured_pose_)
+{
+  Eigen::MatrixXd X(dim_x_, 1);
+  Eigen::MatrixXd P(dim_x_, dim_x_);
+  ekf_.getLatestX(X);
+  ekf_.getLatestP(P);
+
+  /* publish latest pose */
+  pub_pose_->publish(current_ekf_pose_);
+  pub_pose_no_yawbias_->publish(current_ekf_pose_no_yawbias_);
+
+  /* publish latest pose with covariance */
+  geometry_msgs::msg::PoseWithCovarianceStamped pose_cov;
+  pose_cov.header.stamp = current_time;
+  pose_cov.header.frame_id = current_ekf_pose_.header.frame_id;
+  pose_cov.pose.pose = current_ekf_pose_.pose;
+  pose_cov.pose.covariance[0] = P(IDX::X, IDX::X);
+  pose_cov.pose.covariance[1] = P(IDX::X, IDX::Y);
+  pose_cov.pose.covariance[5] = P(IDX::X, IDX::YAW);
+  pose_cov.pose.covariance[6] = P(IDX::Y, IDX::X);
+  pose_cov.pose.covariance[7] = P(IDX::Y, IDX::Y);
+  pose_cov.pose.covariance[11] = P(IDX::Y, IDX::YAW);
+  pose_cov.pose.covariance[30] = P(IDX::YAW, IDX::X);
+  pose_cov.pose.covariance[31] = P(IDX::YAW, IDX::Y);
+  pose_cov.pose.covariance[35] = P(IDX::YAW, IDX::YAW);
+  pub_pose_cov_->publish(pose_cov);
+
+  geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
+  pose_cov_no_yawbias.pose.pose = current_ekf_pose_no_yawbias_.pose;
+  pub_pose_cov_no_yawbias_->publish(pose_cov_no_yawbias);
+
+  /* publish latest twist */
+  pub_twist_->publish(current_ekf_twist_);
+
+  /* publish latest twist with covariance */
+  geometry_msgs::msg::TwistWithCovarianceStamped twist_cov;
+  twist_cov.header.stamp = current_time;
+  twist_cov.header.frame_id = current_ekf_twist_.header.frame_id;
+  twist_cov.twist.twist = current_ekf_twist_.twist;
+  twist_cov.twist.covariance[0] = P(IDX::VX, IDX::VX);
+  twist_cov.twist.covariance[5] = P(IDX::VX, IDX::WZ);
+  twist_cov.twist.covariance[30] = P(IDX::WZ, IDX::VX);
+  twist_cov.twist.covariance[35] = P(IDX::WZ, IDX::WZ);
+  pub_twist_cov_->publish(twist_cov);
+
+  /* publish latest odometry */
+  nav_msgs::msg::Odometry odometry;
+  odometry.header.stamp = current_time;
+  odometry.header.frame_id = current_ekf_pose_.header.frame_id;
+  odometry.child_frame_id = "base_link";
+  odometry.pose = pose_cov.pose;
+  odometry.twist = twist_cov.twist;
+  pub_odom_->publish(odometry);
+
+  /* debug measured pose */
+  if (!current_pose_info_queue_.empty()) {
+    geometry_msgs::msg::PoseStamped p;
+    p.pose = current_pose_info_queue_.back().pose->pose.pose;
+    p.header.stamp = current_time;
+    pub_measured_pose_->publish(p);
+  }
+
+  /* debug publish */
+  double pose_yaw = 0.0;
+  if (!current_pose_info_queue_.empty()) {
+    pose_yaw = tf2::getYaw(current_pose_info_queue_.back().pose->pose.pose.orientation);
+  }
+}
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options), dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */)
 {
@@ -197,7 +281,11 @@ void EKFLocalizer::timerCallback()
   setCurrentResult();
 
   /* publish ekf result */
-  publishEstimateResult();
+  publishEstimateResult(
+    dim_x_, ekf_, this->now(),
+    current_ekf_pose_, current_ekf_pose_no_yawbias_, current_ekf_twist_, current_pose_info_queue_,
+    pub_pose_, pub_pose_no_yawbias_, pub_twist_cov_, pub_pose_cov_, pub_odom_,
+    pub_pose_cov_no_yawbias_, pub_twist_, pub_measured_pose_);
 }
 
 void EKFLocalizer::showCurrentX()
@@ -661,79 +749,6 @@ bool EKFLocalizer::mahalanobisGate(
   }
 
   return true;
-}
-
-/*
- * publishEstimateResult
- */
-void EKFLocalizer::publishEstimateResult()
-{
-  rclcpp::Time current_time = this->now();
-  Eigen::MatrixXd X(dim_x_, 1);
-  Eigen::MatrixXd P(dim_x_, dim_x_);
-  ekf_.getLatestX(X);
-  ekf_.getLatestP(P);
-
-  /* publish latest pose */
-  pub_pose_->publish(current_ekf_pose_);
-  pub_pose_no_yawbias_->publish(current_ekf_pose_no_yawbias_);
-
-  /* publish latest pose with covariance */
-  geometry_msgs::msg::PoseWithCovarianceStamped pose_cov;
-  pose_cov.header.stamp = current_time;
-  pose_cov.header.frame_id = current_ekf_pose_.header.frame_id;
-  pose_cov.pose.pose = current_ekf_pose_.pose;
-  pose_cov.pose.covariance[0] = P(IDX::X, IDX::X);
-  pose_cov.pose.covariance[1] = P(IDX::X, IDX::Y);
-  pose_cov.pose.covariance[5] = P(IDX::X, IDX::YAW);
-  pose_cov.pose.covariance[6] = P(IDX::Y, IDX::X);
-  pose_cov.pose.covariance[7] = P(IDX::Y, IDX::Y);
-  pose_cov.pose.covariance[11] = P(IDX::Y, IDX::YAW);
-  pose_cov.pose.covariance[30] = P(IDX::YAW, IDX::X);
-  pose_cov.pose.covariance[31] = P(IDX::YAW, IDX::Y);
-  pose_cov.pose.covariance[35] = P(IDX::YAW, IDX::YAW);
-  pub_pose_cov_->publish(pose_cov);
-
-  geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
-  pose_cov_no_yawbias.pose.pose = current_ekf_pose_no_yawbias_.pose;
-  pub_pose_cov_no_yawbias_->publish(pose_cov_no_yawbias);
-
-  /* publish latest twist */
-  pub_twist_->publish(current_ekf_twist_);
-
-  /* publish latest twist with covariance */
-  geometry_msgs::msg::TwistWithCovarianceStamped twist_cov;
-  twist_cov.header.stamp = current_time;
-  twist_cov.header.frame_id = current_ekf_twist_.header.frame_id;
-  twist_cov.twist.twist = current_ekf_twist_.twist;
-  twist_cov.twist.covariance[0] = P(IDX::VX, IDX::VX);
-  twist_cov.twist.covariance[5] = P(IDX::VX, IDX::WZ);
-  twist_cov.twist.covariance[30] = P(IDX::WZ, IDX::VX);
-  twist_cov.twist.covariance[35] = P(IDX::WZ, IDX::WZ);
-  pub_twist_cov_->publish(twist_cov);
-
-  /* publish latest odometry */
-  nav_msgs::msg::Odometry odometry;
-  odometry.header.stamp = current_time;
-  odometry.header.frame_id = current_ekf_pose_.header.frame_id;
-  odometry.child_frame_id = "base_link";
-  odometry.pose = pose_cov.pose;
-  odometry.twist = twist_cov.twist;
-  pub_odom_->publish(odometry);
-
-  /* debug measured pose */
-  if (!current_pose_info_queue_.empty()) {
-    geometry_msgs::msg::PoseStamped p;
-    p.pose = current_pose_info_queue_.back().pose->pose.pose;
-    p.header.stamp = current_time;
-    pub_measured_pose_->publish(p);
-  }
-
-  /* debug publish */
-  double pose_yaw = 0.0;
-  if (!current_pose_info_queue_.empty()) {
-    pose_yaw = tf2::getYaw(current_pose_info_queue_.back().pose->pose.pose.orientation);
-  }
 }
 
 double EKFLocalizer::normalizeYaw(const double & yaw) const
