@@ -105,7 +105,8 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
   rclcpp::NodeOptions node_options;
   auto ekf = std::make_shared<TestEKFLocalizerNode>("EKFLocalizerTestSuite", node_options);
 
-  auto pub_pose = ekf->create_publisher<geometry_msgs::msg::PoseStamped>("/in_pose", 1);
+  auto node = std::make_shared<rclcpp::Node>("publisher_node");
+  auto pub_pose = node->create_publisher<geometry_msgs::msg::PoseStamped>("/in_pose", 1);
 
   geometry_msgs::msg::PoseStamped in_pose;
   in_pose.header.frame_id = "world";
