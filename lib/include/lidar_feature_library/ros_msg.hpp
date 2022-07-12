@@ -121,6 +121,21 @@ geometry_msgs::msg::Point MakePoint(const Eigen::Vector3d & p)
   return q;
 }
 
+Eigen::Vector3d ToVector3d(const geometry_msgs::msg::Point & position)
+{
+  return Eigen::Vector3d(position.x, position.y, position.z);
+}
+
+Eigen::Vector3d ToVector3d(const geometry_msgs::msg::Vector3 & translation)
+{
+  return Eigen::Vector3d(translation.x, translation.y, translation.z);
+}
+
+Eigen::Quaterniond ToQuaterniond(const geometry_msgs::msg::Quaternion & rotation)
+{
+  return Eigen::Quaterniond(rotation.w, rotation.x, rotation.y, rotation.z);
+}
+
 visualization_msgs::msg::Marker InitLines(const rclcpp::Time & stamp, const std::string & frame_id)
 {
   visualization_msgs::msg::Marker lines;

@@ -109,3 +109,58 @@ TEST(RosMsg, MakeTransformStamped)
   EXPECT_EQ(msg.header.stamp.sec, seconds);
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
 }
+
+TEST(RosMsg, Vector3ToVector3d)
+{
+  const double x = 1.;
+  const double y = 2.;
+  const double z = 3.;
+
+  geometry_msgs::msg::Vector3 msg;
+  msg.x = x;
+  msg.y = y;
+  msg.z = z;
+
+  const Eigen::Vector3d t = ToVector3d(msg);
+  EXPECT_EQ(t.x(), x);
+  EXPECT_EQ(t.y(), y);
+  EXPECT_EQ(t.z(), z);
+}
+
+TEST(RosMsg, PointToVector3d)
+{
+  const double x = 1.;
+  const double y = 2.;
+  const double z = 3.;
+
+  geometry_msgs::msg::Point msg;
+  msg.x = x;
+  msg.y = y;
+  msg.z = z;
+
+  const Eigen::Vector3d t = ToVector3d(msg);
+  EXPECT_EQ(t.x(), x);
+  EXPECT_EQ(t.y(), y);
+  EXPECT_EQ(t.z(), z);
+}
+
+TEST(RosMsg, ToQuaterniond)
+{
+  const double qw = std::sqrt(2. / 3.);
+  const double qx = std::sqrt(1. / 3.);
+  const double qy = 0.;
+  const double qz = 0.;
+
+  geometry_msgs::msg::Quaternion msg;
+  msg.w = qw;
+  msg.x = qx;
+  msg.y = qy;
+  msg.z = qz;
+
+  const Eigen::Quaterniond q = ToQuaterniond(msg);
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(q.w(), qw, tolerance);
+  EXPECT_NEAR(q.x(), qx, tolerance);
+  EXPECT_NEAR(q.y(), qy, tolerance);
+  EXPECT_NEAR(q.z(), qz, tolerance);
+}
