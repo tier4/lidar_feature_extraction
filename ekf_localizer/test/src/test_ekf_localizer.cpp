@@ -33,8 +33,15 @@ using std::placeholders::_1;
 class EKFLocalizerTestSuite : public ::testing::Test
 {
 protected:
-  void SetUp() { rclcpp::init(0, nullptr); }
-  void TearDown() { (void)rclcpp::shutdown(); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };  // sanity_check
 
 class TestEKFLocalizerNode : public EKFLocalizer
@@ -141,7 +148,7 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
     << "ekf pos x: " << ekf_x << " should be close to " << pos_x;
 
   /* test for invalid value */
-  in_pose.pose.position.x = NAN;  // check for invalid values
+  in_pose.pose.pose.position.x = NAN;  // check for invalid values
   for (int i = 0; i < 10; ++i) {
     in_pose.header.stamp = ekf->now();
     pub_pose->publish(in_pose);
@@ -150,6 +157,10 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePose)
   }
   ASSERT_FALSE(std::isnan(ekf_x)) << "ekf result includes invalid value.";
   ASSERT_FALSE(std::isinf(ekf_x)) << "ekf result includes invalid value.";
+
+  ekf.reset();
+  node.reset();
+  pub_pose.reset();
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
@@ -192,6 +203,9 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
   ekf_vx = ekf->test_current_twist_ptr_->twist.linear.x;
   is_succeeded = !(std::isnan(ekf_vx) || std::isinf(ekf_vx));
   ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
+
+  ekf.reset();
+  pub_twist.reset();
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdatePoseWithCovariance)
@@ -246,6 +260,9 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdatePoseWithCovariance)
   }
   is_succeeded = !(std::isnan(ekf_x) || std::isinf(ekf_x));
   ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
+
+  ekf.reset();
+  pub_pose.reset();
 }
 
 TEST_F(EKFLocalizerTestSuite, measurementUpdateTwistWithCovariance)
@@ -291,4 +308,7 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdateTwistWithCovariance)
   ekf_vx = ekf->test_current_twist_ptr_->twist.linear.x;
   is_succeeded = !(std::isnan(ekf_vx) || std::isinf(ekf_vx));
   ASSERT_EQ(true, is_succeeded) << "ekf result includes invalid value.";
+
+  ekf.reset();
+  pub_twist.reset();
 }
