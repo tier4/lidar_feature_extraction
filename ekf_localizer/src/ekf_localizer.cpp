@@ -516,6 +516,30 @@ void EKFLocalizer::predictKinematicsModel()
   DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
 
+/**
+ * @brief check whether a measurement value falls within the mahalanobis distance threshold
+ * @param dist_max mahalanobis distance threshold
+ * @param estimated current estimated state
+ * @param measured measured state
+ * @param estimated_cov current estimation covariance
+ * @return whether it falls within the mahalanobis distance threshold
+ */
+bool mahalanobisGate(
+  const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
+  const Eigen::MatrixXd & cov,
+  const bool show_debug_info_)
+{
+  Eigen::MatrixXd mahalanobis_squared = (x - obj_x).transpose() * cov.inverse() * (x - obj_x);
+  DEBUG_INFO(
+    rclcpp::get_logger("ekf_localizer"), "measurement update: mahalanobis = %f, gate limit = %f",
+    std::sqrt(mahalanobis_squared(0)), dist_max);
+  if (mahalanobis_squared(0) > dist_max * dist_max) {
+    return false;
+  }
+
+  return true;
+}
+
 /*
  * measurementUpdatePose
  */
@@ -577,7 +601,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   Eigen::MatrixXd P_curr, P_y;
   ekf_.getLatestP(P_curr);
   P_y = P_curr.block(0, 0, dim_y, dim_y);
-  if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
+  if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
       "[EKF] Pose measurement update, mahalanobis distance is over limit. ignore "
@@ -677,7 +701,7 @@ void EKFLocalizer::measurementUpdateTwist(
   Eigen::MatrixXd P_curr, P_y;
   ekf_.getLatestP(P_curr);
   P_y = P_curr.block(4, 4, dim_y, dim_y);
-  if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
+  if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
       "[EKF] Twist measurement update, mahalanobis distance is over limit. ignore "
@@ -713,24 +737,6 @@ void EKFLocalizer::measurementUpdateTwist(
   ekf_.getLatestX(X_result);
   DEBUG_PRINT_MAT(X_result.transpose());
   DEBUG_PRINT_MAT((X_result - X_curr).transpose());
-}
-
-/*
- * mahalanobisGate
- */
-bool EKFLocalizer::mahalanobisGate(
-  const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
-  const Eigen::MatrixXd & cov) const
-{
-  Eigen::MatrixXd mahalanobis_squared = (x - obj_x).transpose() * cov.inverse() * (x - obj_x);
-  DEBUG_INFO(
-    get_logger(), "measurement update: mahalanobis = %f, gate limit = %f",
-    std::sqrt(mahalanobis_squared(0)), dist_max);
-  if (mahalanobis_squared(0) > dist_max * dist_max) {
-    return false;
-  }
-
-  return true;
 }
 
 double EKFLocalizer::normalizeYaw(const double & yaw) const
