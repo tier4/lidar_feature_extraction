@@ -74,3 +74,38 @@ TEST(RosMsg, MakePoseStamped)
   EXPECT_EQ(msg.header.stamp.sec, seconds);
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
 }
+
+TEST(RosMsg, MakeTransformStamped)
+{
+  const double tx = 1.0;
+  const double ty = 2.0;
+  const double tz = 3.0;
+  const double qw = 1. / std::sqrt(2.);
+  const double qx = 0.0;
+  const double qy = 1. / std::sqrt(2.);
+  const double qz = 0.0;
+
+  Eigen::Isometry3d transform = Eigen::Isometry3d::Identity();
+  transform.translation() = Eigen::Vector3d(tx, ty, tz);
+  transform.linear() = Eigen::Quaterniond(qw, qx, qy, qz).toRotationMatrix();
+
+  const int32_t seconds = 10000;
+  const uint32_t nanoseconds = 20000;
+  const rclcpp::Time stamp(seconds, nanoseconds);
+  const std::string frame_id = "map";
+
+  const auto msg = MakeTransformStamped(transform, stamp, frame_id);
+
+  EXPECT_EQ(msg.transform.translation.x, tx);
+  EXPECT_EQ(msg.transform.translation.y, ty);
+  EXPECT_EQ(msg.transform.translation.z, tz);
+
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(msg.transform.rotation.w, qw, tolerance);
+  EXPECT_NEAR(msg.transform.rotation.x, qx, tolerance);
+  EXPECT_NEAR(msg.transform.rotation.y, qy, tolerance);
+  EXPECT_NEAR(msg.transform.rotation.z, qz, tolerance);
+
+  EXPECT_EQ(msg.header.stamp.sec, seconds);
+  EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+}

@@ -103,6 +103,15 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
   return pose_stamped_msg;
 }
 
+geometry_msgs::msg::TransformStamped MakeTransformStamped(
+  const Eigen::Isometry3d & transform, const rclcpp::Time & stamp, const std::string & frame_id)
+{
+  geometry_msgs::msg::TransformStamped msg = tf2::eigenToTransform(transform);
+  msg.header.stamp = stamp;
+  msg.header.frame_id = frame_id;
+  return msg;
+}
+
 geometry_msgs::msg::Point MakePoint(const Eigen::Vector3d & p)
 {
   geometry_msgs::msg::Point q;
