@@ -316,20 +316,12 @@ void EKFLocalizer::timerTFCallback()
     return;
   }
 
-  geometry_msgs::msg::TransformStamped transformStamped;
-  transformStamped.header.stamp = this->now();
-  transformStamped.header.frame_id = current_ekf_pose_.header.frame_id;
-  transformStamped.child_frame_id = "base_link";
-  transformStamped.transform.translation.x = current_ekf_pose_.pose.position.x;
-  transformStamped.transform.translation.y = current_ekf_pose_.pose.position.y;
-  transformStamped.transform.translation.z = current_ekf_pose_.pose.position.z;
-
-  transformStamped.transform.rotation.x = current_ekf_pose_.pose.orientation.x;
-  transformStamped.transform.rotation.y = current_ekf_pose_.pose.orientation.y;
-  transformStamped.transform.rotation.z = current_ekf_pose_.pose.orientation.z;
-  transformStamped.transform.rotation.w = current_ekf_pose_.pose.orientation.w;
-
-  tf_br_->sendTransform(transformStamped);
+  const Eigen::Isometry3d pose = GetIsometry3d(current_ekf_pose_.pose);
+  const std::string frame_id = current_ekf_pose_.header.frame_id;
+  const std::string child_frame_id = "base_link";
+  const rclcpp::Time stamp = this->now();
+  const auto msg = MakeTransformStamped(pose, stamp, frame_id, child_frame_id);
+  tf_br_->sendTransform(msg);
 }
 
 /*
