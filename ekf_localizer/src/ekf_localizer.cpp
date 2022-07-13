@@ -43,6 +43,16 @@ inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
   return tf2::toMsg(q);
 }
 
+inline Eigen::Vector3d createRPYfromQuaternion(
+  const geometry_msgs::msg::Quaternion & orientation)
+{
+  double roll = 0.0, pitch = 0.0, yaw = 0.0;
+  tf2::Quaternion q_tf;
+  tf2::fromMsg(orientation, q_tf);
+  tf2::Matrix3x3(q_tf).getRPY(roll, pitch, yaw);
+  return Eigen::Vector3d(roll, pitch, yaw);
+}
+
 void publishEstimateResult(
   const int dim_x_,
   const TimeDelayKalmanFilter & ekf_,
@@ -745,18 +755,15 @@ double EKFLocalizer::normalizeYaw(const double & yaw) const
 
 void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
 {
-  double z = pose.pose.pose.position.z;
-  double roll = 0.0, pitch = 0.0, yaw_tmp = 0.0;
+  const double z = pose.pose.pose.position.z;
 
-  tf2::Quaternion q_tf;
-  tf2::fromMsg(pose.pose.pose.orientation, q_tf);
-  tf2::Matrix3x3(q_tf).getRPY(roll, pitch, yaw_tmp);
+  const Eigen::Vector3d rpy = createRPYfromQuaternion(pose.pose.pose.orientation);
 
-  double z_stddev = std::sqrt(pose.pose.covariance[2 * 6 + 2]);
-  double roll_stddev = std::sqrt(pose.pose.covariance[3 * 6 + 3]);
-  double pitch_stddev = std::sqrt(pose.pose.covariance[4 * 6 + 4]);
+  const double z_stddev = std::sqrt(pose.pose.covariance[2 * 6 + 2]);
+  const double roll_stddev = std::sqrt(pose.pose.covariance[3 * 6 + 3]);
+  const double pitch_stddev = std::sqrt(pose.pose.covariance[4 * 6 + 4]);
 
   z_filter_.update(z, z_stddev, pose.header.stamp);
-  roll_filter_.update(roll, roll_stddev, pose.header.stamp);
-  pitch_filter_.update(pitch, pitch_stddev, pose.header.stamp);
+  roll_filter_.update(rpy(0), roll_stddev, pose.header.stamp);
+  pitch_filter_.update(rpy(1), pitch_stddev, pose.header.stamp);
 }
