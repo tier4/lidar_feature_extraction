@@ -630,16 +630,16 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Set measurement noise covariance */
   Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
-  std::array<double, 36ul> current_pose_covariance = pose.pose.covariance;
-  R(0, 0) = current_pose_covariance.at(0);   // x - x
-  R(0, 1) = current_pose_covariance.at(1);   // x - y
-  R(0, 2) = current_pose_covariance.at(5);   // x - yaw
-  R(1, 0) = current_pose_covariance.at(6);   // y - x
-  R(1, 1) = current_pose_covariance.at(7);   // y - y
-  R(1, 2) = current_pose_covariance.at(11);  // y - yaw
-  R(2, 0) = current_pose_covariance.at(30);  // yaw - x
-  R(2, 1) = current_pose_covariance.at(31);  // yaw - y
-  R(2, 2) = current_pose_covariance.at(35);  // yaw - yaw
+  const Eigen::Map<const RowMatrix6d> covariance = GetEigenCovariance(pose.pose.covariance);
+  R(0, 0) = covariance(0, 0);  // x - x
+  R(0, 1) = covariance(0, 1);  // x - y
+  R(0, 2) = covariance(0, 5);  // x - yaw
+  R(1, 0) = covariance(1, 0);  // y - x
+  R(1, 1) = covariance(1, 1);  // y - y
+  R(1, 2) = covariance(1, 5);  // y - yaw
+  R(2, 0) = covariance(5, 0);  // yaw - x
+  R(2, 1) = covariance(5, 1);  // yaw - y
+  R(2, 2) = covariance(5, 5);  // yaw - yaw
 
   /* In order to avoid a large change at the time of updating,
    * measurement update is performed by dividing at every step. */
