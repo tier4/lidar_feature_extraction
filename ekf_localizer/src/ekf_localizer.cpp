@@ -70,10 +70,8 @@ void publishEstimateResult(
   const rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr & pub_twist_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_measured_pose_)
 {
-  Eigen::MatrixXd X(dim_x_, 1);
-  Eigen::MatrixXd P(dim_x_, dim_x_);
-  ekf_.getLatestX(X);
-  ekf_.getLatestP(P);
+  const Eigen::MatrixXd X = ekf_.getLatestX();
+  const Eigen::MatrixXd P = ekf_.getLatestP();
 
   /* publish latest pose */
   pub_pose_->publish(current_ekf_pose_);
@@ -475,13 +473,11 @@ void EKFLocalizer::predictKinematicsModel()
    *     [ 0, 0,                 0,                 0,             0,  1]
    */
 
-  Eigen::MatrixXd X_curr(dim_x_, 1);  // current state
+  Eigen::MatrixXd X_curr = ekf_.getLatestX();  // current state
   Eigen::MatrixXd X_next(dim_x_, 1);  // predicted state
-  ekf_.getLatestX(X_curr);
   DEBUG_PRINT_MAT(X_curr.transpose());
 
-  Eigen::MatrixXd P_curr;
-  ekf_.getLatestP(P_curr);
+  const Eigen::MatrixXd P_curr = ekf_.getLatestP();
 
   const double yaw = X_curr(IDX::YAW);
   const double yaw_bias = X_curr(IDX::YAWB);
@@ -521,8 +517,7 @@ void EKFLocalizer::predictKinematicsModel()
   ekf_.predictWithDelay(X_next, A, Q);
 
   // debug
-  Eigen::MatrixXd X_result(dim_x_, 1);
-  ekf_.getLatestX(X_result);
+  const Eigen::MatrixXd X_result = ekf_.getLatestX();
   DEBUG_PRINT_MAT(X_result.transpose());
   DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
@@ -562,8 +557,9 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
       "pose frame_id is %s, but pose_frame is set as %s. They must be same.",
       pose.header.frame_id.c_str(), pose_frame_id_.c_str());
   }
-  Eigen::MatrixXd X_curr(dim_x_, 1);  // current state
-  ekf_.getLatestX(X_curr);
+
+  // current state
+  const Eigen::MatrixXd X_curr = ekf_.getLatestX();
   DEBUG_PRINT_MAT(X_curr.transpose());
 
   constexpr int dim_y = 3;  // pos_x, pos_y, yaw, depending on Pose output
@@ -609,9 +605,8 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   Eigen::MatrixXd y_ekf(dim_y, 1);
   y_ekf << ekf_.getXelement(delay_step * dim_x_ + IDX::X),
     ekf_.getXelement(delay_step * dim_x_ + IDX::Y), ekf_yaw;
-  Eigen::MatrixXd P_curr, P_y;
-  ekf_.getLatestP(P_curr);
-  P_y = P_curr.block(0, 0, dim_y, dim_y);
+  const Eigen::MatrixXd P_curr = ekf_.getLatestP();
+  const Eigen::MatrixXd P_y = P_curr.block(0, 0, dim_y, dim_y);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
@@ -650,8 +645,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   ekf_.updateWithDelay(y, C, R, delay_step);
 
   // debug
-  Eigen::MatrixXd X_result(dim_x_, 1);
-  ekf_.getLatestX(X_result);
+  const Eigen::MatrixXd X_result = ekf_.getLatestX();
   DEBUG_PRINT_MAT(X_result.transpose());
   DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
@@ -668,8 +662,8 @@ void EKFLocalizer::measurementUpdateTwist(
       "twist frame_id must be base_link");
   }
 
-  Eigen::MatrixXd X_curr(dim_x_, 1);  // current state
-  ekf_.getLatestX(X_curr);
+  // current state
+  const Eigen::MatrixXd X_curr = ekf_.getLatestX();
   DEBUG_PRINT_MAT(X_curr.transpose());
 
   constexpr int dim_y = 2;  // vx, wz
@@ -709,9 +703,8 @@ void EKFLocalizer::measurementUpdateTwist(
   Eigen::MatrixXd y_ekf(dim_y, 1);
   y_ekf << ekf_.getXelement(delay_step * dim_x_ + IDX::VX),
     ekf_.getXelement(delay_step * dim_x_ + IDX::WZ);
-  Eigen::MatrixXd P_curr, P_y;
-  ekf_.getLatestP(P_curr);
-  P_y = P_curr.block(4, 4, dim_y, dim_y);
+  const Eigen::MatrixXd P_curr = ekf_.getLatestP();
+  const Eigen::MatrixXd P_y = P_curr.block(4, 4, dim_y, dim_y);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
@@ -744,8 +737,7 @@ void EKFLocalizer::measurementUpdateTwist(
   ekf_.updateWithDelay(y, C, R, delay_step);
 
   // debug
-  Eigen::MatrixXd X_result(dim_x_, 1);
-  ekf_.getLatestX(X_result);
+  const Eigen::MatrixXd X_result = ekf_.getLatestX();
   DEBUG_PRINT_MAT(X_result.transpose());
   DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }

@@ -50,13 +50,13 @@ public:
    * @brief get latest time estimated state
    * @param x latest time estimated state
    */
-  void getLatestX(Eigen::MatrixXd & x) const;
+  Eigen::MatrixXd getLatestX() const;
 
   /**
    * @brief get latest time estimation covariance
    * @param P latest time estimation covariance
    */
-  void getLatestP(Eigen::MatrixXd & P) const;
+  Eigen::MatrixXd getLatestP() const;
 
   /**
    * @brief calculate kalman filter covariance by precision model with time delay. This is mainly
