@@ -30,8 +30,6 @@
 
 // clang-format on
 
-using std::placeholders::_1;
-
 // Revival of tf::createQuaternionFromRPY
 // https://answers.ros.org/question/304397/recommended-way-to-construct-quaternion-from-rollpitchyaw-with-tf2/
 inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
@@ -185,11 +183,14 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pub_pose_cov_no_yawbias_ = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "ekf_pose_with_covariance_without_yawbias", 1);
   sub_initialpose_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "initialpose", 1, std::bind(&EKFLocalizer::callbackInitialPose, this, _1));
+    "initialpose", 1,
+    std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1));
   sub_pose_with_cov_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "in_pose_with_covariance", 1, std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, _1));
+    "in_pose_with_covariance", 1,
+    std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, std::placeholders::_1));
   sub_twist_with_cov_ = create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
-    "in_twist_with_covariance", 1, std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, _1));
+    "in_twist_with_covariance", 1,
+    std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1));
 
   dim_x_ex_ = dim_x_ * extend_state_step_;
 
