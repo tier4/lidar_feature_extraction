@@ -371,12 +371,16 @@ void EKFLocalizer::callbackInitialPose(
 
   // TODO(mitsudome-r) need mutex
 
-  X(IDX::X) = initialpose->pose.pose.position.x + transform.transform.translation.x;
-  X(IDX::Y) = initialpose->pose.pose.position.y + transform.transform.translation.y;
-  current_ekf_pose_.pose.position.z =
-    initialpose->pose.pose.position.z + transform.transform.translation.z;
-  X(IDX::YAW) =
-    tf2::getYaw(initialpose->pose.pose.orientation) + tf2::getYaw(transform.transform.rotation);
+  const Eigen::Vector3d initial_position = ToVector3d(initialpose->pose.pose.position);
+  const Eigen::Vector3d translation = ToVector3d(transform.transform.translation);
+  const Eigen::Vector3d t = initial_position + translation;
+  const double initial_yaw = tf2::getYaw(initialpose->pose.pose.orientation);
+  const double yaw = tf2::getYaw(transform.transform.rotation);
+
+  X(IDX::X) = t(0);
+  X(IDX::Y) = t(1);
+  current_ekf_pose_.pose.position.z = t(2);
+  X(IDX::YAW) = initial_yaw + yaw;
   X(IDX::YAWB) = 0.0;
   X(IDX::VX) = 0.0;
   X(IDX::WZ) = 0.0;
