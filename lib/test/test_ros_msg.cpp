@@ -95,8 +95,9 @@ TEST(RosMsg, MakeTransformStamped)
   const uint32_t nanoseconds = 20000;
   const rclcpp::Time stamp(seconds, nanoseconds);
   const std::string frame_id = "map";
+  const std::string child_frame_id = "base_link";
 
-  const auto msg = MakeTransformStamped(transform, stamp, frame_id);
+  const auto msg = MakeTransformStamped(transform, stamp, frame_id, child_frame_id);
 
   EXPECT_EQ(msg.transform.translation.x, tx);
   EXPECT_EQ(msg.transform.translation.y, ty);
@@ -112,6 +113,8 @@ TEST(RosMsg, MakeTransformStamped)
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
 
   EXPECT_EQ(msg.header.frame_id, frame_id);
+
+  EXPECT_EQ(msg.child_frame_id, child_frame_id);
 }
 
 TEST(RosMsg, Vector3ToVector3d)

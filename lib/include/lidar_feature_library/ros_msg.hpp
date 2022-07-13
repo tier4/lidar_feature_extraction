@@ -81,6 +81,7 @@ Eigen::Isometry3d GetIsometry3d(const geometry_msgs::msg::Pose & pose)
   return transform;
 }
 
+// TODO(IshitaTakeshi) Duplicate of MakeTransformStamped. Remove this
 geometry_msgs::msg::TransformStamped EigenToTransform(
   const Eigen::Isometry3d & eigen_transform,
   const rclcpp::Time & stamp,
@@ -105,11 +106,15 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
 }
 
 geometry_msgs::msg::TransformStamped MakeTransformStamped(
-  const Eigen::Isometry3d & transform, const rclcpp::Time & stamp, const std::string & frame_id)
+  const Eigen::Isometry3d & transform,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id,
+  const std::string & child_frame_id)
 {
   geometry_msgs::msg::TransformStamped msg = tf2::eigenToTransform(transform);
   msg.header.stamp = stamp;
   msg.header.frame_id = frame_id;
+  msg.child_frame_id = child_frame_id;
   return msg;
 }
 
