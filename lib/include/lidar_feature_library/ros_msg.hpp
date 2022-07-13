@@ -146,6 +146,16 @@ geometry_msgs::msg::Vector3 MakeVector3(const Eigen::Vector3d & v)
   return msg;
 }
 
+geometry_msgs::msg::Twist MakeTwist(
+  const Eigen::Vector3d & linear,
+  const Eigen::Vector3d & angular)
+{
+  geometry_msgs::msg::Twist msg;
+  msg.linear = MakeVector3(linear);
+  msg.angular = MakeVector3(angular);
+  return msg;
+}
+
 geometry_msgs::msg::TwistStamped MakeTwistStamped(
   const Eigen::Vector3d & linear,
   const Eigen::Vector3d & angular,
@@ -153,8 +163,7 @@ geometry_msgs::msg::TwistStamped MakeTwistStamped(
   const std::string & frame_id)
 {
   geometry_msgs::msg::TwistStamped msg;
-  msg.twist.linear = MakeVector3(linear);
-  msg.twist.angular = MakeVector3(angular);
+  msg.twist = MakeTwist(linear, angular);
   msg.header.stamp = stamp;
   msg.header.frame_id = frame_id;
   return msg;
