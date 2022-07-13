@@ -14,6 +14,7 @@
 
   <depend>geometry_msgs</depend>
   <depend>kalman_filter</depend>
+  <depend>lidar_feature_library</depend>
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>

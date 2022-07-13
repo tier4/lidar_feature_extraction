@@ -23,6 +23,9 @@
 #include <string>
 #include <utility>
 
+#include "lidar_feature_library/ros_msg.hpp"
+
+
 // clang-format off
 #define PRINT_MAT(X) std::cout << #X << ":\n" << X << std::endl << std::endl
 #define DEBUG_INFO(...) {if (show_debug_info_) {RCLCPP_INFO(__VA_ARGS__);}}
@@ -291,11 +294,10 @@ void EKFLocalizer::timerCallback()
   geometry_msgs::msg::PoseStamped current_ekf_pose_no_yawbias_ = current_ekf_pose_;
   current_ekf_pose_no_yawbias_.pose.orientation =
     createQuaternionFromRPY(roll, pitch, ekf_.getXelement(IDX::YAW));
-  geometry_msgs::msg::TwistStamped current_ekf_twist_;  //!< @brief current estimated twist
-  current_ekf_twist_.header.frame_id = "base_link";
-  current_ekf_twist_.header.stamp = this->now();
-  current_ekf_twist_.twist.linear.x = ekf_.getXelement(IDX::VX);
-  current_ekf_twist_.twist.angular.z = ekf_.getXelement(IDX::WZ);
+
+  const Eigen::Vector3d linear(ekf_.getXelement(IDX::VX), 0, 0);
+  const Eigen::Vector3d angular(0, 0, ekf_.getXelement(IDX::WZ));
+  const auto current_ekf_twist_ = MakeTwistStamped(linear, angular, this->now(), "base_link");
 
   /* publish ekf result */
   publishEstimateResult(
