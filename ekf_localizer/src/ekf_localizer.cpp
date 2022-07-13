@@ -729,11 +729,11 @@ void EKFLocalizer::measurementUpdateTwist(
 
   /* Set measurement noise covariance */
   Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
-  std::array<double, 36ul> current_twist_covariance = twist.twist.covariance;
-  R(0, 0) = current_twist_covariance.at(0);   // vx - vx
-  R(0, 1) = current_twist_covariance.at(5);   // vx - wz
-  R(1, 0) = current_twist_covariance.at(30);  // wz - vx
-  R(1, 1) = current_twist_covariance.at(35);  // wz - wz
+  const Eigen::Map<const RowMatrix6d> covariance = GetEigenCovariance(twist.twist.covariance);
+  R(0, 0) = covariance(0, 0);   // vx - vx
+  R(0, 1) = covariance(0, 5);   // vx - wz
+  R(1, 0) = covariance(5, 0);   // wz - vx
+  R(1, 1) = covariance(5, 5);   // wz - wz
 
   /* In order to avoid a large change by update, measurement update is performed
    * by dividing at every step. measurement update is performed by dividing at every step. */

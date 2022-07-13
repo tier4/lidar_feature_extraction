@@ -46,6 +46,14 @@
 
 #include <string>
 
+
+using RowMatrix6d = Eigen::Matrix<double, 6, 6, Eigen::RowMajor>;
+
+Eigen::Map<const RowMatrix6d> GetEigenCovariance(const std::array<double, 36> & covariance)
+{
+  return Eigen::Map<const RowMatrix6d>(covariance.data(), 6, 6);
+}
+
 template<typename T>
 sensor_msgs::msg::PointCloud2 ToRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
 {
