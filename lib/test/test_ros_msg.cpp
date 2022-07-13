@@ -73,6 +73,8 @@ TEST(RosMsg, MakePoseStamped)
 
   EXPECT_EQ(msg.header.stamp.sec, seconds);
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+
+  EXPECT_EQ(msg.header.frame_id, frame_id);
 }
 
 TEST(RosMsg, MakeTransformStamped)
@@ -108,6 +110,8 @@ TEST(RosMsg, MakeTransformStamped)
 
   EXPECT_EQ(msg.header.stamp.sec, seconds);
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+
+  EXPECT_EQ(msg.header.frame_id, frame_id);
 }
 
 TEST(RosMsg, Vector3ToVector3d)
