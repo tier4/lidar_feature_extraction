@@ -84,15 +84,17 @@ void publishEstimateResult(
   pose_cov.header.stamp = current_time;
   pose_cov.header.frame_id = current_ekf_pose_.header.frame_id;
   pose_cov.pose.pose = current_ekf_pose_.pose;
-  pose_cov.pose.covariance[0] = P(IDX::X, IDX::X);
-  pose_cov.pose.covariance[1] = P(IDX::X, IDX::Y);
-  pose_cov.pose.covariance[5] = P(IDX::X, IDX::YAW);
-  pose_cov.pose.covariance[6] = P(IDX::Y, IDX::X);
-  pose_cov.pose.covariance[7] = P(IDX::Y, IDX::Y);
-  pose_cov.pose.covariance[11] = P(IDX::Y, IDX::YAW);
-  pose_cov.pose.covariance[30] = P(IDX::YAW, IDX::X);
-  pose_cov.pose.covariance[31] = P(IDX::YAW, IDX::Y);
-  pose_cov.pose.covariance[35] = P(IDX::YAW, IDX::YAW);
+
+  Eigen::Map<RowMatrix6d> covariance(pose_cov.pose.covariance.data(), 6, 6);
+  covariance(0, 0) = P(IDX::X, IDX::X);
+  covariance(0, 1) = P(IDX::X, IDX::Y);
+  covariance(0, 5) = P(IDX::X, IDX::YAW);
+  covariance(1, 0) = P(IDX::Y, IDX::X);
+  covariance(1, 1) = P(IDX::Y, IDX::Y);
+  covariance(1, 5) = P(IDX::Y, IDX::YAW);
+  covariance(5, 0) = P(IDX::YAW, IDX::X);
+  covariance(5, 1) = P(IDX::YAW, IDX::Y);
+  covariance(5, 5) = P(IDX::YAW, IDX::YAW);
   pub_pose_cov_->publish(pose_cov);
 
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
