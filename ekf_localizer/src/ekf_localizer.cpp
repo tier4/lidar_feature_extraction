@@ -83,16 +83,16 @@ void publishEstimateResult(
   pose_cov.header.frame_id = current_ekf_pose_.header.frame_id;
   pose_cov.pose.pose = current_ekf_pose_.pose;
 
-  Eigen::Map<RowMatrix6d> covariance(pose_cov.pose.covariance.data(), 6, 6);
-  covariance(0, 0) = P(IDX::X, IDX::X);
-  covariance(0, 1) = P(IDX::X, IDX::Y);
-  covariance(0, 5) = P(IDX::X, IDX::YAW);
-  covariance(1, 0) = P(IDX::Y, IDX::X);
-  covariance(1, 1) = P(IDX::Y, IDX::Y);
-  covariance(1, 5) = P(IDX::Y, IDX::YAW);
-  covariance(5, 0) = P(IDX::YAW, IDX::X);
-  covariance(5, 1) = P(IDX::YAW, IDX::Y);
-  covariance(5, 5) = P(IDX::YAW, IDX::YAW);
+  Eigen::Map<RowMatrix6d> pose_covariance(pose_cov.pose.covariance.data(), 6, 6);
+  pose_covariance(0, 0) = P(IDX::X, IDX::X);
+  pose_covariance(0, 1) = P(IDX::X, IDX::Y);
+  pose_covariance(0, 5) = P(IDX::X, IDX::YAW);
+  pose_covariance(1, 0) = P(IDX::Y, IDX::X);
+  pose_covariance(1, 1) = P(IDX::Y, IDX::Y);
+  pose_covariance(1, 5) = P(IDX::Y, IDX::YAW);
+  pose_covariance(5, 0) = P(IDX::YAW, IDX::X);
+  pose_covariance(5, 1) = P(IDX::YAW, IDX::Y);
+  pose_covariance(5, 5) = P(IDX::YAW, IDX::YAW);
   pub_pose_cov_->publish(pose_cov);
 
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
@@ -107,10 +107,12 @@ void publishEstimateResult(
   twist_cov.header.stamp = current_time;
   twist_cov.header.frame_id = current_ekf_twist_.header.frame_id;
   twist_cov.twist.twist = current_ekf_twist_.twist;
-  twist_cov.twist.covariance[0] = P(IDX::VX, IDX::VX);
-  twist_cov.twist.covariance[5] = P(IDX::VX, IDX::WZ);
-  twist_cov.twist.covariance[30] = P(IDX::WZ, IDX::VX);
-  twist_cov.twist.covariance[35] = P(IDX::WZ, IDX::WZ);
+
+  Eigen::Map<RowMatrix6d> twist_covariance(twist_cov.twist.covariance.data(), 6, 6);
+  twist_covariance(0, 0) = P(IDX::VX, IDX::VX);
+  twist_covariance(0, 5) = P(IDX::VX, IDX::WZ);
+  twist_covariance(5, 0) = P(IDX::WZ, IDX::VX);
+  twist_covariance(5, 5) = P(IDX::WZ, IDX::WZ);
   pub_twist_cov_->publish(twist_cov);
 
   /* publish latest odometry */
