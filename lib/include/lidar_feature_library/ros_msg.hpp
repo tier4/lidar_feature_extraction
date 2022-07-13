@@ -42,6 +42,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/point_field.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 #include <string>
 
@@ -134,6 +135,29 @@ Eigen::Vector3d ToVector3d(const geometry_msgs::msg::Vector3 & translation)
 Eigen::Quaterniond ToQuaterniond(const geometry_msgs::msg::Quaternion & rotation)
 {
   return Eigen::Quaterniond(rotation.w, rotation.x, rotation.y, rotation.z);
+}
+
+geometry_msgs::msg::Vector3 MakeVector3(const Eigen::Vector3d & v)
+{
+  geometry_msgs::msg::Vector3 msg;
+  msg.x = v(0);
+  msg.y = v(1);
+  msg.z = v(2);
+  return msg;
+}
+
+geometry_msgs::msg::TwistStamped MakeTwistStamped(
+  const Eigen::Vector3d & linear,
+  const Eigen::Vector3d & angular,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id)
+{
+  geometry_msgs::msg::TwistStamped msg;
+  msg.twist.linear = MakeVector3(linear);
+  msg.twist.angular = MakeVector3(angular);
+  msg.header.stamp = stamp;
+  msg.header.frame_id = frame_id;
+  return msg;
 }
 
 visualization_msgs::msg::Marker InitLines(const rclcpp::Time & stamp, const std::string & frame_id)

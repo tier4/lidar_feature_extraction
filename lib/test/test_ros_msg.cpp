@@ -164,3 +164,47 @@ TEST(RosMsg, ToQuaterniond)
   EXPECT_NEAR(q.y(), qy, tolerance);
   EXPECT_NEAR(q.z(), qz, tolerance);
 }
+
+TEST(RosMsg, MakeVector3)
+{
+  const double x = 1.;
+  const double y = 2.;
+  const double z = 3.;
+  const Eigen::Vector3d v(x, y, z);
+  const geometry_msgs::msg::Vector3 msg = MakeVector3(v);
+  EXPECT_EQ(msg.x, x);
+  EXPECT_EQ(msg.y, y);
+  EXPECT_EQ(msg.z, z);
+}
+
+TEST(RosMsg, MakeTwistStamped)
+{
+  const double lx = 1.;
+  const double ly = 2.;
+  const double lz = 3.;
+  const double ax = 0.1;
+  const double ay = 0.2;
+  const double az = 0.3;
+  const Eigen::Vector3d linear(lx, ly, lz);
+  const Eigen::Vector3d angular(ax, ay, az);
+
+  const int32_t seconds = 10000;
+  const uint32_t nanoseconds = 20000;
+  const rclcpp::Time stamp(seconds, nanoseconds);
+  const std::string frame_id = "map";
+
+  const auto msg = MakeTwistStamped(linear, angular, stamp, frame_id);
+
+  EXPECT_EQ(msg.twist.linear.x, lx);
+  EXPECT_EQ(msg.twist.linear.y, ly);
+  EXPECT_EQ(msg.twist.linear.z, lz);
+
+  EXPECT_EQ(msg.twist.angular.x, ax);
+  EXPECT_EQ(msg.twist.angular.y, ay);
+  EXPECT_EQ(msg.twist.angular.z, az);
+
+  EXPECT_EQ(msg.header.stamp.sec, seconds);
+  EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+
+  EXPECT_EQ(msg.header.frame_id, frame_id);
+}
