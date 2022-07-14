@@ -215,3 +215,66 @@ TEST(RosMsg, MakeTwistStamped)
 
   EXPECT_EQ(msg.header.frame_id, frame_id);
 }
+
+TEST(RosMsg, FromEigenCovariance)
+{
+  Eigen::Matrix<double, 6, 6> covariance;
+  covariance <<
+     0,  1,  2,  3,  4,  5,
+     6,  7,  8,  9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35;
+
+  const std::array<double, 36> array = FromEigenCovariance(covariance);
+  std::array<double, 36> expected = {
+     0,  1,  2,  3,  4,  5,
+     6,  7,  8,  9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35
+  };
+
+  for (size_t i = 0; i < 36; i++) {
+    EXPECT_EQ(array[i], expected[i]);
+  }
+}
+
+TEST(RosMsg, MakePoseWithCovariance)
+{
+  const double tx = 1.;
+  const double ty = 2.;
+  const double tz = 3.;
+
+  const double qw = std::sqrt(2. / 3.);
+  const double qx = std::sqrt(1. / 3.);
+  const double qy = 0.;
+  const double qz = 0.;
+
+  Eigen::Isometry3d pose;
+  pose.linear() = Eigen::Quaterniond(qw, qx, qy, qz).matrix();
+  pose.translation() = Eigen::Vector3d(tx, ty, tz);
+
+  Eigen::Matrix<double, 6, 6> covariance;
+  covariance <<
+     0,  1,  2,  3,  4,  5,
+     6,  7,  8,  9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35;
+
+  const auto msg = MakePoseWithCovariance(pose, covariance);
+
+  EXPECT_EQ(msg.pose.position.x, tx);
+  EXPECT_EQ(msg.pose.position.y, ty);
+  EXPECT_EQ(msg.pose.position.z, tz);
+
+  const double tolerance = 1e-6;
+  EXPECT_NEAR(msg.pose.orientation.w, qw, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.x, qx, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.y, qy, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.z, qz, tolerance);
+}

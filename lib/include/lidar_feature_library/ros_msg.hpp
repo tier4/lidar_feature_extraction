@@ -43,15 +43,29 @@
 #include <sensor_msgs/msg/point_field.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/pose_with_covariance.hpp>
 
 #include <string>
 
+
+using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
 using RowMatrix6d = Eigen::Matrix<double, 6, 6, Eigen::RowMajor>;
 
 Eigen::Map<const RowMatrix6d> GetEigenCovariance(const std::array<double, 36> & covariance)
 {
   return Eigen::Map<const RowMatrix6d>(covariance.data(), 6, 6);
+}
+
+std::array<double, 36> FromEigenCovariance(const RowMatrix6d & covariance)
+{
+  std::array<double, 36> array;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      array[i * 6 + j] = covariance(i, j);
+    }
+  }
+  return array;
 }
 
 template<typename T>
@@ -103,14 +117,29 @@ geometry_msgs::msg::TransformStamped EigenToTransform(
   return transform;
 }
 
+geometry_msgs::msg::Pose MakePose(const Eigen::Isometry3d & pose)
+{
+  return tf2::toMsg(pose);
+}
+
 geometry_msgs::msg::PoseStamped MakePoseStamped(
   const Eigen::Isometry3d & pose, const rclcpp::Time & stamp, const std::string & frame_id)
 {
   geometry_msgs::msg::PoseStamped pose_stamped_msg;
-  pose_stamped_msg.pose = tf2::toMsg(pose);
+  pose_stamped_msg.pose = MakePose(pose);
   pose_stamped_msg.header.stamp = stamp;
   pose_stamped_msg.header.frame_id = frame_id;
   return pose_stamped_msg;
+}
+
+geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
+  const Eigen::Isometry3d & pose,
+  const RowMatrix6d & covariance)
+{
+  geometry_msgs::msg::PoseWithCovariance msg;
+  msg.pose = MakePose(pose);
+  msg.covariance = FromEigenCovariance(covariance);
+  return msg;
 }
 
 geometry_msgs::msg::TransformStamped MakeTransformStamped(
