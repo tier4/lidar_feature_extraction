@@ -720,11 +720,6 @@ void EKFLocalizer::measurementUpdateTwist(
   DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
 
-double EKFLocalizer::normalizeYaw(const double & yaw) const
-{
-  return std::atan2(std::sin(yaw), std::cos(yaw));
-}
-
 void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
 {
   const double z = pose.pose.pose.position.z;

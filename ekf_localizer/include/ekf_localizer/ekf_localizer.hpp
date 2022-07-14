@@ -40,6 +40,18 @@
 #include <vector>
 
 
+// Noramlizes the yaw angle so that it fits in the range (-pi, pi)
+/**
+* @brief normalize yaw angle
+* @param yaw yaw angle
+* @return normalized yaw
+*/
+inline double normalizeYaw(const double & yaw)
+{
+  return std::atan2(std::sin(yaw), std::cos(yaw));
+}
+
+
 inline double SquaredMahalanobis(
   const Eigen::VectorXd & x,
   const Eigen::VectorXd & y,
@@ -295,13 +307,6 @@ private:
   bool getTransformFromTF(
     std::string parent_frame, std::string child_frame,
     geometry_msgs::msg::TransformStamped & transform);
-
-  /**
-   * @brief normalize yaw angle
-   * @param yaw yaw angle
-   * @return normalized yaw
-   */
-  double normalizeYaw(const double & yaw) const;
 
   void updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose);
 
