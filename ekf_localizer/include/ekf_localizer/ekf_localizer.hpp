@@ -39,6 +39,27 @@
 #include <string>
 #include <vector>
 
+
+/**
+ * @brief check whether a measurement value falls within the mahalanobis distance threshold
+ * @param dist_max mahalanobis distance threshold
+ * @param estimated current estimated state
+ * @param measured measured state
+ * @param estimated_cov current estimation covariance
+ * @return whether it falls within the mahalanobis distance threshold
+ */
+inline bool mahalanobisGate(
+  const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
+  const Eigen::MatrixXd & cov)
+{
+  Eigen::MatrixXd mahalanobis_squared = (x - obj_x).transpose() * cov.inverse() * (x - obj_x);
+  if (mahalanobis_squared(0) > dist_max * dist_max) {
+    return false;
+  }
+
+  return true;
+}
+
 struct PoseInfo
 {
   geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr pose;
@@ -277,4 +298,5 @@ private:
 
   friend class EKFLocalizerTestSuite;  // for test code
 };
+
 #endif  // EKF_LOCALIZER__EKF_LOCALIZER_HPP_
