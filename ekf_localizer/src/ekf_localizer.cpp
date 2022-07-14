@@ -534,13 +534,9 @@ void EKFLocalizer::predictKinematicsModel()
  */
 bool mahalanobisGate(
   const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
-  const Eigen::MatrixXd & cov,
-  const bool show_debug_info_)
+  const Eigen::MatrixXd & cov)
 {
   Eigen::MatrixXd mahalanobis_squared = (x - obj_x).transpose() * cov.inverse() * (x - obj_x);
-  DEBUG_INFO(
-    rclcpp::get_logger("ekf_localizer"), "measurement update: mahalanobis = %f, gate limit = %f",
-    std::sqrt(mahalanobis_squared(0)), dist_max);
   if (mahalanobis_squared(0) > dist_max * dist_max) {
     return false;
   }
@@ -609,7 +605,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     ekf_.getXelement(delay_step * dim_x_ + IDX::Y), ekf_yaw;
   const Eigen::MatrixXd P_curr = ekf_.getLatestP();
   const Eigen::MatrixXd P_y = P_curr.block(0, 0, dim_y, dim_y);
-  if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
+  if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
       "[EKF] Pose measurement update, mahalanobis distance is over limit. ignore "
@@ -706,7 +702,7 @@ void EKFLocalizer::measurementUpdateTwist(
     ekf_.getXelement(delay_step * dim_x_ + IDX::WZ));
   const Eigen::MatrixXd P_curr = ekf_.getLatestP();
   const Eigen::MatrixXd P_y = P_curr.block(4, 4, dim_y, dim_y);
-  if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
+  if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
       "[EKF] Twist measurement update, mahalanobis distance is over limit. ignore "
