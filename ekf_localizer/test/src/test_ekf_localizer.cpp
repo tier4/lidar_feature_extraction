@@ -198,3 +198,17 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
   ASSERT_FALSE(std::isnan(ekf_vx));
   ASSERT_FALSE(std::isinf(ekf_vx));
 }
+
+TEST(MahalanobisGate, mahalanobisGate)
+{
+  Eigen::Vector2d x(0, 1);
+  Eigen::Vector2d y(3, 2);
+  Eigen::Matrix2d C;
+  C <<
+    10, 0,
+    0, 10;
+
+  EXPECT_FALSE(mahalanobisGate(0.99, x, y, C));
+  EXPECT_FALSE(mahalanobisGate(1.00, x, y, C));
+  EXPECT_TRUE(mahalanobisGate(1.01, x, y, C));
+}
