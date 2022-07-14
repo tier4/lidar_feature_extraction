@@ -40,6 +40,15 @@
 #include <vector>
 
 
+inline double SquaredMahalanobis(
+  const Eigen::VectorXd & x,
+  const Eigen::VectorXd & y,
+  const Eigen::MatrixXd & C)
+{
+  const Eigen::VectorXd d = x - y;
+  return d.dot(C.inverse() * d);
+}
+
 /**
  * @brief check whether a measurement value falls within the mahalanobis distance threshold
  * @param dist_max mahalanobis distance threshold
@@ -52,8 +61,8 @@ inline bool mahalanobisGate(
   const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
   const Eigen::MatrixXd & cov)
 {
-  Eigen::MatrixXd mahalanobis_squared = (x - obj_x).transpose() * cov.inverse() * (x - obj_x);
-  if (mahalanobis_squared(0) > dist_max * dist_max) {
+  const double squared_distance = SquaredMahalanobis(x, obj_x, cov);
+  if (squared_distance > dist_max * dist_max) {
     return false;
   }
 

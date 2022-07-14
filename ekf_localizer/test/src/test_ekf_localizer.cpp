@@ -199,6 +199,33 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
   ASSERT_FALSE(std::isinf(ekf_vx));
 }
 
+TEST(MahalanobisGate, SquaredMahalanobis)
+{
+  const double tolerance = 1e-8;
+
+  {
+    Eigen::Vector2d x(0, 1);
+    Eigen::Vector2d y(3, 2);
+    Eigen::Matrix2d C;
+    C <<
+      10, 0,
+      0, 10;
+
+    EXPECT_NEAR(SquaredMahalanobis(x, y, C), 1.0, tolerance);
+  }
+
+  {
+    Eigen::Vector2d x(4, 1);
+    Eigen::Vector2d y(1, 5);
+    Eigen::Matrix2d C;
+    C <<
+      5, 0,
+      0, 5;
+
+    EXPECT_NEAR(SquaredMahalanobis(x, y, C), 5.0, tolerance);
+  }
+}
+
 TEST(MahalanobisGate, mahalanobisGate)
 {
   Eigen::Vector2d x(0, 1);
