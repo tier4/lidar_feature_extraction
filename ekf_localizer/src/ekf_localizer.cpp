@@ -668,7 +668,6 @@ void EKFLocalizer::measurementUpdateTwist(
   const Eigen::MatrixXd X_curr = ekf_.getLatestX();
   DEBUG_PRINT_MAT(X_curr.transpose());
 
-  constexpr int dim_y = 2;  // vx, wz
   const rclcpp::Time t_curr = this->now();
 
   /* Calculate delay step */
@@ -690,9 +689,9 @@ void EKFLocalizer::measurementUpdateTwist(
   }
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
+  constexpr int dim_y = 2;  // vx, wz
   /* Set measurement matrix */
-  Eigen::MatrixXd y(dim_y, 1);
-  y << twist.twist.twist.linear.x, twist.twist.twist.angular.z;
+  const Eigen::Vector2d y(twist.twist.twist.linear.x, twist.twist.twist.angular.z);
 
   if (isnan(y.array()).any() || isinf(y.array()).any()) {
     RCLCPP_WARN(
@@ -702,9 +701,9 @@ void EKFLocalizer::measurementUpdateTwist(
   }
 
   /* Gate */
-  Eigen::MatrixXd y_ekf(dim_y, 1);
-  y_ekf << ekf_.getXelement(delay_step * dim_x_ + IDX::VX),
-    ekf_.getXelement(delay_step * dim_x_ + IDX::WZ);
+  const Eigen::Vector2d y_ekf(
+    ekf_.getXelement(delay_step * dim_x_ + IDX::VX),
+    ekf_.getXelement(delay_step * dim_x_ + IDX::WZ));
   const Eigen::MatrixXd P_curr = ekf_.getLatestP();
   const Eigen::MatrixXd P_y = P_curr.block(4, 4, dim_y, dim_y);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y, show_debug_info_)) {
