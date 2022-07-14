@@ -569,8 +569,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   yaw = yaw_error + ekf_yaw;
 
   /* Set measurement matrix */
-  Eigen::MatrixXd y(dim_y, 1);
-  y << pose.pose.pose.position.x, pose.pose.pose.position.y, yaw;
+  const Eigen::Vector3d y(pose.pose.pose.position.x, pose.pose.pose.position.y, yaw);
 
   if (isnan(y.array()).any() || isinf(y.array()).any()) {
     RCLCPP_WARN(
@@ -580,9 +579,11 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   }
 
   /* Gate */
-  Eigen::MatrixXd y_ekf(dim_y, 1);
-  y_ekf << ekf_.getXelement(delay_step * dim_x_ + IDX::X),
-    ekf_.getXelement(delay_step * dim_x_ + IDX::Y), ekf_yaw;
+  const Eigen::Vector3d y_ekf(
+    ekf_.getXelement(delay_step * dim_x_ + IDX::X),
+    ekf_.getXelement(delay_step * dim_x_ + IDX::Y),
+    ekf_yaw);
+
   const Eigen::MatrixXd P_curr = ekf_.getLatestP();
   const Eigen::MatrixXd P_y = P_curr.block(0, 0, dim_y, dim_y);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
