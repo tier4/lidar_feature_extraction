@@ -19,6 +19,10 @@
 
 #include <Eigen/Core>
 
+bool HasInf(const Eigen::MatrixXd & v)
+{
+  return v.array().isInf().any();
+}
 
 bool HasNan(const Eigen::MatrixXd & v)
 {
