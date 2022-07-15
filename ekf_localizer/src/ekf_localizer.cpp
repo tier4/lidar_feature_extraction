@@ -288,23 +288,31 @@ void EKFLocalizer::timerCallback()
     DEBUG_INFO(get_logger(), "------------------------- end Twist -------------------------\n");
   }
 
-  Eigen::Isometry3d ekf_pose;
   const Eigen::Vector3d translation(
       ekf_.getXelement(IDX::X),
       ekf_.getXelement(IDX::Y),
       z_filter_.get_x()
   );
-  ekf_pose.translation() = translation;
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
-  const double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
-  ekf_pose.linear() = rotationlib::RPYToQuaternionXYZ(roll, pitch, yaw).toRotationMatrix();
+  const double unbiased_yaw = ekf_.getXelement(IDX::YAW);
+  const double yaw_bias = ekf_.getXelement(IDX::YAWB);
+  const rclcpp::Time stamp = this->now();
 
-  current_ekf_pose_ = MakePoseStamped(ekf_pose, this->now(), pose_frame_id_);
+  Eigen::Isometry3d ekf_pose;
+  ekf_pose.translation() = translation;
+  ekf_pose.linear() =
+    rotationlib::RPYToQuaternionXYZ(roll, pitch, unbiased_yaw + yaw_bias).toRotationMatrix();
 
-  geometry_msgs::msg::PoseStamped current_ekf_pose_no_yawbias_ = current_ekf_pose_;
-  current_ekf_pose_no_yawbias_.pose.orientation =
-    createQuaternionFromRPY(roll, pitch, ekf_.getXelement(IDX::YAW));
+  current_ekf_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
+
+  Eigen::Isometry3d ekf_unbiased_pose;
+  ekf_unbiased_pose.translation() = translation;
+  ekf_unbiased_pose.linear() =
+    rotationlib::RPYToQuaternionXYZ(roll, pitch, unbiased_yaw).toRotationMatrix();
+
+  const auto current_ekf_pose_no_yawbias_ =
+    MakePoseStamped(ekf_unbiased_pose, stamp, pose_frame_id_);
 
   const Eigen::Vector3d linear(ekf_.getXelement(IDX::VX), 0, 0);
   const Eigen::Vector3d angular(0, 0, ekf_.getXelement(IDX::WZ));
