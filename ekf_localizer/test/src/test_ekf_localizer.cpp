@@ -28,6 +28,8 @@
 #include <string>
 #include <utility>
 
+#include "ekf_localizer/numeric.hpp"
+
 using std::placeholders::_1;
 
 class EKFLocalizerTestSuite : public ::testing::Test
@@ -238,4 +240,12 @@ TEST(MahalanobisGate, mahalanobisGate)
   EXPECT_FALSE(mahalanobisGate(0.99, x, y, C));
   EXPECT_FALSE(mahalanobisGate(1.00, x, y, C));
   EXPECT_TRUE(mahalanobisGate(1.01, x, y, C));
+}
+
+TEST(Numeric, HasNan)
+{
+  double nan = std::nan("");
+  EXPECT_TRUE(HasNan(Eigen::Vector3d(0, nan, nan)));
+  EXPECT_TRUE(HasNan(Eigen::Vector3d(nan, 0, 0)));
+  EXPECT_FALSE(HasNan(Eigen::Vector3d(0, 0, 0)));
 }

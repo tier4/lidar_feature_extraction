@@ -53,7 +53,6 @@ inline double normalizeYaw(const double & yaw)
   return std::atan2(std::sin(yaw), std::cos(yaw));
 }
 
-
 inline double SquaredMahalanobis(
   const Eigen::VectorXd & x,
   const Eigen::VectorXd & y,
