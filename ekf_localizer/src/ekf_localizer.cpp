@@ -28,6 +28,7 @@
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 #include "rotationlib/quaternion.hpp"
+#include "ekf_localizer/numeric.hpp"
 
 
 // clang-format off
@@ -561,7 +562,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   /* Set measurement matrix */
   const Eigen::Vector3d y(pose.pose.pose.position.x, pose.pose.pose.position.y, yaw);
 
-  if (isnan(y.array()).any() || isinf(y.array()).any()) {
+  if (HasNan(y) || HasInf(y)) {
     warning_.Warn(
       "[EKF] pose measurement matrix includes NaN of Inf. ignore update. check pose message.");
     return;
@@ -645,7 +646,7 @@ void EKFLocalizer::measurementUpdateTwist(
   /* Set measurement matrix */
   const Eigen::Vector2d y(twist.twist.twist.linear.x, twist.twist.twist.angular.z);
 
-  if (isnan(y.array()).any() || isinf(y.array()).any()) {
+  if (HasNan(y) || HasInf(y)) {
     warning_.Warn(
       "[EKF] twist measurement matrix includes NaN of Inf. ignore update. check twist message.");
     return;
