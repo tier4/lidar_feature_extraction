@@ -484,8 +484,6 @@ void EKFLocalizer::predictKinematicsModel()
   Eigen::MatrixXd X_next(dim_x_, 1);  // predicted state
   DEBUG_PRINT_MAT(X_curr.transpose());
 
-  const Eigen::MatrixXd P_curr = ekf_.getLatestP();
-
   const double yaw = X_curr(IDX::YAW);
   const double yaw_bias = X_curr(IDX::YAWB);
   const double vx = X_curr(IDX::VX);
@@ -589,8 +587,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     ekf_.getXelement(delay_step * dim_x_ + IDX::Y),
     ekf_yaw);
 
-  const Eigen::MatrixXd P_curr = ekf_.getLatestP();
-  const Eigen::MatrixXd P_y = P_curr.block(0, 0, dim_y, dim_y);
+  const Eigen::MatrixXd P_y = ekf_.getLatestP().block(0, 0, dim_y, dim_y);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
@@ -610,8 +607,8 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   C(2, IDX::YAW) = 1.0;  // for yaw
 
   /* Set measurement noise covariance */
-  Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
   const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
+  Eigen::Matrix3d R;
   R(0, 0) = covariance(0, 0);  // x - x
   R(0, 1) = covariance(0, 1);  // x - y
   R(0, 2) = covariance(0, 5);  // x - yaw
@@ -686,8 +683,7 @@ void EKFLocalizer::measurementUpdateTwist(
   const Eigen::Vector2d y_ekf(
     ekf_.getXelement(delay_step * dim_x_ + IDX::VX),
     ekf_.getXelement(delay_step * dim_x_ + IDX::WZ));
-  const Eigen::MatrixXd P_curr = ekf_.getLatestP();
-  const Eigen::MatrixXd P_y = P_curr.block(4, 4, dim_y, dim_y);
+  const Eigen::MatrixXd P_y = ekf_.getLatestP().block(4, 4, dim_y, dim_y);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(2000).count(),
