@@ -264,7 +264,7 @@ void EKFLocalizer::timerCallback()
       current_pose_info_queue_.pop();
       measurementUpdatePose(*pose_info.pose);
       ++pose_info.counter;
-      if (pose_info.counter < pose_info.smoothing_steps) {
+      if (pose_info.counter < pose_smoothing_steps_) {
         current_pose_info_queue_.push(pose_info);
       }
     }
@@ -281,7 +281,7 @@ void EKFLocalizer::timerCallback()
       current_twist_info_queue_.pop();
       measurementUpdateTwist(*twist_info.twist);
       ++twist_info.counter;
-      if (twist_info.counter < twist_info.smoothing_steps) {
+      if (twist_info.counter < twist_smoothing_steps_) {
         current_twist_info_queue_.push(twist_info);
       }
     }
@@ -416,7 +416,7 @@ void EKFLocalizer::callbackInitialPose(
 void EKFLocalizer::callbackPoseWithCovariance(
   geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
-  PoseInfo pose_info = {msg, 0, pose_smoothing_steps_};
+  PoseInfo pose_info = {msg, 0};
   current_pose_info_queue_.push(pose_info);
 
   updateSimple1DFilters(*msg);
@@ -428,7 +428,7 @@ void EKFLocalizer::callbackPoseWithCovariance(
 void EKFLocalizer::callbackTwistWithCovariance(
   geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
-  TwistInfo twist_info = {msg, 0, twist_smoothing_steps_};
+  TwistInfo twist_info = {msg, 0};
   current_twist_info_queue_.push(twist_info);
 }
 

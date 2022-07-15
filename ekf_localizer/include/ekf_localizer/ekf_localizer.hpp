@@ -92,7 +92,7 @@ struct TwistInfo
 {
   geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr twist;
   int counter;
-  int smoothing_steps;
+  const int smoothing_steps;
 };
 
 class Simple1DFilter
