@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 
+#include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
 
@@ -293,15 +294,19 @@ void EKFLocalizer::timerCallback()
     DEBUG_INFO(get_logger(), "------------------------- end Twist -------------------------\n");
   }
 
-  current_ekf_pose_.header.frame_id = pose_frame_id_;
-  current_ekf_pose_.header.stamp = this->now();
-  current_ekf_pose_.pose.position.x = ekf_.getXelement(IDX::X);
-  current_ekf_pose_.pose.position.y = ekf_.getXelement(IDX::Y);
-  current_ekf_pose_.pose.position.z = z_filter_.get_x();
-  double roll = roll_filter_.get_x();
-  double pitch = pitch_filter_.get_x();
-  double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
-  current_ekf_pose_.pose.orientation = createQuaternionFromRPY(roll, pitch, yaw);
+  Eigen::Isometry3d ekf_pose;
+  const Eigen::Vector3d translation(
+      ekf_.getXelement(IDX::X),
+      ekf_.getXelement(IDX::Y),
+      z_filter_.get_x()
+  );
+  ekf_pose.translation() = translation;
+  const double roll = roll_filter_.get_x();
+  const double pitch = pitch_filter_.get_x();
+  const double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
+  ekf_pose.linear() = RPYToQuaternionXYZ(roll, pitch, yaw).toRotationMatrix();
+
+  current_ekf_pose_ = MakePoseStamped(ekf_pose, this->now(), pose_frame_id_);
 
   geometry_msgs::msg::PoseStamped current_ekf_pose_no_yawbias_ = current_ekf_pose_;
   current_ekf_pose_no_yawbias_.pose.orientation =
