@@ -27,6 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <gmock/gmock.h>
+#include <tf2/LinearMath/Quaternion.h>
+
 #include "lidar_feature_library/eigen.hpp"
 
 
@@ -111,4 +113,22 @@ TEST(Eigen, GetRows)
   const Eigen::MatrixXd rows = GetRows(matrix, indices);
   EXPECT_EQ(rows.rows(), 2);
   EXPECT_EQ(rows.cols(), 3);
+}
+
+TEST(Eigen, RPYToQuaternionXYZ)
+{
+  const double roll = 0.1;
+  const double pitch = 0.2;
+  const double yaw = 0.3;
+
+  tf2::Quaternion q;
+  q.setRPY(roll, pitch, yaw);
+
+  const Eigen::Quaterniond s = RPYToQuaternionXYZ(roll, pitch, yaw);
+
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(q.w(), s.w(), tolerance);
+  EXPECT_NEAR(q.x(), s.x(), tolerance);
+  EXPECT_NEAR(q.y(), s.y(), tolerance);
+  EXPECT_NEAR(q.z(), s.z(), tolerance);
 }

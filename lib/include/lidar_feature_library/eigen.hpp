@@ -83,4 +83,13 @@ Eigen::MatrixXd GetRows(
   return A;
 }
 
+Eigen::Quaterniond RPYToQuaternionXYZ(const double roll, const double pitch, const double yaw)
+{
+  const Eigen::Quaterniond q =
+    Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+    Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+    Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
+  return q;
+}
+
 #endif  // LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
