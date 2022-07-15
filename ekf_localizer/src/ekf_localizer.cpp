@@ -142,32 +142,32 @@ void publishEstimateResult(
 }
 
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
-: rclcpp::Node(node_name, node_options), dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */)
+: rclcpp::Node(node_name, node_options),
+  show_debug_info_(declare_parameter("show_debug_info", false)),
+  ekf_rate_(declare_parameter("predict_frequency", 50.0)),
+  ekf_dt_(1.0 / std::max(ekf_rate_, 0.1)),
+  tf_rate_(declare_parameter("tf_rate", 10.0)),
+  enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
+  extend_state_step_(declare_parameter("extend_state_step", 50)),
+  pose_frame_id_(declare_parameter("pose_frame_id", std::string("map"))),
+  dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */),
+  dim_x_ex_(dim_x_ * extend_state_step_),
+  pose_smoothing_steps_(declare_parameter("pose_smoothing_steps", 5)),
+  tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
+    std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
+  pose_additional_delay_(declare_parameter("pose_additional_delay", 0.0)),
+  pose_gate_dist_(declare_parameter("pose_gate_dist", 10000.0)),
+  twist_additional_delay_(declare_parameter("twist_additional_delay", 0.0)),
+  twist_gate_dist_(declare_parameter("twist_gate_dist", 10000.0)),
+  twist_smoothing_steps_(declare_parameter("twist_smoothing_steps", 2)),
+  proc_stddev_yaw_c_(declare_parameter("proc_stddev_yaw_c", 0.005)),
+  proc_stddev_yaw_bias_c_(declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
+  proc_stddev_vx_c_(declare_parameter("proc_stddev_vx_c", 5.0)),
+  proc_stddev_wz_c_(declare_parameter("proc_stddev_wz_c", 1.0)),
+  pose_measure_uncertainty_time_(declare_parameter("pose_measure_uncertainty_time", 0.01))
 {
-  show_debug_info_ = declare_parameter("show_debug_info", false);
-  ekf_rate_ = declare_parameter("predict_frequency", 50.0);
-  ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
-  tf_rate_ = declare_parameter("tf_rate", 10.0);
-  enable_yaw_bias_estimation_ = declare_parameter("enable_yaw_bias_estimation", true);
-  extend_state_step_ = declare_parameter("extend_state_step", 50);
-  pose_frame_id_ = declare_parameter("pose_frame_id", std::string("map"));
-
-  /* pose measurement */
-  pose_additional_delay_ = declare_parameter("pose_additional_delay", 0.0);
-  pose_measure_uncertainty_time_ = declare_parameter("pose_measure_uncertainty_time", 0.01);
-  pose_gate_dist_ = declare_parameter("pose_gate_dist", 10000.0);  // Mahalanobis limit
-  pose_smoothing_steps_ = declare_parameter("pose_smoothing_steps", 5);
-
-  /* twist measurement */
-  twist_additional_delay_ = declare_parameter("twist_additional_delay", 0.0);
-  twist_gate_dist_ = declare_parameter("twist_gate_dist", 10000.0);  // Mahalanobis limit
-  twist_smoothing_steps_ = declare_parameter("twist_smoothing_steps", 2);
 
   /* process noise */
-  proc_stddev_yaw_c_ = declare_parameter("proc_stddev_yaw_c", 0.005);
-  proc_stddev_yaw_bias_c_ = declare_parameter("proc_stddev_yaw_bias_c", 0.001);
-  proc_stddev_vx_c_ = declare_parameter("proc_stddev_vx_c", 5.0);
-  proc_stddev_wz_c_ = declare_parameter("proc_stddev_wz_c", 1.0);
   if (!enable_yaw_bias_estimation_) {
     proc_stddev_yaw_bias_c_ = 0.0;
   }
@@ -179,7 +179,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   proc_cov_yaw_bias_d_ = std::pow(proc_stddev_yaw_bias_c_ * ekf_dt_, 2.0);
 
   /* initialize ros system */
-  auto period_control_ns =
+  const auto period_control_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(ekf_dt_));
   timer_control_ = rclcpp::create_timer(
     this, get_clock(), period_control_ns, std::bind(&EKFLocalizer::timerCallback, this));
@@ -208,11 +208,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   sub_twist_with_cov_ = create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
     "in_twist_with_covariance", 1,
     std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1));
-
-  dim_x_ex_ = dim_x_ * extend_state_step_;
-
-  tf_br_ = std::make_shared<tf2_ros::TransformBroadcaster>(
-    std::shared_ptr<rclcpp::Node>(this, [](auto) {}));
 
   initEKF();
 
@@ -481,7 +476,7 @@ void EKFLocalizer::predictKinematicsModel()
    *     [ 0, 0,                 0,                 0,             0,  1]
    */
 
-  Eigen::MatrixXd X_curr = ekf_.getLatestX();  // current state
+  const Eigen::MatrixXd X_curr = ekf_.getLatestX();  // current state
   Eigen::MatrixXd X_next(dim_x_, 1);  // predicted state
   DEBUG_PRINT_MAT(X_curr.transpose());
 

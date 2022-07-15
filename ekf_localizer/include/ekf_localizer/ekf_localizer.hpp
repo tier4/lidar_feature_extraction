@@ -200,38 +200,38 @@ private:
   Simple1DFilter pitch_filter_;
 
   /* parameters */
-  bool show_debug_info_;
+  const bool show_debug_info_;
   double ekf_rate_;                  //!< @brief  EKF predict rate
   double ekf_dt_;                    //!< @brief  = 1 / ekf_rate_
-  double tf_rate_;                   //!< @brief  tf publish rate
-  bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
+  const double tf_rate_;                   //!< @brief  tf publish rate
+  const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
                                      //!< if true,publish /estimate_yaw_bias
-  std::string pose_frame_id_;
+  const std::string pose_frame_id_;
 
   const int dim_x_;              //!< @brief  dimension of EKF state
-  int extend_state_step_;  //!< @brief  for time delay compensation
-  int dim_x_ex_;  //!< @brief  dimension of extended EKF state (dim_x_ * extended_state_step)
+  const int pose_smoothing_steps_;
+
+  const int extend_state_step_;  //!< @brief  for time delay compensation
+  const int dim_x_ex_;  //!< @brief  dimension of extended EKF state (dim_x_ * extended_state_step)
 
   /* Pose */
-  double pose_additional_delay_;          //!< @brief  compensated pose delay time =
+  const double pose_additional_delay_;    //!< @brief  compensated pose delay time =
                                           //!< (pose.header.stamp - now) + additional_delay [s]
-  double pose_measure_uncertainty_time_;  //!< @brief  added for measurement covariance
-  double pose_rate_;  //!< @brief  pose rate [s], used for covariance calculation
+  const double pose_measure_uncertainty_time_;  //!< @brief  added for measurement covariance
   //!< @brief  the mahalanobis distance threshold to ignore pose measurement
-  double pose_gate_dist_;
+  const double pose_gate_dist_;
 
   /* twist */
-  double twist_additional_delay_;  //!< @brief  compensated delay = (twist.header.stamp - now)
+  const double twist_additional_delay_;  //!< @brief  compensated delay = (twist.header.stamp - now)
                                    //!< + additional_delay [s]
-  double twist_rate_;              //!< @brief  rate [s], used for covariance calculation
   //!< @brief  measurement is ignored if the mahalanobis distance is larger than this value.
-  double twist_gate_dist_;
+  const double twist_gate_dist_;
 
   /* process noise standard deviation */
-  double proc_stddev_yaw_c_;       //!< @brief  yaw process noise
+  const double proc_stddev_yaw_c_;       //!< @brief  yaw process noise
   double proc_stddev_yaw_bias_c_;  //!< @brief  yaw bias process noise
-  double proc_stddev_vx_c_;        //!< @brief  vx process noise
-  double proc_stddev_wz_c_;        //!< @brief  wz process noise
+  const double proc_stddev_vx_c_;        //!< @brief  vx process noise
+  const double proc_stddev_wz_c_;        //!< @brief  wz process noise
 
   /* process noise variance for discrete model */
   double proc_cov_yaw_d_;       //!< @brief  discrete yaw process noise
@@ -246,8 +246,7 @@ private:
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
 
-  int pose_smoothing_steps_;
-  int twist_smoothing_steps_;
+  const int twist_smoothing_steps_;
 
   /**
    * @brief computes update & prediction of EKF for each ekf_dt_[s] time
