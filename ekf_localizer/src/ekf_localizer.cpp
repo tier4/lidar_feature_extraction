@@ -401,14 +401,9 @@ void EKFLocalizer::callbackInitialPose(
 
   const Vector6d X = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
 
-  const Matrix6d covariance = GetEigenCovariance(initialpose->pose.covariance);
-  Eigen::MatrixXd P = Eigen::MatrixXd::Zero(dim_x_, dim_x_);
-  P(0, 0) = covariance(0, 0);
-  P(1, 1) = covariance(1, 1);
-  P(2, 2) = covariance(5, 5);
-  P(3, 3) = 0.0001;
-  P(4, 4) = 0.01;
-  P(5, 5) = 0.01;
+  const Matrix6d C = GetEigenCovariance(initialpose->pose.covariance);
+  const Vector6d d = (Vector6d() << C(0, 0), C(1, 1), C(5, 5), 0.0001, 0.01, 0.01).finished();
+  const Matrix6d P = d.asDiagonal();
 
   ekf_.init(X, P, extend_state_step_);
 
