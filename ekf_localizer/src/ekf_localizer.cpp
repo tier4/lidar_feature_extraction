@@ -25,6 +25,7 @@
 
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
+#include "rotationlib/quaternion.hpp"
 
 
 // clang-format off

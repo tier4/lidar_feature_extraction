@@ -15,7 +15,9 @@ ament_auto_add_executable(ekf_localizer
   src/ekf_localizer_node.cpp
   src/ekf_localizer.cpp
 )
-ament_target_dependencies(ekf_localizer kalman_filter lidar_feature_library)
+ament_target_dependencies(
+  ekf_localizer
+  kalman_filter lidar_feature_library rotationlib)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
@@ -29,7 +31,7 @@ if(BUILD_TESTING)
   )
   ament_target_dependencies(
     ekf_localizer-test geometry_msgs kalman_filter lidar_feature_library
-    nav_msgs rclcpp tf2 tf2_ros)
+    nav_msgs rclcpp rotationlib tf2 tf2_ros)
 endif()
 
 ament_auto_package(

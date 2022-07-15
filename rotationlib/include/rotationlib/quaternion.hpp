@@ -77,4 +77,13 @@ Eigen::Matrix4d RightMultiplicationMatrix(const Eigen::Quaterniond & q)
   return Q;
 }
 
+Eigen::Quaterniond RPYToQuaternionXYZ(const double roll, const double pitch, const double yaw)
+{
+  const Eigen::Quaterniond q =
+    Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+    Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+    Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
+  return q;
+}
+
 #endif  // ROTATIONLIB__QUATERNION_HPP_

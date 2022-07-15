@@ -17,6 +17,7 @@
   <depend>lidar_feature_library</depend>
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
+  <depend>rotationlib</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf2</depend>
