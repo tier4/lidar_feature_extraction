@@ -482,7 +482,6 @@ void EKFLocalizer::predictKinematicsModel()
    */
 
   const Eigen::MatrixXd X_curr = ekf_.getLatestX();  // current state
-  DEBUG_PRINT_MAT(X_curr.transpose());
 
   const double unbiased_yaw = X_curr(2);
   const double yaw_bias = X_curr(3);
@@ -521,11 +520,6 @@ void EKFLocalizer::predictKinematicsModel()
   Q(5, 5) = proc_cov_wz_d_;            // for wz
 
   ekf_.predictWithDelay(X_next, A, Q);
-
-  // debug
-  const Eigen::MatrixXd X_result = ekf_.getLatestX();
-  DEBUG_PRINT_MAT(X_result.transpose());
-  DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
 
 /*
@@ -540,10 +534,6 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
         "pose frame_id is {}, but pose_frame is set as {}. They must be same.",
         pose.header.frame_id, pose_frame_id_));
   }
-
-  // current state
-  const Eigen::MatrixXd X_curr = ekf_.getLatestX();
-  DEBUG_PRINT_MAT(X_curr.transpose());
 
   const rclcpp::Time t_curr = this->now();
 
@@ -621,11 +611,6 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   R *= pose_smoothing_steps_;
 
   ekf_.updateWithDelay(y, C, R, delay_step);
-
-  // debug
-  const Eigen::MatrixXd X_result = ekf_.getLatestX();
-  DEBUG_PRINT_MAT(X_result.transpose());
-  DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
 
 /*
@@ -637,10 +622,6 @@ void EKFLocalizer::measurementUpdateTwist(
   if (twist.header.frame_id != "base_link") {
     warning_.WarnThrottle(2000, "twist frame_id must be base_link");
   }
-
-  // current state
-  const Eigen::MatrixXd X_curr = ekf_.getLatestX();
-  DEBUG_PRINT_MAT(X_curr.transpose());
 
   const rclcpp::Time t_curr = this->now();
 
@@ -710,11 +691,6 @@ void EKFLocalizer::measurementUpdateTwist(
   R *= twist_smoothing_steps_;
 
   ekf_.updateWithDelay(y, C, R, delay_step);
-
-  // debug
-  const Eigen::MatrixXd X_result = ekf_.getLatestX();
-  DEBUG_PRINT_MAT(X_result.transpose());
-  DEBUG_PRINT_MAT((X_result - X_curr).transpose());
 }
 
 void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
