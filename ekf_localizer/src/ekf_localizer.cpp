@@ -227,7 +227,7 @@ void EKFLocalizer::updatePredictFrequency()
 {
   if (last_predict_time_) {
     if (get_clock()->now() < *last_predict_time_) {
-      RCLCPP_WARN(get_logger(), "Detected jump back in time");
+      warning_.Warn("Detected jump back in time");
     } else {
       ekf_rate_ = 1.0 / (get_clock()->now() - *last_predict_time_).seconds();
       DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
@@ -369,7 +369,7 @@ bool EKFLocalizer::getTransformFromTF(
       transform = tf_buffer.lookupTransform(parent_frame, child_frame, tf2::TimePointZero);
       return true;
     } catch (tf2::TransformException & ex) {
-      RCLCPP_WARN(get_logger(), "%s", ex.what());
+      warning_.Warn(ex.what());
       rclcpp::sleep_for(std::chrono::milliseconds(100));
     }
   }
@@ -577,8 +577,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   const Eigen::Vector3d y(pose.pose.pose.position.x, pose.pose.pose.position.y, yaw);
 
   if (isnan(y.array()).any() || isinf(y.array()).any()) {
-    RCLCPP_WARN(
-      get_logger(),
+    warning_.Warn(
       "[EKF] pose measurement matrix includes NaN of Inf. ignore update. check pose message.");
     return;
   }
@@ -671,8 +670,7 @@ void EKFLocalizer::measurementUpdateTwist(
   const Eigen::Vector2d y(twist.twist.twist.linear.x, twist.twist.twist.angular.z);
 
   if (isnan(y.array()).any() || isinf(y.array()).any()) {
-    RCLCPP_WARN(
-      get_logger(),
+    warning_.Warn(
       "[EKF] twist measurement matrix includes NaN of Inf. ignore update. check twist message.");
     return;
   }
