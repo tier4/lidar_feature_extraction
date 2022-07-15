@@ -406,9 +406,10 @@ void EKFLocalizer::callbackInitialPose(
   X(IDX::VX) = 0.0;
   X(IDX::WZ) = 0.0;
 
-  P(IDX::X, IDX::X) = initialpose->pose.covariance[0];
-  P(IDX::Y, IDX::Y) = initialpose->pose.covariance[6 + 1];
-  P(IDX::YAW, IDX::YAW) = initialpose->pose.covariance[6 * 5 + 5];
+  const Matrix6d covariance = GetEigenCovariance(initialpose->pose.covariance);
+  P(IDX::X, IDX::X) = covariance(0, 0);
+  P(IDX::Y, IDX::Y) = covariance(1, 1);
+  P(IDX::YAW, IDX::YAW) = covariance(5, 5);
   P(IDX::YAWB, IDX::YAWB) = 0.0001;
   P(IDX::VX, IDX::VX) = 0.01;
   P(IDX::WZ, IDX::WZ) = 0.01;
@@ -734,9 +735,10 @@ void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovar
 
   const Eigen::Vector3d rpy = createRPYfromQuaternion(pose.pose.pose.orientation);
 
-  const double z_stddev = std::sqrt(pose.pose.covariance[2 * 6 + 2]);
-  const double roll_stddev = std::sqrt(pose.pose.covariance[3 * 6 + 3]);
-  const double pitch_stddev = std::sqrt(pose.pose.covariance[4 * 6 + 4]);
+  const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
+  const double z_stddev = std::sqrt(covariance(2, 2));
+  const double roll_stddev = std::sqrt(covariance(3, 3));
+  const double pitch_stddev = std::sqrt(covariance(4, 4));
 
   z_filter_.update(z, z_stddev, pose.header.stamp);
   roll_filter_.update(rpy(0), roll_stddev, pose.header.stamp);
