@@ -31,7 +31,6 @@
 
 
 // clang-format off
-#define PRINT_MAT(X) std::cout << #X << ":\n" << X << std::endl << std::endl
 #define DEBUG_INFO(...) {if (show_debug_info_) {RCLCPP_INFO(__VA_ARGS__);}}
 #define DEBUG_PRINT_MAT(X) {if (show_debug_info_) {std::cout << #X << ": " << X << std::endl;}}
 
