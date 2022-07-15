@@ -89,15 +89,15 @@ void publishEstimateResult(
   pose_cov.pose.pose = current_ekf_pose_.pose;
 
   Eigen::Map<RowMatrix6d> pose_covariance(pose_cov.pose.covariance.data(), 6, 6);
-  pose_covariance(0, 0) = P(IDX::X, IDX::X);
-  pose_covariance(0, 1) = P(IDX::X, IDX::Y);
-  pose_covariance(0, 5) = P(IDX::X, IDX::YAW);
-  pose_covariance(1, 0) = P(IDX::Y, IDX::X);
-  pose_covariance(1, 1) = P(IDX::Y, IDX::Y);
-  pose_covariance(1, 5) = P(IDX::Y, IDX::YAW);
-  pose_covariance(5, 0) = P(IDX::YAW, IDX::X);
-  pose_covariance(5, 1) = P(IDX::YAW, IDX::Y);
-  pose_covariance(5, 5) = P(IDX::YAW, IDX::YAW);
+  pose_covariance(0, 0) = P(0, 0);
+  pose_covariance(0, 1) = P(0, 1);
+  pose_covariance(0, 5) = P(0, 2);
+  pose_covariance(1, 0) = P(1, 0);
+  pose_covariance(1, 1) = P(1, 1);
+  pose_covariance(1, 5) = P(1, 2);
+  pose_covariance(5, 0) = P(2, 0);
+  pose_covariance(5, 1) = P(2, 1);
+  pose_covariance(5, 5) = P(2, 2);
   pub_pose_cov_->publish(pose_cov);
 
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
@@ -114,10 +114,10 @@ void publishEstimateResult(
   twist_cov.twist.twist = current_ekf_twist_.twist;
 
   Eigen::Map<RowMatrix6d> twist_covariance(twist_cov.twist.covariance.data(), 6, 6);
-  twist_covariance(0, 0) = P(IDX::VX, IDX::VX);
-  twist_covariance(0, 5) = P(IDX::VX, IDX::WZ);
-  twist_covariance(5, 0) = P(IDX::WZ, IDX::VX);
-  twist_covariance(5, 5) = P(IDX::WZ, IDX::WZ);
+  twist_covariance(0, 0) = P(4, 4);
+  twist_covariance(0, 5) = P(4, 5);
+  twist_covariance(5, 0) = P(5, 4);
+  twist_covariance(5, 5) = P(5, 5);
   pub_twist_cov_->publish(twist_cov);
 
   /* publish latest odometry */
@@ -293,14 +293,14 @@ void EKFLocalizer::timerCallback()
   }
 
   const Eigen::Vector3d translation(
-      ekf_.getXelement(IDX::X),
-      ekf_.getXelement(IDX::Y),
+      ekf_.getXelement(0),
+      ekf_.getXelement(1),
       z_filter_.get_x()
   );
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
-  const double unbiased_yaw = ekf_.getXelement(IDX::YAW);
-  const double yaw_bias = ekf_.getXelement(IDX::YAWB);
+  const double unbiased_yaw = ekf_.getXelement(2);
+  const double yaw_bias = ekf_.getXelement(3);
   const rclcpp::Time stamp = this->now();
 
   Eigen::Isometry3d ekf_pose;
@@ -318,8 +318,8 @@ void EKFLocalizer::timerCallback()
   const auto current_ekf_pose_no_yawbias_ =
     MakePoseStamped(ekf_unbiased_pose, stamp, pose_frame_id_);
 
-  const Eigen::Vector3d linear(ekf_.getXelement(IDX::VX), 0, 0);
-  const Eigen::Vector3d angular(0, 0, ekf_.getXelement(IDX::WZ));
+  const Eigen::Vector3d linear(ekf_.getXelement(4), 0, 0);
+  const Eigen::Vector3d angular(0, 0, ekf_.getXelement(5));
   const auto current_ekf_twist_ = MakeTwistStamped(linear, angular, this->now(), "base_link");
 
   /* publish ekf result */
@@ -447,10 +447,10 @@ void EKFLocalizer::initEKF()
 {
   Eigen::MatrixXd X = Eigen::MatrixXd::Zero(dim_x_, 1);
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(dim_x_, dim_x_) * 1.0E15;  // for x & y
-  P(IDX::YAW, IDX::YAW) = 50.0;                                            // for yaw
-  P(IDX::YAWB, IDX::YAWB) = proc_cov_yaw_bias_d_;                          // for yaw bias
-  P(IDX::VX, IDX::VX) = 1000.0;                                            // for vx
-  P(IDX::WZ, IDX::WZ) = 50.0;                                              // for wz
+  P(2, 2) = 50.0;                                            // for yaw
+  P(3, 3) = proc_cov_yaw_bias_d_;                          // for yaw bias
+  P(4, 4) = 1000.0;                                            // for vx
+  P(5, 5) = 50.0;                                              // for wz
 
   ekf_.init(X, P, extend_state_step_);
 }
@@ -486,41 +486,41 @@ void EKFLocalizer::predictKinematicsModel()
   Eigen::MatrixXd X_next(dim_x_, 1);  // predicted state
   DEBUG_PRINT_MAT(X_curr.transpose());
 
-  const double unbiased_yaw = X_curr(IDX::YAW);
-  const double yaw_bias = X_curr(IDX::YAWB);
-  const double vx = X_curr(IDX::VX);
-  const double wz = X_curr(IDX::WZ);
+  const double unbiased_yaw = X_curr(2);
+  const double yaw_bias = X_curr(3);
+  const double vx = X_curr(4);
+  const double wz = X_curr(5);
   const double dt = ekf_dt_;
   const double yaw = unbiased_yaw + yaw_bias;
 
   /* Update for latest state */
-  X_next(IDX::X) = X_curr(IDX::X) + vx * cos(yaw) * dt;  // dx = v * cos(yaw)
-  X_next(IDX::Y) = X_curr(IDX::Y) + vx * sin(yaw) * dt;  // dy = v * sin(yaw)
-  X_next(IDX::YAW) = X_curr(IDX::YAW) + (wz)*dt;                    // dyaw = omega + omega_bias
-  X_next(IDX::YAWB) = yaw_bias;
-  X_next(IDX::VX) = vx;
-  X_next(IDX::WZ) = wz;
+  X_next(0) = X_curr(0) + vx * cos(yaw) * dt;  // dx = v * cos(yaw)
+  X_next(1) = X_curr(1) + vx * sin(yaw) * dt;  // dy = v * sin(yaw)
+  X_next(2) = X_curr(2) + (wz)*dt;                    // dyaw = omega + omega_bias
+  X_next(3) = yaw_bias;
+  X_next(4) = vx;
+  X_next(5) = wz;
 
-  X_next(IDX::YAW) = std::atan2(std::sin(X_next(IDX::YAW)), std::cos(X_next(IDX::YAW)));
+  X_next(2) = std::atan2(std::sin(X_next(2)), std::cos(X_next(2)));
 
   /* Set A matrix for latest state */
   Eigen::MatrixXd A = Eigen::MatrixXd::Identity(dim_x_, dim_x_);
-  A(IDX::X, IDX::YAW) = -vx * sin(yaw) * dt;
-  A(IDX::X, IDX::YAWB) = -vx * sin(yaw) * dt;
-  A(IDX::X, IDX::VX) = cos(yaw) * dt;
-  A(IDX::Y, IDX::YAW) = vx * cos(yaw) * dt;
-  A(IDX::Y, IDX::YAWB) = vx * cos(yaw) * dt;
-  A(IDX::Y, IDX::VX) = sin(yaw) * dt;
-  A(IDX::YAW, IDX::WZ) = dt;
+  A(0, 2) = -vx * sin(yaw) * dt;
+  A(0, 3) = -vx * sin(yaw) * dt;
+  A(0, 4) = cos(yaw) * dt;
+  A(1, 2) = vx * cos(yaw) * dt;
+  A(1, 3) = vx * cos(yaw) * dt;
+  A(1, 4) = sin(yaw) * dt;
+  A(2, 5) = dt;
 
   Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(dim_x_, dim_x_);
 
-  Q(IDX::X, IDX::X) = 0.0;
-  Q(IDX::Y, IDX::Y) = 0.0;
-  Q(IDX::YAW, IDX::YAW) = proc_cov_yaw_d_;         // for yaw
-  Q(IDX::YAWB, IDX::YAWB) = proc_cov_yaw_bias_d_;  // for yaw bias
-  Q(IDX::VX, IDX::VX) = proc_cov_vx_d_;            // for vx
-  Q(IDX::WZ, IDX::WZ) = proc_cov_wz_d_;            // for wz
+  Q(0, 0) = 0.0;
+  Q(1, 1) = 0.0;
+  Q(2, 2) = proc_cov_yaw_d_;         // for yaw
+  Q(3, 3) = proc_cov_yaw_bias_d_;  // for yaw bias
+  Q(4, 4) = proc_cov_vx_d_;            // for vx
+  Q(5, 5) = proc_cov_wz_d_;            // for wz
 
   ekf_.predictWithDelay(X_next, A, Q);
 
@@ -572,7 +572,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Set yaw */
   double yaw = tf2::getYaw(pose.pose.pose.orientation);
-  const double ekf_yaw = ekf_.getXelement(delay_step * dim_x_ + IDX::YAW);
+  const double ekf_yaw = ekf_.getXelement(delay_step * dim_x_ + 2);
   const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
   yaw = yaw_error + ekf_yaw;
 
@@ -588,8 +588,8 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Gate */
   const Eigen::Vector3d y_ekf(
-    ekf_.getXelement(delay_step * dim_x_ + IDX::X),
-    ekf_.getXelement(delay_step * dim_x_ + IDX::Y),
+    ekf_.getXelement(delay_step * dim_x_ + 0),
+    ekf_.getXelement(delay_step * dim_x_ + 1),
     ekf_yaw);
 
   const Eigen::MatrixXd P_y = ekf_.getLatestP().block(0, 0, dim_y, dim_y);
@@ -607,9 +607,9 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Set measurement matrix */
   Eigen::MatrixXd C = Eigen::MatrixXd::Zero(dim_y, dim_x_);
-  C(0, IDX::X) = 1.0;    // for pos x
-  C(1, IDX::Y) = 1.0;    // for pos y
-  C(2, IDX::YAW) = 1.0;  // for yaw
+  C(0, 0) = 1.0;    // for pos x
+  C(1, 1) = 1.0;    // for pos y
+  C(2, 2) = 1.0;  // for yaw
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
@@ -686,8 +686,8 @@ void EKFLocalizer::measurementUpdateTwist(
 
   /* Gate */
   const Eigen::Vector2d y_ekf(
-    ekf_.getXelement(delay_step * dim_x_ + IDX::VX),
-    ekf_.getXelement(delay_step * dim_x_ + IDX::WZ));
+    ekf_.getXelement(delay_step * dim_x_ + 4),
+    ekf_.getXelement(delay_step * dim_x_ + 5));
   const Eigen::MatrixXd P_y = ekf_.getLatestP().block(4, 4, dim_y, dim_y);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
     warning_.WarnThrottle(
@@ -703,8 +703,8 @@ void EKFLocalizer::measurementUpdateTwist(
 
   /* Set measurement matrix */
   Eigen::MatrixXd C = Eigen::MatrixXd::Zero(dim_y, dim_x_);
-  C(0, IDX::VX) = 1.0;  // for vx
-  C(1, IDX::WZ) = 1.0;  // for wz
+  C(0, 4) = 1.0;  // for vx
+  C(1, 5) = 1.0;  // for wz
 
   /* Set measurement noise covariance */
   Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
