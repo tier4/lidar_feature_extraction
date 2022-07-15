@@ -305,7 +305,7 @@ void EKFLocalizer::timerCallback()
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
   const double yaw = ekf_.getXelement(IDX::YAW) + ekf_.getXelement(IDX::YAWB);
-  ekf_pose.linear() = RPYToQuaternionXYZ(roll, pitch, yaw).toRotationMatrix();
+  ekf_pose.linear() = rotationlib::RPYToQuaternionXYZ(roll, pitch, yaw).toRotationMatrix();
 
   current_ekf_pose_ = MakePoseStamped(ekf_pose, this->now(), pose_frame_id_);
 
