@@ -212,12 +212,10 @@ private:
   const int pose_smoothing_steps_;
 
   const int extend_state_step_;  //!< @brief  for time delay compensation
-  const int dim_x_ex_;  //!< @brief  dimension of extended EKF state (dim_x_ * extended_state_step)
 
   /* Pose */
   const double pose_additional_delay_;    //!< @brief  compensated pose delay time =
                                           //!< (pose.header.stamp - now) + additional_delay [s]
-  const double pose_measure_uncertainty_time_;  //!< @brief  added for measurement covariance
   //!< @brief  the mahalanobis distance threshold to ignore pose measurement
   const double pose_gate_dist_;
 

@@ -151,7 +151,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   extend_state_step_(declare_parameter("extend_state_step", 50)),
   pose_frame_id_(declare_parameter("pose_frame_id", std::string("map"))),
   dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */),
-  dim_x_ex_(dim_x_ * extend_state_step_),
   pose_smoothing_steps_(declare_parameter("pose_smoothing_steps", 5)),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
@@ -163,8 +162,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   proc_stddev_yaw_c_(declare_parameter("proc_stddev_yaw_c", 0.005)),
   proc_stddev_yaw_bias_c_(declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
   proc_stddev_vx_c_(declare_parameter("proc_stddev_vx_c", 5.0)),
-  proc_stddev_wz_c_(declare_parameter("proc_stddev_wz_c", 1.0)),
-  pose_measure_uncertainty_time_(declare_parameter("pose_measure_uncertainty_time", 0.01))
+  proc_stddev_wz_c_(declare_parameter("proc_stddev_wz_c", 1.0))
 {
 
   /* process noise */
