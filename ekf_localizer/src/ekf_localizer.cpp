@@ -606,7 +606,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Set measurement noise covariance */
   Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
-  const Eigen::Map<const RowMatrix6d> covariance = GetEigenCovariance(pose.pose.covariance);
+  const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
   R(0, 0) = covariance(0, 0);  // x - x
   R(0, 1) = covariance(0, 1);  // x - y
   R(0, 2) = covariance(0, 5);  // x - yaw
@@ -702,7 +702,7 @@ void EKFLocalizer::measurementUpdateTwist(
 
   /* Set measurement noise covariance */
   Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
-  const Eigen::Map<const RowMatrix6d> covariance = GetEigenCovariance(twist.twist.covariance);
+  const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
   R(0, 0) = covariance(0, 0);   // vx - vx
   R(0, 1) = covariance(0, 5);   // vx - wz
   R(1, 0) = covariance(5, 0);   // wz - vx

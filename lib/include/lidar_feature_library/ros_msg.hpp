@@ -52,9 +52,15 @@ using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
 using RowMatrix6d = Eigen::Matrix<double, 6, 6, Eigen::RowMajor>;
 
-Eigen::Map<const RowMatrix6d> GetEigenCovariance(const std::array<double, 36> & covariance)
+Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance)
 {
-  return Eigen::Map<const RowMatrix6d>(covariance.data(), 6, 6);
+  Matrix6d matrix;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      matrix(i, j) = covariance[i * 6 + j];
+    }
+  }
+  return matrix;
 }
 
 std::array<double, 36> FromEigenCovariance(const RowMatrix6d & covariance)
