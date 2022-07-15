@@ -488,15 +488,16 @@ void EKFLocalizer::predictKinematicsModel()
   Eigen::MatrixXd X_next(dim_x_, 1);  // predicted state
   DEBUG_PRINT_MAT(X_curr.transpose());
 
-  const double yaw = X_curr(IDX::YAW);
+  const double unbiased_yaw = X_curr(IDX::YAW);
   const double yaw_bias = X_curr(IDX::YAWB);
   const double vx = X_curr(IDX::VX);
   const double wz = X_curr(IDX::WZ);
   const double dt = ekf_dt_;
+  const double yaw = unbiased_yaw + yaw_bias;
 
   /* Update for latest state */
-  X_next(IDX::X) = X_curr(IDX::X) + vx * cos(yaw + yaw_bias) * dt;  // dx = v * cos(yaw)
-  X_next(IDX::Y) = X_curr(IDX::Y) + vx * sin(yaw + yaw_bias) * dt;  // dy = v * sin(yaw)
+  X_next(IDX::X) = X_curr(IDX::X) + vx * cos(yaw) * dt;  // dx = v * cos(yaw)
+  X_next(IDX::Y) = X_curr(IDX::Y) + vx * sin(yaw) * dt;  // dy = v * sin(yaw)
   X_next(IDX::YAW) = X_curr(IDX::YAW) + (wz)*dt;                    // dyaw = omega + omega_bias
   X_next(IDX::YAWB) = yaw_bias;
   X_next(IDX::VX) = vx;
@@ -506,12 +507,12 @@ void EKFLocalizer::predictKinematicsModel()
 
   /* Set A matrix for latest state */
   Eigen::MatrixXd A = Eigen::MatrixXd::Identity(dim_x_, dim_x_);
-  A(IDX::X, IDX::YAW) = -vx * sin(yaw + yaw_bias) * dt;
-  A(IDX::X, IDX::YAWB) = -vx * sin(yaw + yaw_bias) * dt;
-  A(IDX::X, IDX::VX) = cos(yaw + yaw_bias) * dt;
-  A(IDX::Y, IDX::YAW) = vx * cos(yaw + yaw_bias) * dt;
-  A(IDX::Y, IDX::YAWB) = vx * cos(yaw + yaw_bias) * dt;
-  A(IDX::Y, IDX::VX) = sin(yaw + yaw_bias) * dt;
+  A(IDX::X, IDX::YAW) = -vx * sin(yaw) * dt;
+  A(IDX::X, IDX::YAWB) = -vx * sin(yaw) * dt;
+  A(IDX::X, IDX::VX) = cos(yaw) * dt;
+  A(IDX::Y, IDX::YAW) = vx * cos(yaw) * dt;
+  A(IDX::Y, IDX::YAWB) = vx * cos(yaw) * dt;
+  A(IDX::Y, IDX::VX) = sin(yaw) * dt;
   A(IDX::YAW, IDX::WZ) = dt;
 
   Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(dim_x_, dim_x_);
