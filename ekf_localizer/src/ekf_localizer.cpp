@@ -143,6 +143,7 @@ void publishEstimateResult(
 
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
+  warning_(this),
   show_debug_info_(declare_parameter("show_debug_info", false)),
   ekf_rate_(declare_parameter("predict_frequency", 50.0)),
   ekf_dt_(1.0 / std::max(ekf_rate_, 0.1)),

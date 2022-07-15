@@ -39,6 +39,8 @@
 #include <string>
 #include <vector>
 
+#include "ekf_localizer/warning.hpp"
+
 
 // Noramlizes the yaw angle so that it fits in the range (-pi, pi)
 /**
@@ -158,6 +160,7 @@ public:
   EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & options);
 
 private:
+  const Warning warning_;
   //!< @brief ekf estimated pose publisher
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_pose_;
   //!< @brief estimated ekf pose with covariance publisher
