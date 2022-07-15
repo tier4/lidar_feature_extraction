@@ -495,12 +495,10 @@ void EKFLocalizer::predictKinematicsModel()
   Vector6d X_next;  // predicted state
   X_next(0) = X_curr(0) + vx * cos(yaw) * dt;  // dx = v * cos(yaw)
   X_next(1) = X_curr(1) + vx * sin(yaw) * dt;  // dy = v * sin(yaw)
-  X_next(2) = X_curr(2) + (wz)*dt;                    // dyaw = omega + omega_bias
+  X_next(2) = normalizeYaw(X_curr(2) + wz*dt);                    // dyaw = omega + omega_bias
   X_next(3) = yaw_bias;
   X_next(4) = vx;
   X_next(5) = wz;
-
-  X_next(2) = std::atan2(std::sin(X_next(2)), std::cos(X_next(2)));
 
   /* Set A matrix for latest state */
   Eigen::MatrixXd A = Eigen::MatrixXd::Identity(dim_x_, dim_x_);
