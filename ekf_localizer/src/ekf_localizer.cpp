@@ -34,6 +34,8 @@
 #define DEBUG_INFO(...) {if (show_debug_info_) {RCLCPP_INFO(__VA_ARGS__);}}
 #define DEBUG_PRINT_MAT(X) {if (show_debug_info_) {std::cout << #X << ": " << X << std::endl;}}
 
+using Vector6d = Eigen::Matrix<double, 6, 1>;
+
 // clang-format on
 
 // Revival of tf::createQuaternionFromRPY
@@ -387,7 +389,6 @@ void EKFLocalizer::callbackInitialPose(
       initialpose->header.frame_id.c_str());
   }
 
-  Eigen::MatrixXd X(dim_x_, 1);
   Eigen::MatrixXd P = Eigen::MatrixXd::Zero(dim_x_, dim_x_);
 
   // TODO(mitsudome-r) need mutex
@@ -398,21 +399,17 @@ void EKFLocalizer::callbackInitialPose(
   const double initial_yaw = tf2::getYaw(initialpose->pose.pose.orientation);
   const double yaw = tf2::getYaw(transform.transform.rotation);
 
-  X(IDX::X) = t(0);
-  X(IDX::Y) = t(1);
   current_ekf_pose_.pose.position.z = t(2);
-  X(IDX::YAW) = initial_yaw + yaw;
-  X(IDX::YAWB) = 0.0;
-  X(IDX::VX) = 0.0;
-  X(IDX::WZ) = 0.0;
 
-  const Matrix6d covariance = GetEigenCovariance(initialpose->pose.covariance);
-  P(IDX::X, IDX::X) = covariance(0, 0);
-  P(IDX::Y, IDX::Y) = covariance(1, 1);
-  P(IDX::YAW, IDX::YAW) = covariance(5, 5);
-  P(IDX::YAWB, IDX::YAWB) = 0.0001;
-  P(IDX::VX, IDX::VX) = 0.01;
-  P(IDX::WZ, IDX::WZ) = 0.01;
+  const Vector6d X = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
+
+  Matrix6d covariance = GetEigenCovariance(initialpose->pose.covariance);
+  P(0, 0) = covariance(0, 0);
+  P(1, 1) = covariance(1, 1);
+  P(2, 2) = covariance(5, 5);
+  P(3, 3) = 0.0001;
+  P(4, 4) = 0.01;
+  P(5, 5) = 0.01;
 
   ekf_.init(X, P, extend_state_step_);
 
