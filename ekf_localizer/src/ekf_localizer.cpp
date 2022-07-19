@@ -145,6 +145,11 @@ void publishEstimateResult(
   }
 }
 
+double TimeScaledVariance(const double stddev, const double dt)
+{
+  return stddev * stddev * dt * dt;
+}
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -176,10 +181,10 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   }
 
   /* convert to continuous to discrete */
-  proc_cov_vx_d_ = std::pow(proc_stddev_vx_c_ * ekf_dt_, 2.0);
-  proc_cov_wz_d_ = std::pow(proc_stddev_wz_c_ * ekf_dt_, 2.0);
-  proc_cov_yaw_d_ = std::pow(proc_stddev_yaw_c_ * ekf_dt_, 2.0);
-  proc_cov_yaw_bias_d_ = std::pow(proc_stddev_yaw_bias_c_ * ekf_dt_, 2.0);
+  proc_cov_vx_d_ = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
+  proc_cov_wz_d_ = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
+  proc_cov_yaw_d_ = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
+  proc_cov_yaw_bias_d_ = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
 
   /* initialize ros system */
   const auto period_control_ns =
@@ -235,10 +240,10 @@ void EKFLocalizer::updatePredictFrequency()
       ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
 
       /* Update discrete proc_cov*/
-      proc_cov_vx_d_ = std::pow(proc_stddev_vx_c_ * ekf_dt_, 2.0);
-      proc_cov_wz_d_ = std::pow(proc_stddev_wz_c_ * ekf_dt_, 2.0);
-      proc_cov_yaw_d_ = std::pow(proc_stddev_yaw_c_ * ekf_dt_, 2.0);
-      proc_cov_yaw_bias_d_ = std::pow(proc_stddev_yaw_bias_c_ * ekf_dt_, 2.0);
+      proc_cov_vx_d_ = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
+      proc_cov_wz_d_ = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
+      proc_cov_yaw_d_ = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
+      proc_cov_yaw_bias_d_ = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
     }
   }
   last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
