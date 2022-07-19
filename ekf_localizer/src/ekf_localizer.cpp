@@ -540,10 +540,10 @@ void EKFLocalizer::initEKF()
 
 double ComputeDelayTime(
   const rclcpp::Time & current_time,
-  const rclcpp::Time & twist_stamp,
+  const rclcpp::Time & message_stamp,
   const double additional_delay)
 {
-  return (current_time - twist_stamp).seconds() + additional_delay;
+  return (current_time - message_stamp).seconds() + additional_delay;
 }
 
 void ShowDelayTimeWarning(const Warning & warning, const double delay_time)
@@ -584,7 +584,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   const rclcpp::Time t_curr = this->now();
 
   /* Calculate delay step */
-  double delay_time = (t_curr - pose.header.stamp).seconds() + pose_additional_delay_;
+  double delay_time = ComputeDelayTime(t_curr, pose.header.stamp, pose_additional_delay_);
   if (delay_time < 0.0) {
     ShowDelayTimeWarning(warning_, delay_time);
     delay_time = 0.0;
