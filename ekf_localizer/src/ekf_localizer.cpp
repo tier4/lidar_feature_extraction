@@ -305,6 +305,20 @@ Matrix6d MatrixQ(
   return q.asDiagonal();
 }
 
+Eigen::Matrix2d MatrixR(const Matrix6d & covariance, const double smoothing_steps)
+{
+  Eigen::Matrix2d R = Eigen::Matrix2d::Zero();
+  R(0, 0) = covariance(0, 0);   // vx - vx
+  R(0, 1) = covariance(0, 5);   // vx - wz
+  R(1, 0) = covariance(5, 0);   // wz - vx
+  R(1, 1) = covariance(5, 5);   // wz - wz
+
+  /* In order to avoid a large change by update, measurement update is performed
+   * by dividing at every step. measurement update is performed by dividing at every step. */
+  R *= smoothing_steps;
+  return R;
+}
+
 /*
  * timerCallback
  */
@@ -709,17 +723,8 @@ void EKFLocalizer::measurementUpdateTwist(
   C(1, 5) = 1.0;  // for wz
 
   /* Set measurement noise covariance */
-  Eigen::MatrixXd R = Eigen::MatrixXd::Zero(dim_y, dim_y);
   const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
-  R(0, 0) = covariance(0, 0);   // vx - vx
-  R(0, 1) = covariance(0, 5);   // vx - wz
-  R(1, 0) = covariance(5, 0);   // wz - vx
-  R(1, 1) = covariance(5, 5);   // wz - wz
-
-  /* In order to avoid a large change by update, measurement update is performed
-   * by dividing at every step. measurement update is performed by dividing at every step. */
-  R *= twist_smoothing_steps_;
-
+  const Eigen::Matrix2d R = MatrixR(covariance, twist_smoothing_steps_);
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
