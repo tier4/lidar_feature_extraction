@@ -474,6 +474,43 @@ Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
   return x_next;
 }
 
+Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
+{
+  const double unbiased_yaw = x_curr(2);
+  const double yaw_bias = x_curr(3);
+  const double vx = x_curr(4);
+  const double wz = x_curr(5);
+  const double yaw = unbiased_yaw + yaw_bias;
+
+  /* Set A matrix for latest state */
+  Matrix6d A = Matrix6d::Identity();
+  A(0, 2) = -vx * sin(yaw) * dt;
+  A(0, 3) = -vx * sin(yaw) * dt;
+  A(0, 4) = cos(yaw) * dt;
+  A(1, 2) = vx * cos(yaw) * dt;
+  A(1, 3) = vx * cos(yaw) * dt;
+  A(1, 4) = sin(yaw) * dt;
+  A(2, 5) = dt;
+  return A;
+}
+
+Matrix6d MatrixQ(
+  const double yaw_covariance,
+  const double yaw_bias_covariance,
+  const double vx_covariance,
+  const double wz_covariance)
+{
+  Vector6d q;
+  q <<
+    0.0,
+    0.0,
+    yaw_covariance,
+    yaw_bias_covariance,
+    vx_covariance,
+    wz_covariance;
+  return q.asDiagonal();
+}
+
 void EKFLocalizer::predictKinematicsModel()
 {
   /*  == Nonlinear model ==
@@ -500,31 +537,8 @@ void EKFLocalizer::predictKinematicsModel()
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
-
-  const double unbiased_yaw = x_curr(2);
-  const double yaw_bias = x_curr(3);
-  const double vx = x_curr(4);
-  const double wz = x_curr(5);
-  const double dt = ekf_dt_;
-  const double yaw = unbiased_yaw + yaw_bias;
-
-  /* Set A matrix for latest state */
-  Eigen::MatrixXd A = Eigen::MatrixXd::Identity(dim_x_, dim_x_);
-  A(0, 2) = -vx * sin(yaw) * dt;
-  A(0, 3) = -vx * sin(yaw) * dt;
-  A(0, 4) = cos(yaw) * dt;
-  A(1, 2) = vx * cos(yaw) * dt;
-  A(1, 3) = vx * cos(yaw) * dt;
-  A(1, 4) = sin(yaw) * dt;
-  A(2, 5) = dt;
-
-  Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(dim_x_, dim_x_);
-  Q(0, 0) = 0.0;
-  Q(1, 1) = 0.0;
-  Q(2, 2) = proc_cov_yaw_d_;         // for yaw
-  Q(3, 3) = proc_cov_yaw_bias_d_;  // for yaw bias
-  Q(4, 4) = proc_cov_vx_d_;            // for vx
-  Q(5, 5) = proc_cov_wz_d_;            // for wz
+  const Matrix6d A = MatrixA(x_curr, ekf_dt_);
+  const Matrix6d Q = MatrixQ(proc_cov_yaw_d_, proc_cov_yaw_bias_d_, proc_cov_vx_d_, proc_cov_wz_d_);
 
   ekf_.predictWithDelay(x_next, A, Q);
 }
