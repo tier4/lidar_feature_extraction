@@ -584,14 +584,12 @@ void ShowDelayStepWarning(
 
 void ShowFrameIdWarning(
   const Warning & warning,
-  const std::string & pose_header_frame_id,
-  const std::string & pose_frame_id)
+  const std::string & header_frame_id,
+  const std::string & expected_frame_id)
 {
   warning.WarnThrottle(
     2000,
-    fmt::format(
-      "pose frame_id is {}, but pose_frame is set as {}. They must be same.",
-      pose_header_frame_id, pose_frame_id));
+    fmt::format("frame_id is {} while {} is expected", header_frame_id, expected_frame_id));
 }
 
 // The message is modified from the original one to improve reusability
@@ -686,7 +684,7 @@ void EKFLocalizer::measurementUpdateTwist(
   const geometry_msgs::msg::TwistWithCovarianceStamped & twist)
 {
   if (twist.header.frame_id != "base_link") {
-    warning_.WarnThrottle(2000, "twist frame_id must be base_link");
+    ShowFrameIdWarning(warning_, twist.header.frame_id, "base_link");
   }
 
   const rclcpp::Time t_curr = this->now();
