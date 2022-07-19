@@ -148,6 +148,14 @@ double TimeScaledVariance(const double stddev, const double dt)
   return stddev * stddev * dt * dt;
 }
 
+double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_value)
+{
+  if (enable_yaw_bias_estimation) {
+    return initial_value;
+  }
+  return 0.;
+}
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -168,15 +176,11 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   twist_gate_dist_(declare_parameter("twist_gate_dist", 10000.0)),
   twist_smoothing_steps_(declare_parameter("twist_smoothing_steps", 2)),
   yaw_covariance_(declare_parameter("proc_stddev_yaw_c", 0.005)),
-  yaw_bias_covariance_(declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
+  yaw_bias_covariance_(
+    InitYawBias(enable_yaw_bias_estimation_, declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
   wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0))
 {
-
-  /* process noise */
-  if (!enable_yaw_bias_estimation_) {
-    yaw_bias_covariance_ = 0.0;
-  }
 
   /* convert to continuous to discrete */
   variances_(0) = TimeScaledVariance(yaw_covariance_, ekf_dt_);
