@@ -218,7 +218,7 @@ private:
 
   /* process noise standard deviation */
   const double yaw_covariance_;       //!< @brief  yaw process noise
-  double yaw_bias_covariance_;  //!< @brief  yaw bias process noise
+  const double yaw_bias_covariance_;  //!< @brief  yaw bias process noise
   const double vx_covariance_;        //!< @brief  vx process noise
   const double wz_covariance_;        //!< @brief  wz process noise
 
