@@ -455,6 +455,25 @@ void EKFLocalizer::initEKF()
   ekf_.init(X, P, extend_state_step_);
 }
 
+Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
+{
+  const double unbiased_yaw = x_curr(2);
+  const double yaw_bias = x_curr(3);
+  const double vx = x_curr(4);
+  const double wz = x_curr(5);
+  const double yaw = unbiased_yaw + yaw_bias;
+
+  Vector6d x_next;
+  x_next <<
+    x_curr(0) + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
+    x_curr(1) + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
+    normalizeYaw(x_curr(2) + wz*dt),                    // dyaw = omega + omega_bias
+    yaw_bias,
+    vx,
+    wz;
+  return x_next;
+}
+
 void EKFLocalizer::predictKinematicsModel()
 {
   /*  == Nonlinear model ==
@@ -479,7 +498,8 @@ void EKFLocalizer::predictKinematicsModel()
    *     [ 0, 0,                 0,                 0,             0,  1]
    */
 
-  const Eigen::MatrixXd x_curr = ekf_.getLatestX();  // current state
+  const Vector6d x_curr = ekf_.getLatestX();  // current state
+  const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
 
   const double unbiased_yaw = x_curr(2);
   const double yaw_bias = x_curr(3);
@@ -487,16 +507,6 @@ void EKFLocalizer::predictKinematicsModel()
   const double wz = x_curr(5);
   const double dt = ekf_dt_;
   const double yaw = unbiased_yaw + yaw_bias;
-
-  /* Update for latest state */
-  Vector6d x_next;  // predicted state
-  x_next <<
-    x_curr(0) + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
-    x_curr(1) + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
-    normalizeYaw(x_curr(2) + wz*dt),                    // dyaw = omega + omega_bias
-    yaw_bias,
-    vx,
-    wz;
 
   /* Set A matrix for latest state */
   Eigen::MatrixXd A = Eigen::MatrixXd::Identity(dim_x_, dim_x_);
