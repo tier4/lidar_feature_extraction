@@ -45,5 +45,21 @@ private:
   rclcpp::Node * node_;
 };
 
+void ShowDelayTimeWarning(const Warning & warning, const double delay_time);
+
+void ShowDelayStepWarning(
+  const Warning & warning,
+  const double delay_time,
+  const double extend_state_step,
+  const double ekf_dt);
+
+void ShowFrameIdWarning(
+  const Warning & warning,
+  const std::string & header_frame_id,
+  const std::string & expected_frame_id);
+
+void ShowMahalanobisGateWarning(const Warning & warning);
+
+void ShowMeasurementMatrixNanInfWarning(const Warning & warning);
 
 #endif  // EKF_LOCALIZER__WARNING_HPP_

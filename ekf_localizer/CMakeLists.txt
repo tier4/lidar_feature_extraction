@@ -14,6 +14,7 @@ include_directories(
 ament_auto_add_executable(ekf_localizer
   src/ekf_localizer_node.cpp
   src/ekf_localizer.cpp
+  src/warning.cpp
 )
 target_include_directories(ekf_localizer PUBLIC include)
 
@@ -26,6 +27,7 @@ if(BUILD_TESTING)
   ament_add_gtest(ekf_localizer-test test/test_ekf_localizer.test
     test/src/test_ekf_localizer.cpp
     src/ekf_localizer.cpp
+    src/warning.cpp
   )
   target_include_directories(ekf_localizer-test
     PRIVATE

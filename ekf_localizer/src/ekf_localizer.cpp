@@ -14,8 +14,6 @@
 
 #include "ekf_localizer/ekf_localizer.hpp"
 
-#define FMT_HEADER_ONLY
-#include <fmt/format.h>
 #include <rclcpp/logging.hpp>
 
 #include <algorithm>
@@ -29,6 +27,7 @@
 #include "lidar_feature_library/ros_msg.hpp"
 #include "rotationlib/quaternion.hpp"
 #include "ekf_localizer/numeric.hpp"
+#include "ekf_localizer/warning.hpp"
 
 
 // clang-format off
@@ -588,51 +587,6 @@ double ComputeDelayTime(
   const double additional_delay)
 {
   return (current_time - message_stamp).seconds() + additional_delay;
-}
-
-void ShowDelayTimeWarning(const Warning & warning, const double delay_time)
-{
-  warning.WarnThrottle(
-    1000,
-    fmt::format(
-      "The time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
-      delay_time));
-}
-
-void ShowDelayStepWarning(
-  const Warning & warning,
-  const double delay_time,
-  const double extend_state_step,
-  const double ekf_dt)
-{
-  warning.WarnThrottle(
-    1000,
-    fmt::format(
-      "The delay time ({}[s]) exceeds the compensation limit ({}[s]).",
-      delay_time, extend_state_step * ekf_dt));
-}
-
-void ShowFrameIdWarning(
-  const Warning & warning,
-  const std::string & header_frame_id,
-  const std::string & expected_frame_id)
-{
-  warning.WarnThrottle(
-    2000,
-    fmt::format("frame_id is {} while {} is expected", header_frame_id, expected_frame_id));
-}
-
-// The message is modified from the original one to improve reusability
-void ShowMahalanobisGateWarning(const Warning & warning)
-{
-  warning.WarnThrottle(
-    2000,
-    "[EKF] Mahalanobis distance is over limit. Ignore measurement data.");
-}
-
-void ShowMeasurementMatrixNanInfWarning(const Warning & warning)
-{
-  warning.Warn("[EKF] The measurement matrix includes NaN or Inf.");
 }
 
 /*
