@@ -167,22 +167,22 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   twist_additional_delay_(declare_parameter("twist_additional_delay", 0.0)),
   twist_gate_dist_(declare_parameter("twist_gate_dist", 10000.0)),
   twist_smoothing_steps_(declare_parameter("twist_smoothing_steps", 2)),
-  proc_stddev_yaw_c_(declare_parameter("proc_stddev_yaw_c", 0.005)),
-  proc_stddev_yaw_bias_c_(declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
-  proc_stddev_vx_c_(declare_parameter("proc_stddev_vx_c", 5.0)),
-  proc_stddev_wz_c_(declare_parameter("proc_stddev_wz_c", 1.0))
+  yaw_covariance_(declare_parameter("proc_stddev_yaw_c", 0.005)),
+  yaw_bias_covariance_(declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
+  vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
+  wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0))
 {
 
   /* process noise */
   if (!enable_yaw_bias_estimation_) {
-    proc_stddev_yaw_bias_c_ = 0.0;
+    yaw_bias_covariance_ = 0.0;
   }
 
   /* convert to continuous to discrete */
-  variances_(0) = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
-  variances_(1) = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
-  variances_(2) = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
-  variances_(3) = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
+  variances_(0) = TimeScaledVariance(yaw_covariance_, ekf_dt_);
+  variances_(1) = TimeScaledVariance(yaw_bias_covariance_, ekf_dt_);
+  variances_(2) = TimeScaledVariance(vx_covariance_, ekf_dt_);
+  variances_(3) = TimeScaledVariance(wz_covariance_, ekf_dt_);
 
   /* initialize ros system */
   const auto period_control_ns =
@@ -246,10 +246,10 @@ void EKFLocalizer::updatePredictFrequency()
   DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
 
   /* Update discrete proc_cov*/
-  variances_(0) = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
-  variances_(1) = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
-  variances_(2) = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
-  variances_(3) = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
+  variances_(0) = TimeScaledVariance(yaw_covariance_, ekf_dt_);
+  variances_(1) = TimeScaledVariance(yaw_bias_covariance_, ekf_dt_);
+  variances_(2) = TimeScaledVariance(vx_covariance_, ekf_dt_);
+  variances_(3) = TimeScaledVariance(wz_covariance_, ekf_dt_);
   last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
 }
 

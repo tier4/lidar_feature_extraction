@@ -217,10 +217,10 @@ private:
   const double twist_gate_dist_;
 
   /* process noise standard deviation */
-  const double proc_stddev_yaw_c_;       //!< @brief  yaw process noise
-  double proc_stddev_yaw_bias_c_;  //!< @brief  yaw bias process noise
-  const double proc_stddev_vx_c_;        //!< @brief  vx process noise
-  const double proc_stddev_wz_c_;        //!< @brief  wz process noise
+  const double yaw_covariance_;       //!< @brief  yaw process noise
+  double yaw_bias_covariance_;  //!< @brief  yaw bias process noise
+  const double vx_covariance_;        //!< @brief  vx process noise
+  const double wz_covariance_;        //!< @brief  wz process noise
 
   /* process noise variance for discrete model */
   Eigen::Vector4d variances_;
