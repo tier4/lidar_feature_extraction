@@ -565,7 +565,7 @@ void ShowDelayTimeWarning(const Warning & warning, const double delay_time)
   warning.WarnThrottle(
     1000,
     fmt::format(
-      "Twist time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
+      "The time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
       delay_time));
 }
 
@@ -578,8 +578,8 @@ void ShowDelayStepWarning(
   warning.WarnThrottle(
     1000,
     fmt::format(
-      "Twist delay exceeds the compensation limit, ignored. delay: {}[s], limit = "
-      "extend_state_step * ekf_dt : {} [s]", delay_time, extend_state_step * ekf_dt));
+      "The delay time ({}[s]) exceeds the compensation limit ({}[s]).",
+      delay_time, extend_state_step * ekf_dt));
 }
 
 void ShowFrameIdWarning(
