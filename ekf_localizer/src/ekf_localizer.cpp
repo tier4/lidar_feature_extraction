@@ -305,7 +305,7 @@ Matrix6d MatrixQ(
   return q.asDiagonal();
 }
 
-Eigen::Matrix2d MatrixR(const Matrix6d & covariance, const double smoothing_steps)
+Eigen::Matrix2d TwistR(const Matrix6d & covariance, const double smoothing_steps)
 {
   Eigen::Matrix2d R = Eigen::Matrix2d::Zero();
   R(0, 0) = covariance(0, 0);   // vx - vx
@@ -732,7 +732,7 @@ void EKFLocalizer::measurementUpdateTwist(
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
-  const Eigen::Matrix2d R = MatrixR(covariance, twist_smoothing_steps_);
+  const Eigen::Matrix2d R = TwistR(covariance, twist_smoothing_steps_);
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
