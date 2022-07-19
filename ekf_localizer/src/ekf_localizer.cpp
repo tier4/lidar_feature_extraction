@@ -594,6 +594,14 @@ void ShowFrameIdWarning(
       pose_header_frame_id, pose_frame_id));
 }
 
+// The message is modified from the original one to improve reusability
+void ShowMahalanobisGateWarning(const Warning & warning)
+{
+  warning.WarnThrottle(
+    2000,
+    "[EKF] Mahalanobis distance is over limit. Ignore measurement data.");
+}
+
 /*
  * measurementUpdatePose
  */
@@ -642,10 +650,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   constexpr int dim_y = 3;  // pos_x, pos_y, yaw, depending on Pose output
   const Eigen::MatrixXd P_y = ekf_.getLatestP().block(0, 0, dim_y, dim_y);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
-    warning_.WarnThrottle(
-      2000,
-      "[EKF] Pose measurement update, mahalanobis distance is over limit. ignore "
-      "measurement data.");
+    ShowMahalanobisGateWarning(warning_);
     return;
   }
 
@@ -714,10 +719,7 @@ void EKFLocalizer::measurementUpdateTwist(
     ekf_.getXelement(delay_step * dim_x_ + 5));
   const Eigen::MatrixXd P_y = ekf_.getLatestP().block(4, 4, dim_y, dim_y);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
-    warning_.WarnThrottle(
-      2000,
-      "[EKF] Twist measurement update, mahalanobis distance is over limit. ignore "
-      "measurement data.");
+    ShowMahalanobisGateWarning(warning_);
     return;
   }
 
