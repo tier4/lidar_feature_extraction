@@ -629,6 +629,14 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
+double ComputeDelayTime(
+  const rclcpp::Time & current_time,
+  const rclcpp::Time & twist_stamp,
+  const double additional_delay)
+{
+  return (current_time - twist_stamp).seconds() + additional_delay;
+}
+
 /*
  * measurementUpdateTwist
  */
@@ -641,8 +649,7 @@ void EKFLocalizer::measurementUpdateTwist(
 
   const rclcpp::Time t_curr = this->now();
 
-  /* Calculate delay step */
-  double delay_time = (t_curr - twist.header.stamp).seconds() + twist_additional_delay_;
+  double delay_time = ComputeDelayTime(t_curr, twist.header.stamp, twist_additional_delay_);
   if (delay_time < 0.0) {
     warning_.WarnThrottle(
       1000,
