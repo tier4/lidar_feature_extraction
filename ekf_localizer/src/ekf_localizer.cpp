@@ -179,10 +179,10 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   }
 
   /* convert to continuous to discrete */
-  proc_cov_vx_d_ = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
-  proc_cov_wz_d_ = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
-  proc_cov_yaw_d_ = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
-  proc_cov_yaw_bias_d_ = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
+  variances_(0) = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
+  variances_(1) = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
+  variances_(2) = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
+  variances_(3) = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
 
   /* initialize ros system */
   const auto period_control_ns =
@@ -246,10 +246,10 @@ void EKFLocalizer::updatePredictFrequency()
   DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
 
   /* Update discrete proc_cov*/
-  proc_cov_vx_d_ = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
-  proc_cov_wz_d_ = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
-  proc_cov_yaw_d_ = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
-  proc_cov_yaw_bias_d_ = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
+  variances_(0) = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
+  variances_(1) = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
+  variances_(2) = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
+  variances_(3) = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
   last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
 }
 
@@ -391,7 +391,7 @@ void EKFLocalizer::timerCallback()
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
   const Matrix6d A = MatrixA(x_curr, ekf_dt_);
-  const Matrix6d Q = MatrixQ(proc_cov_yaw_d_, proc_cov_yaw_bias_d_, proc_cov_vx_d_, proc_cov_wz_d_);
+  const Matrix6d Q = MatrixQ(variances_(0), variances_(1), variances_(2), variances_(3));
 
   ekf_.predictWithDelay(x_next, A, Q);
   DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
@@ -580,7 +580,7 @@ void EKFLocalizer::initEKF()
   const Vector6d X = Vector6d::Zero(dim_x_, 1);
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(dim_x_, dim_x_) * 1.0E15;  // for x & y
   P(2, 2) = 50.0;                                            // for yaw
-  P(3, 3) = proc_cov_yaw_bias_d_;                          // for yaw bias
+  P(3, 3) = variances_(1);                                   // for yaw bias
   P(4, 4) = 1000.0;                                            // for vx
   P(5, 5) = 50.0;                                              // for wz
 
