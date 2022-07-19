@@ -538,6 +538,36 @@ void EKFLocalizer::initEKF()
   ekf_.init(X, P, extend_state_step_);
 }
 
+double ComputeDelayTime(
+  const rclcpp::Time & current_time,
+  const rclcpp::Time & twist_stamp,
+  const double additional_delay)
+{
+  return (current_time - twist_stamp).seconds() + additional_delay;
+}
+
+void ShowDelayTimeWarning(const Warning & warning, const double delay_time)
+{
+  warning.WarnThrottle(
+    1000,
+    fmt::format(
+      "Twist time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
+      delay_time));
+}
+
+void ShowDelayStepWarning(
+  const Warning & warning,
+  const double delay_time,
+  const double extend_state_step,
+  const double ekf_dt)
+{
+  warning.WarnThrottle(
+    1000,
+    fmt::format(
+      "Twist delay exceeds the compensation limit, ignored. delay: {}[s], limit = "
+      "extend_state_step * ekf_dt : {} [s]", delay_time, extend_state_step * ekf_dt));
+}
+
 /*
  * measurementUpdatePose
  */
@@ -556,19 +586,12 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   /* Calculate delay step */
   double delay_time = (t_curr - pose.header.stamp).seconds() + pose_additional_delay_;
   if (delay_time < 0.0) {
+    ShowDelayTimeWarning(warning_, delay_time);
     delay_time = 0.0;
-    warning_.WarnThrottle(
-      1000,
-      fmt::format("Pose time stamp is inappropriate, set delay to 0[s]. delay = {}", delay_time));
   }
   int delay_step = std::roundf(delay_time / ekf_dt_);
   if (delay_step > extend_state_step_ - 1) {
-    warning_.WarnThrottle(
-      1000,
-      fmt::format(
-        "Pose delay exceeds the compensation limit, ignored. delay: {}[s], limit = "
-        "extend_state_step * ekf_dt : {} [s]",
-        delay_time, extend_state_step_ * ekf_dt_));
+    ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
     return;
   }
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
@@ -627,36 +650,6 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   R *= pose_smoothing_steps_;
 
   ekf_.updateWithDelay(y, C, R, delay_step);
-}
-
-double ComputeDelayTime(
-  const rclcpp::Time & current_time,
-  const rclcpp::Time & twist_stamp,
-  const double additional_delay)
-{
-  return (current_time - twist_stamp).seconds() + additional_delay;
-}
-
-void ShowDelayTimeWarning(const Warning & warning, const double delay_time)
-{
-  warning.WarnThrottle(
-    1000,
-    fmt::format(
-      "Twist time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
-      delay_time));
-}
-
-void ShowDelayStepWarning(
-  const Warning & warning,
-  const double delay_time,
-  const double extend_state_step,
-  const double ekf_dt)
-{
-  warning.WarnThrottle(
-    1000,
-    fmt::format(
-      "Twist delay exceeds the compensation limit, ignored. delay: {}[s], limit = "
-      "extend_state_step * ekf_dt : {} [s]", delay_time, extend_state_step * ekf_dt));
 }
 
 /*
