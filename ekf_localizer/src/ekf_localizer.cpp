@@ -676,8 +676,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     ekf_.getXelement(delay_step * dim_x_ + 1),
     ekf_yaw);
 
-  constexpr int dim_y = 3;  // pos_x, pos_y, yaw, depending on Pose output
-  const Eigen::MatrixXd P_y = ekf_.getLatestP().block(0, 0, dim_y, dim_y);
+  const Eigen::MatrixXd P_y = ekf_.getLatestP().block(0, 0, 3, 3);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
     ShowMahalanobisGateWarning(warning_);
     return;
@@ -721,7 +720,6 @@ void EKFLocalizer::measurementUpdateTwist(
   }
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
-  constexpr int dim_y = 2;  // vx, wz
   /* Set measurement matrix */
   const Eigen::Vector2d y(twist.twist.twist.linear.x, twist.twist.twist.angular.z);
 
@@ -735,7 +733,7 @@ void EKFLocalizer::measurementUpdateTwist(
   const Eigen::Vector2d y_ekf(
     ekf_.getXelement(delay_step * dim_x_ + 4),
     ekf_.getXelement(delay_step * dim_x_ + 5));
-  const Eigen::MatrixXd P_y = ekf_.getLatestP().block(4, 4, dim_y, dim_y);
+  const Eigen::MatrixXd P_y = ekf_.getLatestP().block(4, 4, 2, 2);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
     ShowMahalanobisGateWarning(warning_);
     return;
