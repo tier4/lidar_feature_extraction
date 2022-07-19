@@ -33,7 +33,6 @@
 
 // clang-format off
 #define DEBUG_INFO(...) {if (show_debug_info_) {RCLCPP_INFO(__VA_ARGS__);}}
-#define DEBUG_PRINT_MAT(X) {if (show_debug_info_) {std::cout << #X << ": " << X << std::endl;}}
 
 using Vector6d = Eigen::Matrix<double, 6, 1>;
 
@@ -686,10 +685,6 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     return;
   }
 
-  DEBUG_PRINT_MAT(y.transpose());
-  DEBUG_PRINT_MAT(y_ekf.transpose());
-  DEBUG_PRINT_MAT((y - y_ekf).transpose());
-
   /* Set measurement matrix */
   const Eigen::Matrix<double, 3, 6> C = PoseC();
 
@@ -741,10 +736,6 @@ void EKFLocalizer::measurementUpdateTwist(
     ShowMahalanobisGateWarning(warning_);
     return;
   }
-
-  DEBUG_PRINT_MAT(y.transpose());
-  DEBUG_PRINT_MAT(y_ekf.transpose());
-  DEBUG_PRINT_MAT((y - y_ekf).transpose());
 
   /* Set measurement matrix */
   const Eigen::Matrix<double, 2, 6> C = TwistC();
