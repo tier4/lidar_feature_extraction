@@ -42,3 +42,8 @@ jobs:
         run: |
           . /opt/ros/galactic/setup.sh
           colcon build
+
+      - name: Test
+        run: |
+          . /opt/ros/galactic/setup.sh
+          colcon test
