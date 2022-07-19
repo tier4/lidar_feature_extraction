@@ -305,6 +305,24 @@ Matrix6d MatrixQ(
   return q.asDiagonal();
 }
 
+Eigen::Matrix<double, 3, 6> PoseC()
+{
+  /* Set measurement matrix */
+  Eigen::Matrix<double, 3, 6> C = Eigen::Matrix<double, 3, 6>::Zero();
+  C(0, 0) = 1.0;    // for pos x
+  C(1, 1) = 1.0;    // for pos y
+  C(2, 2) = 1.0;  // for yaw
+  return C;
+}
+
+Eigen::Matrix<double, 2, 6> TwistC()
+{
+  Eigen::Matrix<double, 2, 6> C = Eigen::Matrix<double, 2, 6>::Zero();
+  C(0, 4) = 1.0;  // for vx
+  C(1, 5) = 1.0;  // for wz
+  return C;
+}
+
 Eigen::Matrix3d PoseR(const Matrix6d & covariance, const double smoothing_steps)
 {
   Eigen::Matrix3d R;
@@ -670,10 +688,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   DEBUG_PRINT_MAT((y - y_ekf).transpose());
 
   /* Set measurement matrix */
-  Eigen::MatrixXd C = Eigen::MatrixXd::Zero(dim_y, dim_x_);
-  C(0, 0) = 1.0;    // for pos x
-  C(1, 1) = 1.0;    // for pos y
-  C(2, 2) = 1.0;  // for yaw
+  const Eigen::Matrix<double, 3, 6> C = PoseC();
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
@@ -731,9 +746,7 @@ void EKFLocalizer::measurementUpdateTwist(
   DEBUG_PRINT_MAT((y - y_ekf).transpose());
 
   /* Set measurement matrix */
-  Eigen::MatrixXd C = Eigen::MatrixXd::Zero(dim_y, dim_x_);
-  C(0, 4) = 1.0;  // for vx
-  C(1, 5) = 1.0;  // for wz
+  const Eigen::Matrix<double, 2, 6> C = TwistC();
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
