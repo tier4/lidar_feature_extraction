@@ -305,6 +305,19 @@ Matrix6d MatrixQ(
   return q.asDiagonal();
 }
 
+Eigen::Matrix3d PoseR(const Matrix6d & covariance, const double smoothing_steps)
+{
+  Eigen::Matrix3d R;
+  R <<
+    covariance(0, 0), covariance(0, 1), covariance(0, 5),
+    covariance(1, 0), covariance(1, 1), covariance(1, 5),
+    covariance(5, 0), covariance(5, 1), covariance(5, 5);
+  /* In order to avoid a large change at the time of updating,
+   * measurement update is performed by dividing at every step. */
+  R *= smoothing_steps;
+  return R;
+}
+
 Eigen::Matrix2d TwistR(const Matrix6d & covariance, const double smoothing_steps)
 {
   Eigen::Matrix2d R = Eigen::Matrix2d::Zero();
@@ -664,15 +677,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
-  Eigen::Matrix3d R;
-  R <<
-    covariance(0, 0), covariance(0, 1), covariance(0, 5),
-    covariance(1, 0), covariance(1, 1), covariance(1, 5),
-    covariance(5, 0), covariance(5, 1), covariance(5, 5);
-
-  /* In order to avoid a large change at the time of updating,
-   * measurement update is performed by dividing at every step. */
-  R *= pose_smoothing_steps_;
+  const Eigen::Matrix3d R = PoseR(covariance, pose_smoothing_steps_);
 
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
