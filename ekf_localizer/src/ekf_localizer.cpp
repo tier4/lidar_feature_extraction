@@ -631,6 +631,11 @@ void ShowMahalanobisGateWarning(const Warning & warning)
     "[EKF] Mahalanobis distance is over limit. Ignore measurement data.");
 }
 
+void ShowMeasurementMatrixNanInfWarning(const Warning & warning)
+{
+  warning.Warn("[EKF] The measurement matrix includes NaN or Inf.");
+}
+
 /*
  * measurementUpdatePose
  */
@@ -665,8 +670,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   const Eigen::Vector3d y(pose.pose.pose.position.x, pose.pose.pose.position.y, yaw);
 
   if (HasNan(y) || HasInf(y)) {
-    warning_.Warn(
-      "[EKF] pose measurement matrix includes NaN of Inf. ignore update. check pose message.");
+    ShowMeasurementMatrixNanInfWarning(warning_);
     return;
   }
 
@@ -724,8 +728,7 @@ void EKFLocalizer::measurementUpdateTwist(
   const Eigen::Vector2d y(twist.twist.twist.linear.x, twist.twist.twist.angular.z);
 
   if (HasNan(y) || HasInf(y)) {
-    warning_.Warn(
-      "[EKF] twist measurement matrix includes NaN of Inf. ignore update. check twist message.");
+    ShowMeasurementMatrixNanInfWarning(warning_);
     return;
   }
 
