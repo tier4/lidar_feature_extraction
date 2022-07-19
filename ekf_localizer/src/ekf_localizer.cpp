@@ -637,6 +637,28 @@ double ComputeDelayTime(
   return (current_time - twist_stamp).seconds() + additional_delay;
 }
 
+void ShowDelayTimeWarning(const Warning & warning, const double delay_time)
+{
+  warning.WarnThrottle(
+    1000,
+    fmt::format(
+      "Twist time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
+      delay_time));
+}
+
+void ShowDelayStepWarning(
+  const Warning & warning,
+  const double delay_time,
+  const double extend_state_step,
+  const double ekf_dt)
+{
+  warning.WarnThrottle(
+    1000,
+    fmt::format(
+      "Twist delay exceeds the compensation limit, ignored. delay: {}[s], limit = "
+      "extend_state_step * ekf_dt : {} [s]", delay_time, extend_state_step * ekf_dt));
+}
+
 /*
  * measurementUpdateTwist
  */
@@ -651,20 +673,12 @@ void EKFLocalizer::measurementUpdateTwist(
 
   double delay_time = ComputeDelayTime(t_curr, twist.header.stamp, twist_additional_delay_);
   if (delay_time < 0.0) {
-    warning_.WarnThrottle(
-      1000,
-      fmt::format(
-        "Twist time stamp is inappropriate (delay = {} [s]), set delay to 0[s].",
-        delay_time));
+    ShowDelayTimeWarning(warning_, delay_time);
     delay_time = 0.0;
   }
   int delay_step = std::roundf(delay_time / ekf_dt_);
   if (delay_step > extend_state_step_ - 1) {
-    warning_.WarnThrottle(
-      1000,
-      fmt::format(
-        "Twist delay exceeds the compensation limit, ignored. delay: {}[s], limit = "
-        "extend_state_step * ekf_dt : {} [s]", delay_time, extend_state_step_ * ekf_dt_));
+    ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
     return;
   }
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
