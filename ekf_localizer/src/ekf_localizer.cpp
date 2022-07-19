@@ -582,17 +582,25 @@ void ShowDelayStepWarning(
       "extend_state_step * ekf_dt : {} [s]", delay_time, extend_state_step * ekf_dt));
 }
 
+void ShowFrameIdWarning(
+  const Warning & warning,
+  const std::string & pose_header_frame_id,
+  const std::string & pose_frame_id)
+{
+  warning.WarnThrottle(
+    2000,
+    fmt::format(
+      "pose frame_id is {}, but pose_frame is set as {}. They must be same.",
+      pose_header_frame_id, pose_frame_id));
+}
+
 /*
  * measurementUpdatePose
  */
 void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
 {
   if (pose.header.frame_id != pose_frame_id_) {
-    warning_.WarnThrottle(
-      2000,
-      fmt::format(
-        "pose frame_id is {}, but pose_frame is set as {}. They must be same.",
-        pose.header.frame_id, pose_frame_id_));
+    ShowFrameIdWarning(warning_, pose.header.frame_id, pose_frame_id_);
   }
 
   const rclcpp::Time t_curr = this->now();
