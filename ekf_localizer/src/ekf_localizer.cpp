@@ -249,6 +249,62 @@ void EKFLocalizer::updatePredictFrequency()
   last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
 }
 
+Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
+{
+  const double unbiased_yaw = x_curr(2);
+  const double yaw_bias = x_curr(3);
+  const double vx = x_curr(4);
+  const double wz = x_curr(5);
+  const double yaw = unbiased_yaw + yaw_bias;
+
+  Vector6d x_next;
+  x_next <<
+    x_curr(0) + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
+    x_curr(1) + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
+    normalizeYaw(x_curr(2) + wz*dt),                    // dyaw = omega + omega_bias
+    yaw_bias,
+    vx,
+    wz;
+  return x_next;
+}
+
+Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
+{
+  const double unbiased_yaw = x_curr(2);
+  const double yaw_bias = x_curr(3);
+  const double vx = x_curr(4);
+  const double wz = x_curr(5);
+  const double yaw = unbiased_yaw + yaw_bias;
+
+  /* Set A matrix for latest state */
+  Matrix6d A = Matrix6d::Identity();
+  A(0, 2) = -vx * sin(yaw) * dt;
+  A(0, 3) = -vx * sin(yaw) * dt;
+  A(0, 4) = cos(yaw) * dt;
+  A(1, 2) = vx * cos(yaw) * dt;
+  A(1, 3) = vx * cos(yaw) * dt;
+  A(1, 4) = sin(yaw) * dt;
+  A(2, 5) = dt;
+  return A;
+}
+
+Matrix6d MatrixQ(
+  const double yaw_covariance,
+  const double yaw_bias_covariance,
+  const double vx_covariance,
+  const double wz_covariance)
+{
+  Vector6d q;
+  q <<
+    0.0,
+    0.0,
+    yaw_covariance,
+    yaw_bias_covariance,
+    vx_covariance,
+    wz_covariance;
+  return q.asDiagonal();
+}
+
 /*
  * timerCallback
  */
@@ -261,7 +317,34 @@ void EKFLocalizer::timerCallback()
 
   /* predict model in EKF */
   DEBUG_INFO(get_logger(), "------------------------- start prediction -------------------------");
-  predictKinematicsModel();
+  /*  == Nonlinear model ==
+   *
+   * x_{k+1}   = x_k + vx_k * cos(yaw_k + b_k) * dt
+   * y_{k+1}   = y_k + vx_k * sin(yaw_k + b_k) * dt
+   * yaw_{k+1} = yaw_k + (wz_k) * dt
+   * b_{k+1}   = b_k
+   * vx_{k+1}  = vz_k
+   * wz_{k+1}  = wz_k
+   *
+   * (b_k : yaw_bias_k)
+   */
+
+  /*  == Linearized model ==
+   *
+   * A = [ 1, 0, -vx*sin(yaw+b)*dt, -vx*sin(yaw+b)*dt, cos(yaw+b)*dt,  0]
+   *     [ 0, 1,  vx*cos(yaw+b)*dt,  vx*cos(yaw+b)*dt, sin(yaw+b)*dt,  0]
+   *     [ 0, 0,                 1,                 0,             0, dt]
+   *     [ 0, 0,                 0,                 1,             0,  0]
+   *     [ 0, 0,                 0,                 0,             1,  0]
+   *     [ 0, 0,                 0,                 0,             0,  1]
+   */
+
+  const Vector6d x_curr = ekf_.getLatestX();  // current state
+  const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
+  const Matrix6d A = MatrixA(x_curr, ekf_dt_);
+  const Matrix6d Q = MatrixQ(proc_cov_yaw_d_, proc_cov_yaw_bias_d_, proc_cov_vx_d_, proc_cov_wz_d_);
+
+  ekf_.predictWithDelay(x_next, A, Q);
   DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
 
   /* pose measurement update */
@@ -453,94 +536,6 @@ void EKFLocalizer::initEKF()
   P(5, 5) = 50.0;                                              // for wz
 
   ekf_.init(X, P, extend_state_step_);
-}
-
-Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
-{
-  const double unbiased_yaw = x_curr(2);
-  const double yaw_bias = x_curr(3);
-  const double vx = x_curr(4);
-  const double wz = x_curr(5);
-  const double yaw = unbiased_yaw + yaw_bias;
-
-  Vector6d x_next;
-  x_next <<
-    x_curr(0) + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
-    x_curr(1) + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
-    normalizeYaw(x_curr(2) + wz*dt),                    // dyaw = omega + omega_bias
-    yaw_bias,
-    vx,
-    wz;
-  return x_next;
-}
-
-Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
-{
-  const double unbiased_yaw = x_curr(2);
-  const double yaw_bias = x_curr(3);
-  const double vx = x_curr(4);
-  const double wz = x_curr(5);
-  const double yaw = unbiased_yaw + yaw_bias;
-
-  /* Set A matrix for latest state */
-  Matrix6d A = Matrix6d::Identity();
-  A(0, 2) = -vx * sin(yaw) * dt;
-  A(0, 3) = -vx * sin(yaw) * dt;
-  A(0, 4) = cos(yaw) * dt;
-  A(1, 2) = vx * cos(yaw) * dt;
-  A(1, 3) = vx * cos(yaw) * dt;
-  A(1, 4) = sin(yaw) * dt;
-  A(2, 5) = dt;
-  return A;
-}
-
-Matrix6d MatrixQ(
-  const double yaw_covariance,
-  const double yaw_bias_covariance,
-  const double vx_covariance,
-  const double wz_covariance)
-{
-  Vector6d q;
-  q <<
-    0.0,
-    0.0,
-    yaw_covariance,
-    yaw_bias_covariance,
-    vx_covariance,
-    wz_covariance;
-  return q.asDiagonal();
-}
-
-void EKFLocalizer::predictKinematicsModel()
-{
-  /*  == Nonlinear model ==
-   *
-   * x_{k+1}   = x_k + vx_k * cos(yaw_k + b_k) * dt
-   * y_{k+1}   = y_k + vx_k * sin(yaw_k + b_k) * dt
-   * yaw_{k+1} = yaw_k + (wz_k) * dt
-   * b_{k+1}   = b_k
-   * vx_{k+1}  = vz_k
-   * wz_{k+1}  = wz_k
-   *
-   * (b_k : yaw_bias_k)
-   */
-
-  /*  == Linearized model ==
-   *
-   * A = [ 1, 0, -vx*sin(yaw+b)*dt, -vx*sin(yaw+b)*dt, cos(yaw+b)*dt,  0]
-   *     [ 0, 1,  vx*cos(yaw+b)*dt,  vx*cos(yaw+b)*dt, sin(yaw+b)*dt,  0]
-   *     [ 0, 0,                 1,                 0,             0, dt]
-   *     [ 0, 0,                 0,                 1,             0,  0]
-   *     [ 0, 0,                 0,                 0,             1,  0]
-   *     [ 0, 0,                 0,                 0,             0,  1]
-   */
-
-  const Vector6d x_curr = ekf_.getLatestX();  // current state
-  const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
-  const Matrix6d A = MatrixA(x_curr, ekf_dt_);
-  const Matrix6d Q = MatrixQ(proc_cov_yaw_d_, proc_cov_yaw_bias_d_, proc_cov_vx_d_, proc_cov_wz_d_);
-
-  ekf_.predictWithDelay(x_next, A, Q);
 }
 
 /*

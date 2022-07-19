@@ -273,11 +273,6 @@ private:
   void updatePredictFrequency();
 
   /**
-   * @brief compute EKF prediction
-   */
-  void predictKinematicsModel();
-
-  /**
    * @brief compute EKF update with pose measurement
    * @param pose measurement value
    */
