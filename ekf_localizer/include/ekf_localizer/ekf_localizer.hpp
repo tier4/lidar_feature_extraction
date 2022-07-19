@@ -151,6 +151,7 @@ public:
 
 private:
   const Warning warning_;
+
   //!< @brief ekf estimated pose publisher
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_pose_;
   //!< @brief estimated ekf pose with covariance publisher
@@ -197,24 +198,24 @@ private:
   const double tf_rate_;                   //!< @brief  tf publish rate
   const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
                                      //!< if true,publish /estimate_yaw_bias
+  const int extend_state_step_;  //!< @brief  for time delay compensation
+
   const std::string pose_frame_id_;
 
   const int dim_x_;              //!< @brief  dimension of EKF state
   const int pose_smoothing_steps_;
 
-  const int extend_state_step_;  //!< @brief  for time delay compensation
-
-  /* Pose */
   const double pose_additional_delay_;    //!< @brief  compensated pose delay time =
                                           //!< (pose.header.stamp - now) + additional_delay [s]
   //!< @brief  the mahalanobis distance threshold to ignore pose measurement
   const double pose_gate_dist_;
 
-  /* twist */
   const double twist_additional_delay_;  //!< @brief  compensated delay = (twist.header.stamp - now)
                                    //!< + additional_delay [s]
   //!< @brief  measurement is ignored if the mahalanobis distance is larger than this value.
   const double twist_gate_dist_;
+
+  const int twist_smoothing_steps_;
 
   /* process noise standard deviation */
   const double yaw_covariance_;       //!< @brief  yaw process noise
@@ -231,8 +232,6 @@ private:
   geometry_msgs::msg::PoseStamped current_ekf_pose_;  //!< @brief current estimated pose
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
-
-  const int twist_smoothing_steps_;
 
   /**
    * @brief computes update & prediction of EKF for each ekf_dt_[s] time

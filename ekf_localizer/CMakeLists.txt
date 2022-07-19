@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 project(ekf_localizer)
 
+set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-pg -g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
+
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 

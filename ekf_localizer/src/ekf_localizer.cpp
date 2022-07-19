@@ -29,13 +29,11 @@
 #include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/warning.hpp"
 
-
 // clang-format off
 #define DEBUG_INFO(...) {if (show_debug_info_) {RCLCPP_INFO(__VA_ARGS__);}}
+// clang-format on
 
 using Vector6d = Eigen::Matrix<double, 6, 1>;
-
-// clang-format on
 
 // Revival of tf::createQuaternionFromRPY
 // https://answers.ros.org/question/304397/recommended-way-to-construct-quaternion-from-rollpitchyaw-with-tf2/
@@ -58,7 +56,6 @@ inline Eigen::Vector3d createRPYfromQuaternion(
 }
 
 void publishEstimateResult(
-  const int dim_x_,
   const TimeDelayKalmanFilter & ekf_,
   const rclcpp::Time & current_time,
   const geometry_msgs::msg::PoseStamped & current_ekf_pose_,
@@ -135,12 +132,6 @@ void publishEstimateResult(
     p.header.stamp = current_time;
     pub_measured_pose_->publish(p);
   }
-
-  /* debug publish */
-  double pose_yaw = 0.0;
-  if (!current_pose_info_queue_.empty()) {
-    pose_yaw = tf2::getYaw(current_pose_info_queue_.back().pose->pose.pose.orientation);
-  }
 }
 
 double TimeScaledVariance(const double stddev, const double dt)
@@ -159,6 +150,8 @@ double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_v
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
+  tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
+    std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   show_debug_info_(declare_parameter("show_debug_info", false)),
   ekf_rate_(declare_parameter("predict_frequency", 50.0)),
   ekf_dt_(1.0 / std::max(ekf_rate_, 0.1)),
@@ -168,8 +161,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pose_frame_id_(declare_parameter("pose_frame_id", std::string("map"))),
   dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */),
   pose_smoothing_steps_(declare_parameter("pose_smoothing_steps", 5)),
-  tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
-    std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   pose_additional_delay_(declare_parameter("pose_additional_delay", 0.0)),
   pose_gate_dist_(declare_parameter("pose_gate_dist", 10000.0)),
   twist_additional_delay_(declare_parameter("twist_additional_delay", 0.0)),
@@ -281,7 +272,6 @@ Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
   const double unbiased_yaw = x_curr(2);
   const double yaw_bias = x_curr(3);
   const double vx = x_curr(4);
-  const double wz = x_curr(5);
   const double yaw = unbiased_yaw + yaw_bias;
 
   /* Set A matrix for latest state */
@@ -466,7 +456,7 @@ void EKFLocalizer::timerCallback()
 
   /* publish ekf result */
   publishEstimateResult(
-    dim_x_, ekf_, this->now(),
+    ekf_, this->now(),
     current_ekf_pose_, current_ekf_pose_no_yawbias_, current_ekf_twist_, current_pose_info_queue_,
     pub_pose_, pub_pose_no_yawbias_, pub_twist_cov_, pub_pose_cov_, pub_odom_,
     pub_pose_cov_no_yawbias_, pub_twist_, pub_measured_pose_);
