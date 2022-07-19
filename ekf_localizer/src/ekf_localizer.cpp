@@ -229,21 +229,27 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
  */
 void EKFLocalizer::updatePredictFrequency()
 {
-  if (last_predict_time_) {
-    if (get_clock()->now() < *last_predict_time_) {
-      warning_.Warn("Detected jump back in time");
-    } else {
-      ekf_rate_ = 1.0 / (get_clock()->now() - *last_predict_time_).seconds();
-      DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
-      ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
-
-      /* Update discrete proc_cov*/
-      proc_cov_vx_d_ = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
-      proc_cov_wz_d_ = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
-      proc_cov_yaw_d_ = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
-      proc_cov_yaw_bias_d_ = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
-    }
+  if (!last_predict_time_) {
+    last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
+    return;
   }
+
+  if (get_clock()->now() < *last_predict_time_) {
+    warning_.Warn("Detected jump back in time");
+    last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
+    return;
+  }
+
+  ekf_rate_ = 1.0 / (get_clock()->now() - *last_predict_time_).seconds();
+  ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
+
+  DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
+
+  /* Update discrete proc_cov*/
+  proc_cov_vx_d_ = TimeScaledVariance(proc_stddev_vx_c_, ekf_dt_);
+  proc_cov_wz_d_ = TimeScaledVariance(proc_stddev_wz_c_, ekf_dt_);
+  proc_cov_yaw_d_ = TimeScaledVariance(proc_stddev_yaw_c_, ekf_dt_);
+  proc_cov_yaw_bias_d_ = TimeScaledVariance(proc_stddev_yaw_bias_c_, ekf_dt_);
   last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
 }
 
