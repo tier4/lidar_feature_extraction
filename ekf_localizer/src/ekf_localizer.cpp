@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string>
 #include <utility>
@@ -188,6 +189,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   sub_twist_with_cov_(create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
     "in_twist_with_covariance", 1,
     std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1))),
+  last_predict_time_(std::nullopt),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   show_debug_info_(declare_parameter("show_debug_info", false)),
@@ -337,17 +339,17 @@ void EKFLocalizer::timerCallback()
   /* update predict frequency with measured timer rate */
   const rclcpp::Time current_time = get_clock()->now();
 
-  if (!last_predict_time_ || current_time < *last_predict_time_) {
-    last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
+  if (!last_predict_time_.has_value() || current_time < last_predict_time_.value()) {
+    last_predict_time_ = std::make_optional<rclcpp::Time>(current_time);
   } else {
-    ekf_rate_ = 1.0 / (current_time - *last_predict_time_).seconds();
+    ekf_rate_ = 1.0 / (current_time - last_predict_time_.value()).seconds();
     ekf_dt_ = UpdateInterval(ekf_rate_);
 
     DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
 
     /* Update discrete proc_cov*/
     variances_ = variance_.TimeScaledVariances(ekf_dt_);
-    last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
+    last_predict_time_ = std::make_optional<rclcpp::Time>(current_time);
   }
 
   /* predict model in EKF */

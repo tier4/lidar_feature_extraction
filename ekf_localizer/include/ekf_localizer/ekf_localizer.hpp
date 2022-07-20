@@ -215,7 +215,7 @@ private:
   //!< @brief time for ekf calculation callback
   rclcpp::TimerBase::SharedPtr timer_control_;
   //!< @brief last predict time
-  std::shared_ptr<const rclcpp::Time> last_predict_time_;
+  std::optional<rclcpp::Time> last_predict_time_;
 
   //!< @brief timer to send transform
   rclcpp::TimerBase::SharedPtr timer_tf_;
