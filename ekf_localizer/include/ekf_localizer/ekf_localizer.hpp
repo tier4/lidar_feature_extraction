@@ -198,14 +198,15 @@ class UpdateInterval
     if (!last_time_.has_value()) {
       last_time_ = std::make_optional<const double>(current_time_second);
       return ComputeInterval(default_frequency_);
-    } else {
-      if (current_time_second < last_time_.value()) {
-        throw std::invalid_argument("Detected jump back in time");
-      }
-      const double ekf_rate = 1.0 / (current_time_second - last_time_.value());
-      last_time_ = std::make_optional<const double>(current_time_second);
-      return ComputeInterval(ekf_rate);
     }
+
+    if (current_time_second < last_time_.value()) {
+      throw std::invalid_argument("Detected jump back in time");
+    }
+
+    const double ekf_rate = 1.0 / (current_time_second - last_time_.value());
+    last_time_ = std::make_optional<const double>(current_time_second);
+    return ComputeInterval(ekf_rate);
   }
 
  private:
