@@ -231,13 +231,7 @@ void EKFLocalizer::updatePredictFrequency()
 {
   const rclcpp::Time current_time = get_clock()->now();
 
-  if (!last_predict_time_) {
-    last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
-    return;
-  }
-
-  if (current_time < *last_predict_time_) {
-    warning_.Warn("Detected jump back in time");
+  if (!last_predict_time_ || current_time < *last_predict_time_) {
     last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
     return;
   }
@@ -535,13 +529,13 @@ void EKFLocalizer::callbackInitialPose(
 
   current_ekf_pose_.pose.position.z = t(2);
 
-  const Vector6d X = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
+  const Vector6d x = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
 
   const Matrix6d C = GetEigenCovariance(initialpose->pose.covariance);
   const Vector6d d = (Vector6d() << C(0, 0), C(1, 1), C(5, 5), 0.0001, 0.01, 0.01).finished();
   const Matrix6d P = d.asDiagonal();
 
-  ekf_.init(X, P, extend_state_step_);
+  ekf_.init(x, P, extend_state_step_);
 
   updateSimple1DFilters(*initialpose);
 
