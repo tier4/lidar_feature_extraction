@@ -134,11 +134,6 @@ void publishEstimateResult(
   }
 }
 
-double TimeScaledVariance(const double stddev, const double dt)
-{
-  return stddev * stddev * dt * dt;
-}
-
 double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_value)
 {
   if (enable_yaw_bias_estimation) {
@@ -196,15 +191,12 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   yaw_bias_covariance_(
     InitYawBias(enable_yaw_bias_estimation_, declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
-  wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0))
+  wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
+  variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
+  variances_(variance_.TimeScaledVariances(ekf_dt_))
 {
 
   /* convert to continuous to discrete */
-  variances_(0) = TimeScaledVariance(yaw_covariance_, ekf_dt_);
-  variances_(1) = TimeScaledVariance(yaw_bias_covariance_, ekf_dt_);
-  variances_(2) = TimeScaledVariance(vx_covariance_, ekf_dt_);
-  variances_(3) = TimeScaledVariance(wz_covariance_, ekf_dt_);
-
   timer_control_ = rclcpp::create_timer(
     this, get_clock(), DoubleToNanoSeconds(ekf_dt_),
     std::bind(&EKFLocalizer::timerCallback, this));
@@ -240,10 +232,7 @@ void EKFLocalizer::updatePredictFrequency()
   DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
 
   /* Update discrete proc_cov*/
-  variances_(0) = TimeScaledVariance(yaw_covariance_, ekf_dt_);
-  variances_(1) = TimeScaledVariance(yaw_bias_covariance_, ekf_dt_);
-  variances_(2) = TimeScaledVariance(vx_covariance_, ekf_dt_);
-  variances_(3) = TimeScaledVariance(wz_covariance_, ekf_dt_);
+  variances_ = variance_.TimeScaledVariances(ekf_dt_);
   last_predict_time_ = std::make_shared<const rclcpp::Time>(get_clock()->now());
 }
 

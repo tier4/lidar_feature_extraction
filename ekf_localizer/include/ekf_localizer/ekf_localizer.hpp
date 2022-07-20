@@ -144,6 +144,42 @@ private:
   rclcpp::Time latest_time_;
 };
 
+inline double TimeScaledVariance(const double stddev, const double dt)
+{
+  return stddev * stddev * dt * dt;
+}
+
+class DefaultVariance
+{
+public:
+  DefaultVariance(
+    const double yaw_covariance,
+    const double yaw_bias_covariance,
+    const double vx_covariance,
+    const double wz_covariance) :
+    yaw_covariance_(yaw_covariance),
+    yaw_bias_covariance_(yaw_bias_covariance),
+    vx_covariance_(vx_covariance),
+    wz_covariance_(wz_covariance)
+  {
+  }
+
+  Eigen::Vector4d TimeScaledVariances(const double dt) const
+  {
+    const double yaw_variance = TimeScaledVariance(yaw_covariance_, dt);
+    const double yaw_bias_variance = TimeScaledVariance(yaw_bias_covariance_, dt);
+    const double vx_variance = TimeScaledVariance(vx_covariance_, dt);
+    const double wz_variance = TimeScaledVariance(wz_covariance_, dt);
+    return Eigen::Vector4d(yaw_variance, yaw_bias_variance, vx_variance, wz_variance);
+  }
+
+private:
+  const double yaw_covariance_;
+  const double yaw_bias_covariance_;
+  const double vx_covariance_;
+  const double wz_covariance_;
+};
+
 class EKFLocalizer : public rclcpp::Node
 {
 public:
@@ -223,7 +259,7 @@ private:
   const double vx_covariance_;        //!< @brief  vx process noise
   const double wz_covariance_;        //!< @brief  wz process noise
 
-  /* process noise variance for discrete model */
+  const DefaultVariance variance_;
   Eigen::Vector4d variances_;
 
   /* for model prediction */
