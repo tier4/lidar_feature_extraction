@@ -147,6 +147,23 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time) {
     std::chrono::duration<double>(time));
 }
 
+TimeDelayKalmanFilter InitEKF(
+  const int dim_x_,
+  const int extend_state_step_,
+  const double yaw_bias_variance)
+{
+  Eigen::MatrixXd P = Eigen::MatrixXd::Identity(dim_x_, dim_x_) * 1.0E15;  // for x & y
+  P(2, 2) = 50.0;                                              // for yaw
+  P(3, 3) = yaw_bias_variance;                                 // for yaw bias
+  P(4, 4) = 1000.0;                                            // for vx
+  P(5, 5) = 50.0;                                              // for wz
+
+  TimeDelayKalmanFilter ekf;
+  ekf.init(Vector6d::Zero(), P, extend_state_step_);
+  return ekf;
+}
+
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -193,7 +210,8 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
   wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
   variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
-  variances_(variance_.TimeScaledVariances(ekf_dt_))
+  variances_(variance_.TimeScaledVariances(ekf_dt_)),
+  ekf_(InitEKF(dim_x_, extend_state_step_, variances_(1)))
 {
 
   /* convert to continuous to discrete */
@@ -203,7 +221,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   timer_tf_ = rclcpp::create_timer(
     this, get_clock(), rclcpp::Rate(tf_rate_).period(),
     std::bind(&EKFLocalizer::timerTFCallback, this));
-  initEKF();
 
   z_filter_.set_proc_stddev(1.0);
   roll_filter_.set_proc_stddev(0.1);
@@ -552,21 +569,6 @@ void EKFLocalizer::callbackTwistWithCovariance(
 {
   TwistInfo twist_info = {msg, 0};
   current_twist_info_queue_.push(twist_info);
-}
-
-/*
- * initEKF
- */
-void EKFLocalizer::initEKF()
-{
-  const Vector6d X = Vector6d::Zero(dim_x_, 1);
-  Eigen::MatrixXd P = Eigen::MatrixXd::Identity(dim_x_, dim_x_) * 1.0E15;  // for x & y
-  P(2, 2) = 50.0;                                            // for yaw
-  P(3, 3) = variances_(1);                                   // for yaw bias
-  P(4, 4) = 1000.0;                                            // for vx
-  P(5, 5) = 50.0;                                              // for wz
-
-  ekf_.init(X, P, extend_state_step_);
 }
 
 double ComputeDelayTime(

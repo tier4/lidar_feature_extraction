@@ -222,7 +222,6 @@ private:
   //!< @brief tf broadcaster
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_br_;
   //!< @brief  extended kalman filter instance.
-  TimeDelayKalmanFilter ekf_;
   Simple1DFilter z_filter_;
   Simple1DFilter roll_filter_;
   Simple1DFilter pitch_filter_;
@@ -261,6 +260,7 @@ private:
 
   const DefaultVariance variance_;
   Eigen::Vector4d variances_;
+  TimeDelayKalmanFilter ekf_;
 
   /* for model prediction */
   std::queue<TwistInfo> current_twist_info_queue_;    //!< @brief current measured pose
