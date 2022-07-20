@@ -224,28 +224,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pitch_filter_.set_proc_stddev(0.1);
 }
 
-/*
- * updatePredictFrequency
- */
-void EKFLocalizer::updatePredictFrequency()
-{
-  const rclcpp::Time current_time = get_clock()->now();
-
-  if (!last_predict_time_ || current_time < *last_predict_time_) {
-    last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
-    return;
-  }
-
-  ekf_rate_ = 1.0 / (current_time - *last_predict_time_).seconds();
-  ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
-
-  DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
-
-  /* Update discrete proc_cov*/
-  variances_ = variance_.TimeScaledVariances(ekf_dt_);
-  last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
-}
-
 Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
 {
   const double unbiased_yaw = x_curr(2);
@@ -354,7 +332,20 @@ void EKFLocalizer::timerCallback()
   DEBUG_INFO(get_logger(), "========================= timer called =========================");
 
   /* update predict frequency with measured timer rate */
-  updatePredictFrequency();
+  const rclcpp::Time current_time = get_clock()->now();
+
+  if (!last_predict_time_ || current_time < *last_predict_time_) {
+    last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
+  } else {
+    ekf_rate_ = 1.0 / (current_time - *last_predict_time_).seconds();
+    ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
+
+    DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
+
+    /* Update discrete proc_cov*/
+    variances_ = variance_.TimeScaledVariances(ekf_dt_);
+    last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
+  }
 
   /* predict model in EKF */
   DEBUG_INFO(get_logger(), "------------------------- start prediction -------------------------");
