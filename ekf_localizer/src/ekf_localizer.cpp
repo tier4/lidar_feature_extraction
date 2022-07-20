@@ -586,10 +586,8 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     ShowFrameIdWarning(warning_, pose.header.frame_id, pose_frame_id_);
   }
 
-  const rclcpp::Time t_curr = this->now();
-
   /* Calculate delay step */
-  double delay_time = ComputeDelayTime(t_curr, pose.header.stamp, pose_additional_delay_);
+  double delay_time = ComputeDelayTime(this->now(), pose.header.stamp, pose_additional_delay_);
   if (delay_time < 0.0) {
     ShowDelayTimeWarning(warning_, delay_time);
     delay_time = 0.0;
@@ -647,9 +645,7 @@ void EKFLocalizer::measurementUpdateTwist(
     ShowFrameIdWarning(warning_, twist.header.frame_id, "base_link");
   }
 
-  const rclcpp::Time t_curr = this->now();
-
-  double delay_time = ComputeDelayTime(t_curr, twist.header.stamp, twist_additional_delay_);
+  double delay_time = ComputeDelayTime(this->now(), twist.header.stamp, twist_additional_delay_);
   if (delay_time < 0.0) {
     ShowDelayTimeWarning(warning_, delay_time);
     delay_time = 0.0;
