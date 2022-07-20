@@ -579,7 +579,6 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   const double ekf_yaw = ekf_.getXelement(delay_step * dim_x_ + 2);
   const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
 
-  /* Set measurement matrix */
   const Eigen::Vector3d y(
     pose.pose.pose.position.x,
     pose.pose.pose.position.y,
@@ -617,6 +616,16 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
 }
 
+Eigen::Vector2d TwistStateVector(
+  const TimeDelayKalmanFilter ekf_,
+  const int delay_step,
+  const int dim_x_)
+{
+  return Eigen::Vector2d(
+    ekf_.getXelement(delay_step * dim_x_ + 4),
+    ekf_.getXelement(delay_step * dim_x_ + 5));
+}
+
 /*
  * measurementUpdateTwist
  */
@@ -639,18 +648,14 @@ void EKFLocalizer::measurementUpdateTwist(
   }
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
-  /* Set measurement matrix */
   const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
+  const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step, dim_x_);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);
     return;
   }
 
-  /* Gate */
-  const Eigen::Vector2d y_ekf(
-    ekf_.getXelement(delay_step * dim_x_ + 4),
-    ekf_.getXelement(delay_step * dim_x_ + 5));
   const Eigen::MatrixXd P_y = ekf_.getLatestP().block(4, 4, 2, 2);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
     ShowMahalanobisGateWarning(warning_);
