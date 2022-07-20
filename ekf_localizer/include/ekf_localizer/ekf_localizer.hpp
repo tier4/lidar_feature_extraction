@@ -228,7 +228,6 @@ private:
 
   /* parameters */
   const bool show_debug_info_;
-  double ekf_rate_;                  //!< @brief  EKF predict rate
   double ekf_dt_;                    //!< @brief  = 1 / ekf_rate_
   const double tf_rate_;                   //!< @brief  tf publish rate
   const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.

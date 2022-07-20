@@ -193,8 +193,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   show_debug_info_(declare_parameter("show_debug_info", false)),
-  ekf_rate_(declare_parameter("predict_frequency", 50.0)),
-  ekf_dt_(UpdateInterval(ekf_rate_)),
+  ekf_dt_(UpdateInterval(declare_parameter("predict_frequency", 50.0))),
   tf_rate_(declare_parameter("tf_rate", 10.0)),
   enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
@@ -329,8 +328,26 @@ Eigen::Matrix2d TwistR(const Matrix6d & covariance, const double smoothing_steps
   return R;
 }
 
-/*
- * timerCallback
+/*  == Nonlinear model ==
+ *
+ * x_{k+1}   = x_k + vx_k * cos(yaw_k + b_k) * dt
+ * y_{k+1}   = y_k + vx_k * sin(yaw_k + b_k) * dt
+ * yaw_{k+1} = yaw_k + (wz_k) * dt
+ * b_{k+1}   = b_k
+ * vx_{k+1}  = vz_k
+ * wz_{k+1}  = wz_k
+ *
+ * (b_k : yaw_bias_k)
+ */
+
+/*  == Linearized model ==
+ *
+ * A = [ 1, 0, -vx*sin(yaw+b)*dt, -vx*sin(yaw+b)*dt, cos(yaw+b)*dt,  0]
+ *     [ 0, 1,  vx*cos(yaw+b)*dt,  vx*cos(yaw+b)*dt, sin(yaw+b)*dt,  0]
+ *     [ 0, 0,                 1,                 0,             0, dt]
+ *     [ 0, 0,                 0,                 1,             0,  0]
+ *     [ 0, 0,                 0,                 0,             1,  0]
+ *     [ 0, 0,                 0,                 0,             0,  1]
  */
 void EKFLocalizer::timerCallback()
 {
@@ -342,10 +359,10 @@ void EKFLocalizer::timerCallback()
   if (!last_predict_time_.has_value() || current_time < last_predict_time_.value()) {
     last_predict_time_ = std::make_optional<rclcpp::Time>(current_time);
   } else {
-    ekf_rate_ = 1.0 / (current_time - last_predict_time_.value()).seconds();
-    ekf_dt_ = UpdateInterval(ekf_rate_);
+    const double ekf_rate = 1.0 / (current_time - last_predict_time_.value()).seconds();
+    ekf_dt_ = UpdateInterval(ekf_rate);
 
-    DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
+    DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate);
 
     /* Update discrete proc_cov*/
     variances_ = variance_.TimeScaledVariances(ekf_dt_);
@@ -354,27 +371,6 @@ void EKFLocalizer::timerCallback()
 
   /* predict model in EKF */
   DEBUG_INFO(get_logger(), "------------------------- start prediction -------------------------");
-  /*  == Nonlinear model ==
-   *
-   * x_{k+1}   = x_k + vx_k * cos(yaw_k + b_k) * dt
-   * y_{k+1}   = y_k + vx_k * sin(yaw_k + b_k) * dt
-   * yaw_{k+1} = yaw_k + (wz_k) * dt
-   * b_{k+1}   = b_k
-   * vx_{k+1}  = vz_k
-   * wz_{k+1}  = wz_k
-   *
-   * (b_k : yaw_bias_k)
-   */
-
-  /*  == Linearized model ==
-   *
-   * A = [ 1, 0, -vx*sin(yaw+b)*dt, -vx*sin(yaw+b)*dt, cos(yaw+b)*dt,  0]
-   *     [ 0, 1,  vx*cos(yaw+b)*dt,  vx*cos(yaw+b)*dt, sin(yaw+b)*dt,  0]
-   *     [ 0, 0,                 1,                 0,             0, dt]
-   *     [ 0, 0,                 0,                 1,             0,  0]
-   *     [ 0, 0,                 0,                 0,             1,  0]
-   *     [ 0, 0,                 0,                 0,             0,  1]
-   */
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
