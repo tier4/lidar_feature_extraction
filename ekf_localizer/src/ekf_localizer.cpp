@@ -161,10 +161,6 @@ TimeDelayKalmanFilter InitEKF(const int extend_state_step_, const double yaw_bia
   return ekf;
 }
 
-double UpdateInterval(const double frequency) {
-  return 1.0 / std::max(frequency, 0.1);
-}
-
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -192,8 +188,10 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   last_predict_time_(std::nullopt),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
+  default_frequency_(declare_parameter("predict_frequency", 50.0)),
+  interval_(default_frequency_),
+  ekf_dt_(ComputeInterval(default_frequency_)),
   show_debug_info_(declare_parameter("show_debug_info", false)),
-  ekf_dt_(UpdateInterval(declare_parameter("predict_frequency", 50.0))),
   tf_rate_(declare_parameter("tf_rate", 10.0)),
   enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
@@ -356,21 +354,8 @@ void EKFLocalizer::timerCallback()
   /* update predict frequency with measured timer rate */
   const rclcpp::Time current_time = get_clock()->now();
 
-  if (!last_predict_time_.has_value()) {
-    last_predict_time_ = std::make_optional<rclcpp::Time>(current_time);
-  } else {
-    if (current_time < last_predict_time_.value()) {
-      throw std::invalid_argument("Detected jump back in time");
-    }
-    const double ekf_rate = 1.0 / (current_time - last_predict_time_.value()).seconds();
-    ekf_dt_ = UpdateInterval(ekf_rate);
-
-    DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate);
-
-    /* Update discrete proc_cov*/
-    variances_ = variance_.TimeScaledVariances(ekf_dt_);
-    last_predict_time_ = std::make_optional<rclcpp::Time>(current_time);
-  }
+  ekf_dt_ = interval_.Compute(current_time.seconds());
+  variances_ = variance_.TimeScaledVariances(ekf_dt_);
 
   /* predict model in EKF */
   DEBUG_INFO(get_logger(), "------------------------- start prediction -------------------------");

@@ -180,6 +180,39 @@ private:
   const double wz_covariance_;
 };
 
+inline double ComputeInterval(double frequency)
+{
+  return 1.0 / std::max(frequency, 0.1);
+}
+
+class UpdateInterval
+{
+ public:
+  UpdateInterval(const double frequency)
+  : default_frequency_(frequency), last_time_(std::nullopt)
+  {
+  }
+
+  double Compute(double current_time_second)
+  {
+    if (!last_time_.has_value()) {
+      last_time_ = std::make_optional<const double>(current_time_second);
+      return ComputeInterval(default_frequency_);
+    } else {
+      if (current_time_second < last_time_.value()) {
+        throw std::invalid_argument("Detected jump back in time");
+      }
+      const double ekf_rate = 1.0 / (current_time_second - last_time_.value());
+      last_time_ = std::make_optional<const double>(current_time_second);
+      return ComputeInterval(ekf_rate);
+    }
+  }
+
+ private:
+  const double default_frequency_;
+  std::optional<double> last_time_;
+};
+
 class EKFLocalizer : public rclcpp::Node
 {
 public:
@@ -226,9 +259,14 @@ private:
   Simple1DFilter roll_filter_;
   Simple1DFilter pitch_filter_;
 
+  const double default_frequency_;
+
+  UpdateInterval interval_;
+
   /* parameters */
-  const bool show_debug_info_;
   double ekf_dt_;                    //!< @brief  = 1 / ekf_rate_
+
+  const bool show_debug_info_;
   const double tf_rate_;                   //!< @brief  tf publish rate
   const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
                                      //!< if true,publish /estimate_yaw_bias
