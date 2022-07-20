@@ -575,13 +575,15 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
   /* Set yaw */
-  double yaw = tf2::getYaw(pose.pose.pose.orientation);
+  const double yaw = tf2::getYaw(pose.pose.pose.orientation);
   const double ekf_yaw = ekf_.getXelement(delay_step * dim_x_ + 2);
   const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
-  yaw = yaw_error + ekf_yaw;
 
   /* Set measurement matrix */
-  const Eigen::Vector3d y(pose.pose.pose.position.x, pose.pose.pose.position.y, yaw);
+  const Eigen::Vector3d y(
+    pose.pose.pose.position.x,
+    pose.pose.pose.position.y,
+    yaw_error + ekf_yaw);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);
