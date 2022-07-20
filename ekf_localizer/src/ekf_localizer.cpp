@@ -356,9 +356,12 @@ void EKFLocalizer::timerCallback()
   /* update predict frequency with measured timer rate */
   const rclcpp::Time current_time = get_clock()->now();
 
-  if (!last_predict_time_.has_value() || current_time < last_predict_time_.value()) {
+  if (!last_predict_time_.has_value()) {
     last_predict_time_ = std::make_optional<rclcpp::Time>(current_time);
   } else {
+    if (current_time < last_predict_time_.value()) {
+      throw std::invalid_argument("Detected jump back in time");
+    }
     const double ekf_rate = 1.0 / (current_time - last_predict_time_.value()).seconds();
     ekf_dt_ = UpdateInterval(ekf_rate);
 
