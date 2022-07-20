@@ -147,9 +147,35 @@ double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_v
   return 0.;
 }
 
+std::chrono::nanoseconds DoubleToNanoSeconds(const double time) {
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    std::chrono::duration<double>(time));
+}
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
+  pub_pose_(create_publisher<geometry_msgs::msg::PoseStamped>("ekf_pose", 1)),
+  pub_pose_cov_(
+    create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("ekf_pose_with_covariance", 1)),
+  pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
+  pub_twist_(create_publisher<geometry_msgs::msg::TwistStamped>("ekf_twist", 1)),
+  pub_twist_cov_(create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+    "ekf_twist_with_covariance", 1)),
+  pub_measured_pose_(create_publisher<geometry_msgs::msg::PoseStamped>("debug/measured_pose", 1)),
+  pub_pose_no_yawbias_(
+    create_publisher<geometry_msgs::msg::PoseStamped>("ekf_pose_without_yawbias", 1)),
+  pub_pose_cov_no_yawbias_(create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+    "ekf_pose_with_covariance_without_yawbias", 1)),
+  sub_initialpose_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+    "initialpose", 1,
+    std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1))),
+  sub_pose_with_cov_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+    "in_pose_with_covariance", 1,
+    std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, std::placeholders::_1))),
+  sub_twist_with_cov_(create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+    "in_twist_with_covariance", 1,
+    std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1))),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   show_debug_info_(declare_parameter("show_debug_info", false)),
@@ -179,44 +205,17 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   variances_(2) = TimeScaledVariance(vx_covariance_, ekf_dt_);
   variances_(3) = TimeScaledVariance(wz_covariance_, ekf_dt_);
 
-  /* initialize ros system */
-  const auto period_control_ns =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(ekf_dt_));
   timer_control_ = rclcpp::create_timer(
-    this, get_clock(), period_control_ns, std::bind(&EKFLocalizer::timerCallback, this));
-
-  const auto period_tf_ns = rclcpp::Rate(tf_rate_).period();
+    this, get_clock(), DoubleToNanoSeconds(ekf_dt_),
+    std::bind(&EKFLocalizer::timerCallback, this));
   timer_tf_ = rclcpp::create_timer(
-    this, get_clock(), period_tf_ns, std::bind(&EKFLocalizer::timerTFCallback, this));
-
-  pub_pose_ = create_publisher<geometry_msgs::msg::PoseStamped>("ekf_pose", 1);
-  pub_pose_cov_ =
-    create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("ekf_pose_with_covariance", 1);
-  pub_odom_ = create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1);
-  pub_twist_ = create_publisher<geometry_msgs::msg::TwistStamped>("ekf_twist", 1);
-  pub_twist_cov_ = create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
-    "ekf_twist_with_covariance", 1);
-  pub_pose_no_yawbias_ =
-    create_publisher<geometry_msgs::msg::PoseStamped>("ekf_pose_without_yawbias", 1);
-  pub_pose_cov_no_yawbias_ = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "ekf_pose_with_covariance_without_yawbias", 1);
-  sub_initialpose_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "initialpose", 1,
-    std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1));
-  sub_pose_with_cov_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "in_pose_with_covariance", 1,
-    std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, std::placeholders::_1));
-  sub_twist_with_cov_ = create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
-    "in_twist_with_covariance", 1,
-    std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1));
-
+    this, get_clock(), rclcpp::Rate(tf_rate_).period(),
+    std::bind(&EKFLocalizer::timerTFCallback, this));
   initEKF();
 
   z_filter_.set_proc_stddev(1.0);
   roll_filter_.set_proc_stddev(0.1);
   pitch_filter_.set_proc_stddev(0.1);
-
-  pub_measured_pose_ = create_publisher<geometry_msgs::msg::PoseStamped>("debug/measured_pose", 1);
 }
 
 /*
