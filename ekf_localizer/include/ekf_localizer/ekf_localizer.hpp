@@ -193,7 +193,7 @@ class UpdateInterval
   {
   }
 
-  double Compute(double current_time_second)
+  double Compute(const double current_time_second)
   {
     if (!last_time_.has_value()) {
       last_time_ = std::make_optional<const double>(current_time_second);
