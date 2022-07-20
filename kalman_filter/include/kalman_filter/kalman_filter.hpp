@@ -122,7 +122,7 @@ public:
    * @param i index of kalman filter state
    * @return value of i's component of the kalman filter state x[i]
    */
-  double getXelement(unsigned int i);
+  double getXelement(unsigned int i) const;
 
   /**
    * @brief calculate kalman filter state and covariance by prediction model with A, B, Q matrix.
