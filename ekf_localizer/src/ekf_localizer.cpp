@@ -36,6 +36,9 @@
 
 using Vector6d = Eigen::Matrix<double, 6, 1>;
 
+constexpr int DIM_X = 6;
+
+
 // Revival of tf::createQuaternionFromRPY
 // https://answers.ros.org/question/304397/recommended-way-to-construct-quaternion-from-rollpitchyaw-with-tf2/
 inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
@@ -196,7 +199,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
   pose_frame_id_(declare_parameter("pose_frame_id", std::string("map"))),
-  dim_x_(6 /* x, y, yaw, yaw_bias, vx, wz */),
   pose_smoothing_steps_(declare_parameter("pose_smoothing_steps", 5)),
   pose_additional_delay_(declare_parameter("pose_additional_delay", 0.0)),
   pose_gate_dist_(declare_parameter("pose_gate_dist", 10000.0)),
@@ -552,15 +554,12 @@ double ComputeDelayTime(
   return (current_time - message_stamp).seconds() + additional_delay;
 }
 
-Eigen::Vector3d PoseStateVector(
-  const TimeDelayKalmanFilter & ekf,
-  const int delay_step,
-  const int dim_x_)
+Eigen::Vector3d PoseStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
 {
   return Eigen::Vector3d(
-    ekf.getXelement(delay_step * dim_x_ + 0),
-    ekf.getXelement(delay_step * dim_x_ + 1),
-    ekf.getXelement(delay_step * dim_x_ + 2));
+    ekf.getXelement(delay_step * DIM_X + 0),
+    ekf.getXelement(delay_step * DIM_X + 1),
+    ekf.getXelement(delay_step * DIM_X + 2));
 }
 
 Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
@@ -592,7 +591,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Set yaw */
   const double yaw = tf2::getYaw(pose.pose.pose.orientation);
-  const double ekf_yaw = ekf_.getXelement(delay_step * dim_x_ + 2);
+  const double ekf_yaw = ekf_.getXelement(delay_step * DIM_X + 2);
   const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
 
   const Eigen::Vector3d y(
@@ -607,7 +606,7 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
 
   /* Gate */
 
-  const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step, dim_x_);
+  const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
   const Eigen::MatrixXd P_y = PoseCovariance(ekf_);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
     ShowMahalanobisGateWarning(warning_);
@@ -629,14 +628,11 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
 }
 
-Eigen::Vector2d TwistStateVector(
-  const TimeDelayKalmanFilter ekf_,
-  const int delay_step,
-  const int dim_x_)
+Eigen::Vector2d TwistStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
 {
   return Eigen::Vector2d(
-    ekf_.getXelement(delay_step * dim_x_ + 4),
-    ekf_.getXelement(delay_step * dim_x_ + 5));
+    ekf.getXelement(delay_step * DIM_X + 4),
+    ekf.getXelement(delay_step * DIM_X + 5));
 }
 
 Eigen::Matrix2d TwistCovariance(const TimeDelayKalmanFilter & ekf)
@@ -667,7 +663,7 @@ void EKFLocalizer::measurementUpdateTwist(
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
   const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
-  const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step, dim_x_);
+  const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);

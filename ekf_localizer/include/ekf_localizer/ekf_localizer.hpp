@@ -275,7 +275,6 @@ private:
 
   const std::string pose_frame_id_;
 
-  const int dim_x_;              //!< @brief  dimension of EKF state
   const int pose_smoothing_steps_;
 
   const double pose_additional_delay_;    //!< @brief  compensated pose delay time =
