@@ -554,6 +554,18 @@ double ComputeDelayTime(
   return (current_time - message_stamp).seconds() + additional_delay;
 }
 
+Eigen::Vector3d PoseMeasurementVector(
+  const TimeDelayKalmanFilter & ekf,
+  const geometry_msgs::msg::Pose & pose,
+  const int delay_step)
+{
+  const double yaw = tf2::getYaw(pose.orientation);
+  const double ekf_yaw = ekf.getXelement(delay_step * DIM_X + 2);
+  const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
+
+  return Eigen::Vector3d(pose.position.x, pose.position.y, yaw_error + ekf_yaw);
+}
+
 Eigen::Vector3d PoseStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
 {
   return Eigen::Vector3d(
@@ -582,32 +594,22 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     ShowDelayTimeWarning(warning_, delay_time);
     delay_time = 0.0;
   }
-  int delay_step = std::roundf(delay_time / ekf_dt_);
+  const int delay_step = std::roundf(delay_time / ekf_dt_);
   if (delay_step > extend_state_step_ - 1) {
     ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
     return;
   }
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
-  /* Set yaw */
-  const double yaw = tf2::getYaw(pose.pose.pose.orientation);
-  const double ekf_yaw = ekf_.getXelement(delay_step * DIM_X + 2);
-  const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
-
-  const Eigen::Vector3d y(
-    pose.pose.pose.position.x,
-    pose.pose.pose.position.y,
-    yaw_error + ekf_yaw);
+  const Eigen::Vector3d y = PoseMeasurementVector(ekf_, pose.pose.pose, delay_step);
+  const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
+  const Eigen::MatrixXd P_y = PoseCovariance(ekf_);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);
     return;
   }
 
-  /* Gate */
-
-  const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
-  const Eigen::MatrixXd P_y = PoseCovariance(ekf_);
   if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
     ShowMahalanobisGateWarning(warning_);
     return;
