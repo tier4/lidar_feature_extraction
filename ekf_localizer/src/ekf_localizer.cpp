@@ -160,6 +160,9 @@ TimeDelayKalmanFilter InitEKF(const int extend_state_step_, const double yaw_bia
   return ekf;
 }
 
+double UpdateInterval(const double frequency) {
+  return 1.0 / std::max(frequency, 0.1);
+}
 
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
@@ -189,7 +192,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   show_debug_info_(declare_parameter("show_debug_info", false)),
   ekf_rate_(declare_parameter("predict_frequency", 50.0)),
-  ekf_dt_(1.0 / std::max(ekf_rate_, 0.1)),
+  ekf_dt_(UpdateInterval(ekf_rate_)),
   tf_rate_(declare_parameter("tf_rate", 10.0)),
   enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
@@ -338,7 +341,7 @@ void EKFLocalizer::timerCallback()
     last_predict_time_ = std::make_shared<const rclcpp::Time>(current_time);
   } else {
     ekf_rate_ = 1.0 / (current_time - *last_predict_time_).seconds();
-    ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
+    ekf_dt_ = UpdateInterval(ekf_rate_);
 
     DEBUG_INFO(get_logger(), "[EKF] update ekf_rate_ to %f hz", ekf_rate_);
 
