@@ -635,6 +635,11 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
+Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
+{
+  return Eigen::Vector2d(twist.linear.x, twist.angular.z);
+}
+
 /*
  * measurementUpdateTwist
  */
@@ -658,7 +663,7 @@ void EKFLocalizer::measurementUpdateTwist(
   DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
   /* Set measurement matrix */
-  const Eigen::Vector2d y(twist.twist.twist.linear.x, twist.twist.twist.angular.z);
+  const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);
