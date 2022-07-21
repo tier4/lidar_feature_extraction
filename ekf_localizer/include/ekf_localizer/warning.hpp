@@ -47,11 +47,7 @@ private:
 
 void ShowDelayTimeWarning(const Warning & warning, const double delay_time);
 
-void ShowDelayStepWarning(
-  const Warning & warning,
-  const double delay_time,
-  const double extend_state_step,
-  const double ekf_dt);
+void ShowDelayStepWarning(const Warning & warning, const int delay_step, const int state_step);
 
 void ShowFrameIdWarning(
   const Warning & warning,
