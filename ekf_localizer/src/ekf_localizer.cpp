@@ -491,13 +491,14 @@ void EKFLocalizer::timerCallback()
     }
   }
 
-  const double x = ekf_.getXelement(0, 0);
-  const double y = ekf_.getXelement(0, 1);
+  const Vector6d x_est = ekf_.getLatestX();
+  const double x = x_est(0);
+  const double y = x_est(1);
   const double z = z_filter_.get_x();
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
-  const double biased_yaw = ekf_.getXelement(0, 2);
-  const double yaw_bias = ekf_.getXelement(0, 3);
+  const double biased_yaw = x_est(2);
+  const double yaw_bias = x_est(3);
   const double yaw = biased_yaw + yaw_bias;
   const rclcpp::Time stamp = this->now();
 
@@ -508,8 +509,8 @@ void EKFLocalizer::timerCallback()
 
   const auto current_biased_pose = MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
 
-  const Eigen::Vector3d linear(ekf_.getXelement(0, 4), 0, 0);
-  const Eigen::Vector3d angular(0, 0, ekf_.getXelement(0, 5));
+  const Eigen::Vector3d linear(x_est(4), 0, 0);
+  const Eigen::Vector3d angular(0, 0, x_est(5));
   const auto current_twist = MakeTwistStamped(linear, angular, this->now(), "base_link");
 
   /* publish ekf result */
