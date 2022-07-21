@@ -53,6 +53,13 @@ public:
   Eigen::MatrixXd getLatestX() const;
 
   /**
+   * @brief get the estimated state at a specific delay step
+   * @param delay_step the delay step
+   * @param i element index in the specified step
+   */
+  double getXelement(const int delay_step, const int i) const;
+
+  /**
    * @brief get latest time estimation covariance
    * @param P latest time estimation covariance
    */

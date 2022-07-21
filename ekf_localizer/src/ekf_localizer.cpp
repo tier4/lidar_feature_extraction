@@ -343,8 +343,8 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 Eigen::Vector2d TwistStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
 {
   return Eigen::Vector2d(
-    ekf.getXelement(delay_step * DIM_X + 4),
-    ekf.getXelement(delay_step * DIM_X + 5));
+    ekf.getXelement(delay_step, 4),
+    ekf.getXelement(delay_step, 5));
 }
 
 Eigen::Matrix2d TwistCovariance(const TimeDelayKalmanFilter & ekf)
@@ -491,13 +491,13 @@ void EKFLocalizer::timerCallback()
     }
   }
 
-  const double x = ekf_.getXelement(0);
-  const double y = ekf_.getXelement(1);
+  const double x = ekf_.getXelement(0, 0);
+  const double y = ekf_.getXelement(0, 1);
   const double z = z_filter_.get_x();
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
-  const double biased_yaw = ekf_.getXelement(2);
-  const double yaw_bias = ekf_.getXelement(3);
+  const double biased_yaw = ekf_.getXelement(0, 2);
+  const double yaw_bias = ekf_.getXelement(0, 3);
   const double yaw = biased_yaw + yaw_bias;
   const rclcpp::Time stamp = this->now();
 
@@ -508,8 +508,8 @@ void EKFLocalizer::timerCallback()
 
   const auto current_biased_pose = MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
 
-  const Eigen::Vector3d linear(ekf_.getXelement(4), 0, 0);
-  const Eigen::Vector3d angular(0, 0, ekf_.getXelement(5));
+  const Eigen::Vector3d linear(ekf_.getXelement(0, 4), 0, 0);
+  const Eigen::Vector3d angular(0, 0, ekf_.getXelement(0, 5));
   const auto current_twist = MakeTwistStamped(linear, angular, this->now(), "base_link");
 
   /* publish ekf result */
@@ -629,7 +629,7 @@ Eigen::Vector3d PoseMeasurementVector(
   const int delay_step)
 {
   const double yaw = tf2::getYaw(pose.orientation);
-  const double ekf_yaw = ekf.getXelement(delay_step * DIM_X + 2);
+  const double ekf_yaw = ekf.getXelement(delay_step, 2);
   const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
 
   return Eigen::Vector3d(pose.position.x, pose.position.y, yaw_error + ekf_yaw);
@@ -638,9 +638,9 @@ Eigen::Vector3d PoseMeasurementVector(
 Eigen::Vector3d PoseStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
 {
   return Eigen::Vector3d(
-    ekf.getXelement(delay_step * DIM_X + 0),
-    ekf.getXelement(delay_step * DIM_X + 1),
-    ekf.getXelement(delay_step * DIM_X + 2));
+    ekf.getXelement(delay_step, 0),
+    ekf.getXelement(delay_step, 1),
+    ekf.getXelement(delay_step, 2));
 }
 
 Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
