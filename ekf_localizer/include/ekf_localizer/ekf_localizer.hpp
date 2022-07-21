@@ -222,16 +222,8 @@ public:
 private:
   const Warning warning_;
 
-  //!< @brief ekf estimated pose publisher
-  const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_pose_;
-  //!< @brief estimated ekf pose with covariance publisher
-  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_pose_cov_;
   //!< @brief estimated ekf odometry publisher
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_;
-  //!< @brief ekf estimated twist publisher
-  const rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_twist_;
-  //!< @brief ekf estimated twist with covariance publisher
-  const rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr pub_twist_cov_;
   //!< @brief debug measurement pose publisher
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_measured_pose_;
   //!< @brief ekf estimated yaw bias publisher
