@@ -280,20 +280,10 @@ Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
   return A;
 }
 
-Matrix6d MatrixQ(
-  const double yaw_covariance,
-  const double yaw_bias_covariance,
-  const double vx_covariance,
-  const double wz_covariance)
+Matrix6d MatrixQ(const Eigen::Vector4d & variances)
 {
   Vector6d q;
-  q <<
-    0.0,
-    0.0,
-    yaw_covariance,
-    yaw_bias_covariance,
-    vx_covariance,
-    wz_covariance;
+  q << 0., 0., variances(0), variances(1), variances(2), variances(3);
   return q.asDiagonal();
 }
 
@@ -472,7 +462,7 @@ void EKFLocalizer::timerCallback()
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
   const Matrix6d A = MatrixA(x_curr, ekf_dt_);
-  const Matrix6d Q = MatrixQ(variances_(0), variances_(1), variances_(2), variances_(3));
+  const Matrix6d Q = MatrixQ(variances_);
 
   ekf_.predictWithDelay(x_next, A, Q);
   DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
