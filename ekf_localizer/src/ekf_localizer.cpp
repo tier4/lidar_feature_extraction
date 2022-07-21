@@ -370,10 +370,13 @@ double ComputeDelayTime(
   return (current_time - message_stamp).seconds() + additional_delay;
 }
 
-void CheckTwistFrameId(const Warning & warning_, const std::string & frame_id)
+void CheckFrameId(
+  const Warning & warning_,
+  const std::string & frame_id,
+  const std::string & expected_frame_id)
 {
-  if (frame_id != "base_link") {
-    ShowFrameIdWarning(warning_, frame_id, "base_link");
+  if (frame_id != expected_frame_id) {
+    ShowFrameIdWarning(warning_, frame_id, expected_frame_id);
   }
 }
 
@@ -400,7 +403,7 @@ void measurementUpdateTwist(
   const double twist_gate_dist_,
   const int twist_smoothing_steps_)
 {
-  CheckTwistFrameId(warning_, twist.header.frame_id);
+  CheckFrameId(warning_, twist.header.frame_id, "base_link");
 
   const double delay_time = ComputeDelayTime(
     current_time, twist.header.stamp, twist_additional_delay_);
@@ -661,9 +664,7 @@ Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
 void EKFLocalizer::measurementUpdatePose(
     const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
 {
-  if (pose.header.frame_id != pose_frame_id_) {
-    ShowFrameIdWarning(warning_, pose.header.frame_id, pose_frame_id_);
-  }
+  CheckFrameId(warning_, pose.header.frame_id, pose_frame_id_);
 
   /* Calculate delay step */
   const double delay_time = ComputeDelayTime(
