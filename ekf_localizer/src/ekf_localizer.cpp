@@ -478,8 +478,7 @@ void EKFLocalizer::timerCallback()
   if (!current_pose_info_queue_.empty()) {
     DEBUG_INFO(get_logger(), "------------------------- start Pose -------------------------");
 
-    int pose_info_queue_size = static_cast<int>(current_pose_info_queue_.size());
-    for (int i = 0; i < pose_info_queue_size; ++i) {
+    for (size_t i = 0; i < current_pose_info_queue_.size(); ++i) {
       PoseInfo pose_info = current_pose_info_queue_.front();
       current_pose_info_queue_.pop();
       measurementUpdatePose(*pose_info.pose);
@@ -495,8 +494,7 @@ void EKFLocalizer::timerCallback()
   if (!current_twist_info_queue_.empty()) {
     DEBUG_INFO(get_logger(), "------------------------- start Twist -------------------------");
 
-    int twist_info_queue_size = static_cast<int>(current_twist_info_queue_.size());
-    for (int i = 0; i < twist_info_queue_size; ++i) {
+    for (size_t i = 0; i < current_twist_info_queue_.size(); ++i) {
       TwistInfo twist_info = current_twist_info_queue_.front();
       current_twist_info_queue_.pop();
       measurementUpdateTwist(
