@@ -293,7 +293,7 @@ Matrix6d MatrixQ(
   return q.asDiagonal();
 }
 
-Eigen::Matrix<double, 3, 6> PoseC()
+Eigen::Matrix<double, 3, 6> PoseObservationModel()
 {
   /* Set measurement matrix */
   Eigen::Matrix<double, 3, 6> C = Eigen::Matrix<double, 3, 6>::Zero();
@@ -303,7 +303,7 @@ Eigen::Matrix<double, 3, 6> PoseC()
   return C;
 }
 
-Eigen::Matrix<double, 2, 6> TwistC()
+Eigen::Matrix<double, 2, 6> TwistObservationModel()
 {
   Eigen::Matrix<double, 2, 6> C = Eigen::Matrix<double, 2, 6>::Zero();
   C(0, 4) = 1.0;  // for vx
@@ -311,7 +311,9 @@ Eigen::Matrix<double, 2, 6> TwistC()
   return C;
 }
 
-Eigen::Matrix3d PoseR(const Matrix6d & covariance, const double smoothing_steps)
+Eigen::Matrix3d PoseObservationCovariance(
+  const Matrix6d & covariance,
+  const double smoothing_steps)
 {
   Eigen::Matrix3d R;
   R <<
@@ -324,7 +326,9 @@ Eigen::Matrix3d PoseR(const Matrix6d & covariance, const double smoothing_steps)
   return R;
 }
 
-Eigen::Matrix2d TwistR(const Matrix6d & covariance, const double smoothing_steps)
+Eigen::Matrix2d TwistObservationCovariance(
+  const Matrix6d & covariance,
+  const double smoothing_steps)
 {
   Eigen::Matrix2d R = Eigen::Matrix2d::Zero();
   R(0, 0) = covariance(0, 0);   // vx - vx
@@ -617,11 +621,11 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   }
 
   /* Set measurement matrix */
-  const Eigen::Matrix<double, 3, 6> C = PoseC();
+  const Eigen::Matrix<double, 3, 6> C = PoseObservationModel();
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
-  const Eigen::Matrix3d R = PoseR(covariance, pose_smoothing_steps_);
+  const Eigen::Matrix3d R = PoseObservationCovariance(covariance, pose_smoothing_steps_);
 
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
@@ -680,11 +684,11 @@ void EKFLocalizer::measurementUpdateTwist(
   }
 
   /* Set measurement matrix */
-  const Eigen::Matrix<double, 2, 6> C = TwistC();
+  const Eigen::Matrix<double, 2, 6> C = TwistObservationModel();
 
   /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
-  const Eigen::Matrix2d R = TwistR(covariance, twist_smoothing_steps_);
+  const Eigen::Matrix2d R = TwistObservationCovariance(covariance, twist_smoothing_steps_);
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
