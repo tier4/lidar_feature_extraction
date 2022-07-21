@@ -230,11 +230,11 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
 
 Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
 {
-  const double unbiased_yaw = x_curr(2);
+  const double biased_yaw = x_curr(2);
   const double yaw_bias = x_curr(3);
   const double vx = x_curr(4);
   const double wz = x_curr(5);
-  const double yaw = unbiased_yaw + yaw_bias;
+  const double yaw = biased_yaw + yaw_bias;
 
   Vector6d x_next;
   x_next <<
@@ -249,10 +249,10 @@ Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
 
 Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
 {
-  const double unbiased_yaw = x_curr(2);
+  const double biased_yaw = x_curr(2);
   const double yaw_bias = x_curr(3);
   const double vx = x_curr(4);
-  const double yaw = unbiased_yaw + yaw_bias;
+  const double yaw = biased_yaw + yaw_bias;
 
   /* Set A matrix for latest state */
   Matrix6d A = Matrix6d::Identity();
@@ -411,24 +411,24 @@ void EKFLocalizer::timerCallback()
   );
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
-  const double unbiased_yaw = ekf_.getXelement(2);
+  const double biased_yaw = ekf_.getXelement(2);
   const double yaw_bias = ekf_.getXelement(3);
   const rclcpp::Time stamp = this->now();
 
   Eigen::Isometry3d ekf_pose;
   ekf_pose.translation() = translation;
   ekf_pose.linear() =
-    rotationlib::RPYToQuaternionXYZ(roll, pitch, unbiased_yaw + yaw_bias).toRotationMatrix();
+    rotationlib::RPYToQuaternionXYZ(roll, pitch, biased_yaw + yaw_bias).toRotationMatrix();
 
   current_ekf_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
 
-  Eigen::Isometry3d ekf_unbiased_pose;
-  ekf_unbiased_pose.translation() = translation;
-  ekf_unbiased_pose.linear() =
-    rotationlib::RPYToQuaternionXYZ(roll, pitch, unbiased_yaw).toRotationMatrix();
+  Eigen::Isometry3d ekf_biased_pose;
+  ekf_biased_pose.translation() = translation;
+  ekf_biased_pose.linear() =
+    rotationlib::RPYToQuaternionXYZ(roll, pitch, biased_yaw).toRotationMatrix();
 
   const auto current_ekf_pose_no_yawbias_ =
-    MakePoseStamped(ekf_unbiased_pose, stamp, pose_frame_id_);
+    MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
 
   const Eigen::Vector3d linear(ekf_.getXelement(4), 0, 0);
   const Eigen::Vector3d angular(0, 0, ekf_.getXelement(5));
