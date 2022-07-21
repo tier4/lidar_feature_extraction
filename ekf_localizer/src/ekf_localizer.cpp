@@ -69,6 +69,29 @@ Eigen::Isometry3d MakePoseFromXYZRPY(
   return pose;
 }
 
+std::array<double, 36> EKFCovarianceToPoseMessageCovariance(const Matrix6d & P)
+{
+  return std::array<double, 36>{
+    P(0, 0), P(0, 1), 0, 0, 0, P(0, 2),
+    P(1, 0), P(1, 1), 0, 0, 0, P(1, 2),
+          0,       0, 0, 0, 0,       0,
+          0,       0, 0, 0, 0,       0,
+    P(2, 0), P(2, 1), 0, 0, 0, P(2, 2)
+  };
+}
+
+std::array<double, 36> EKFCovarianceToTwistMessageCovariance(const Matrix6d & P)
+{
+  return std::array<double, 36>{
+    P(4, 4), 0, 0, 0, 0, P(4, 5),
+          0, 0, 0, 0, 0,       0,
+          0, 0, 0, 0, 0,       0,
+          0, 0, 0, 0, 0,       0,
+          0, 0, 0, 0, 0,       0,
+    P(5, 4), 0, 0, 0, 0, P(5, 5)
+  };
+}
+
 void publishEstimateResult(
   const Eigen::MatrixXd & P,
   const rclcpp::Time & current_time,
@@ -89,17 +112,7 @@ void publishEstimateResult(
   pose_cov.header.stamp = current_time;
   pose_cov.header.frame_id = current_unbiased_pose.header.frame_id;
   pose_cov.pose.pose = current_unbiased_pose.pose;
-
-  Eigen::Map<RowMatrix6d> pose_covariance(pose_cov.pose.covariance.data(), 6, 6);
-  pose_covariance(0, 0) = P(0, 0);
-  pose_covariance(0, 1) = P(0, 1);
-  pose_covariance(0, 5) = P(0, 2);
-  pose_covariance(1, 0) = P(1, 0);
-  pose_covariance(1, 1) = P(1, 1);
-  pose_covariance(1, 5) = P(1, 2);
-  pose_covariance(5, 0) = P(2, 0);
-  pose_covariance(5, 1) = P(2, 1);
-  pose_covariance(5, 5) = P(2, 2);
+  pose_cov.pose.covariance = EKFCovarianceToPoseMessageCovariance(P);
 
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
   pose_cov_no_yawbias.pose.pose = current_biased_pose.pose;
@@ -110,12 +123,7 @@ void publishEstimateResult(
   twist_cov.header.stamp = current_time;
   twist_cov.header.frame_id = current_twist.header.frame_id;
   twist_cov.twist.twist = current_twist.twist;
-
-  Eigen::Map<RowMatrix6d> twist_covariance(twist_cov.twist.covariance.data(), 6, 6);
-  twist_covariance(0, 0) = P(4, 4);
-  twist_covariance(0, 5) = P(4, 5);
-  twist_covariance(5, 0) = P(5, 4);
-  twist_covariance(5, 5) = P(5, 5);
+  twist_cov.twist.covariance = EKFCovarianceToTwistMessageCovariance(P);
 
   /* publish latest odometry */
   nav_msgs::msg::Odometry odometry;
