@@ -370,9 +370,17 @@ double ComputeDelayTime(
   return (current_time - message_stamp).seconds() + additional_delay;
 }
 
-void CheckTwistFrameId(const Warning & warning_, const std::string & frame_id) {
+void CheckTwistFrameId(const Warning & warning_, const std::string & frame_id)
+{
   if (frame_id != "base_link") {
     ShowFrameIdWarning(warning_, frame_id, "base_link");
+  }
+}
+
+void CheckDelayTime(const Warning & warning_, const double delay_time)
+{
+  if (delay_time < 0.0) {
+    ShowDelayTimeWarning(warning_, delay_time);
   }
 }
 
@@ -390,10 +398,9 @@ void measurementUpdateTwist(
   CheckTwistFrameId(warning_, twist.header.frame_id);
 
   double delay_time = ComputeDelayTime(current_time, twist.header.stamp, twist_additional_delay_);
-  if (delay_time < 0.0) {
-    ShowDelayTimeWarning(warning_, delay_time);
-    delay_time = 0.0;
-  }
+  CheckDelayTime(warning_, delay_time);
+  delay_time = std::max(delay_time, 0.);
+
   int delay_step = std::roundf(delay_time / ekf_dt_);
   if (delay_step >= extend_state_step_) {
     ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
@@ -667,10 +674,9 @@ void EKFLocalizer::measurementUpdatePose(
 
   /* Calculate delay step */
   double delay_time = ComputeDelayTime(this->now(), pose.header.stamp, pose_additional_delay_);
-  if (delay_time < 0.0) {
-    ShowDelayTimeWarning(warning_, delay_time);
-    delay_time = 0.0;
-  }
+  CheckDelayTime(warning_, delay_time);
+  delay_time = std::max(delay_time, 0.);
+
   const int delay_step = std::roundf(delay_time / ekf_dt_);
   if (delay_step >= extend_state_step_) {
     ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
