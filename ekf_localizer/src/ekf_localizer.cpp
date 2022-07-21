@@ -330,11 +330,10 @@ Eigen::Matrix2d TwistObservationCovariance(
   const Matrix6d & covariance,
   const double smoothing_steps)
 {
-  Eigen::Matrix2d R = Eigen::Matrix2d::Zero();
-  R(0, 0) = covariance(0, 0);   // vx - vx
-  R(0, 1) = covariance(0, 5);   // vx - wz
-  R(1, 0) = covariance(5, 0);   // wz - vx
-  R(1, 1) = covariance(5, 5);   // wz - wz
+  Eigen::Matrix2d R;
+  //   vx                wz
+  R << covariance(0, 0), covariance(0, 5),   // vx
+       covariance(5, 0), covariance(5, 5);   // wz
 
   /* In order to avoid a large change by update, measurement update is performed
    * by dividing at every step. measurement update is performed by dividing at every step. */
