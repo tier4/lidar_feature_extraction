@@ -475,37 +475,27 @@ void EKFLocalizer::timerCallback()
   DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
 
   /* pose measurement update */
-  if (!current_pose_info_queue_.empty()) {
-    DEBUG_INFO(get_logger(), "------------------------- start Pose -------------------------");
-
-    for (size_t i = 0; i < current_pose_info_queue_.size(); ++i) {
-      PoseInfo pose_info = current_pose_info_queue_.front();
-      current_pose_info_queue_.pop();
-      measurementUpdatePose(*pose_info.pose);
-      ++pose_info.counter;
-      if (pose_info.counter < pose_smoothing_steps_) {
-        current_pose_info_queue_.push(pose_info);
-      }
+  for (size_t i = 0; i < current_pose_info_queue_.size(); ++i) {
+    PoseInfo pose_info = current_pose_info_queue_.front();
+    current_pose_info_queue_.pop();
+    measurementUpdatePose(*pose_info.pose);
+    ++pose_info.counter;
+    if (pose_info.counter < pose_smoothing_steps_) {
+      current_pose_info_queue_.push(pose_info);
     }
-    DEBUG_INFO(get_logger(), "------------------------- end Pose -------------------------\n");
   }
 
   /* twist measurement update */
-  if (!current_twist_info_queue_.empty()) {
-    DEBUG_INFO(get_logger(), "------------------------- start Twist -------------------------");
-
-    for (size_t i = 0; i < current_twist_info_queue_.size(); ++i) {
-      TwistInfo twist_info = current_twist_info_queue_.front();
-      current_twist_info_queue_.pop();
-      measurementUpdateTwist(
-        ekf_, this->now(), *twist_info.twist, warning_, ekf_dt_, extend_state_step_,
-        twist_additional_delay_, twist_gate_dist_, twist_smoothing_steps_);
-      ++twist_info.counter;
-      if (twist_info.counter < twist_smoothing_steps_) {
-        current_twist_info_queue_.push(twist_info);
-      }
+  for (size_t i = 0; i < current_twist_info_queue_.size(); ++i) {
+    TwistInfo twist_info = current_twist_info_queue_.front();
+    current_twist_info_queue_.pop();
+    measurementUpdateTwist(
+      ekf_, this->now(), *twist_info.twist, warning_, ekf_dt_, extend_state_step_,
+      twist_additional_delay_, twist_gate_dist_, twist_smoothing_steps_);
+    ++twist_info.counter;
+    if (twist_info.counter < twist_smoothing_steps_) {
+      current_twist_info_queue_.push(twist_info);
     }
-    DEBUG_INFO(get_logger(), "------------------------- end Twist -------------------------\n");
   }
 
   const double x = ekf_.getXelement(0);
