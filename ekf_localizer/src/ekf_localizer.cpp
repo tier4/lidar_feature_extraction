@@ -59,6 +59,16 @@ inline Eigen::Vector3d createRPYfromQuaternion(
   return Eigen::Vector3d(roll, pitch, yaw);
 }
 
+Eigen::Isometry3d MakePoseFromXYZRPY(
+  const double x, const double y, const double z,
+  const double roll, const double pitch, const double yaw)
+{
+  Eigen::Isometry3d pose;
+  pose.translation() = Eigen::Vector3d(x, y, z);
+  pose.linear() = rotationlib::RPYToQuaternionXYZ(roll, pitch, yaw).toRotationMatrix();
+  return pose;
+}
+
 void publishEstimateResult(
   const TimeDelayKalmanFilter & ekf_,
   const rclcpp::Time & current_time,
@@ -404,31 +414,22 @@ void EKFLocalizer::timerCallback()
     DEBUG_INFO(get_logger(), "------------------------- end Twist -------------------------\n");
   }
 
-  const Eigen::Vector3d translation(
-      ekf_.getXelement(0),
-      ekf_.getXelement(1),
-      z_filter_.get_x()
-  );
+  const double x = ekf_.getXelement(0);
+  const double y = ekf_.getXelement(1);
+  const double z = z_filter_.get_x();
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
   const double biased_yaw = ekf_.getXelement(2);
   const double yaw_bias = ekf_.getXelement(3);
+  const double yaw = biased_yaw + yaw_bias;
   const rclcpp::Time stamp = this->now();
 
-  Eigen::Isometry3d ekf_pose;
-  ekf_pose.translation() = translation;
-  ekf_pose.linear() =
-    rotationlib::RPYToQuaternionXYZ(roll, pitch, biased_yaw + yaw_bias).toRotationMatrix();
-
+  const Eigen::Isometry3d ekf_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
   current_ekf_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
 
-  Eigen::Isometry3d ekf_biased_pose;
-  ekf_biased_pose.translation() = translation;
-  ekf_biased_pose.linear() =
-    rotationlib::RPYToQuaternionXYZ(roll, pitch, biased_yaw).toRotationMatrix();
+  const Eigen::Isometry3d ekf_biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
 
-  const auto current_ekf_pose_no_yawbias_ =
-    MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
+  const auto current_ekf_pose_no_yawbias_ = MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
 
   const Eigen::Vector3d linear(ekf_.getXelement(4), 0, 0);
   const Eigen::Vector3d angular(0, 0, ekf_.getXelement(5));
@@ -666,13 +667,13 @@ void EKFLocalizer::measurementUpdateTwist(
 
   const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
   const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
+  const Eigen::MatrixXd P_y = TwistCovariance(ekf_);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);
     return;
   }
 
-  const Eigen::MatrixXd P_y = TwistCovariance(ekf_);
   if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
     ShowMahalanobisGateWarning(warning_);
     return;
