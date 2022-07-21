@@ -340,12 +340,6 @@ private:
   void measurementUpdatePose(const geometry_msgs::msg::PoseWithCovarianceStamped & pose);
 
   /**
-   * @brief compute EKF update with pose measurement
-   * @param twist measurement value
-   */
-  void measurementUpdateTwist(const geometry_msgs::msg::TwistWithCovarianceStamped & twist);
-
-  /**
    * @brief get transform from frame_id
    */
   bool getTransformFromTF(

@@ -345,6 +345,77 @@ Eigen::Matrix2d TwistObservationCovariance(
   return R;
 }
 
+Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
+{
+  return Eigen::Vector2d(twist.linear.x, twist.angular.z);
+}
+
+Eigen::Vector2d TwistStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
+{
+  return Eigen::Vector2d(
+    ekf.getXelement(delay_step * DIM_X + 4),
+    ekf.getXelement(delay_step * DIM_X + 5));
+}
+
+Eigen::Matrix2d TwistCovariance(const TimeDelayKalmanFilter & ekf)
+{
+  return ekf.getLatestP().block(4, 4, 2, 2);
+}
+
+double ComputeDelayTime(
+  const rclcpp::Time & current_time,
+  const rclcpp::Time & message_stamp,
+  const double additional_delay)
+{
+  return (current_time - message_stamp).seconds() + additional_delay;
+}
+
+void measurementUpdateTwist(
+  TimeDelayKalmanFilter & ekf_,
+  const rclcpp::Time & current_time,
+  const geometry_msgs::msg::TwistWithCovarianceStamped & twist,
+  const Warning & warning_,
+  const double ekf_dt_,
+  const int extend_state_step_,
+  const double twist_additional_delay_,
+  const double twist_gate_dist_,
+  const int twist_smoothing_steps_)
+{
+  if (twist.header.frame_id != "base_link") {
+    ShowFrameIdWarning(warning_, twist.header.frame_id, "base_link");
+  }
+
+  double delay_time = ComputeDelayTime(current_time, twist.header.stamp, twist_additional_delay_);
+  if (delay_time < 0.0) {
+    ShowDelayTimeWarning(warning_, delay_time);
+    delay_time = 0.0;
+  }
+  int delay_step = std::roundf(delay_time / ekf_dt_);
+  if (delay_step > extend_state_step_ - 1) {
+    ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
+    return;
+  }
+
+  const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
+  const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
+  const Eigen::MatrixXd P_y = TwistCovariance(ekf_);
+
+  if (HasNan(y) || HasInf(y)) {
+    ShowMeasurementMatrixNanInfWarning(warning_);
+    return;
+  }
+
+  if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
+    ShowMahalanobisGateWarning(warning_);
+    return;
+  }
+
+  const Eigen::Matrix<double, 2, 6> C = TwistObservationModel();
+  const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
+  const Eigen::Matrix2d R = TwistObservationCovariance(covariance, twist_smoothing_steps_);
+  ekf_.updateWithDelay(y, C, R, delay_step);
+}
+
 /*  == Nonlinear model ==
  *
  * x_{k+1}   = x_k + vx_k * cos(yaw_k + b_k) * dt
@@ -412,7 +483,9 @@ void EKFLocalizer::timerCallback()
     for (int i = 0; i < twist_info_queue_size; ++i) {
       TwistInfo twist_info = current_twist_info_queue_.front();
       current_twist_info_queue_.pop();
-      measurementUpdateTwist(*twist_info.twist);
+      measurementUpdateTwist(
+        ekf_, this->now(), *twist_info.twist, warning_, ekf_dt_, extend_state_step_,
+        twist_additional_delay_, twist_gate_dist_, twist_smoothing_steps_);
       ++twist_info.counter;
       if (twist_info.counter < twist_smoothing_steps_) {
         current_twist_info_queue_.push(twist_info);
@@ -553,14 +626,6 @@ void EKFLocalizer::callbackTwistWithCovariance(
   current_twist_info_queue_.push(twist_info);
 }
 
-double ComputeDelayTime(
-  const rclcpp::Time & current_time,
-  const rclcpp::Time & message_stamp,
-  const double additional_delay)
-{
-  return (current_time - message_stamp).seconds() + additional_delay;
-}
-
 Eigen::Vector3d PoseMeasurementVector(
   const TimeDelayKalmanFilter & ekf,
   const geometry_msgs::msg::Pose & pose,
@@ -589,7 +654,8 @@ Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
 /*
  * measurementUpdatePose
  */
-void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
+void EKFLocalizer::measurementUpdatePose(
+    const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
 {
   if (pose.header.frame_id != pose_frame_id_) {
     ShowFrameIdWarning(warning_, pose.header.frame_id, pose_frame_id_);
@@ -622,75 +688,10 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
     return;
   }
 
-  /* Set measurement matrix */
   const Eigen::Matrix<double, 3, 6> C = PoseObservationModel();
-
-  /* Set measurement noise covariance */
   const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
   const Eigen::Matrix3d R = PoseObservationCovariance(covariance, pose_smoothing_steps_);
 
-  ekf_.updateWithDelay(y, C, R, delay_step);
-}
-
-Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
-{
-  return Eigen::Vector2d(twist.linear.x, twist.angular.z);
-}
-
-Eigen::Vector2d TwistStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
-{
-  return Eigen::Vector2d(
-    ekf.getXelement(delay_step * DIM_X + 4),
-    ekf.getXelement(delay_step * DIM_X + 5));
-}
-
-Eigen::Matrix2d TwistCovariance(const TimeDelayKalmanFilter & ekf)
-{
-  return ekf.getLatestP().block(4, 4, 2, 2);
-}
-
-/*
- * measurementUpdateTwist
- */
-void EKFLocalizer::measurementUpdateTwist(
-  const geometry_msgs::msg::TwistWithCovarianceStamped & twist)
-{
-  if (twist.header.frame_id != "base_link") {
-    ShowFrameIdWarning(warning_, twist.header.frame_id, "base_link");
-  }
-
-  double delay_time = ComputeDelayTime(this->now(), twist.header.stamp, twist_additional_delay_);
-  if (delay_time < 0.0) {
-    ShowDelayTimeWarning(warning_, delay_time);
-    delay_time = 0.0;
-  }
-  int delay_step = std::roundf(delay_time / ekf_dt_);
-  if (delay_step > extend_state_step_ - 1) {
-    ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
-    return;
-  }
-  DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
-
-  const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
-  const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
-  const Eigen::MatrixXd P_y = TwistCovariance(ekf_);
-
-  if (HasNan(y) || HasInf(y)) {
-    ShowMeasurementMatrixNanInfWarning(warning_);
-    return;
-  }
-
-  if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
-    ShowMahalanobisGateWarning(warning_);
-    return;
-  }
-
-  /* Set measurement matrix */
-  const Eigen::Matrix<double, 2, 6> C = TwistObservationModel();
-
-  /* Set measurement noise covariance */
-  const Matrix6d covariance = GetEigenCovariance(twist.twist.covariance);
-  const Eigen::Matrix2d R = TwistObservationCovariance(covariance, twist_smoothing_steps_);
   ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
