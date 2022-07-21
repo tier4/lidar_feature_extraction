@@ -384,6 +384,11 @@ void CheckDelayTime(const Warning & warning_, const double delay_time)
   }
 }
 
+int ComputeDelayStep(const double delay_time, const double dt)
+{
+  return std::roundf(std::max(delay_time, 0.) / dt);
+}
+
 void measurementUpdateTwist(
   TimeDelayKalmanFilter & ekf_,
   const rclcpp::Time & current_time,
@@ -397,11 +402,11 @@ void measurementUpdateTwist(
 {
   CheckTwistFrameId(warning_, twist.header.frame_id);
 
-  double delay_time = ComputeDelayTime(current_time, twist.header.stamp, twist_additional_delay_);
+  const double delay_time = ComputeDelayTime(
+    current_time, twist.header.stamp, twist_additional_delay_);
   CheckDelayTime(warning_, delay_time);
-  delay_time = std::max(delay_time, 0.);
 
-  const int delay_step = std::roundf(delay_time / ekf_dt_);
+  const int delay_step = ComputeDelayStep(delay_time, ekf_dt_);
   if (delay_step >= extend_state_step_) {
     ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
     return;
@@ -673,16 +678,15 @@ void EKFLocalizer::measurementUpdatePose(
   }
 
   /* Calculate delay step */
-  double delay_time = ComputeDelayTime(this->now(), pose.header.stamp, pose_additional_delay_);
+  const double delay_time = ComputeDelayTime(
+    this->now(), pose.header.stamp, pose_additional_delay_);
   CheckDelayTime(warning_, delay_time);
-  delay_time = std::max(delay_time, 0.);
 
-  const int delay_step = std::roundf(delay_time / ekf_dt_);
+  const int delay_step = ComputeDelayStep(delay_time, ekf_dt_);
   if (delay_step >= extend_state_step_) {
     ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
     return;
   }
-  DEBUG_INFO(get_logger(), "delay_time: %f [s]", delay_time);
 
   const Eigen::Vector3d y = PoseMeasurementVector(ekf_, pose.pose.pose, delay_step);
   const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
