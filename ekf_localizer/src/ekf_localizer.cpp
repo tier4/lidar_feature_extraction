@@ -70,7 +70,7 @@ Eigen::Isometry3d MakePoseFromXYZRPY(
 }
 
 void publishEstimateResult(
-  const TimeDelayKalmanFilter & ekf_,
+  const Eigen::MatrixXd & P,
   const rclcpp::Time & current_time,
   const geometry_msgs::msg::PoseStamped & current_unbiased_pose,
   const geometry_msgs::msg::PoseStamped & current_biased_pose,
@@ -81,9 +81,6 @@ void publishEstimateResult(
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_no_yawbias_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_measured_pose_)
 {
-  const Eigen::MatrixXd X = ekf_.getLatestX();
-  const Eigen::MatrixXd P = ekf_.getLatestP();
-
   /* publish latest pose */
   pub_pose_no_yawbias_->publish(current_biased_pose);
 
@@ -424,10 +421,9 @@ void EKFLocalizer::timerCallback()
 
   /* publish ekf result */
   publishEstimateResult(
-    ekf_, this->now(),
+    ekf_.getLatestP(), this->now(),
     current_unbiased_pose_, current_biased_pose, current_twist, current_pose_info_queue_,
-    pub_pose_no_yawbias_, pub_odom_,
-    pub_pose_cov_no_yawbias_, pub_measured_pose_);
+    pub_pose_no_yawbias_, pub_odom_, pub_pose_cov_no_yawbias_, pub_measured_pose_);
 }
 
 /*
