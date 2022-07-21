@@ -72,9 +72,9 @@ Eigen::Isometry3d MakePoseFromXYZRPY(
 void publishEstimateResult(
   const TimeDelayKalmanFilter & ekf_,
   const rclcpp::Time & current_time,
-  const geometry_msgs::msg::PoseStamped & current_ekf_pose_,
-  const geometry_msgs::msg::PoseStamped & current_ekf_pose_no_yawbias_,
-  const geometry_msgs::msg::TwistStamped & current_ekf_twist_,
+  const geometry_msgs::msg::PoseStamped & current_unbiased_pose,
+  const geometry_msgs::msg::PoseStamped & current_biased_pose,
+  const geometry_msgs::msg::TwistStamped & current_twist,
   const std::queue<PoseInfo> & current_pose_info_queue_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_pose_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_pose_no_yawbias_,
@@ -89,14 +89,14 @@ void publishEstimateResult(
   const Eigen::MatrixXd P = ekf_.getLatestP();
 
   /* publish latest pose */
-  pub_pose_->publish(current_ekf_pose_);
-  pub_pose_no_yawbias_->publish(current_ekf_pose_no_yawbias_);
+  pub_pose_->publish(current_unbiased_pose);
+  pub_pose_no_yawbias_->publish(current_biased_pose);
 
   /* publish latest pose with covariance */
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov;
   pose_cov.header.stamp = current_time;
-  pose_cov.header.frame_id = current_ekf_pose_.header.frame_id;
-  pose_cov.pose.pose = current_ekf_pose_.pose;
+  pose_cov.header.frame_id = current_unbiased_pose.header.frame_id;
+  pose_cov.pose.pose = current_unbiased_pose.pose;
 
   Eigen::Map<RowMatrix6d> pose_covariance(pose_cov.pose.covariance.data(), 6, 6);
   pose_covariance(0, 0) = P(0, 0);
@@ -111,17 +111,17 @@ void publishEstimateResult(
   pub_pose_cov_->publish(pose_cov);
 
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
-  pose_cov_no_yawbias.pose.pose = current_ekf_pose_no_yawbias_.pose;
+  pose_cov_no_yawbias.pose.pose = current_biased_pose.pose;
   pub_pose_cov_no_yawbias_->publish(pose_cov_no_yawbias);
 
   /* publish latest twist */
-  pub_twist_->publish(current_ekf_twist_);
+  pub_twist_->publish(current_twist);
 
   /* publish latest twist with covariance */
   geometry_msgs::msg::TwistWithCovarianceStamped twist_cov;
   twist_cov.header.stamp = current_time;
-  twist_cov.header.frame_id = current_ekf_twist_.header.frame_id;
-  twist_cov.twist.twist = current_ekf_twist_.twist;
+  twist_cov.header.frame_id = current_twist.header.frame_id;
+  twist_cov.twist.twist = current_twist.twist;
 
   Eigen::Map<RowMatrix6d> twist_covariance(twist_cov.twist.covariance.data(), 6, 6);
   twist_covariance(0, 0) = P(4, 4);
@@ -133,7 +133,7 @@ void publishEstimateResult(
   /* publish latest odometry */
   nav_msgs::msg::Odometry odometry;
   odometry.header.stamp = current_time;
-  odometry.header.frame_id = current_ekf_pose_.header.frame_id;
+  odometry.header.frame_id = current_unbiased_pose.header.frame_id;
   odometry.child_frame_id = "base_link";
   odometry.pose = pose_cov.pose;
   odometry.twist = twist_cov.twist;
@@ -428,20 +428,20 @@ void EKFLocalizer::timerCallback()
   const rclcpp::Time stamp = this->now();
 
   const Eigen::Isometry3d ekf_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
-  current_ekf_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
+  current_unbiased_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
 
   const Eigen::Isometry3d ekf_biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
 
-  const auto current_ekf_pose_no_yawbias_ = MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
+  const auto current_biased_pose = MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
 
   const Eigen::Vector3d linear(ekf_.getXelement(4), 0, 0);
   const Eigen::Vector3d angular(0, 0, ekf_.getXelement(5));
-  const auto current_ekf_twist_ = MakeTwistStamped(linear, angular, this->now(), "base_link");
+  const auto current_twist = MakeTwistStamped(linear, angular, this->now(), "base_link");
 
   /* publish ekf result */
   publishEstimateResult(
     ekf_, this->now(),
-    current_ekf_pose_, current_ekf_pose_no_yawbias_, current_ekf_twist_, current_pose_info_queue_,
+    current_unbiased_pose_, current_biased_pose, current_twist, current_pose_info_queue_,
     pub_pose_, pub_pose_no_yawbias_, pub_twist_cov_, pub_pose_cov_, pub_odom_,
     pub_pose_cov_no_yawbias_, pub_twist_, pub_measured_pose_);
 }
@@ -451,12 +451,12 @@ void EKFLocalizer::timerCallback()
  */
 void EKFLocalizer::timerTFCallback()
 {
-  if (current_ekf_pose_.header.frame_id == "") {
+  if (current_unbiased_pose_.header.frame_id == "") {
     return;
   }
 
-  const Eigen::Isometry3d pose = GetIsometry3d(current_ekf_pose_.pose);
-  const std::string frame_id = current_ekf_pose_.header.frame_id;
+  const Eigen::Isometry3d pose = GetIsometry3d(current_unbiased_pose_.pose);
+  const std::string frame_id = current_unbiased_pose_.header.frame_id;
   const std::string child_frame_id = "base_link";
   const rclcpp::Time stamp = this->now();
   const auto msg = MakeTransformStamped(pose, stamp, frame_id, child_frame_id);
@@ -513,7 +513,7 @@ void EKFLocalizer::callbackInitialPose(
   const double initial_yaw = tf2::getYaw(initialpose->pose.pose.orientation);
   const double yaw = tf2::getYaw(transform.transform.rotation);
 
-  current_ekf_pose_.pose.position.z = t(2);
+  current_unbiased_pose_.pose.position.z = t(2);
 
   const Vector6d x = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
 

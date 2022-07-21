@@ -302,7 +302,7 @@ private:
   /* for model prediction */
   std::queue<TwistInfo> current_twist_info_queue_;    //!< @brief current measured pose
   std::queue<PoseInfo> current_pose_info_queue_;      //!< @brief current measured pose
-  geometry_msgs::msg::PoseStamped current_ekf_pose_;  //!< @brief current estimated pose
+  geometry_msgs::msg::PoseStamped current_unbiased_pose_;  //!< @brief current estimated pose
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
 

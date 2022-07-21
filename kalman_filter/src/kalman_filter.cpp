@@ -112,6 +112,7 @@ bool KalmanFilter::update(
   return true;
 }
 
+// x <- x + K * (y - C * x)
 bool KalmanFilter::update(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
 {
