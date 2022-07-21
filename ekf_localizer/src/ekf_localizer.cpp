@@ -395,7 +395,7 @@ void measurementUpdateTwist(
     delay_time = 0.0;
   }
   int delay_step = std::roundf(delay_time / ekf_dt_);
-  if (delay_step > extend_state_step_ - 1) {
+  if (delay_step >= extend_state_step_) {
     ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
     return;
   }
@@ -672,7 +672,7 @@ void EKFLocalizer::measurementUpdatePose(
     delay_time = 0.0;
   }
   const int delay_step = std::roundf(delay_time / ekf_dt_);
-  if (delay_step > extend_state_step_ - 1) {
+  if (delay_step >= extend_state_step_) {
     ShowDelayStepWarning(warning_, delay_time, extend_state_step_, ekf_dt_);
     return;
   }
