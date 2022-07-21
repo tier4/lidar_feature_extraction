@@ -370,6 +370,12 @@ double ComputeDelayTime(
   return (current_time - message_stamp).seconds() + additional_delay;
 }
 
+void CheckTwistFrameId(const Warning & warning_, const std::string & frame_id) {
+  if (frame_id != "base_link") {
+    ShowFrameIdWarning(warning_, frame_id, "base_link");
+  }
+}
+
 void measurementUpdateTwist(
   TimeDelayKalmanFilter & ekf_,
   const rclcpp::Time & current_time,
@@ -381,9 +387,7 @@ void measurementUpdateTwist(
   const double twist_gate_dist_,
   const int twist_smoothing_steps_)
 {
-  if (twist.header.frame_id != "base_link") {
-    ShowFrameIdWarning(warning_, twist.header.frame_id, "base_link");
-  }
+  CheckTwistFrameId(warning_, twist.header.frame_id);
 
   double delay_time = ComputeDelayTime(current_time, twist.header.stamp, twist_additional_delay_);
   if (delay_time < 0.0) {
