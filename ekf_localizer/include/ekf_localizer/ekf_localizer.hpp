@@ -74,12 +74,7 @@ inline bool mahalanobisGate(
   const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
   const Eigen::MatrixXd & cov)
 {
-  const double squared_distance = SquaredMahalanobis(x, obj_x, cov);
-  if (squared_distance > dist_max * dist_max) {
-    return false;
-  }
-
-  return true;
+  return SquaredMahalanobis(x, obj_x, cov) <= dist_max * dist_max;
 }
 
 struct PoseInfo

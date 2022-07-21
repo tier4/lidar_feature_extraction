@@ -414,7 +414,7 @@ void measurementUpdateTwist(
 
   const Eigen::Vector2d y = TwistMeasurementVector(twist.twist.twist);
   const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
-  const Eigen::MatrixXd P_y = TwistCovariance(ekf_);
+  const Eigen::Matrix2d P_y = TwistCovariance(ekf_);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);
