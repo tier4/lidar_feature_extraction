@@ -239,7 +239,7 @@ Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
   return x_next;
 }
 
-Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
+Matrix6d StateTransitionModel(const Vector6d & x_curr, const double dt)
 {
   const double biased_yaw = x_curr(2);
   const double yaw_bias = x_curr(3);
@@ -258,7 +258,7 @@ Matrix6d MatrixA(const Vector6d & x_curr, const double dt)
   return A;
 }
 
-Matrix6d MatrixQ(const Eigen::Vector4d & variances)
+Matrix6d ProcessNoiseCovariance(const Eigen::Vector4d & variances)
 {
   Vector6d q;
   q << 0., 0., variances(0), variances(1), variances(2), variances(3);
@@ -415,8 +415,8 @@ void EKFLocalizer::timerCallback()
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, dt);
-  const Matrix6d A = MatrixA(x_curr, dt);
-  const Matrix6d Q = MatrixQ(variance_.TimeScaledVariances(dt));
+  const Matrix6d A = StateTransitionModel(x_curr, dt);
+  const Matrix6d Q = ProcessNoiseCovariance(variance_.TimeScaledVariances(dt));
 
   ekf_.predictWithDelay(x_next, A, Q);
 
