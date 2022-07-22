@@ -113,7 +113,7 @@ void publishEstimateResult(
   const geometry_msgs::msg::PoseStamped & current_unbiased_pose,
   const geometry_msgs::msg::PoseStamped & current_biased_pose,
   const geometry_msgs::msg::TwistStamped & current_twist,
-  const std::queue<PoseInfo> & current_pose_info_queue_,
+  const std::queue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> & pose_msgs_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_pose_no_yawbias_,
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_no_yawbias_,
@@ -150,9 +150,9 @@ void publishEstimateResult(
   pub_odom_->publish(odometry);
 
   /* debug measured pose */
-  if (!current_pose_info_queue_.empty()) {
+  if (!pose_msgs_.empty()) {
     geometry_msgs::msg::PoseStamped p;
-    p.pose = current_pose_info_queue_.back().pose->pose.pose;
+    p.pose = pose_msgs_.back()->pose.pose;
     p.header.stamp = current_time;
     pub_measured_pose_->publish(p);
   }
@@ -468,26 +468,36 @@ void EKFLocalizer::timerCallback()
   DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
 
   /* pose measurement update */
-  for (size_t i = 0; i < current_pose_info_queue_.size(); ++i) {
-    PoseInfo pose_info = current_pose_info_queue_.front();
-    current_pose_info_queue_.pop();
-    measurementUpdatePose(*pose_info.pose);
-    ++pose_info.counter;
-    if (pose_info.counter < pose_smoothing_steps_) {
-      current_pose_info_queue_.push(pose_info);
+  const size_t n_pose_msgs = pose_msgs_.size();
+  for (size_t i = 0; i < n_pose_msgs; ++i) {
+    const auto pose = pose_msgs_.front();
+    const int counter = pose_counters_.front();
+    pose_msgs_.pop();
+    pose_counters_.pop();
+
+    measurementUpdatePose(*pose);
+
+    if (counter + 1 < pose_smoothing_steps_) {
+      pose_msgs_.push(pose);
+      pose_counters_.push(counter + 1);
     }
   }
 
   /* twist measurement update */
-  for (size_t i = 0; i < current_twist_info_queue_.size(); ++i) {
-    TwistInfo twist_info = current_twist_info_queue_.front();
-    current_twist_info_queue_.pop();
+  const size_t n_twist_msgs = twist_msgs_.size();
+  for (size_t i = 0; i < n_twist_msgs; ++i) {
+    const auto twist = twist_msgs_.front();
+    const int counter = twist_counters_.front();
+    twist_msgs_.pop();
+    twist_counters_.pop();
+
     measurementUpdateTwist(
-      ekf_, this->now(), *twist_info.twist, warning_, ekf_dt_, extend_state_step_,
+      ekf_, this->now(), *twist, warning_, ekf_dt_, extend_state_step_,
       twist_additional_delay_, twist_gate_dist_, twist_smoothing_steps_);
-    ++twist_info.counter;
-    if (twist_info.counter < twist_smoothing_steps_) {
-      current_twist_info_queue_.push(twist_info);
+
+    if (counter + 1 < twist_smoothing_steps_) {
+      twist_msgs_.push(twist);
+      twist_counters_.push(counter + 1);
     }
   }
 
@@ -519,7 +529,7 @@ void EKFLocalizer::timerCallback()
   /* publish ekf result */
   publishEstimateResult(
     ekf_.getLatestP(), this->now(),
-    current_unbiased_pose_, current_biased_pose, current_twist, current_pose_info_queue_,
+    current_unbiased_pose_, current_biased_pose, current_twist, pose_msgs_,
     pub_pose_no_yawbias_, pub_odom_, pub_pose_cov_no_yawbias_, pub_measured_pose_);
 }
 
@@ -602,7 +612,8 @@ void EKFLocalizer::callbackInitialPose(
 
   updateSimple1DFilters(*initialpose);
 
-  while (!current_pose_info_queue_.empty()) current_pose_info_queue_.pop();
+  while (!pose_msgs_.empty()) { pose_msgs_.pop(); }
+  while (!pose_counters_.empty()) { pose_counters_.pop(); }
 }
 
 /*
@@ -611,8 +622,8 @@ void EKFLocalizer::callbackInitialPose(
 void EKFLocalizer::callbackPoseWithCovariance(
   geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
-  PoseInfo pose_info = {msg, 0};
-  current_pose_info_queue_.push(pose_info);
+  pose_msgs_.push(msg);
+  pose_counters_.push(0);
 
   updateSimple1DFilters(*msg);
 }
@@ -623,8 +634,8 @@ void EKFLocalizer::callbackPoseWithCovariance(
 void EKFLocalizer::callbackTwistWithCovariance(
   geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
-  TwistInfo twist_info = {msg, 0};
-  current_twist_info_queue_.push(twist_info);
+  twist_msgs_.push(msg);
+  twist_counters_.push(0);
 }
 
 Eigen::Vector3d PoseMeasurementVector(
@@ -673,7 +684,7 @@ void EKFLocalizer::measurementUpdatePose(
 
   const Eigen::Vector3d y = PoseMeasurementVector(ekf_, pose.pose.pose, delay_step);
   const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
-  const Eigen::MatrixXd P_y = PoseCovariance(ekf_);
+  const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
 
   if (HasNan(y) || HasInf(y)) {
     ShowMeasurementMatrixNanInfWarning(warning_);

@@ -77,18 +77,6 @@ inline bool mahalanobisGate(
   return SquaredMahalanobis(x, obj_x, cov) <= dist_max * dist_max;
 }
 
-struct PoseInfo
-{
-  const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr pose;
-  int counter;
-};
-
-struct TwistInfo
-{
-  const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr twist;
-  int counter;
-};
-
 class Simple1DFilter
 {
 public:
@@ -287,8 +275,13 @@ private:
   TimeDelayKalmanFilter ekf_;
 
   /* for model prediction */
-  std::queue<TwistInfo> current_twist_info_queue_;    //!< @brief current measured pose
-  std::queue<PoseInfo> current_pose_info_queue_;      //!< @brief current measured pose
+  std::queue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> pose_msgs_;    //!< @brief current measured pose
+  std::queue<int> pose_counters_;    //!< @brief current measured pose
+
+  /* for model prediction */
+  std::queue<geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr> twist_msgs_;    //!< @brief current measured twist
+  std::queue<int> twist_counters_;    //!< @brief current measured twist
+
   geometry_msgs::msg::PoseStamped current_unbiased_pose_;  //!< @brief current estimated pose
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
