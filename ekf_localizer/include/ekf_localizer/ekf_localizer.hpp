@@ -353,13 +353,6 @@ private:
    */
   void updatePredictFrequency();
 
-  /**
-   * @brief get transform from frame_id
-   */
-  bool getTransformFromTF(
-    std::string parent_frame, std::string child_frame,
-    geometry_msgs::msg::TransformStamped & transform);
-
   void updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose);
 
   friend class EKFLocalizerTestSuite;  // for test code
