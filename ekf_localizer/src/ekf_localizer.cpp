@@ -30,10 +30,6 @@
 #include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/warning.hpp"
 
-// clang-format off
-#define DEBUG_INFO(...) {if (show_debug_info_) {RCLCPP_INFO(__VA_ARGS__);}}
-// clang-format on
-
 using Vector6d = Eigen::Matrix<double, 6, 1>;
 
 constexpr int DIM_X = 6;
@@ -192,7 +188,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   default_frequency_(declare_parameter("predict_frequency", 50.0)),
   interval_(default_frequency_),
   ekf_dt_(ComputeInterval(default_frequency_)),
-  show_debug_info_(declare_parameter("show_debug_info", false)),
   tf_rate_(declare_parameter("tf_rate", 10.0)),
   enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
@@ -414,16 +409,11 @@ int ComputeDelayStep(const double delay_time, const double dt)
  */
 void EKFLocalizer::timerCallback()
 {
-  DEBUG_INFO(get_logger(), "========================= timer called =========================");
-
   /* update predict frequency with measured timer rate */
   const rclcpp::Time current_time = get_clock()->now();
 
   ekf_dt_ = interval_.Compute(current_time.seconds());
   variances_ = variance_.TimeScaledVariances(ekf_dt_);
-
-  /* predict model in EKF */
-  DEBUG_INFO(get_logger(), "------------------------- start prediction -------------------------");
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
@@ -431,7 +421,6 @@ void EKFLocalizer::timerCallback()
   const Matrix6d Q = MatrixQ(variances_);
 
   ekf_.predictWithDelay(x_next, A, Q);
-  DEBUG_INFO(get_logger(), "------------------------- end prediction -------------------------\n");
 
   /* pose measurement update */
   const size_t n_pose_msgs = pose_msgs_.size();
