@@ -509,11 +509,10 @@ void EKFLocalizer::timerCallback()
   const double roll = roll_filter_.get_x();
   const double pitch = pitch_filter_.get_x();
   const double yaw = biased_yaw + yaw_bias;
-  const rclcpp::Time stamp = this->now();
 
-  const Eigen::Isometry3d ekf_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
-  const Eigen::Isometry3d ekf_biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
-  current_unbiased_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
+  const Eigen::Isometry3d unbiased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
+  const Eigen::Isometry3d biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
+  current_unbiased_pose_ = MakePoseStamped(unbiased_pose, this->now(), pose_frame_id_);
 
   const Eigen::Vector3d linear(vx, 0, 0);
   const Eigen::Vector3d angular(0, 0, wz);
@@ -521,7 +520,7 @@ void EKFLocalizer::timerCallback()
   /* publish ekf result */
   publishEstimateResult(
     ekf_.getLatestP(), this->now(), pose_frame_id_,
-    ekf_pose, ekf_biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
+    unbiased_pose, biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
 }
 
 /*
