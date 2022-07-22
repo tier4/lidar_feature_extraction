@@ -113,10 +113,8 @@ void publishEstimateResult(
   const geometry_msgs::msg::PoseStamped & current_unbiased_pose,
   const geometry_msgs::msg::PoseStamped & current_biased_pose,
   const geometry_msgs::msg::TwistStamped & current_twist,
-  const std::queue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> & pose_msgs_,
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
-  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_no_yawbias_,
-  const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_measured_pose_)
+  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_no_yawbias_)
 {
 
   /* publish latest pose with covariance */
@@ -145,14 +143,6 @@ void publishEstimateResult(
   odometry.pose = pose_cov.pose;
   odometry.twist = twist_cov.twist;
   pub_odom_->publish(odometry);
-
-  /* debug measured pose */
-  if (!pose_msgs_.empty()) {
-    geometry_msgs::msg::PoseStamped p;
-    p.pose = pose_msgs_.back()->pose.pose;
-    p.header.stamp = current_time;
-    pub_measured_pose_->publish(p);
-  }
 }
 
 double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_value)
@@ -185,7 +175,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
 : rclcpp::Node(node_name, node_options),
   warning_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
-  pub_measured_pose_(create_publisher<geometry_msgs::msg::PoseStamped>("debug/measured_pose", 1)),
   pub_pose_cov_no_yawbias_(create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "ekf_pose_with_covariance_without_yawbias", 1)),
   sub_initialpose_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -563,8 +552,7 @@ void EKFLocalizer::timerCallback()
   /* publish ekf result */
   publishEstimateResult(
     ekf_.getLatestP(), this->now(),
-    current_unbiased_pose_, current_biased_pose, current_twist, pose_msgs_,
-    pub_odom_, pub_pose_cov_no_yawbias_, pub_measured_pose_);
+    current_unbiased_pose_, current_biased_pose, current_twist, pub_odom_, pub_pose_cov_no_yawbias_);
 }
 
 /*
