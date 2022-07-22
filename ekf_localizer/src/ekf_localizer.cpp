@@ -106,38 +106,38 @@ std::array<double, 36> EKFCovarianceToTwistMessageCovariance(const Matrix6d & P)
 void publishEstimateResult(
   const Eigen::MatrixXd & P,
   const rclcpp::Time & current_time,
-  const geometry_msgs::msg::PoseStamped & current_unbiased_pose,
-  const geometry_msgs::msg::PoseStamped & current_biased_pose,
-  const geometry_msgs::msg::TwistStamped & current_twist,
+  const std::string & pose_frame_id,
+  const Eigen::Isometry3d & unbiased_pose,
+  const Eigen::Isometry3d & biased_pose,
+  const Eigen::Vector3d & linear,
+  const Eigen::Vector3d & angular,
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_biased_pose_)
 {
+  geometry_msgs::msg::PoseWithCovarianceStamped biased_pose_msg;
+  biased_pose_msg.pose.pose = MakePose(biased_pose);
+  biased_pose_msg.pose.covariance = EKFCovarianceToPoseMessageCovariance(P);
+  biased_pose_msg.header.stamp = current_time;
+  biased_pose_msg.header.frame_id = pose_frame_id;
+  pub_biased_pose_->publish(biased_pose_msg);
 
   /* publish latest pose with covariance */
-  geometry_msgs::msg::PoseWithCovarianceStamped pose_cov;
-  pose_cov.header.stamp = current_time;
-  pose_cov.header.frame_id = current_unbiased_pose.header.frame_id;
-  pose_cov.pose.pose = current_unbiased_pose.pose;
-  pose_cov.pose.covariance = EKFCovarianceToPoseMessageCovariance(P);
-
-  geometry_msgs::msg::PoseWithCovarianceStamped pose_cov_no_yawbias = pose_cov;
-  pose_cov_no_yawbias.pose.pose = current_biased_pose.pose;
-  pub_biased_pose_->publish(pose_cov_no_yawbias);
+  geometry_msgs::msg::PoseWithCovariance unbiased_pose_msg;
+  unbiased_pose_msg.pose = MakePose(unbiased_pose);
+  unbiased_pose_msg.covariance = EKFCovarianceToPoseMessageCovariance(P);
 
   /* publish latest twist with covariance */
-  geometry_msgs::msg::TwistWithCovarianceStamped twist_cov;
-  twist_cov.header.stamp = current_time;
-  twist_cov.header.frame_id = current_twist.header.frame_id;
-  twist_cov.twist.twist = current_twist.twist;
-  twist_cov.twist.covariance = EKFCovarianceToTwistMessageCovariance(P);
+  geometry_msgs::msg::TwistWithCovariance twist_msg;
+  twist_msg.twist = MakeTwist(linear, angular);
+  twist_msg.covariance = EKFCovarianceToTwistMessageCovariance(P);
 
   /* publish latest odometry */
   nav_msgs::msg::Odometry odometry;
   odometry.header.stamp = current_time;
-  odometry.header.frame_id = current_unbiased_pose.header.frame_id;
+  odometry.header.frame_id = pose_frame_id;
   odometry.child_frame_id = "base_link";
-  odometry.pose = pose_cov.pose;
-  odometry.twist = twist_cov.twist;
+  odometry.pose = unbiased_pose_msg;
+  odometry.twist = twist_msg;
   pub_odom_->publish(odometry);
 }
 
@@ -512,20 +512,16 @@ void EKFLocalizer::timerCallback()
   const rclcpp::Time stamp = this->now();
 
   const Eigen::Isometry3d ekf_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
-  current_unbiased_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
-
   const Eigen::Isometry3d ekf_biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
-
-  const auto current_biased_pose = MakePoseStamped(ekf_biased_pose, stamp, pose_frame_id_);
+  current_unbiased_pose_ = MakePoseStamped(ekf_pose, stamp, pose_frame_id_);
 
   const Eigen::Vector3d linear(vx, 0, 0);
   const Eigen::Vector3d angular(0, 0, wz);
-  const auto current_twist = MakeTwistStamped(linear, angular, this->now(), "base_link");
 
   /* publish ekf result */
   publishEstimateResult(
-    ekf_.getLatestP(), this->now(),
-    current_unbiased_pose_, current_biased_pose, current_twist, pub_odom_, pub_biased_pose_);
+    ekf_.getLatestP(), this->now(), pose_frame_id_,
+    ekf_pose, ekf_biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
 }
 
 /*
