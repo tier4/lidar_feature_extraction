@@ -202,7 +202,9 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
     InitYawBias(enable_yaw_bias_estimation_, declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
   wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
-  variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_)
+  variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
+  pose_messages_(pose_smoothing_steps_),
+  twist_messages_(twist_smoothing_steps_)
 {
   const double timer_interval = ComputeInterval(default_frequency_);
 
@@ -421,17 +423,9 @@ void EKFLocalizer::timerCallback()
   ekf_.predictWithDelay(x_next, A, Q);
 
   /* pose measurement update */
-  const size_t n_pose_msgs = pose_msgs_.size();
+  const size_t n_pose_msgs = pose_messages_.size();
   for (size_t i = 0; i < n_pose_msgs; ++i) {
-    const auto pose = pose_msgs_.front();
-    const int counter = pose_counters_.front() + 1;
-    pose_msgs_.pop();
-    pose_counters_.pop();
-
-    if (counter < pose_smoothing_steps_) {
-      pose_msgs_.push(pose);
-      pose_counters_.push(counter);
-    }
+    const auto pose = pose_messages_.pop();
 
     CheckFrameId(warning_, pose->header.frame_id, pose_frame_id_);
 
@@ -467,17 +461,9 @@ void EKFLocalizer::timerCallback()
   }
 
   /* twist measurement update */
-  const size_t n_twist_msgs = twist_msgs_.size();
+  const size_t n_twist_msgs = twist_messages_.size();
   for (size_t i = 0; i < n_twist_msgs; ++i) {
-    const auto twist = twist_msgs_.front();
-    const int counter = twist_counters_.front() + 1;
-    twist_msgs_.pop();
-    twist_counters_.pop();
-
-    if (counter < twist_smoothing_steps_) {
-      twist_msgs_.push(twist);
-      twist_counters_.push(counter);
-    }
+    const auto twist = twist_messages_.pop();
 
     CheckFrameId(warning_, twist->header.frame_id, "base_link");
 
@@ -621,8 +607,7 @@ void EKFLocalizer::callbackInitialPose(
 
   updateSimple1DFilters(*initialpose);
 
-  while (!pose_msgs_.empty()) { pose_msgs_.pop(); }
-  while (!pose_counters_.empty()) { pose_counters_.pop(); }
+  pose_messages_.clear();
 }
 
 /*
@@ -631,8 +616,7 @@ void EKFLocalizer::callbackInitialPose(
 void EKFLocalizer::callbackPoseWithCovariance(
   geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
-  pose_msgs_.push(msg);
-  pose_counters_.push(0);
+  pose_messages_.push(msg);
 
   updateSimple1DFilters(*msg);
 }
@@ -643,8 +627,7 @@ void EKFLocalizer::callbackPoseWithCovariance(
 void EKFLocalizer::callbackTwistWithCovariance(
   geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
-  twist_msgs_.push(msg);
-  twist_counters_.push(0);
+  twist_messages_.push(msg);
 }
 
 void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)

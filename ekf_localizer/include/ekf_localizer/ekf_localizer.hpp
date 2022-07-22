@@ -77,6 +77,52 @@ inline bool mahalanobisGate(
   return SquaredMahalanobis(x, obj_x, cov) <= dist_max * dist_max;
 }
 
+template<typename Message>
+class AgedMessageQueue
+{
+public:
+  AgedMessageQueue(const int max_age) : max_age_(max_age)
+  {
+  }
+
+  size_t size()
+  {
+    return msgs_.size();
+  }
+
+  void push(const Message & msg)
+  {
+    msgs_.push(msg);
+    ages_.push(0);
+  }
+
+  Message pop()
+  {
+    const auto msg = msgs_.front();
+    const int age = ages_.front() + 1;
+    msgs_.pop();
+    ages_.pop();
+
+    if (age < max_age_) {
+      msgs_.push(msg);
+      ages_.push(age);
+    }
+
+    return msg;
+  }
+
+  void clear()
+  {
+    msgs_ = std::queue<Message>();
+    ages_ = std::queue<int>();
+  }
+
+private:
+  const int max_age_;
+  std::queue<Message> msgs_;
+  std::queue<int> ages_;
+};
+
 class Simple1DFilter
 {
 public:
@@ -265,13 +311,8 @@ private:
   const DefaultVariance variance_;
   TimeDelayKalmanFilter ekf_;
 
-  /* for model prediction */
-  std::queue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> pose_msgs_;    //!< @brief current measured pose
-  std::queue<int> pose_counters_;    //!< @brief current measured pose
-
-  /* for model prediction */
-  std::queue<geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr> twist_msgs_;    //!< @brief current measured twist
-  std::queue<int> twist_counters_;    //!< @brief current measured twist
+  AgedMessageQueue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> pose_messages_;
+  AgedMessageQueue<geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr> twist_messages_;
 
   geometry_msgs::msg::PoseStamped current_unbiased_pose_;  //!< @brief current estimated pose
   std::array<double, 36ul> current_pose_covariance_;
