@@ -542,36 +542,36 @@ void EKFLocalizer::timerCallback()
   const size_t n_pose_msgs = pose_msgs_.size();
   for (size_t i = 0; i < n_pose_msgs; ++i) {
     const auto pose = pose_msgs_.front();
-    const int counter = pose_counters_.front();
+    const int counter = pose_counters_.front() + 1;
     pose_msgs_.pop();
     pose_counters_.pop();
+
+    if (counter < pose_smoothing_steps_) {
+      pose_msgs_.push(pose);
+      pose_counters_.push(counter);
+    }
 
     measurementUpdatePose(
       ekf_, this->now(), *pose, warning_, ekf_dt_, extend_state_step_,
       pose_additional_delay_, pose_gate_dist_, pose_smoothing_steps_, pose_frame_id_);
-
-    if (counter + 1 < pose_smoothing_steps_) {
-      pose_msgs_.push(pose);
-      pose_counters_.push(counter + 1);
-    }
   }
 
   /* twist measurement update */
   const size_t n_twist_msgs = twist_msgs_.size();
   for (size_t i = 0; i < n_twist_msgs; ++i) {
     const auto twist = twist_msgs_.front();
-    const int counter = twist_counters_.front();
+    const int counter = twist_counters_.front() + 1;
     twist_msgs_.pop();
     twist_counters_.pop();
+
+    if (counter < twist_smoothing_steps_) {
+      twist_msgs_.push(twist);
+      twist_counters_.push(counter);
+    }
 
     measurementUpdateTwist(
       ekf_, this->now(), *twist, warning_, ekf_dt_, extend_state_step_,
       twist_additional_delay_, twist_gate_dist_, twist_smoothing_steps_);
-
-    if (counter + 1 < twist_smoothing_steps_) {
-      twist_msgs_.push(twist);
-      twist_counters_.push(counter + 1);
-    }
   }
 
   const Vector6d x_est = ekf_.getLatestX();
