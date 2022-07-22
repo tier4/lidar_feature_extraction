@@ -322,12 +322,6 @@ private:
   void updatePredictFrequency();
 
   /**
-   * @brief compute EKF update with pose measurement
-   * @param pose measurement value
-   */
-  void measurementUpdatePose(const geometry_msgs::msg::PoseWithCovarianceStamped & pose);
-
-  /**
    * @brief get transform from frame_id
    */
   bool getTransformFromTF(

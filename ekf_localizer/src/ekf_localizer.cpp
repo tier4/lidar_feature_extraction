@@ -335,6 +335,31 @@ Eigen::Matrix2d TwistObservationCovariance(
   return R;
 }
 
+Eigen::Vector3d PoseMeasurementVector(
+  const TimeDelayKalmanFilter & ekf,
+  const geometry_msgs::msg::Pose & pose,
+  const int delay_step)
+{
+  const double yaw = tf2::getYaw(pose.orientation);
+  const double ekf_yaw = ekf.getXelement(delay_step, 2);
+  const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
+
+  return Eigen::Vector3d(pose.position.x, pose.position.y, yaw_error + ekf_yaw);
+}
+
+Eigen::Vector3d PoseStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
+{
+  return Eigen::Vector3d(
+    ekf.getXelement(delay_step, 0),
+    ekf.getXelement(delay_step, 1),
+    ekf.getXelement(delay_step, 2));
+}
+
+Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
+{
+  return ekf.getLatestP().block(0, 0, 3, 3);
+}
+
 Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 {
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
@@ -380,6 +405,52 @@ void CheckDelayTime(const Warning & warning_, const double delay_time)
 int ComputeDelayStep(const double delay_time, const double dt)
 {
   return std::roundf(std::max(delay_time, 0.) / dt);
+}
+
+void measurementUpdatePose(
+  TimeDelayKalmanFilter & ekf_,
+  const rclcpp::Time & current_time,
+  const geometry_msgs::msg::PoseWithCovarianceStamped & pose,
+  const Warning & warning_,
+  const double ekf_dt_,
+  const int extend_state_step_,
+  const double pose_additional_delay_,
+  const double pose_gate_dist_,
+  const int pose_smoothing_steps_,
+  const std::string & pose_frame_id_)
+{
+  CheckFrameId(warning_, pose.header.frame_id, pose_frame_id_);
+
+  /* Calculate delay step */
+  const double delay_time = ComputeDelayTime(
+    current_time, pose.header.stamp, pose_additional_delay_);
+  CheckDelayTime(warning_, delay_time);
+
+  const int delay_step = ComputeDelayStep(delay_time, ekf_dt_);
+  if (delay_step >= extend_state_step_) {
+    ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
+    return;
+  }
+
+  const Eigen::Vector3d y = PoseMeasurementVector(ekf_, pose.pose.pose, delay_step);
+  const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
+  const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
+
+  if (HasNan(y) || HasInf(y)) {
+    ShowMeasurementMatrixNanInfWarning(warning_);
+    return;
+  }
+
+  if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
+    ShowMahalanobisGateWarning(warning_);
+    return;
+  }
+
+  const Eigen::Matrix<double, 3, 6> C = PoseObservationModel();
+  const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
+  const Eigen::Matrix3d R = PoseObservationCovariance(covariance, pose_smoothing_steps_);
+
+  ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
 void measurementUpdateTwist(
@@ -475,7 +546,9 @@ void EKFLocalizer::timerCallback()
     pose_msgs_.pop();
     pose_counters_.pop();
 
-    measurementUpdatePose(*pose);
+    measurementUpdatePose(
+      ekf_, this->now(), *pose, warning_, ekf_dt_, extend_state_step_,
+      pose_additional_delay_, pose_gate_dist_, pose_smoothing_steps_, pose_frame_id_);
 
     if (counter + 1 < pose_smoothing_steps_) {
       pose_msgs_.push(pose);
@@ -636,71 +709,6 @@ void EKFLocalizer::callbackTwistWithCovariance(
 {
   twist_msgs_.push(msg);
   twist_counters_.push(0);
-}
-
-Eigen::Vector3d PoseMeasurementVector(
-  const TimeDelayKalmanFilter & ekf,
-  const geometry_msgs::msg::Pose & pose,
-  const int delay_step)
-{
-  const double yaw = tf2::getYaw(pose.orientation);
-  const double ekf_yaw = ekf.getXelement(delay_step, 2);
-  const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
-
-  return Eigen::Vector3d(pose.position.x, pose.position.y, yaw_error + ekf_yaw);
-}
-
-Eigen::Vector3d PoseStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
-{
-  return Eigen::Vector3d(
-    ekf.getXelement(delay_step, 0),
-    ekf.getXelement(delay_step, 1),
-    ekf.getXelement(delay_step, 2));
-}
-
-Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
-{
-  return ekf.getLatestP().block(0, 0, 3, 3);
-}
-
-/*
- * measurementUpdatePose
- */
-void EKFLocalizer::measurementUpdatePose(
-    const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
-{
-  CheckFrameId(warning_, pose.header.frame_id, pose_frame_id_);
-
-  /* Calculate delay step */
-  const double delay_time = ComputeDelayTime(
-    this->now(), pose.header.stamp, pose_additional_delay_);
-  CheckDelayTime(warning_, delay_time);
-
-  const int delay_step = ComputeDelayStep(delay_time, ekf_dt_);
-  if (delay_step >= extend_state_step_) {
-    ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
-    return;
-  }
-
-  const Eigen::Vector3d y = PoseMeasurementVector(ekf_, pose.pose.pose, delay_step);
-  const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
-  const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
-
-  if (HasNan(y) || HasInf(y)) {
-    ShowMeasurementMatrixNanInfWarning(warning_);
-    return;
-  }
-
-  if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
-    ShowMahalanobisGateWarning(warning_);
-    return;
-  }
-
-  const Eigen::Matrix<double, 3, 6> C = PoseObservationModel();
-  const Matrix6d covariance = GetEigenCovariance(pose.pose.covariance);
-  const Eigen::Matrix3d R = PoseObservationCovariance(covariance, pose_smoothing_steps_);
-
-  ekf_.updateWithDelay(y, C, R, delay_step);
 }
 
 void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
