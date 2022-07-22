@@ -114,13 +114,10 @@ void publishEstimateResult(
   const geometry_msgs::msg::PoseStamped & current_biased_pose,
   const geometry_msgs::msg::TwistStamped & current_twist,
   const std::queue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> & pose_msgs_,
-  const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_pose_no_yawbias_,
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_pose_cov_no_yawbias_,
   const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_measured_pose_)
 {
-  /* publish latest pose */
-  pub_pose_no_yawbias_->publish(current_biased_pose);
 
   /* publish latest pose with covariance */
   geometry_msgs::msg::PoseWithCovarianceStamped pose_cov;
@@ -189,8 +186,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   warning_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
   pub_measured_pose_(create_publisher<geometry_msgs::msg::PoseStamped>("debug/measured_pose", 1)),
-  pub_pose_no_yawbias_(
-    create_publisher<geometry_msgs::msg::PoseStamped>("ekf_pose_without_yawbias", 1)),
   pub_pose_cov_no_yawbias_(create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "ekf_pose_with_covariance_without_yawbias", 1)),
   sub_initialpose_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -569,7 +564,7 @@ void EKFLocalizer::timerCallback()
   publishEstimateResult(
     ekf_.getLatestP(), this->now(),
     current_unbiased_pose_, current_biased_pose, current_twist, pose_msgs_,
-    pub_pose_no_yawbias_, pub_odom_, pub_pose_cov_no_yawbias_, pub_measured_pose_);
+    pub_odom_, pub_pose_cov_no_yawbias_, pub_measured_pose_);
 }
 
 /*
