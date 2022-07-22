@@ -208,8 +208,7 @@ private:
   //!< @brief estimated ekf odometry publisher
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_;
   //!< @brief ekf estimated yaw bias publisher
-  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
-    pub_pose_cov_no_yawbias_;
+  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_biased_pose_;
   //!< @brief initial pose subscriber
   const rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_initialpose_;
   //!< @brief measurement pose with covariance subscriber
