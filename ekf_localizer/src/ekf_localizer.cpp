@@ -213,9 +213,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   timer_control_ = rclcpp::create_timer(
     this, get_clock(), DoubleToNanoSeconds(timer_interval),
     std::bind(&EKFLocalizer::timerCallback, this));
-  timer_tf_ = rclcpp::create_timer(
-    this, get_clock(), rclcpp::Rate(tf_rate_).period(),
-    std::bind(&EKFLocalizer::timerTFCallback, this));
 
   z_filter_.set_proc_stddev(1.0);
   roll_filter_.set_proc_stddev(0.1);
@@ -542,32 +539,16 @@ void EKFLocalizer::timerCallback()
 
   const Eigen::Isometry3d unbiased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
   const Eigen::Isometry3d biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
-  current_unbiased_pose_ = MakePoseStamped(unbiased_pose, this->now(), pose_frame_id_);
 
   const Eigen::Vector3d linear(vx, 0, 0);
   const Eigen::Vector3d angular(0, 0, wz);
+
+  tf_br_->sendTransform(MakeTransformStamped(unbiased_pose, this->now(), pose_frame_id_, "base_link"));
 
   /* publish ekf result */
   publishEstimateResult(
     ekf_.getLatestP(), this->now(), pose_frame_id_,
     unbiased_pose, biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
-}
-
-/*
- * timerTFCallback
- */
-void EKFLocalizer::timerTFCallback()
-{
-  if (current_unbiased_pose_.header.frame_id == "") {
-    return;
-  }
-
-  const Eigen::Isometry3d pose = GetIsometry3d(current_unbiased_pose_.pose);
-  const std::string frame_id = current_unbiased_pose_.header.frame_id;
-  const std::string child_frame_id = "base_link";
-  const rclcpp::Time stamp = this->now();
-  const auto msg = MakeTransformStamped(pose, stamp, frame_id, child_frame_id);
-  tf_br_->sendTransform(msg);
 }
 
 std::string EraseBeginSlash(const std::string & s)
@@ -627,8 +608,6 @@ void EKFLocalizer::callbackInitialPose(
   const Eigen::Vector3d t = initial_position + translation;
   const double initial_yaw = tf2::getYaw(initialpose->pose.pose.orientation);
   const double yaw = tf2::getYaw(transform.transform.rotation);
-
-  current_unbiased_pose_.pose.position.z = t(2);
 
   const Vector6d x = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
 

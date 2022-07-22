@@ -267,8 +267,6 @@ private:
   //!< @brief last predict time
   std::optional<rclcpp::Time> last_predict_time_;
 
-  //!< @brief timer to send transform
-  rclcpp::TimerBase::SharedPtr timer_tf_;
   //!< @brief tf broadcaster
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_br_;
   //!< @brief  extended kalman filter instance.
@@ -314,7 +312,6 @@ private:
   AgedMessageQueue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> pose_messages_;
   AgedMessageQueue<geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr> twist_messages_;
 
-  geometry_msgs::msg::PoseStamped current_unbiased_pose_;  //!< @brief current estimated pose
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
 
@@ -322,11 +319,6 @@ private:
    * @brief computes update & prediction of EKF for each ekf_dt_[s] time
    */
   void timerCallback();
-
-  /**
-   * @brief publish tf for tf_rate [Hz]
-   */
-  void timerTFCallback();
 
   /**
    * @brief set poseWithCovariance measurement
