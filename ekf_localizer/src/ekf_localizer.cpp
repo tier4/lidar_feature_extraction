@@ -204,8 +204,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
   wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
   variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
-  variances_(variance_.TimeScaledVariances(ekf_dt_)),
-  ekf_(InitEKF(extend_state_step_, variances_(1)))
+  ekf_(InitEKF(extend_state_step_, TimeScaledVariance(yaw_bias_covariance_, ekf_dt_)))
 {
 
   /* convert to continuous to discrete */
@@ -412,13 +411,12 @@ void EKFLocalizer::timerCallback()
   /* update predict frequency with measured timer rate */
   const rclcpp::Time current_time = get_clock()->now();
 
-  ekf_dt_ = interval_.Compute(current_time.seconds());
-  variances_ = variance_.TimeScaledVariances(ekf_dt_);
+  const double dt = interval_.Compute(current_time.seconds());
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
-  const Vector6d x_next = PredictNextState(x_curr, ekf_dt_);
-  const Matrix6d A = MatrixA(x_curr, ekf_dt_);
-  const Matrix6d Q = MatrixQ(variances_);
+  const Vector6d x_next = PredictNextState(x_curr, dt);
+  const Matrix6d A = MatrixA(x_curr, dt);
+  const Matrix6d Q = MatrixQ(variance_.TimeScaledVariances(dt));
 
   ekf_.predictWithDelay(x_next, A, Q);
 
@@ -441,7 +439,7 @@ void EKFLocalizer::timerCallback()
       this->now(), pose->header.stamp, pose_additional_delay_);
     CheckDelayTime(warning_, delay_time);
 
-    const int delay_step = ComputeDelayStep(delay_time, ekf_dt_);
+    const int delay_step = ComputeDelayStep(delay_time, dt);
     if (delay_step >= extend_state_step_) {
       ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
       continue;
@@ -487,7 +485,7 @@ void EKFLocalizer::timerCallback()
       this->now(), twist->header.stamp, twist_additional_delay_);
     CheckDelayTime(warning_, delay_time);
 
-    const int delay_step = ComputeDelayStep(delay_time, ekf_dt_);
+    const int delay_step = ComputeDelayStep(delay_time, dt);
     if (delay_step >= extend_state_step_) {
       ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
       continue;
