@@ -236,8 +236,6 @@ private:
   UpdateInterval interval_;
 
   /* parameters */
-  const double timer_interval_;                    //!< @brief  = 1 / ekf_rate_
-
   const double tf_rate_;                   //!< @brief  tf publish rate
   const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
                                      //!< if true,publish /estimate_yaw_bias

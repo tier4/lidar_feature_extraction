@@ -187,7 +187,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
     std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   default_frequency_(declare_parameter("predict_frequency", 50.0)),
   interval_(default_frequency_),
-  timer_interval_(ComputeInterval(default_frequency_)),
   tf_rate_(declare_parameter("tf_rate", 10.0)),
   enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
@@ -203,13 +202,14 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
     InitYawBias(enable_yaw_bias_estimation_, declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
   wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
-  variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
-  ekf_(InitEKF(extend_state_step_, TimeScaledVariance(yaw_bias_covariance_, timer_interval_)))
+  variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_)
 {
+  const double timer_interval = ComputeInterval(default_frequency_);
 
-  /* convert to continuous to discrete */
+  ekf_ = InitEKF(extend_state_step_, TimeScaledVariance(yaw_bias_covariance_, timer_interval));
+
   timer_control_ = rclcpp::create_timer(
-    this, get_clock(), DoubleToNanoSeconds(timer_interval_),
+    this, get_clock(), DoubleToNanoSeconds(timer_interval),
     std::bind(&EKFLocalizer::timerCallback, this));
   timer_tf_ = rclcpp::create_timer(
     this, get_clock(), rclcpp::Rate(tf_rate_).period(),
