@@ -365,21 +365,57 @@ double ComputeDelayTime(
   return (current_time - message_stamp).seconds() + additional_delay;
 }
 
-void CheckFrameId(
+bool CheckFrameId(
   const Warning & warning_,
   const std::string & frame_id,
   const std::string & expected_frame_id)
 {
-  if (frame_id != expected_frame_id) {
+  const bool good = frame_id == expected_frame_id;
+  if (!good) {
     ShowFrameIdWarning(warning_, frame_id, expected_frame_id);
   }
+  return good;
 }
 
-void CheckDelayTime(const Warning & warning_, const double delay_time)
+bool CheckDelayTime(const Warning & warning_, const double delay_time)
 {
-  if (delay_time < 0.0) {
+  const bool good = delay_time >= 0.0;
+  if (!good) {
     ShowDelayTimeWarning(warning_, delay_time);
   }
+  return good;
+}
+
+bool CheckDelayStep(const Warning & warning_, const int delay_step, const int max_delay_step)
+{
+  const bool good = delay_step < max_delay_step;
+  if (!good) {
+    ShowDelayStepWarning(warning_, delay_step, max_delay_step);
+  }
+  return good;
+}
+
+bool CheckMeasurementMatrixNanInf(const Warning & warning_, const Eigen::MatrixXd & M) {
+  const bool good = !HasNan(M) && !HasInf(M);
+
+  if (!good) {
+    ShowMeasurementMatrixNanInfWarning(warning_);
+  }
+  return good;
+}
+
+bool CheckMahalanobisGate(
+  const Warning & warning_,
+  const double & dist_max,
+  const Eigen::MatrixXd & x1,
+  const Eigen::MatrixXd & x2,
+  const Eigen::MatrixXd & cov)
+{
+  const bool good = mahalanobisGate(dist_max, x1, x2, cov);
+  if (!good) {
+    ShowMahalanobisGateWarning(warning_);
+  }
+  return good;
 }
 
 int ComputeDelayStep(const double delay_time, const double dt)
@@ -434,8 +470,7 @@ void EKFLocalizer::timerCallback()
     CheckDelayTime(warning_, delay_time);
 
     const int delay_step = ComputeDelayStep(delay_time, dt);
-    if (delay_step >= extend_state_step_) {
-      ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
+    if (!CheckDelayStep(warning_, delay_step, extend_state_step_)) {
       continue;
     }
 
@@ -443,13 +478,11 @@ void EKFLocalizer::timerCallback()
     const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
     const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
 
-    if (HasNan(y) || HasInf(y)) {
-      ShowMeasurementMatrixNanInfWarning(warning_);
+    if (!CheckMeasurementMatrixNanInf(warning_, y)) {
       continue;
     }
 
-    if (!mahalanobisGate(pose_gate_dist_, y_ekf, y, P_y)) {
-      ShowMahalanobisGateWarning(warning_);
+    if (!CheckMahalanobisGate(warning_, pose_gate_dist_, y_ekf, y, P_y)) {
       continue;
     }
 
@@ -472,8 +505,7 @@ void EKFLocalizer::timerCallback()
     CheckDelayTime(warning_, delay_time);
 
     const int delay_step = ComputeDelayStep(delay_time, dt);
-    if (delay_step >= extend_state_step_) {
-      ShowDelayStepWarning(warning_, delay_step, extend_state_step_);
+    if (!CheckDelayStep(warning_, delay_step, extend_state_step_)) {
       continue;
     }
 
@@ -481,13 +513,11 @@ void EKFLocalizer::timerCallback()
     const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
     const Eigen::Matrix2d P_y = TwistCovariance(ekf_);
 
-    if (HasNan(y) || HasInf(y)) {
-      ShowMeasurementMatrixNanInfWarning(warning_);
+    if (!CheckMeasurementMatrixNanInf(warning_, y)) {
       continue;
     }
 
-    if (!mahalanobisGate(twist_gate_dist_, y_ekf, y, P_y)) {
-      ShowMahalanobisGateWarning(warning_);
+    if (!CheckMahalanobisGate(warning_, twist_gate_dist_, y_ekf, y, P_y)) {
       continue;
     }
 
