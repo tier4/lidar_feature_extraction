@@ -33,6 +33,9 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
+namespace rotationlib
+{
+
 Eigen::Quaterniond FromWXYZ(const Eigen::Vector4d & wxyz)
 {
   return Eigen::Quaterniond(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
@@ -85,5 +88,7 @@ Eigen::Quaterniond RPYToQuaternionXYZ(const double roll, const double pitch, con
     Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
   return q;
 }
+
+}  // namespace rotationlib
 
 #endif  // ROTATIONLIB__QUATERNION_HPP_

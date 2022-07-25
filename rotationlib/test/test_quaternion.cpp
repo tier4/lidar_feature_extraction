@@ -31,6 +31,10 @@
 
 #include "rotationlib/quaternion.hpp"
 
+
+using namespace rotationlib;
+
+
 TEST(Quaternion, LeftMultiplicationMatrix)
 {
   const Eigen::Quaterniond q1 = FromWXYZ(Eigen::Vector4d::Random());
