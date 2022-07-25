@@ -39,3 +39,38 @@ TEST(RosMsg, MakePoint)
   EXPECT_EQ(q.y, 4);
   EXPECT_EQ(q.z, 6);
 }
+
+TEST(RosMsg, MakePoseStamped)
+{
+  const double tx = 1.0;
+  const double ty = 2.0;
+  const double tz = 3.0;
+  const double qw = 1. / std::sqrt(2.);
+  const double qx = 0.0;
+  const double qy = 1. / std::sqrt(2.);
+  const double qz = 0.0;
+
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.translation() = Eigen::Vector3d(tx, ty, tz);
+  pose.linear() = Eigen::Quaterniond(qw, qx, qy, qz).toRotationMatrix();
+
+  const int32_t seconds = 10000;
+  const uint32_t nanoseconds = 20000;
+  const rclcpp::Time stamp(seconds, nanoseconds);
+  const std::string frame_id = "map";
+
+  const auto msg = MakePoseStamped(pose, stamp, frame_id);
+
+  EXPECT_EQ(msg.pose.position.x, tx);
+  EXPECT_EQ(msg.pose.position.y, ty);
+  EXPECT_EQ(msg.pose.position.z, tz);
+
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(msg.pose.orientation.w, qw, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.x, qx, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.y, qy, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.z, qz, tolerance);
+
+  EXPECT_EQ(msg.header.stamp.sec, seconds);
+  EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+}

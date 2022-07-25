@@ -45,6 +45,17 @@
 
 #include <string>
 
+
+geometry_msgs::msg::PoseStamped MakePoseStamped(
+  const Eigen::Isometry3d & pose, const rclcpp::Time & stamp, const std::string & frame_id)
+{
+  geometry_msgs::msg::PoseStamped pose_stamped_msg;
+  pose_stamped_msg.pose = tf2::toMsg(pose);
+  pose_stamped_msg.header.stamp = stamp;
+  pose_stamped_msg.header.frame_id = frame_id;
+  return pose_stamped_msg;
+}
+
 template<typename T>
 sensor_msgs::msg::PointCloud2 ToRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
 {

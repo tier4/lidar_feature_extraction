@@ -45,17 +45,6 @@
 #include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
-
-geometry_msgs::msg::PoseStamped MakePoseStamped(
-  const Eigen::Isometry3d & pose, const rclcpp::Time & stamp, const std::string & frame_id)
-{
-  geometry_msgs::msg::PoseStamped pose_stamped_msg;
-  pose_stamped_msg.pose = tf2::toMsg(pose);
-  pose_stamped_msg.header.stamp = stamp;
-  pose_stamped_msg.header.frame_id = frame_id;
-  return pose_stamped_msg;
-}
-
 rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
 {
   rclcpp::CallbackGroup::SharedPtr main_callback_group;
