@@ -27,6 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <gmock/gmock.h>
+#include <tf2/LinearMath/Quaternion.h>
+
 #include "lidar_feature_library/eigen.hpp"
 
 

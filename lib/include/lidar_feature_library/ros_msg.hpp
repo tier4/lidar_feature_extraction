@@ -42,18 +42,36 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/point_field.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/pose_with_covariance.hpp>
 
 #include <string>
 
 
-geometry_msgs::msg::PoseStamped MakePoseStamped(
-  const Eigen::Isometry3d & pose, const rclcpp::Time & stamp, const std::string & frame_id)
+using Matrix6d = Eigen::Matrix<double, 6, 6>;
+
+using RowMatrix6d = Eigen::Matrix<double, 6, 6, Eigen::RowMajor>;
+
+Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance)
 {
-  geometry_msgs::msg::PoseStamped pose_stamped_msg;
-  pose_stamped_msg.pose = tf2::toMsg(pose);
-  pose_stamped_msg.header.stamp = stamp;
-  pose_stamped_msg.header.frame_id = frame_id;
-  return pose_stamped_msg;
+  Matrix6d matrix;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      matrix(i, j) = covariance[i * 6 + j];
+    }
+  }
+  return matrix;
+}
+
+std::array<double, 36> FromEigenCovariance(const RowMatrix6d & covariance)
+{
+  std::array<double, 36> array;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      array[i * 6 + j] = covariance(i, j);
+    }
+  }
+  return array;
 }
 
 template<typename T>
@@ -91,6 +109,7 @@ Eigen::Isometry3d GetIsometry3d(const geometry_msgs::msg::Pose & pose)
   return transform;
 }
 
+// TODO(IshitaTakeshi) Duplicate of MakeTransformStamped. Remove this
 geometry_msgs::msg::TransformStamped EigenToTransform(
   const Eigen::Isometry3d & eigen_transform,
   const rclcpp::Time & stamp,
@@ -104,6 +123,44 @@ geometry_msgs::msg::TransformStamped EigenToTransform(
   return transform;
 }
 
+geometry_msgs::msg::Pose MakePose(const Eigen::Isometry3d & pose)
+{
+  return tf2::toMsg(pose);
+}
+
+geometry_msgs::msg::PoseStamped MakePoseStamped(
+  const Eigen::Isometry3d & pose, const rclcpp::Time & stamp, const std::string & frame_id)
+{
+  geometry_msgs::msg::PoseStamped pose_stamped_msg;
+  pose_stamped_msg.pose = MakePose(pose);
+  pose_stamped_msg.header.stamp = stamp;
+  pose_stamped_msg.header.frame_id = frame_id;
+  return pose_stamped_msg;
+}
+
+geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
+  const Eigen::Isometry3d & pose,
+  const RowMatrix6d & covariance)
+{
+  geometry_msgs::msg::PoseWithCovariance msg;
+  msg.pose = MakePose(pose);
+  msg.covariance = FromEigenCovariance(covariance);
+  return msg;
+}
+
+geometry_msgs::msg::TransformStamped MakeTransformStamped(
+  const Eigen::Isometry3d & transform,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id,
+  const std::string & child_frame_id)
+{
+  geometry_msgs::msg::TransformStamped msg = tf2::eigenToTransform(transform);
+  msg.header.stamp = stamp;
+  msg.header.frame_id = frame_id;
+  msg.child_frame_id = child_frame_id;
+  return msg;
+}
+
 geometry_msgs::msg::Point MakePoint(const Eigen::Vector3d & p)
 {
   geometry_msgs::msg::Point q;
@@ -111,6 +168,53 @@ geometry_msgs::msg::Point MakePoint(const Eigen::Vector3d & p)
   q.y = p(1);
   q.z = p(2);
   return q;
+}
+
+Eigen::Vector3d ToVector3d(const geometry_msgs::msg::Point & position)
+{
+  return Eigen::Vector3d(position.x, position.y, position.z);
+}
+
+Eigen::Vector3d ToVector3d(const geometry_msgs::msg::Vector3 & translation)
+{
+  return Eigen::Vector3d(translation.x, translation.y, translation.z);
+}
+
+Eigen::Quaterniond ToQuaterniond(const geometry_msgs::msg::Quaternion & rotation)
+{
+  return Eigen::Quaterniond(rotation.w, rotation.x, rotation.y, rotation.z);
+}
+
+geometry_msgs::msg::Vector3 MakeVector3(const Eigen::Vector3d & v)
+{
+  geometry_msgs::msg::Vector3 msg;
+  msg.x = v(0);
+  msg.y = v(1);
+  msg.z = v(2);
+  return msg;
+}
+
+geometry_msgs::msg::Twist MakeTwist(
+  const Eigen::Vector3d & linear,
+  const Eigen::Vector3d & angular)
+{
+  geometry_msgs::msg::Twist msg;
+  msg.linear = MakeVector3(linear);
+  msg.angular = MakeVector3(angular);
+  return msg;
+}
+
+geometry_msgs::msg::TwistStamped MakeTwistStamped(
+  const Eigen::Vector3d & linear,
+  const Eigen::Vector3d & angular,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id)
+{
+  geometry_msgs::msg::TwistStamped msg;
+  msg.twist = MakeTwist(linear, angular);
+  msg.header.stamp = stamp;
+  msg.header.frame_id = frame_id;
+  return msg;
 }
 
 visualization_msgs::msg::Marker InitLines(const rclcpp::Time & stamp, const std::string & frame_id)

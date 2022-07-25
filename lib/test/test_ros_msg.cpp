@@ -73,4 +73,208 @@ TEST(RosMsg, MakePoseStamped)
 
   EXPECT_EQ(msg.header.stamp.sec, seconds);
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+
+  EXPECT_EQ(msg.header.frame_id, frame_id);
+}
+
+TEST(RosMsg, MakeTransformStamped)
+{
+  const double tx = 1.0;
+  const double ty = 2.0;
+  const double tz = 3.0;
+  const double qw = 1. / std::sqrt(2.);
+  const double qx = 0.0;
+  const double qy = 1. / std::sqrt(2.);
+  const double qz = 0.0;
+
+  Eigen::Isometry3d transform = Eigen::Isometry3d::Identity();
+  transform.translation() = Eigen::Vector3d(tx, ty, tz);
+  transform.linear() = Eigen::Quaterniond(qw, qx, qy, qz).toRotationMatrix();
+
+  const int32_t seconds = 10000;
+  const uint32_t nanoseconds = 20000;
+  const rclcpp::Time stamp(seconds, nanoseconds);
+  const std::string frame_id = "map";
+  const std::string child_frame_id = "base_link";
+
+  const auto msg = MakeTransformStamped(transform, stamp, frame_id, child_frame_id);
+
+  EXPECT_EQ(msg.transform.translation.x, tx);
+  EXPECT_EQ(msg.transform.translation.y, ty);
+  EXPECT_EQ(msg.transform.translation.z, tz);
+
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(msg.transform.rotation.w, qw, tolerance);
+  EXPECT_NEAR(msg.transform.rotation.x, qx, tolerance);
+  EXPECT_NEAR(msg.transform.rotation.y, qy, tolerance);
+  EXPECT_NEAR(msg.transform.rotation.z, qz, tolerance);
+
+  EXPECT_EQ(msg.header.stamp.sec, seconds);
+  EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+
+  EXPECT_EQ(msg.header.frame_id, frame_id);
+
+  EXPECT_EQ(msg.child_frame_id, child_frame_id);
+}
+
+TEST(RosMsg, Vector3ToVector3d)
+{
+  const double x = 1.;
+  const double y = 2.;
+  const double z = 3.;
+
+  geometry_msgs::msg::Vector3 msg;
+  msg.x = x;
+  msg.y = y;
+  msg.z = z;
+
+  const Eigen::Vector3d t = ToVector3d(msg);
+  EXPECT_EQ(t.x(), x);
+  EXPECT_EQ(t.y(), y);
+  EXPECT_EQ(t.z(), z);
+}
+
+TEST(RosMsg, PointToVector3d)
+{
+  const double x = 1.;
+  const double y = 2.;
+  const double z = 3.;
+
+  geometry_msgs::msg::Point msg;
+  msg.x = x;
+  msg.y = y;
+  msg.z = z;
+
+  const Eigen::Vector3d t = ToVector3d(msg);
+  EXPECT_EQ(t.x(), x);
+  EXPECT_EQ(t.y(), y);
+  EXPECT_EQ(t.z(), z);
+}
+
+TEST(RosMsg, ToQuaterniond)
+{
+  const double qw = std::sqrt(2. / 3.);
+  const double qx = std::sqrt(1. / 3.);
+  const double qy = 0.;
+  const double qz = 0.;
+
+  geometry_msgs::msg::Quaternion msg;
+  msg.w = qw;
+  msg.x = qx;
+  msg.y = qy;
+  msg.z = qz;
+
+  const Eigen::Quaterniond q = ToQuaterniond(msg);
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(q.w(), qw, tolerance);
+  EXPECT_NEAR(q.x(), qx, tolerance);
+  EXPECT_NEAR(q.y(), qy, tolerance);
+  EXPECT_NEAR(q.z(), qz, tolerance);
+}
+
+TEST(RosMsg, MakeVector3)
+{
+  const double x = 1.;
+  const double y = 2.;
+  const double z = 3.;
+  const Eigen::Vector3d v(x, y, z);
+  const geometry_msgs::msg::Vector3 msg = MakeVector3(v);
+  EXPECT_EQ(msg.x, x);
+  EXPECT_EQ(msg.y, y);
+  EXPECT_EQ(msg.z, z);
+}
+
+TEST(RosMsg, MakeTwistStamped)
+{
+  const double lx = 1.;
+  const double ly = 2.;
+  const double lz = 3.;
+  const double ax = 0.1;
+  const double ay = 0.2;
+  const double az = 0.3;
+  const Eigen::Vector3d linear(lx, ly, lz);
+  const Eigen::Vector3d angular(ax, ay, az);
+
+  const int32_t seconds = 10000;
+  const uint32_t nanoseconds = 20000;
+  const rclcpp::Time stamp(seconds, nanoseconds);
+  const std::string frame_id = "map";
+
+  const auto msg = MakeTwistStamped(linear, angular, stamp, frame_id);
+
+  EXPECT_EQ(msg.twist.linear.x, lx);
+  EXPECT_EQ(msg.twist.linear.y, ly);
+  EXPECT_EQ(msg.twist.linear.z, lz);
+
+  EXPECT_EQ(msg.twist.angular.x, ax);
+  EXPECT_EQ(msg.twist.angular.y, ay);
+  EXPECT_EQ(msg.twist.angular.z, az);
+
+  EXPECT_EQ(msg.header.stamp.sec, seconds);
+  EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
+
+  EXPECT_EQ(msg.header.frame_id, frame_id);
+}
+
+TEST(RosMsg, FromEigenCovariance)
+{
+  Eigen::Matrix<double, 6, 6> covariance;
+  covariance <<
+     0,  1,  2,  3,  4,  5,
+     6,  7,  8,  9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35;
+
+  const std::array<double, 36> array = FromEigenCovariance(covariance);
+  std::array<double, 36> expected = {
+     0,  1,  2,  3,  4,  5,
+     6,  7,  8,  9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35
+  };
+
+  for (size_t i = 0; i < 36; i++) {
+    EXPECT_EQ(array[i], expected[i]);
+  }
+}
+
+TEST(RosMsg, MakePoseWithCovariance)
+{
+  const double tx = 1.;
+  const double ty = 2.;
+  const double tz = 3.;
+
+  const double qw = std::sqrt(2. / 3.);
+  const double qx = std::sqrt(1. / 3.);
+  const double qy = 0.;
+  const double qz = 0.;
+
+  Eigen::Isometry3d pose;
+  pose.linear() = Eigen::Quaterniond(qw, qx, qy, qz).matrix();
+  pose.translation() = Eigen::Vector3d(tx, ty, tz);
+
+  Eigen::Matrix<double, 6, 6> covariance;
+  covariance <<
+     0,  1,  2,  3,  4,  5,
+     6,  7,  8,  9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35;
+
+  const auto msg = MakePoseWithCovariance(pose, covariance);
+
+  EXPECT_EQ(msg.pose.position.x, tx);
+  EXPECT_EQ(msg.pose.position.y, ty);
+  EXPECT_EQ(msg.pose.position.z, tz);
+
+  const double tolerance = 1e-6;
+  EXPECT_NEAR(msg.pose.orientation.w, qw, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.x, qx, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.y, qy, tolerance);
+  EXPECT_NEAR(msg.pose.orientation.z, qz, tolerance);
 }
