@@ -48,3 +48,27 @@ TEST(Quaternion, RightMultiplicationMatrix)
   const Eigen::Vector4d q4 = RightMultiplicationMatrix(q2) * ToWXYZ(q1);
   EXPECT_THAT((q3 - q4).norm(), testing::Le(1e-4));
 }
+
+TEST(Eigen, RPYToQuaternionXYZ)
+{
+  const double roll = 0.1;
+  const double pitch = 0.2;
+  const double yaw = 0.3;
+
+  // obtained from python
+  // >>> from scipy.spatial.transform import Rotation
+  // >>> [x, y, z, w] = Rotation.from_euler('xyz', [0.1, 0.2, 0.3]).as_quat()
+
+  const double w = 0.9833474432563558;
+  const double x = 0.034270798550482096;
+  const double y = 0.10602051106179562;
+  const double z = 0.1435721750273919;
+
+  const Eigen::Quaterniond q = RPYToQuaternionXYZ(roll, pitch, yaw);
+
+  const double tolerance = 1e-8;
+  EXPECT_NEAR(q.w(), w, tolerance);
+  EXPECT_NEAR(q.x(), x, tolerance);
+  EXPECT_NEAR(q.y(), y, tolerance);
+  EXPECT_NEAR(q.z(), z, tolerance);
+}
