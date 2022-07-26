@@ -26,25 +26,32 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-
-#include <Eigen/Core>
 
 #include <vector>
 
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_localization/jacobian.hpp"
 
 
 void FillJacobianRow(
   Eigen::MatrixXd & J,
   const int i,
   const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+  const Eigen::Vector3d & coeff)
+{
+  J.block<1, 4>(i, 0) = coeff.transpose() * drpdq;
+  J.block<1, 3>(i, 4) = coeff;
+}
 
 Eigen::MatrixXd MakeJacobian(
   const std::vector<Eigen::Vector3d> & points,
   const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+  const Eigen::Quaterniond & q)
+{
+  assert(points.size() == coeffs.size());
+  Eigen::MatrixXd J(points.size(), 7);
+  for (unsigned int i = 0; i < points.size(); i++) {
+    const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, points.at(i));
+    FillJacobianRow(J, i, drpdq, coeffs.at(i));
+  }
+  return J;
+}

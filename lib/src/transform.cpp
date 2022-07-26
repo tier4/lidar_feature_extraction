@@ -26,25 +26,26 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
 
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_library/transform.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
+{
+  assert(std::abs(q.norm() - 1.0) < 1e-6);
+  Eigen::Isometry3d transform;
+  transform.linear() = q.toRotationMatrix();
+  transform.translation() = t;
+  return transform;
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+Eigen::VectorXd TransformXYZ(const Eigen::Isometry3d & transform, const Eigen::VectorXd & p0)
+{
+  assert(p0.size() >= 3);
+  const size_t d = p0.size();
+  Eigen::VectorXd p1(d);
+  Eigen::Vector3d head = p0.head(3);
+  p1.head(3) = transform * head;
+  p1.tail(d - 3) = p0.tail(d - 3);
+  return p1;
+}

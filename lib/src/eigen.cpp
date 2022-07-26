@@ -26,25 +26,32 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
 
-#include <Eigen/Core>
+#include "lidar_feature_library/eigen.hpp"
 
-#include <vector>
+Eigen::VectorXd VectorToEigen(const std::vector<double> & values)
+{
+  Eigen::VectorXd v(values.size());
+  for (unsigned int i = 0; i < values.size(); i++) {
+    v(i) = values[i];
+  }
+  return v;
+}
 
-#include "rotationlib/jacobian/quaternion.hpp"
+std::string EigenToString(const Eigen::MatrixXd & matrix)
+{
+  std::stringstream ss;
+  ss << matrix;
+  return ss.str();
+}
 
-
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
-
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+Eigen::MatrixXd GetRows(
+  const Eigen::MatrixXd & matrix,
+  const std::vector<std::uint64_t> & indices)
+{
+  Eigen::MatrixXd A(indices.size(), matrix.cols());
+  for (const auto & [i, index] : ranges::views::enumerate(indices)) {
+    A.row(i) = matrix.row(index);
+  }
+  return A;
+}

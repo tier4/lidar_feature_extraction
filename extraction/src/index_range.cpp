@@ -26,25 +26,54 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
 
-#include <Eigen/Core>
+#include "lidar_feature_extraction/index_range.hpp"
 
-#include <vector>
+IndexRange::IndexRange(const int start_index, const int end_index, const int n_blocks)
+: start_index_(start_index), end_index_(end_index), n_blocks_(n_blocks)
+{
+  if (end_index - start_index < n_blocks) {
+    auto s = fmt::format(
+      "end_index - start_index (which is {}) cannot be smaller than n_blocks (which is {}",
+      end_index - start_index, n_blocks);
+    throw std::invalid_argument(s);
+  }
+}
 
-#include "rotationlib/jacobian/quaternion.hpp"
+int IndexRange::NBlocks() const
+{
+  return n_blocks_;
+}
 
+int IndexRange::Begin(const int j) const
+{
+  ThrowExceptionIfOutOfRange(j);
+  return this->Boundary(j);
+}
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+int IndexRange::End(const int j) const
+{
+  ThrowExceptionIfOutOfRange(j);
+  return this->Boundary(j + 1);
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
+int IndexRange::Boundary(const int j) const
+{
+  const double s = static_cast<double>(start_index_);
+  const double e = static_cast<double>(end_index_);
+  const double n = static_cast<double>(n_blocks_);
+  return static_cast<int>(s * (1. - j / n) + e * j / n);
+}
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+void IndexRange::ThrowExceptionIfOutOfRange(const int j) const
+{
+  if (j >= n_blocks_) {
+    auto s = RangeMessageLargerThanOrEqualTo("j", "n_blocks", j, n_blocks_);
+    throw std::out_of_range(s);
+  }
+
+  if (j < 0) {
+    auto s = RangeMessageSmallerThan("j", "0", j, 0);
+    throw std::out_of_range(s);
+  }
+}

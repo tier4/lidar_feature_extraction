@@ -53,7 +53,7 @@
 #include "lidar_feature_library/point_type.hpp"
 
 
-std::vector<PointLabel> InitLabels(const int size)
+inline std::vector<PointLabel> InitLabels(const int size)
 {
   return std::vector<PointLabel>(size, PointLabel::Default);
 }

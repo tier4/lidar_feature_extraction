@@ -31,11 +31,6 @@
 
 #include <Eigen/Eigenvalues>
 
-bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1)
-{
-  const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(C);
-  const Eigen::VectorXd eigenvalues = es.eigenvalues();
-  return (eigenvalues.array().abs() < threshold).any();
-}
+bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold = 0.1);
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__DEGENERATE_HPP_

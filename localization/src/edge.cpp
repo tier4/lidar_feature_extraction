@@ -26,25 +26,59 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+#include <tuple>
 
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_localization/edge.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+Eigen::VectorXd Center(const Eigen::MatrixXd & X)
+{
+  return X.colwise().mean();
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
+Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X)
+{
+  const Eigen::MatrixXd D = X.rowwise() - Center(X).transpose();
+  return D.transpose() * D / X.rows();
+}
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+Eigen::Vector3d TripletCross(
+  const Eigen::Vector3d & p0,
+  const Eigen::Vector3d & p1,
+  const Eigen::Vector3d & p2)
+{
+  return (p2 - p1).cross((p0 - p1).cross(p0 - p2));
+}
+
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Matrix3d & C)
+{
+  const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(C);
+  return {solver.eigenvalues(), solver.eigenvectors()};
+}
+
+Eigen::Matrix<double, 3, 7> MakeEdgeJacobianRow(
+  const Eigen::Quaterniond & q,
+  const Eigen::Vector3d & p0,
+  const Eigen::Vector3d & p1,
+  const Eigen::Vector3d & p2)
+{
+  const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, p0);
+  const Eigen::Matrix3d K = rotationlib::Hat(p2 - p1);
+  return (Eigen::Matrix<double, 3, 7>() << K * drpdq, K).finished();
+}
+
+Eigen::Vector3d MakeEdgeResidual(
+  const Eigen::Isometry3d & transform,
+  const Eigen::Vector3d & p0,
+  const Eigen::Vector3d & p1,
+  const Eigen::Vector3d & p2)
+{
+  const Eigen::Vector3d p = transform * p0;
+  return (p - p1).cross(p - p2);
+}
+
+Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix)
+{
+  const int rows = matrix.rows();
+  return matrix.block(0, 0, rows, 3);
+}

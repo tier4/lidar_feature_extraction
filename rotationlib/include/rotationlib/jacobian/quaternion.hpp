@@ -37,24 +37,7 @@
 namespace rotationlib
 {
 
-Eigen::Matrix<double, 3, 4> DRpDq(const Eigen::Quaterniond & q, const Eigen::Vector3d & p)
-{
-  // Sola, Joan.
-  // "Quaternion kinematics for the error-state Kalman filter."
-  // arXiv preprint arXiv:1711.02508 (2017).
-  // Equation 174
-  const Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
-  const Eigen::Matrix3d K = rotationlib::Hat(p);
-
-  const double w = q.w();
-  const Eigen::Vector3d v = q.vec();
-
-  Eigen::Matrix<double, 3, 4> half_j;
-  half_j.col(0) = w * p + v.cross(p);
-  half_j.rightCols(3) = v.dot(p) * I + v * p.transpose() - p * v.transpose() - w * K;
-
-  return 2. * half_j;
-}
+Eigen::Matrix<double, 3, 4> DRpDq(const Eigen::Quaterniond & q, const Eigen::Vector3d & p);
 
 }  // namespace rotationlib
 

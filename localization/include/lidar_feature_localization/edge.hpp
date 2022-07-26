@@ -44,63 +44,36 @@
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/pointcloud_to_matrix.hpp"
 
-Eigen::VectorXd Center(const Eigen::MatrixXd & X)
-{
-  return X.colwise().mean();
-}
+Eigen::VectorXd Center(const Eigen::MatrixXd & X);
 
-Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X)
-{
-  const Eigen::MatrixXd D = X.rowwise() - Center(X).transpose();
-  return D.transpose() * D / X.rows();
-}
+Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X);
 
 Eigen::Vector3d TripletCross(
   const Eigen::Vector3d & p0,
   const Eigen::Vector3d & p1,
-  const Eigen::Vector3d & p2)
-{
-  return (p2 - p1).cross((p0 - p1).cross(p0 - p2));
-}
+  const Eigen::Vector3d & p2);
 
-std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Matrix3d & C)
-{
-  const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(C);
-  return {solver.eigenvalues(), solver.eigenvectors()};
-}
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Matrix3d & C);
 
 Eigen::Matrix<double, 3, 7> MakeEdgeJacobianRow(
   const Eigen::Quaterniond & q,
   const Eigen::Vector3d & p0,
   const Eigen::Vector3d & p1,
-  const Eigen::Vector3d & p2)
-{
-  const Eigen::Matrix<double, 3, 4> drpdq = rotationlib::DRpDq(q, p0);
-  const Eigen::Matrix3d K = rotationlib::Hat(p2 - p1);
-  return (Eigen::Matrix<double, 3, 7>() << K * drpdq, K).finished();
-}
+  const Eigen::Vector3d & p2);
 
 Eigen::Vector3d MakeEdgeResidual(
   const Eigen::Isometry3d & transform,
   const Eigen::Vector3d & p0,
   const Eigen::Vector3d & p1,
-  const Eigen::Vector3d & p2)
-{
-  const Eigen::Vector3d p = transform * p0;
-  return (p - p1).cross(p - p2);
-}
+  const Eigen::Vector3d & p2);
+
+Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix);
 
 template<typename PointToVector, typename PointType>
 KDTreeEigen MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
 {
   const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
   return KDTreeEigen(matrix, 10);
-}
-
-Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix)
-{
-  const int rows = matrix.rows();
-  return matrix.block(0, 0, rows, 3);
 }
 
 template<typename PointToVector, typename PointType>

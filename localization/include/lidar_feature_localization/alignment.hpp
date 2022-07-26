@@ -40,34 +40,12 @@
 
 Eigen::MatrixXd MakeJacobian(
   const Eigen::Quaterniond & q,
-  const Eigen::MatrixXd & points)
-{
-  Eigen::MatrixXd J(3 * points.rows(), 7);
-  for (unsigned int i = 0; i < points.rows(); i++) {
-    J.block<3, 4>(3 * i, 0) = rotationlib::DRpDq(q, points.row(i));
-    J.block<3, 3>(3 * i, 4) = Eigen::Matrix3d::Identity();
-  }
-  return J;
-}
+  const Eigen::MatrixXd & points);
 
 Eigen::VectorXd MakeResidual(
   const Eigen::Isometry3d & point_to_map,
   const Eigen::MatrixXd & source_points,
-  const Eigen::MatrixXd & target_points)
-{
-  assert(source_points.rows() == target_points.rows());
-  assert(source_points.cols() == target_points.cols());
-
-  Eigen::VectorXd r(3 * source_points.rows());
-  for (unsigned int i = 0; i < source_points.rows(); i++) {
-    const Eigen::Vector3d x = source_points.row(i);
-    const Eigen::Vector3d y = target_points.row(i);
-    r.segment(3 * i, 3) = point_to_map * x - y;
-  }
-  return r;
-}
-
-using Points = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
+  const Eigen::MatrixXd & target_points);
 
 class AlignmentProblem
 {
@@ -75,14 +53,9 @@ public:
   AlignmentProblem() {}
 
   std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
-  Make(const Points & points, const Eigen::Isometry3d & point_to_map) const
-  {
-    const Eigen::Quaterniond q(point_to_map.rotation());
-    const auto & [source_points, target_points] = points;
-    const Eigen::MatrixXd J = MakeJacobian(q, source_points);
-    const Eigen::VectorXd r = MakeResidual(point_to_map, source_points, target_points);
-    return std::make_tuple(J, r);
-  }
+  Make(
+    const std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> & points,
+    const Eigen::Isometry3d & point_to_map) const;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__ALIGNMENT_HPP_

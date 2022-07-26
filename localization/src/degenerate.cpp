@@ -26,25 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_localization/degenerate.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
-
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+bool IsDegenerate(const Eigen::MatrixXd & C, const double threshold)
+{
+  const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(C);
+  const Eigen::VectorXd eigenvalues = es.eigenvalues();
+  return (eigenvalues.array().abs() < threshold).any();
+}

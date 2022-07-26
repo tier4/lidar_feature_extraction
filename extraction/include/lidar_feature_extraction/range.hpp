@@ -37,7 +37,7 @@
 #include "math.hpp"
 #include "mapped_points.hpp"
 
-bool IsInInclusiveRange(const double v, const double min, const double max)
+inline bool IsInInclusiveRange(const double v, const double min, const double max)
 {
   return min <= v && v <= max;
 }

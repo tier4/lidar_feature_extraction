@@ -58,31 +58,13 @@ Eigen::MatrixXd HorizontalStack(const std::vector<Eigen::Matrix<double, N, M>> &
   return X;
 }
 
-Eigen::VectorXd VectorToEigen(const std::vector<double> & values)
-{
-  Eigen::VectorXd v(values.size());
-  for (unsigned int i = 0; i < values.size(); i++) {
-    v(i) = values[i];
-  }
-  return v;
-}
 
-std::string EigenToString(const Eigen::MatrixXd & matrix)
-{
-  std::stringstream ss;
-  ss << matrix;
-  return ss.str();
-}
+Eigen::VectorXd VectorToEigen(const std::vector<double> & values);
+
+std::string EigenToString(const Eigen::MatrixXd & matrix);
 
 Eigen::MatrixXd GetRows(
   const Eigen::MatrixXd & matrix,
-  const std::vector<std::uint64_t> & indices)
-{
-  Eigen::MatrixXd A(indices.size(), matrix.cols());
-  for (const auto & [i, index] : ranges::views::enumerate(indices)) {
-    A.row(i) = matrix.row(index);
-  }
-  return A;
-}
+  const std::vector<std::uint64_t> & indices);
 
 #endif  // LIDAR_FEATURE_LIBRARY__EIGEN_HPP_

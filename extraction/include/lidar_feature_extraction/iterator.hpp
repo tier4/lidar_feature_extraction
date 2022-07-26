@@ -36,9 +36,6 @@
 template<typename Iterator>
 using ElementType = typename std::iterator_traits<typename Iterator::iterator>::value_type;
 
-std::vector<int> irange(const int size)
-{
-  return ranges::views::ints(0, size) | ranges::to_vector;
-}
+std::vector<int> irange(const int size);
 
 #endif  // LIDAR_FEATURE_EXTRACTION__ITERATOR_HPP_

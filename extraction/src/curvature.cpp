@@ -26,25 +26,25 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
 
-#include <Eigen/Core>
-
+#include <algorithm>
 #include <vector>
 
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_extraction/curvature.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+std::vector<double> MakeWeight(const int padding)
+{
+  assert(padding > 0);
+  std::vector<double> weight(padding * 2 + 1, 1.);
+  weight.at(padding) = -2. * padding;
+  return weight;
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+std::vector<double> CalcCurvature(const std::vector<double> & range, const int padding)
+{
+  const std::vector<double> weight = MakeWeight(padding);
+  auto f = [](const double v) {return v * v;};
+  const auto weighted = Convolution1D(range, weight);
+  return weighted | ranges::views::transform(f) | ranges::to_vector;
+}

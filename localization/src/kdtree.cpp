@@ -26,25 +26,31 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-
-#include <Eigen/Core>
-
+#include <tuple>
 #include <vector>
 
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_localization/kdtree.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+std::tuple<Eigen::MatrixXd, std::vector<double>> KDTreeEigen::NearestKSearch(
+  const Eigen::VectorXd & query, const int n_neighbors) const
+{
+  assert(map_.cols() == query.size());
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
+  std::vector<std::uint64_t> indices(n_neighbors);
+  std::vector<double> distances(n_neighbors);
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+  nanoflann::KNNResultSet<double> result(n_neighbors);
+
+  result.init(&indices[0], &distances[0]);
+  std::vector<double> queryvec(query.size());
+  Eigen::VectorXd::Map(&queryvec[0], query.size()) = query;
+  kdtree_->index->findNeighbors(result, &queryvec[0], nanoflann::SearchParams(10));
+  // kdtree_->query(&query[0], n_neighbors, &indices[0], &distances[0]);
+
+  indices.resize(n_neighbors);
+  distances.resize(n_neighbors);
+
+  const Eigen::MatrixXd X = GetRows(map_, indices);
+  return std::make_tuple(X, distances);
+}

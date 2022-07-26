@@ -26,25 +26,21 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_library/pcl_utils.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v)
+{
+  return pcl::PointXYZ(v(0), v(1), v(2));
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+Eigen::MatrixXd Get(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud,
+  const std::vector<int> & indices)
+{
+  Eigen::MatrixXd A(indices.size(), 3);
+  for (const auto & [j, index] : ranges::views::enumerate(indices)) {
+    A.row(j) = GetXYZ(pointcloud->at(index)).transpose();
+  }
+  return A;
+}

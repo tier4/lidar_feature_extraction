@@ -1,4 +1,4 @@
-// Copyright 2022 Tixiao Shan, Takeshi Ishita
+// Copyright 2022 Takeshi Ishita
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -10,7 +10,7 @@
 //      notice, this list of conditions and the following disclaimer in the
 //      documentation and/or other materials provided with the distribution.
 //
-//    * Neither the name of the Tixiao Shan, Takeshi Ishita nor the names of its
+//    * Neither the name of the Takeshi Ishita nor the names of its
 //      contributors may be used to endorse or promote products derived from
 //      this software without specific prior written permission.
 //
@@ -26,25 +26,20 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "rotationlib/hat.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+namespace rotationlib
+{
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
+Eigen::Matrix3d Hat(const Eigen::Vector3d & v)
+{
+  Eigen::Matrix3d M;
+  M <<
+    0., -v(2), v(1),
+    v(2), 0., -v(0),
+    -v(1), v(0), 0.;
+  return M;
+}
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+}  // namespace rotationlib

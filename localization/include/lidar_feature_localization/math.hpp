@@ -33,7 +33,7 @@
 #include <Eigen/QR>
 
 
-Eigen::VectorXd SolveLinear(const Eigen::MatrixXd & A, const Eigen::VectorXd & b)
+inline Eigen::VectorXd SolveLinear(const Eigen::MatrixXd & A, const Eigen::VectorXd & b)
 {
   assert(A.rows() == b.size());
   return A.householderQr().solve(b);

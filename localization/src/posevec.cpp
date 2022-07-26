@@ -26,25 +26,29 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_localization/posevec.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+Eigen::Quaterniond AngleAxisToQuaternion(const Eigen::Vector3d & theta)
+{
+  const double k = theta.norm();
+  if (k < 1e-8) {
+    return Eigen::Quaterniond::Identity();
+  }
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
+  const Eigen::Vector3d u = theta / k;
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+  const double w = std::cos(k / 2.);
+  const Eigen::Vector3d xyz = u * std::sin(k / 2.);
+  return Eigen::Quaterniond(w, xyz(0), xyz(1), xyz(2));
+}
+
+Eigen::Isometry3d MakePose(
+  const Eigen::Quaterniond & q,
+  const Eigen::Vector3d & t)
+{
+  Eigen::Isometry3d pose;
+  pose.linear() = q.toRotationMatrix();
+  pose.translation() = t;
+  return pose;
+}

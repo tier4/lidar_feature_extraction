@@ -7,14 +7,25 @@ set(CMAKE_CXX_FLAGS "-g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-c
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 set(BUILD_TESTING ON)
 
+find_package(fmt REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 
 ament_auto_find_build_dependencies()
 
-ament_auto_add_executable(${PROJECT_NAME} DIRECTORY src)
+set(SOURCE_FILES
+  src/convolution.cpp
+  src/ring.cpp
+  src/iterator.cpp
+  src/index_range.cpp
+  src/color_points.cpp
+  src/math.cpp
+  src/curvature.cpp)
 
-find_package(fmt REQUIRED)
-target_link_libraries(${PROJECT_NAME} fmt)
+ament_auto_add_library(lidar_feature_extraction_lib SHARED ${SOURCE_FILES})
+target_link_libraries(lidar_feature_extraction_lib fmt)
+
+ament_auto_add_executable(lidar_feature_extraction app/feature_extraction.cpp)
+target_link_libraries(lidar_feature_extraction lidar_feature_extraction_lib)
 
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
@@ -24,8 +35,8 @@ function(add_testcase filepath)
 
   ament_add_gmock(${test_name} ${filepath})
   target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_link_libraries(${test_name} fmt)
-  ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+  target_link_libraries(${test_name} lidar_feature_extraction_lib)
+  ament_target_dependencies(${test_name} ${lidar_feature_extraction_FOUND_BUILD_DEPENDS})
 endfunction()
 
 if (BUILD_TESTING)

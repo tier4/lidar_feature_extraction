@@ -13,10 +13,14 @@ find_package(fmt REQUIRED)
 
 ament_auto_find_build_dependencies()
 
-ament_auto_add_library(${PROJECT_NAME} SHARED src/lib.cpp)
+set(SOURCE_FILES
+  src/lib.cpp
+  src/eigen.cpp
+  src/pcl_utils.cpp
+  src/ros_msg.cpp
+  src/transform.cpp)
 
-file(GLOB HEADER_FILES include/lidar_feature_library/*)
-target_precompile_headers(${PROJECT_NAME} PUBLIC ${HEADER_FILES})
+ament_auto_add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
 function(add_testcase filepath)
   find_package(ament_cmake_gmock REQUIRED)
@@ -27,8 +31,7 @@ function(add_testcase filepath)
   message("test_name = ${test_name}")
 
   ament_add_gmock(${test_name} ${filepath})
-  target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_link_libraries(${test_name} fmt)
+  target_link_libraries(${test_name} fmt ${PROJECT_NAME})
   ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
 endfunction()
 

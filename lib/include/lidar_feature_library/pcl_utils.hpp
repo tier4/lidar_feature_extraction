@@ -45,21 +45,11 @@ Eigen::Vector3d GetXYZ(const PointType & point)
   return Eigen::Vector3d(point.x, point.y, point.z);
 }
 
-pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v)
-{
-  return pcl::PointXYZ(v(0), v(1), v(2));
-}
+pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v);
 
 Eigen::MatrixXd Get(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud,
-  const std::vector<int> & indices)
-{
-  Eigen::MatrixXd A(indices.size(), 3);
-  for (const auto & [j, index] : ranges::views::enumerate(indices)) {
-    A.row(j) = GetXYZ(pointcloud->at(index)).transpose();
-  }
-  return A;
-}
+  const std::vector<int> & indices);
 
 template<typename T>
 std::vector<Eigen::Vector3d> PointsToEigen(const std::vector<T> & cloud)
