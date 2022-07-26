@@ -29,15 +29,19 @@
 #ifndef LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
 #define LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
 
+#include <Eigen/Geometry>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/eigen.h>
+#include <pcl/common/transforms.h>
 
 #include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <tuple>
 #include <vector>
+
 
 template<typename PointType>
 Eigen::Vector3d GetXYZ(const PointType & point)
@@ -58,6 +62,16 @@ std::vector<Eigen::Vector3d> PointsToEigen(const std::vector<T> & cloud)
       return Eigen::Vector3d(p.x, p.y, p.z);
     };
   return cloud | ranges::views::transform(get_xyz) | ranges::to_vector;
+}
+
+template<typename T>
+typename pcl::PointCloud<T>::Ptr TransformPointCloud(
+  const Eigen::Affine3d & transform,
+  const typename pcl::PointCloud<T>::Ptr & cloud)
+{
+  typename pcl::PointCloud<T>::Ptr transformed(new pcl::PointCloud<T>());
+  pcl::transformPointCloud(*cloud, *transformed, transform);
+  return transformed;
 }
 
 #endif  // LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_

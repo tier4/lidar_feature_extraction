@@ -37,7 +37,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "lidar_feature_library/transform.hpp"
+#include "lidar_feature_library/pcl_utils.hpp"
 
 
 template<typename PointType>

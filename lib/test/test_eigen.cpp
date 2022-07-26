@@ -32,6 +32,38 @@
 #include "lidar_feature_library/eigen.hpp"
 
 
+TEST(Transform, MakeIsometry3d)
+{
+  const Eigen::Quaterniond q = Eigen::Quaterniond(-1., 1., 1., 1).normalized();
+  const Eigen::Vector3d t(1., -1., 2.);
+  const Eigen::Isometry3d transform = MakeIsometry3d(q, t);
+
+  const Eigen::Vector3d p(2., 4., 1.);
+
+  EXPECT_THAT((q * p + t - transform * p).norm(), testing::Le(1e-3));
+}
+
+TEST(TransformXYZ, TransformXYZ)
+{
+  Eigen::VectorXd p0(5);
+  p0 << 1, 0, 2, 5, 4;
+
+  Eigen::Isometry3d transform;
+  transform.linear() <<
+      -1., -0.,  0.,
+       0.,  1., -0.,
+       0.,  0., -1.;
+  transform.translation() <<
+      2, 4, 1;
+
+  const Eigen::VectorXd p1 = TransformXYZ(transform, p0);
+
+  Eigen::VectorXd expected(5);
+  expected << 1, 4, -1, 5, 4;
+
+  EXPECT_THAT((p1 - expected).norm(), 0);;
+}
+
 TEST(Eigen, VectorsToEigen)
 {
   const std::vector<Eigen::Vector2d> vectors = {

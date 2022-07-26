@@ -58,6 +58,9 @@ Eigen::MatrixXd HorizontalStack(const std::vector<Eigen::Matrix<double, N, M>> &
   return X;
 }
 
+Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t);
+
+Eigen::VectorXd TransformXYZ(const Eigen::Isometry3d & transform, const Eigen::VectorXd & p0);
 
 Eigen::VectorXd VectorToEigen(const std::vector<double> & values);
 
