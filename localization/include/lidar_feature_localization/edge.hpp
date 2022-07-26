@@ -71,6 +71,7 @@ Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix);
 template<typename PointToVector, typename PointType>
 KDTreeEigen MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
 {
+  ThrowsIfPointCloudIsEmpty<PointType>(map);
   const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
   return KDTreeEigen(matrix, 10);
 }
