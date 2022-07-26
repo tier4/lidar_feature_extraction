@@ -33,7 +33,6 @@
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
-#include "lidar_feature_library/transform.hpp"
 #include "lidar_feature_library/point_type.hpp"
 
 using testing::ElementsAre;

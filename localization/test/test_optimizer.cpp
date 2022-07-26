@@ -33,10 +33,10 @@
 
 #include <tuple>
 
-#include "lidar_feature_library/transform.hpp"
-
 #include "lidar_feature_localization/alignment.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
+
+#include "lidar_feature_library/eigen.hpp"
 
 
 const Eigen::Isometry3d MakeTransform(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
