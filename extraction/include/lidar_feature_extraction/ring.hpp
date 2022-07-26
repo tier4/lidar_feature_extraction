@@ -48,15 +48,7 @@
 #include "mapped_points.hpp"
 
 
-bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
-{
-  for (const auto & field : fields) {
-    if (field.name == "ring") {
-      return true;
-    }
-  }
-  return false;
-}
+bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields);
 
 template<typename Iter>
 void SortByAtan2(std::vector<int> & indices, const Iter & iter)
@@ -90,18 +82,7 @@ MakeReferenceVectorsPerRing(const Iter & points)
 
 void RemoveSparseRings(
   std::unordered_map<int, std::vector<int>> & rings,
-  const int n_min_points)
-{
-  for (auto it = rings.begin(); it != rings.end(); ) {
-    const auto & indices = it->second;
-    const int size = static_cast<int>(indices.size());
-    if (size < n_min_points) {
-      it = rings.erase(it);
-      continue;
-    }
-    it++;
-  }
-}
+  const int n_min_points);
 
 template<typename Iter>
 void SortEachRingByAngle(

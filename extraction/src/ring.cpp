@@ -26,25 +26,34 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
 
-#include <Eigen/Core>
-
+#include <unordered_map>
 #include <vector>
 
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_extraction/ring.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields)
+{
+  for (const auto & field : fields) {
+    if (field.name == "ring") {
+      return true;
+    }
+  }
+  return false;
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
-
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+void RemoveSparseRings(
+  std::unordered_map<int, std::vector<int>> & rings,
+  const int n_min_points)
+{
+  for (auto it = rings.begin(); it != rings.end(); ) {
+    const auto & indices = it->second;
+    const int size = static_cast<int>(indices.size());
+    if (size < n_min_points) {
+      it = rings.erase(it);
+      continue;
+    }
+    it++;
+  }
+}

@@ -33,15 +33,11 @@
 
 #include <pcl/common/transforms.h>
 
-Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
-{
-  assert(std::abs(q.norm() - 1.0) < 1e-6);
-  Eigen::Isometry3d transform;
-  transform.linear() = q.toRotationMatrix();
-  transform.translation() = t;
-  return transform;
-}
 
+// TODO(IshitaTakeshi) Move this to eigen.hpp
+Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t);
+
+// TODO(IshitaTakeshi) Move this to pcl_utils.hpp
 template<typename T>
 typename pcl::PointCloud<T>::Ptr TransformPointCloud(
   const Eigen::Affine3d & transform,
@@ -52,15 +48,7 @@ typename pcl::PointCloud<T>::Ptr TransformPointCloud(
   return transformed;
 }
 
-Eigen::VectorXd TransformXYZ(const Eigen::Isometry3d & transform, const Eigen::VectorXd & p0)
-{
-  assert(p0.size() >= 3);
-  const size_t d = p0.size();
-  Eigen::VectorXd p1(d);
-  Eigen::Vector3d head = p0.head(3);
-  p1.head(3) = transform * head;
-  p1.tail(d - 3) = p0.tail(d - 3);
-  return p1;
-}
+// TODO(IshitaTakeshi) Move this to eigen.hpp
+Eigen::VectorXd TransformXYZ(const Eigen::Isometry3d & transform, const Eigen::VectorXd & p0);
 
 #endif  // LIDAR_FEATURE_LIBRARY__TRANSFORM_HPP_

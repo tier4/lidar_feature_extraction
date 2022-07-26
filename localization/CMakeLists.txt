@@ -16,15 +16,21 @@ set(INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include/)
 
-file(GLOB HEADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/lidar_feature_localization/*)
-list(APPEND HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include/nanoflann.hpp)
+set(SOURCE_FILES
+  src/alignment.cpp
+  src/degenerate.cpp
+  src/edge.cpp
+  src/jacobian.cpp
+  src/kdtree.cpp
+  src/optimizer.cpp
+  src/posevec.cpp)
+
+ament_auto_add_library(lidar_feature_localization_lib SHARED ${SOURCE_FILES})
+target_include_directories(lidar_feature_localization_lib PUBLIC ${INCLUDE_DIRS})
 
 foreach(suffix IN ITEMS "localization" "odometry" "convergence")
-  ament_auto_add_executable("lidar_feature_${suffix}" src/${suffix}.cpp)
-  target_include_directories("lidar_feature_${suffix}" PUBLIC ${INCLUDE_DIRS})
-  target_link_libraries("lidar_feature_${suffix}" fmt)
-  target_precompile_headers("lidar_feature_${suffix}" PUBLIC ${HEADER_FILES})
+  ament_auto_add_executable("lidar_feature_${suffix}" app/${suffix}.cpp)
+  target_link_libraries("lidar_feature_${suffix}" fmt lidar_feature_localization_lib)
 endforeach()
 
 function(add_testcase filepath)
@@ -34,9 +40,8 @@ function(add_testcase filepath)
   message("test_name = ${test_name}")
 
   ament_add_gmock(${test_name} ${filepath})
-  target_include_directories(${test_name} PUBLIC ${INCLUDE_DIRS})
+  target_link_libraries("${test_name}" fmt lidar_feature_localization_lib)
   ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
-  target_precompile_headers(${test_name} PUBLIC ${HEADER_FILES})
 endfunction()
 
 if(BUILD_TESTING)

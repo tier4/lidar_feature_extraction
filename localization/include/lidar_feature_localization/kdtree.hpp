@@ -59,27 +59,7 @@ public:
   }
 
   std::tuple<Eigen::MatrixXd, std::vector<double>> NearestKSearch(
-    const Eigen::VectorXd & query, const int n_neighbors) const
-  {
-    assert(map_.cols() == query.size());
-
-    std::vector<std::uint64_t> indices(n_neighbors);
-    std::vector<double> distances(n_neighbors);
-
-    nanoflann::KNNResultSet<double> result(n_neighbors);
-
-    result.init(&indices[0], &distances[0]);
-    std::vector<double> queryvec(query.size());
-    Eigen::VectorXd::Map(&queryvec[0], query.size()) = query;
-    kdtree_->index->findNeighbors(result, &queryvec[0], nanoflann::SearchParams(10));
-    // kdtree_->query(&query[0], n_neighbors, &indices[0], &distances[0]);
-
-    indices.resize(n_neighbors);
-    distances.resize(n_neighbors);
-
-    const Eigen::MatrixXd X = GetRows(map_, indices);
-    return std::make_tuple(X, distances);
-  }
+    const Eigen::VectorXd & query, const int n_neighbors) const;
 
 private:
   const Eigen::MatrixXd map_;

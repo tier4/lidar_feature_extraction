@@ -38,35 +38,6 @@
 
 std::vector<double> Convolution1D(
   const std::vector<double> input,
-  const std::vector<double> weight)
-{
-  if (input.size() < weight.size()) {
-    auto s = fmt::format(
-      "Input array size {} cannot be smaller than weight size {}", input.size(), weight.size());
-    throw std::invalid_argument(s);
-  }
-
-  assert(weight.size() % 2 == 1);
-
-  const int padding = (weight.size() - 1) / 2;
-  const int convolution_size = input.size() - padding * 2;
-
-  std::vector<double> result(input.size());
-
-  for (int i = 0; i < padding; i++) {
-    result[i] = 0.;
-  }
-
-  for (int i = 0; i < convolution_size; i++) {
-    const auto iter = input.begin() + i;
-    result[padding + i] = InnerProduct(iter, iter + weight.size(), weight.begin());
-  }
-
-  for (int i = 0; i < padding; i++) {
-    result[convolution_size + padding + i] = 0.;
-  }
-
-  return result;
-}
+  const std::vector<double> weight);
 
 #endif  // LIDAR_FEATURE_EXTRACTION__CONVOLUTION_HPP_

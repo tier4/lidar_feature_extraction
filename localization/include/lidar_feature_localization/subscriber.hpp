@@ -45,7 +45,7 @@
 #include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
-rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
+inline rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
 {
   rclcpp::CallbackGroup::SharedPtr main_callback_group;
   main_callback_group = node.create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);

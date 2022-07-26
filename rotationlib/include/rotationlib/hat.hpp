@@ -34,15 +34,7 @@
 namespace rotationlib
 {
 
-Eigen::Matrix3d Hat(const Eigen::Vector3d & v)
-{
-  Eigen::Matrix3d M;
-  M <<
-    0., -v(2), v(1),
-    v(2), 0., -v(0),
-    -v(1), v(0), 0.;
-  return M;
-}
+Eigen::Matrix3d Hat(const Eigen::Vector3d & v);
 
 }  // namespace rotationlib
 

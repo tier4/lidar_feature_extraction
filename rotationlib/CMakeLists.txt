@@ -17,19 +17,30 @@ find_package(ament_cmake_auto REQUIRED)
 
 ament_auto_find_build_dependencies()
 
+set(SOURCE_FILES
+  src/hat.cpp
+  src/quaternion.cpp
+  src/jacobian/quaternion.cpp)
+
+ament_auto_add_library(${PROJECT_NAME}_lib SHARED ${SOURCE_FILES})
+
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
   string(REGEX REPLACE ".cpp" "" test_name ${filename})
 
   ament_add_gmock(${test_name} ${filepath})
-  target_include_directories(${test_name} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/testlib)
+  target_link_libraries(${test_name} ${PROJECT_NAME}_lib)
+  target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/testlib)
   ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
 endfunction()
 
 
 if(BUILD_TESTING)
+  set(TEST_FILES
+    test/test_hat.hpp
+    test/test_quaternion.cpp
+    test/test_jacobian_quaternion.cpp)
+
   find_package(ament_lint_auto REQUIRED)
 
   list(APPEND AMENT_LINT_AUTO_EXCLUDE
@@ -47,7 +58,6 @@ if(BUILD_TESTING)
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${SOURCE_AND_HEADER})
 
-  file(GLOB_RECURSE TEST_FILES test/*)
   foreach(filepath ${TEST_FILES})
     add_testcase(${filepath})
   endforeach()

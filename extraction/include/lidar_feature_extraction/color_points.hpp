@@ -38,35 +38,9 @@
 #include "lidar_feature_extraction/point_label.hpp"
 
 
-std::vector<uint8_t> LabelToColor(const PointLabel & label)
-{
-  if (label == PointLabel::Default) {
-    return std::vector<uint8_t>{255, 255, 255};
-  }
-  if (label == PointLabel::Edge) {
-    return std::vector<uint8_t>{255, 0, 0};
-  }
-  if (label == PointLabel::EdgeNeighbor) {
-    return std::vector<uint8_t>{255, 63, 0};
-  }
-  if (label == PointLabel::OutOfRange) {
-    return std::vector<uint8_t>{127, 127, 127};
-  }
-  if (label == PointLabel::Occluded) {
-    return std::vector<uint8_t>{255, 0, 255};
-  }
-  if (label == PointLabel::ParallelBeam) {
-    return std::vector<uint8_t>{0, 255, 0};
-  }
-  throw std::invalid_argument(fmt::format("Invalid label {}", label));
-}
+std::vector<uint8_t> LabelToColor(const PointLabel & label);
 
-std::vector<uint8_t> ValueToColor(const double value, const double min, const double max)
-{
-  const double v = std::clamp(value, min, max);
-  const uint8_t c = static_cast<uint8_t>(255. * v / (max - min));
-  return std::vector<uint8_t>{c, c, c};
-}
+std::vector<uint8_t> ValueToColor(const double value, const double min, const double max);
 
 template<typename PointT>
 pcl::PointXYZRGB MakeXYZRGB(const PointT & p, const std::vector<uint8_t> & rgb)

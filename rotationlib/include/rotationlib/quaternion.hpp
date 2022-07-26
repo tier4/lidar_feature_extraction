@@ -36,58 +36,15 @@
 namespace rotationlib
 {
 
-Eigen::Quaterniond FromWXYZ(const Eigen::Vector4d & wxyz)
-{
-  return Eigen::Quaterniond(wxyz(0), wxyz(1), wxyz(2), wxyz(3));
-}
+Eigen::Quaterniond FromWXYZ(const Eigen::Vector4d & wxyz);
 
-Eigen::Vector4d ToWXYZ(const Eigen::Quaterniond & q)
-{
-  return Eigen::Vector4d(q.w(), q.x(), q.y(), q.z());
-}
+Eigen::Vector4d ToWXYZ(const Eigen::Quaterniond & q);
 
-Eigen::Matrix4d LeftMultiplicationMatrix(const Eigen::Quaterniond & q)
-{
-  const double w = q.w();
-  const double x = q.x();
-  const double y = q.y();
-  const double z = q.z();
+Eigen::Matrix4d LeftMultiplicationMatrix(const Eigen::Quaterniond & q);
 
-  Eigen::Matrix4d Q;
-  Q <<
-    w, -x, -y, -z,
-    x, w, -z, y,
-    y, z, w, -x,
-    z, -y, x, w;
+Eigen::Matrix4d RightMultiplicationMatrix(const Eigen::Quaterniond & q);
 
-  return Q;
-}
-
-Eigen::Matrix4d RightMultiplicationMatrix(const Eigen::Quaterniond & q)
-{
-  const double w = q.w();
-  const double x = q.x();
-  const double y = q.y();
-  const double z = q.z();
-
-  Eigen::Matrix4d Q;
-  Q <<
-    w, -x, -y, -z,
-    x, w, z, -y,
-    y, -z, w, x,
-    z, y, -x, w;
-
-  return Q;
-}
-
-Eigen::Quaterniond RPYToQuaternionXYZ(const double roll, const double pitch, const double yaw)
-{
-  const Eigen::Quaterniond q =
-    Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
-    Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
-    Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
-  return q;
-}
+Eigen::Quaterniond RPYToQuaternionXYZ(const double roll, const double pitch, const double yaw);
 
 }  // namespace rotationlib
 

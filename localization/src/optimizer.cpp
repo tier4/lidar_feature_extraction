@@ -26,25 +26,42 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
-#define LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+#include <tuple>
 
-#include <Eigen/Core>
-
-#include <vector>
-
-#include "rotationlib/jacobian/quaternion.hpp"
+#include "lidar_feature_localization/optimizer.hpp"
 
 
-void FillJacobianRow(
-  Eigen::MatrixXd & J,
-  const int i,
-  const Eigen::Matrix<double, 3, 4> & drpdq,
-  const Eigen::Vector3d & coeff);
+bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
+{
+  return dq.vec().norm() < 1e-3 && dt.norm() < 1e-3;
+}
 
-Eigen::MatrixXd MakeJacobian(
-  const std::vector<Eigen::Vector3d> & points,
-  const std::vector<Eigen::Vector3d> & coeffs,
-  const Eigen::Quaterniond & q);
+Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & r)
+{
+  return (J.transpose() * J).ldlt().solve(-J.transpose() * r);
+}
 
-#endif  // LIDAR_FEATURE_LOCALIZATION__JACOBIAN_HPP_
+Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
+{
+  const Eigen::Matrix4d L = rotationlib::LeftMultiplicationMatrix(q);
+  const Eigen::Matrix<double, 4, 3> Q = 0.5 * L.block<4, 3>(0, 1);
+
+  Eigen::Matrix<double, 7, 6> M;
+  M.block<4, 3>(0, 0) = Q;
+  M.block<4, 3>(0, 3) = Eigen::MatrixXd::Zero(4, 3);
+  M.block<3, 3>(4, 0) = Eigen::Matrix3d::Zero();
+  M.block<3, 3>(4, 3) = Eigen::Matrix3d::Identity();
+  return M;
+}
+
+std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
+  const Eigen::MatrixXd & J,
+  const Eigen::VectorXd & r,
+  const Eigen::Quaterniond & q)
+{
+  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+  const Vector6d dx = CalcUpdate(J * M, r);
+  const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
+  const Eigen::Vector3d dt = dx.tail(3);
+  return {dq, dt};
+}
