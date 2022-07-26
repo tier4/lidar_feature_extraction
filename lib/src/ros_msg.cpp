@@ -59,20 +59,6 @@ Eigen::Isometry3d GetIsometry3d(const geometry_msgs::msg::Pose & pose)
   return transform;
 }
 
-// TODO(IshitaTakeshi) Duplicate of MakeTransformStamped. Remove this
-geometry_msgs::msg::TransformStamped EigenToTransform(
-  const Eigen::Isometry3d & eigen_transform,
-  const rclcpp::Time & stamp,
-  const std::string & frame_id,
-  const std::string & child_frame_id)
-{
-  geometry_msgs::msg::TransformStamped transform = tf2::eigenToTransform(eigen_transform);
-  transform.header.stamp = stamp;
-  transform.header.frame_id = frame_id;
-  transform.child_frame_id = child_frame_id;
-  return transform;
-}
-
 geometry_msgs::msg::Pose MakePose(const Eigen::Isometry3d & pose)
 {
   return tf2::toMsg(pose);

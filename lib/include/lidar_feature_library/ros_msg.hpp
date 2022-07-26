@@ -86,13 +86,6 @@ typename pcl::PointCloud<T>::Ptr GetPointCloud(const sensor_msgs::msg::PointClou
 
 Eigen::Isometry3d GetIsometry3d(const geometry_msgs::msg::Pose & pose);
 
-// TODO(IshitaTakeshi) Duplicate of MakeTransformStamped. Remove this
-geometry_msgs::msg::TransformStamped EigenToTransform(
-  const Eigen::Isometry3d & eigen_transform,
-  const rclcpp::Time & stamp,
-  const std::string & frame_id,
-  const std::string & child_frame_id);
-
 geometry_msgs::msg::Pose MakePose(const Eigen::Isometry3d & pose);
 
 geometry_msgs::msg::PoseStamped MakePoseStamped(
