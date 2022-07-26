@@ -85,8 +85,7 @@ public:
       return;
     }
 
-    Eigen::Isometry3d transform;
-    tf2::fromMsg(initial_pose->pose, transform);
+    const Eigen::Isometry3d transform = GetIsometry3d(initial_pose->pose);
     localizer_.Init(transform);
 
     pose_publisher_->publish(*initial_pose);
@@ -106,7 +105,7 @@ public:
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
 
     tf_broadcaster_.sendTransform(
-      EigenToTransform(pose, edge_msg->header.stamp, "map", "base_link")
+      MakeTransformStamped(pose, edge_msg->header.stamp, "map", "base_link")
     );
 
     RCLCPP_INFO(this->get_logger(), "Pose update done");
@@ -154,7 +153,7 @@ public:
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
 
     tf_broadcaster_.sendTransform(
-      EigenToTransform(pose, edge_msg->header.stamp, "map", "base_link")
+      MakeTransformStamped(pose, edge_msg->header.stamp, "map", "base_link")
     );
 
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback finished");

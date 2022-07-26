@@ -125,7 +125,7 @@ public:
 
     const Eigen::Isometry3d pose = GetIsometry3d(pose_msg->pose);
 
-    const auto transform = EigenToTransform(pose, edge_msg->header.stamp, "map", "base_link");
+    const auto transform = MakeTransformStamped(pose, edge_msg->header.stamp, "map", "base_link");
     tf_broadcaster_.sendTransform(transform);
 
     using OptimizationProblem = LOAMOptimizationProblem<PointToVector, PointType>;
