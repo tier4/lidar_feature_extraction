@@ -26,60 +26,48 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
-#define LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
+#include <gmock/gmock.h>
 
-#include <Eigen/Geometry>
+#include "lidar_feature_library/eigen.hpp"
+#include "lidar_feature_library/pcl_utils.hpp"
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/eigen.h>
-#include <pcl/common/transforms.h>
-
-#include <range/v3/all.hpp>
-
-#include <algorithm>
-#include <tuple>
-#include <vector>
-
-
-template<typename PointType>
-void ThrowsIfPointCloudIsEmpty(const typename pcl::PointCloud<PointType>::Ptr & cloud)
+TEST(PCL_UTILS, ThrowsIfPointCloudIsEmpty)
 {
-  if (cloud->size() == 0) {
-    throw std::invalid_argument("Point cloud is empty!");
-  }
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  EXPECT_THROW(
+    try {
+      ThrowsIfPointCloudIsEmpty<pcl::PointXYZ>(cloud);
+    } catch (std::invalid_argument & e) {
+      EXPECT_STREQ("Point cloud is empty!", e.what());
+      throw e;
+    },
+    std::invalid_argument);
+
+  cloud->push_back(pcl::PointXYZ(0., 1., 2.));
+  ThrowsIfPointCloudIsEmpty<pcl::PointXYZ>(cloud);
 }
 
-template<typename PointType>
-Eigen::Vector3d GetXYZ(const PointType & point)
+TEST(PCL_UTILS, TransformPointCloud)
 {
-  return Eigen::Vector3d(point.x, point.y, point.z);
+  auto to_vector = [](const pcl::PointXYZ & p) {
+    return Eigen::Vector3d(p.x, p.y, p.z);
+  };
+
+  const Eigen::Quaterniond q = Eigen::Quaterniond(-1., 1., 1., -1.).normalized();
+  const Eigen::Vector3d t(1., 2., 4.);
+
+  const Eigen::Affine3d transform = MakeIsometry3d(q, t);
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  cloud->push_back(pcl::PointXYZ(1., 2., 0.));
+  cloud->push_back(pcl::PointXYZ(2., 4., 3.));
+  const auto transformed = TransformPointCloud<pcl::PointXYZ>(transform, cloud);
+
+  EXPECT_THAT(
+    (q * to_vector(cloud->at(0)) + t - to_vector(transformed->at(0))).norm(),
+    testing::Le(1e-4));
+
+  EXPECT_THAT(
+    (q * to_vector(cloud->at(1)) + t - to_vector(transformed->at(1))).norm(),
+    testing::Le(1e-4));
 }
-
-pcl::PointXYZ MakePointXYZ(const Eigen::Vector3d & v);
-
-Eigen::MatrixXd Get(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr & pointcloud,
-  const std::vector<int> & indices);
-
-template<typename T>
-std::vector<Eigen::Vector3d> PointsToEigen(const std::vector<T> & cloud)
-{
-  auto get_xyz = [](const T & p) {
-      return Eigen::Vector3d(p.x, p.y, p.z);
-    };
-  return cloud | ranges::views::transform(get_xyz) | ranges::to_vector;
-}
-
-template<typename T>
-typename pcl::PointCloud<T>::Ptr TransformPointCloud(
-  const Eigen::Affine3d & transform,
-  const typename pcl::PointCloud<T>::Ptr & cloud)
-{
-  typename pcl::PointCloud<T>::Ptr transformed(new pcl::PointCloud<T>());
-  pcl::transformPointCloud(*cloud, *transformed, transform);
-  return transformed;
-}
-
-#endif  // LIDAR_FEATURE_LIBRARY__PCL_UTILS_HPP_
