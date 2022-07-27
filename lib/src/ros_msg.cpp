@@ -84,6 +84,19 @@ geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
   return msg;
 }
 
+geometry_msgs::msg::PoseWithCovarianceStamped MakePoseWithCovarianceStamped(
+  const Eigen::Isometry3d & pose,
+  const RowMatrix6d & covariance,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id)
+{
+  geometry_msgs::msg::PoseWithCovarianceStamped msg;
+  msg.pose = MakePoseWithCovariance(pose, covariance);
+  msg.header.stamp = stamp;
+  msg.header.frame_id = frame_id;
+  return msg;
+}
+
 geometry_msgs::msg::TransformStamped MakeTransformStamped(
   const Eigen::Isometry3d & transform,
   const rclcpp::Time & stamp,

@@ -44,6 +44,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
 #include <string>
 
@@ -94,6 +95,12 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
 geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
   const Eigen::Isometry3d & pose,
   const RowMatrix6d & covariance);
+
+geometry_msgs::msg::PoseWithCovarianceStamped MakePoseWithCovarianceStamped(
+  const Eigen::Isometry3d & pose,
+  const RowMatrix6d & covariance,
+  const rclcpp::Time & stamp,
+  const std::string & frame_id);
 
 geometry_msgs::msg::TransformStamped MakeTransformStamped(
   const Eigen::Isometry3d & transform,
