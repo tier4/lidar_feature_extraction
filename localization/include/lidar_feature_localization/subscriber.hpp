@@ -71,7 +71,7 @@ public:
         std::bind(&LocalizationSubscriber::PoseUpdateCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
     pose_publisher_(
-      this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10)),
+      this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("estimated_pose", 10)),
     localizer_(localizer),
     tf_broadcaster_(*this)
   {
@@ -88,8 +88,6 @@ public:
     const Eigen::Isometry3d transform = GetIsometry3d(initial_pose->pose);
     localizer_.Init(transform);
 
-    pose_publisher_->publish(*initial_pose);
-
     RCLCPP_INFO(this->get_logger(), "Initialized");
   }
 
@@ -102,7 +100,10 @@ public:
     localizer_.Update(edge);
 
     const Eigen::Isometry3d pose = localizer_.Get();
-    pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
+    const RowMatrix6d covariance = RowMatrix6d::Identity();
+    pose_publisher_->publish(
+      MakePoseWithCovarianceStamped(pose, covariance, edge_msg->header.stamp, "map")
+    );
 
     tf_broadcaster_.sendTransform(
       MakeTransformStamped(pose, edge_msg->header.stamp, "map", "base_link")
@@ -114,7 +115,7 @@ public:
 private:
   const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr initial_pose_subscriber_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
-  const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
+  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
   LocalizerT localizer_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 };
