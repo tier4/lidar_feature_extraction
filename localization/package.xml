@@ -11,6 +11,7 @@
 
   <depend>eigen</depend>
   <depend>lidar_feature_library</depend>
+  <depend>nav_msgs</depend>
   <depend>pcl_ros</depend>
   <depend>range-v3</depend>
   <depend>rotationlib</depend>
