@@ -28,7 +28,7 @@
 
   <!-- output topic name -->
   <arg name="output_odom_name" default="ekf_odom"/>
-  <arg name="output_pose_with_covariance_without_yawbias_name" default="ekf_pose_with_covariance_without_yawbias"/>
+  <arg name="output_biased_pose_with_covariance" default="ekf_biased_pose_with_covariance"/>
 
   <node pkg="ekf_localizer" exec="ekf_localizer" name="ekf_localizer" output="screen">
     <remap from="in_pose_with_covariance" to="$(var input_pose_with_cov_name)"/>
@@ -61,6 +61,6 @@
     <param name="proc_stddev_wz_c" value="$(var proc_stddev_wz_c)"/>
 
     <remap from="ekf_odom" to="$(var output_odom_name)"/>
-    <remap from="ekf_pose_with_covariance_without_yawbias" to="$(var output_pose_with_covariance_without_yawbias_name)"/>
+    <remap from="ekf_biased_pose_with_covariance" to="$(var output_biased_pose_with_covariance)"/>
   </node>
 </launch>

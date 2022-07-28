@@ -172,7 +172,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   warning_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
   pub_biased_pose_(create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "ekf_pose_with_covariance_without_yawbias", 1)),
+    "ekf_biased_pose_with_covariance", 1)),
   sub_initialpose_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "initialpose", 1,
     std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1))),
