@@ -60,10 +60,10 @@ class LocalizationSubscriber : public rclcpp::Node
 public:
   explicit LocalizationSubscriber(LocalizerT & localizer)
   : Node("lidar_feature_localization"),
-    initial_pose_subscriber_(
+    optimization_start_subscriber_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "initial_pose", QOS_RELIABLE_VOLATILE,
-        std::bind(&LocalizationSubscriber::PoseInitializationCallback, this, std::placeholders::_1),
+        "optimization_start_pose", QOS_RELIABLE_VOLATILE,
+        std::bind(&LocalizationSubscriber::OptimizationStartPoseCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
     edge_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
@@ -78,14 +78,14 @@ public:
     RCLCPP_INFO(this->get_logger(), "LocalizationSubscriber created");
   }
 
-  void PoseInitializationCallback(
-    const geometry_msgs::msg::PoseStamped::ConstSharedPtr initial_pose)
+  void OptimizationStartPoseCallback(
+    const geometry_msgs::msg::PoseStamped::ConstSharedPtr optimization_start_pose)
   {
     if (localizer_.IsInitialized()) {
       return;
     }
 
-    const Eigen::Isometry3d transform = GetIsometry3d(initial_pose->pose);
+    const Eigen::Isometry3d transform = GetIsometry3d(optimization_start_pose->pose);
     localizer_.Init(transform);
 
     RCLCPP_INFO(this->get_logger(), "Initialized");
@@ -113,7 +113,7 @@ public:
   }
 
 private:
-  const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr initial_pose_subscriber_;
+  const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr optimization_start_subscriber_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
   LocalizerT localizer_;

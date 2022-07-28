@@ -40,8 +40,8 @@ input_sensor_points_topic = LaunchConfiguration(
     'input_sensor_points_topic',
     default='/points_raw'
 )
-initial_pose_topic = LaunchConfiguration(
-    'initial_pose_topic',
+optimization_start_pose_topic = LaunchConfiguration(
+    'optimization_start_pose_topic',
     default='/pose'
 )
 output_estimated_pose_topic = LaunchConfiguration(
@@ -80,7 +80,7 @@ def generate_launch_description():
         name='lidar_feature_localization',
         remappings=[
             ('scan_edge', scan_edge_topic),
-            ('initial_pose', initial_pose_topic),
+            ('optimization_start_pose', optimization_start_pose_topic),
             ('estimated_pose', output_estimated_pose_topic),
         ]
     )
