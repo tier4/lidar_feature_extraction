@@ -33,6 +33,7 @@
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -60,10 +61,17 @@ class LocalizationSubscriber : public rclcpp::Node
 public:
   explicit LocalizationSubscriber(LocalizerT & localizer)
   : Node("lidar_feature_localization"),
-    optimization_start_subscriber_(
+    optimization_start_odom_subscriber_(
+      this->create_subscription<nav_msgs::msg::Odometry>(
+        "optimization_start_odom", QOS_RELIABLE_VOLATILE,
+        std::bind(
+          &LocalizationSubscriber::OptimizationStartOdomCallback, this, std::placeholders::_1),
+        MutuallyExclusiveOption(*this))),
+    optimization_start_pose_subscriber_(
       this->create_subscription<geometry_msgs::msg::PoseStamped>(
         "optimization_start_pose", QOS_RELIABLE_VOLATILE,
-        std::bind(&LocalizationSubscriber::OptimizationStartPoseCallback, this, std::placeholders::_1),
+        std::bind(
+          &LocalizationSubscriber::OptimizationStartPoseCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
     edge_subscriber_(
       this->create_subscription<sensor_msgs::msg::PointCloud2>(
@@ -78,17 +86,22 @@ public:
     RCLCPP_INFO(this->get_logger(), "LocalizationSubscriber created");
   }
 
+  void OptimizationStartOdomCallback(
+    const nav_msgs::msg::Odometry::ConstSharedPtr optimization_start_odom)
+  {
+    this->SetOptimizationStartPose(optimization_start_odom->pose.pose);
+  }
+
   void OptimizationStartPoseCallback(
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr optimization_start_pose)
   {
-    if (localizer_.IsInitialized()) {
-      return;
-    }
+    this->SetOptimizationStartPose(optimization_start_pose->pose);
+  }
 
-    const Eigen::Isometry3d transform = GetIsometry3d(optimization_start_pose->pose);
-    localizer_.Init(transform);
-
-    RCLCPP_INFO(this->get_logger(), "Initialized");
+  void SetOptimizationStartPose(const geometry_msgs::msg::Pose & pose_msg)
+  {
+    const Eigen::Isometry3d pose = GetIsometry3d(pose_msg);
+    localizer_.Init(pose);
   }
 
   void PoseUpdateCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg)
@@ -113,7 +126,10 @@ public:
   }
 
 private:
-  const rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr optimization_start_subscriber_;
+  using Odometry = nav_msgs::msg::Odometry;
+  using PoseStamped = geometry_msgs::msg::PoseStamped;
+  const rclcpp::Subscription<Odometry>::SharedPtr optimization_start_odom_subscriber_;
+  const rclcpp::Subscription<PoseStamped>::SharedPtr optimization_start_pose_subscriber_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
   LocalizerT localizer_;
