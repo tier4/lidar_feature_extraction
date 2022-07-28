@@ -54,30 +54,6 @@ inline double normalizeYaw(const double & yaw)
   return std::atan2(std::sin(yaw), std::cos(yaw));
 }
 
-inline double SquaredMahalanobis(
-  const Eigen::VectorXd & x,
-  const Eigen::VectorXd & y,
-  const Eigen::MatrixXd & C)
-{
-  const Eigen::VectorXd d = x - y;
-  return d.dot(C.inverse() * d);
-}
-
-/**
- * @brief check whether a measurement value falls within the mahalanobis distance threshold
- * @param dist_max mahalanobis distance threshold
- * @param estimated current estimated state
- * @param measured measured state
- * @param estimated_cov current estimation covariance
- * @return whether it falls within the mahalanobis distance threshold
- */
-inline bool mahalanobisGate(
-  const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
-  const Eigen::MatrixXd & cov)
-{
-  return SquaredMahalanobis(x, obj_x, cov) <= dist_max * dist_max;
-}
-
 template<typename Message>
 class AgedMessageQueue
 {

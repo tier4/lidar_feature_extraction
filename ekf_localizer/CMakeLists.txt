@@ -6,28 +6,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-pg -g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
 
 find_package(ament_cmake_auto REQUIRED)
-ament_auto_find_build_dependencies()
-
 find_package(Eigen3 REQUIRED)
 
-include_directories(
-  SYSTEM
-    ${EIGEN3_INCLUDE_DIR}
-)
+ament_auto_find_build_dependencies()
 
 ament_auto_add_library(ekf_localizer_lib SHARED
   src/ekf_localizer.cpp
+  src/mahalanobis.cpp
   src/update_interval.cpp
   src/warning.cpp
 )
 
+target_link_libraries(ekf_localizer_lib Eigen3::Eigen)
+
 ament_auto_add_executable(ekf_localizer src/ekf_localizer_node.cpp)
 target_link_libraries(ekf_localizer ekf_localizer_lib)
 target_include_directories(ekf_localizer PUBLIC include)
-
-ament_target_dependencies(
-  ekf_localizer
-  fmt kalman_filter lidar_feature_library rotationlib)
 
 function(add_testcase filepath)
   get_filename_component(filename ${filepath} NAME)
