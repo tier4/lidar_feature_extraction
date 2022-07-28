@@ -15,32 +15,36 @@ include_directories(
     ${EIGEN3_INCLUDE_DIR}
 )
 
-ament_auto_add_executable(ekf_localizer
-  src/ekf_localizer_node.cpp
+ament_auto_add_library(ekf_localizer_lib SHARED
   src/ekf_localizer.cpp
+  src/update_interval.cpp
   src/warning.cpp
 )
+
+ament_auto_add_executable(ekf_localizer src/ekf_localizer_node.cpp)
+target_link_libraries(ekf_localizer ekf_localizer_lib)
 target_include_directories(ekf_localizer PUBLIC include)
 
 ament_target_dependencies(
   ekf_localizer
   fmt kalman_filter lidar_feature_library rotationlib)
 
+function(add_testcase filepath)
+  get_filename_component(filename ${filepath} NAME)
+  string(REGEX REPLACE ".cpp" "" test_name ${filename})
+
+  ament_add_gtest(${test_name} ${filepath})
+  target_link_libraries("${test_name}" ekf_localizer_lib)
+  ament_target_dependencies(${test_name} ${${PROJECT_NAME}_FOUND_BUILD_DEPENDS})
+endfunction()
+
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  ament_add_gtest(ekf_localizer-test test/test_ekf_localizer.test
-    test/src/test_ekf_localizer.cpp
-    src/ekf_localizer.cpp
-    src/warning.cpp
-  )
-  target_include_directories(ekf_localizer-test
-    PRIVATE
-    include
-  )
-  ament_target_dependencies(
-    ekf_localizer-test
-    fmt geometry_msgs kalman_filter lidar_feature_library
-    nav_msgs rclcpp rotationlib tf2 tf2_ros)
+
+  file(GLOB TEST_FILES test/src/test_ekf_localizer.cpp test/test_update_interval.cpp)
+  foreach(filepath ${TEST_FILES})
+    add_testcase(${filepath})
+  endforeach()
 endif()
 
 ament_auto_package(

@@ -39,6 +39,7 @@
 #include <string>
 #include <vector>
 
+#include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
 
 
@@ -207,40 +208,6 @@ private:
   const double yaw_bias_covariance_;
   const double vx_covariance_;
   const double wz_covariance_;
-};
-
-inline double ComputeInterval(double frequency)
-{
-  return 1.0 / std::max(frequency, 0.1);
-}
-
-class UpdateInterval
-{
- public:
-  UpdateInterval(const double frequency)
-  : default_frequency_(frequency), last_time_(std::nullopt)
-  {
-  }
-
-  double Compute(const double current_time_second)
-  {
-    if (!last_time_.has_value()) {
-      last_time_ = std::make_optional<const double>(current_time_second);
-      return ComputeInterval(default_frequency_);
-    }
-
-    if (current_time_second < last_time_.value()) {
-      throw std::invalid_argument("Detected jump back in time");
-    }
-
-    const double ekf_rate = 1.0 / (current_time_second - last_time_.value());
-    last_time_ = std::make_optional<const double>(current_time_second);
-    return ComputeInterval(ekf_rate);
-  }
-
- private:
-  const double default_frequency_;
-  std::optional<double> last_time_;
 };
 
 class EKFLocalizer : public rclcpp::Node
