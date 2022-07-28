@@ -36,25 +36,34 @@ colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
 map_path = 'maps/edge.pcd'
 
+ekf_initial_pose_topic = LaunchConfiguration(
+    'input_initial_pose_topic',
+    default='/initialpose3d'
+)
+input_twist_topic = LaunchConfiguration(
+    'input_twist_topic',
+    default='/twist'
+)
 input_sensor_points_topic = LaunchConfiguration(
     'input_sensor_points_topic',
     default='/points_raw'
 )
-optimization_start_pose_topic = LaunchConfiguration(
-    'optimization_start_pose_topic',
-    default='/pose'
-)
-output_estimated_pose_topic = LaunchConfiguration(
-    'output_estimated_pose_topic',
+estimated_pose_topic = LaunchConfiguration(
+    'estimated_pose_topic',
     default='/estimated_pose'
 )
 edge_map_topic = LaunchConfiguration(
     'edge_map_topic',
     default='/edge_map'
 )
-output_estimated_path_topic = LaunchConfiguration(
-    'output_estimated_path_topic',
+estimated_path_topic = LaunchConfiguration(
+    'estimated_path_topic',
     default='/estimated_path'
+)
+
+ekf_odometry = LaunchConfiguration(
+    'ekf_odometry',
+    default='/ekf_odom'
 )
 
 
@@ -80,8 +89,8 @@ def generate_launch_description():
         name='lidar_feature_localization',
         remappings=[
             ('scan_edge', scan_edge_topic),
-            ('optimization_start_pose', optimization_start_pose_topic),
-            ('estimated_pose', output_estimated_pose_topic),
+            ('optimization_start_odom', ekf_odometry),
+            ('estimated_pose', estimated_pose_topic),
         ]
     )
 
@@ -108,7 +117,7 @@ def generate_launch_description():
             }
         ],
         remappings=[
-            ('/pointcloud_map', edge_map_topic)
+            ('pointcloud_map', edge_map_topic)
         ]
     )
 
@@ -117,15 +126,28 @@ def generate_launch_description():
         executable='path_generator',
         name='path_generator',
         remappings=[
-            ('pose', output_estimated_pose_topic),
-            ('path', output_estimated_path_topic),
+            ('pose', estimated_pose_topic),
+            ('path', estimated_path_topic),
         ]
     )
 
+    ekf_localizer = Node(
+        package='ekf_localizer',
+        executable='ekf_localizer',
+        name='ekf_localizer',
+        remappings=[
+            ('initialpose', ekf_initial_pose_topic),
+            ('ekf_odom', ekf_odometry),
+            ('in_pose_with_covariance', estimated_pose_topic),
+            ('in_twist_with_covariance', input_twist_topic),
+        ],
+        parameters=[{'use_sim_time': True}]
+    )
     return LaunchDescription([
+        ekf_localizer,
         extraction,
         localization,
         map_loader,
         map_tf_generator,
-        path_generator,
+        path_generator
     ])
