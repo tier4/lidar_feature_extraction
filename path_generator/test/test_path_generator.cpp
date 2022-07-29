@@ -38,7 +38,6 @@
 
 #include "path_generator/path_generator.hpp"
 
-
 class PathEvaluator
 {
 public:
@@ -59,22 +58,40 @@ public:
   size_t n_received_;
 };
 
-TEST(PathGenerator, NodeIntegrationTest)
+class TestSuite : public ::testing::Test
 {
-  rclcpp::init(0, {});
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, {});
+  }
 
-  const size_t n_spin = 100;
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 
-  auto node = std::make_shared<rclcpp::Node>("test_node");
-  auto evaluator = std::make_shared<PathEvaluator>();
+  void SetUp() override
+  {
+    node = std::make_shared<rclcpp::Node>("test_node");
+    evaluator = std::make_shared<PathEvaluator>();
+  }
 
-  const auto qos = rclcpp::SensorDataQoS().reliable().transient_local().keep_all();
+  std::shared_ptr<rclcpp::Node> node;
+  std::shared_ptr<PathEvaluator> evaluator;
+};
 
-  auto pose_publisher = node->create_publisher<geometry_msgs::msg::PoseStamped>("pose", qos);
+constexpr size_t n_spin = 100;
+
+TEST_F(TestSuite, FromPose)
+{
+  using PoseStamped = geometry_msgs::msg::PoseStamped;
+
+  auto qos = rclcpp::SensorDataQoS().reliable().transient_local().keep_all();
+  auto pose_publisher = node->create_publisher<PoseStamped>("pose", qos);
   auto path_subscription = node->create_subscription<nav_msgs::msg::Path>(
     "path", qos, std::bind(&PathEvaluator::Callback, evaluator, std::placeholders::_1));
-
-  auto generator = std::make_shared<PathGenerator>("path", "pose");
+  auto generator = std::make_shared<FromPose>("path", "pose");
 
   rclcpp::ExecutorOptions options;
 
@@ -82,12 +99,36 @@ TEST(PathGenerator, NodeIntegrationTest)
   executor.add_node(node);
   executor.add_node(generator);
   for (size_t i = 0; i < n_spin; i++) {
-    geometry_msgs::msg::PoseStamped pose;
+    PoseStamped pose;
     pose.pose.position.set__x(i + 1);
     pose_publisher->publish(pose);
     executor.spin_once(std::chrono::milliseconds(100));
   }
 
   EXPECT_THAT(evaluator->n_received_, testing::Gt(0U));
-  rclcpp::shutdown();
+}
+
+TEST_F(TestSuite, FromPoseWithCovariance)
+{
+  using PoseWithCovarianceStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
+
+  auto qos = rclcpp::SensorDataQoS().reliable().transient_local().keep_all();
+  auto pose_publisher = node->create_publisher<PoseWithCovarianceStamped>("pose", qos);
+  auto path_subscription = node->create_subscription<nav_msgs::msg::Path>(
+    "path", qos, std::bind(&PathEvaluator::Callback, evaluator, std::placeholders::_1));
+  auto generator = std::make_shared<FromPoseWithCovariance>("path", "pose");
+
+  rclcpp::ExecutorOptions options;
+
+  rclcpp::executors::MultiThreadedExecutor executor(options);
+  executor.add_node(node);
+  executor.add_node(generator);
+  for (size_t i = 0; i < n_spin; i++) {
+    PoseWithCovarianceStamped pose;
+    pose.pose.pose.position.set__x(i + 1);
+    pose_publisher->publish(pose);
+    executor.spin_once(std::chrono::milliseconds(100));
+  }
+
+  EXPECT_THAT(evaluator->n_received_, testing::Gt(0U));
 }

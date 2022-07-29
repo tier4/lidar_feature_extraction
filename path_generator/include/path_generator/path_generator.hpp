@@ -32,6 +32,7 @@
 
 #include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <functional>
@@ -43,29 +44,74 @@
 class PathGenerator : public rclcpp::Node
 {
 public:
-  PathGenerator(const std::string & path_topic_name, const std::string & pose_topic_name)
+  explicit PathGenerator(const std::string & path_topic_name)
   : Node("path_generator"),
-    pose_subscription_(
-      this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        pose_topic_name, rclcpp::SensorDataQoS().reliable().durability_volatile().keep_all(),
-        std::bind(&PathGenerator::Callback, this, std::placeholders::_1))),
     path_publisher_(
-      this->create_publisher<nav_msgs::msg::Path>(
-        path_topic_name, QOS_RELIABLE_TRANSIENT_LOCAL))
+      this->create_publisher<nav_msgs::msg::Path>(path_topic_name, QOS_RELIABLE_TRANSIENT_LOCAL))
   {
   }
 
-  void Callback(const geometry_msgs::msg::PoseStamped::ConstSharedPtr pose)
+  void Publish(const std_msgs::msg::Header & header, const geometry_msgs::msg::Pose & pose)
   {
-    path_.header = pose->header;
-    path_.poses.push_back(*pose);
+    geometry_msgs::msg::PoseStamped pose_stamped;
+    pose_stamped.header = header;
+    pose_stamped.pose = pose;
+
+    path_.header = header;
+    path_.poses.push_back(pose_stamped);
+
     path_publisher_->publish(path_);
   }
 
 private:
   nav_msgs::msg::Path path_;
-  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
-  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
+  const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
+};
+
+class FromPose : public PathGenerator
+{
+public:
+  using PoseStamped = geometry_msgs::msg::PoseStamped;
+
+  FromPose(const std::string & path_topic_name, const std::string & pose_topic_name)
+  : PathGenerator(path_topic_name),
+    subscription_(
+      this->create_subscription<PoseStamped>(
+        pose_topic_name, rclcpp::SensorDataQoS().reliable().durability_volatile().keep_all(),
+        std::bind(&FromPose::Callback, this, std::placeholders::_1)))
+  {
+  }
+
+  void Callback(const PoseStamped::ConstSharedPtr pose)
+  {
+    this->Publish(pose->header, pose->pose);
+  }
+
+private:
+  rclcpp::Subscription<PoseStamped>::SharedPtr subscription_;
+};
+
+class FromPoseWithCovariance : public PathGenerator
+{
+public:
+  using PoseWithCovarianceStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
+
+  FromPoseWithCovariance(const std::string & path_topic_name, const std::string & pose_topic_name)
+  : PathGenerator(path_topic_name),
+    subscription_(
+      this->create_subscription<PoseWithCovarianceStamped>(
+        pose_topic_name, rclcpp::SensorDataQoS().reliable().durability_volatile().keep_all(),
+        std::bind(&FromPoseWithCovariance::Callback, this, std::placeholders::_1)))
+  {
+  }
+
+  void Callback(const PoseWithCovarianceStamped::ConstSharedPtr pose)
+  {
+    this->Publish(pose->header, pose->pose.pose);
+  }
+
+private:
+  rclcpp::Subscription<PoseWithCovarianceStamped>::SharedPtr subscription_;
 };
 
 #endif  // PATH_GENERATOR__PATH_GENERATOR_HPP_

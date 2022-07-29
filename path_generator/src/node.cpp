@@ -34,7 +34,7 @@
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<PathGenerator>("path", "pose"));
+  rclcpp::spin(std::make_shared<FromPoseWithCovariance>("path", "pose"));
   rclcpp::shutdown();
   return 0;
 }
