@@ -223,6 +223,8 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
 
 Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
 {
+  const double x = x_curr(0);
+  const double y = x_curr(1);
   const double biased_yaw = x_curr(2);
   const double yaw_bias = x_curr(3);
   const double vx = x_curr(4);
@@ -231,9 +233,9 @@ Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
 
   Vector6d x_next;
   x_next <<
-    x_curr(0) + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
-    x_curr(1) + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
-    normalizeYaw(x_curr(2) + wz*dt),                    // dyaw = omega + omega_bias
+    x + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
+    y + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
+    normalizeYaw(biased_yaw + wz*dt),                    // dyaw = omega + omega_bias
     yaw_bias,
     vx,
     wz;
