@@ -26,10 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <rclcpp/rclcpp.hpp>
 #include <memory>
 
+#include <rclcpp/rclcpp.hpp>
+
 #include "path_generator/path_generator.hpp"
+
 
 int main(int argc, char * argv[])
 {

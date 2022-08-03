@@ -30,10 +30,10 @@
 #ifndef LIDAR_FEATURE_EXTRACTION__CURVATURE_HPP_
 #define LIDAR_FEATURE_EXTRACTION__CURVATURE_HPP_
 
-#include <range/v3/all.hpp>
-
 #include <algorithm>
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 #include "math.hpp"
 #include "convolution.hpp"

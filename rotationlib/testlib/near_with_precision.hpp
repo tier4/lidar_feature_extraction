@@ -26,16 +26,16 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef TESTLIB_NEAR_WITH_PRECISION_
-#define TESTLIB_NEAR_WITH_PRECISION_
+#ifndef ROTATIONLIB__TESTLIB__NEAR_WITH_PRECISION_HPP_
+#define ROTATIONLIB__TESTLIB__NEAR_WITH_PRECISION_HPP_
+
+#include <gmock/gmock.h>
 
 #include <tuple>
 #include <cmath>
-
-#include <gmock/gmock.h>
 
 MATCHER_P(NearWithPrecision, precision, "") {
   return std::abs(std::get<0>(arg) - std::get<1>(arg)) < precision;
 }
 
-#endif  // TESTLIB_NEAR_WITH_PRECISION_
+#endif  // ROTATIONLIB__TESTLIB__NEAR_WITH_PRECISION_HPP_

@@ -29,12 +29,13 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_
 
-#include <nanoflann.hpp>
 #include <pcl/point_cloud.h>
 
 #include <memory>
 #include <tuple>
 #include <vector>
+
+#include <nanoflann.hpp>
 
 #include "lidar_feature_library/eigen.hpp"
 

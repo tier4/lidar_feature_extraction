@@ -15,18 +15,6 @@
 #ifndef EKF_LOCALIZER__EKF_LOCALIZER_HPP_
 #define EKF_LOCALIZER__EKF_LOCALIZER_HPP_
 
-#include <kalman_filter/kalman_filter.hpp>
-#include <kalman_filter/time_delay_kalman_filter.hpp>
-#include <rclcpp/rclcpp.hpp>
-
-#include <geometry_msgs/msg/pose_array.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
-#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/utils.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -39,9 +27,23 @@
 #include <string>
 #include <vector>
 
+#include <kalman_filter/kalman_filter.hpp>
+#include <kalman_filter/time_delay_kalman_filter.hpp>
+#include <rclcpp/rclcpp.hpp>
+
+#include <geometry_msgs/msg/pose_array.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
 
+using PoseWithCovarianceStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
+using TwistWithCovarianceStamped = geometry_msgs::msg::TwistWithCovarianceStamped;
 
 // Noramlizes the yaw angle so that it fits in the range (-pi, pi)
 /**
@@ -58,7 +60,7 @@ template<typename Message>
 class AgedMessageQueue
 {
 public:
-  AgedMessageQueue(const int max_age) : max_age_(max_age)
+  explicit AgedMessageQueue(const int max_age) : max_age_(max_age)
   {
   }
 
@@ -197,13 +199,13 @@ private:
   //!< @brief estimated ekf odometry publisher
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_;
   //!< @brief ekf estimated yaw bias publisher
-  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_biased_pose_;
+  const rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr pub_biased_pose_;
   //!< @brief initial pose subscriber
-  const rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_initialpose_;
+  const rclcpp::Subscription<PoseWithCovarianceStamped>::SharedPtr sub_initialpose_;
   //!< @brief measurement pose with covariance subscriber
-  const rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_pose_with_cov_;
+  const rclcpp::Subscription<PoseWithCovarianceStamped>::SharedPtr sub_pose_with_cov_;
   //!< @brief measurement twist with covariance subscriber
-  const rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
+  const rclcpp::Subscription<TwistWithCovarianceStamped>::SharedPtr
     sub_twist_with_cov_;
   //!< @brief time for ekf calculation callback
   rclcpp::TimerBase::SharedPtr timer_control_;
@@ -252,8 +254,8 @@ private:
   const DefaultVariance variance_;
   TimeDelayKalmanFilter ekf_;
 
-  AgedMessageQueue<geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr> pose_messages_;
-  AgedMessageQueue<geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr> twist_messages_;
+  AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> pose_messages_;
+  AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> twist_messages_;
 
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;
@@ -266,17 +268,17 @@ private:
   /**
    * @brief set poseWithCovariance measurement
    */
-  void callbackPoseWithCovariance(geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+  void callbackPoseWithCovariance(PoseWithCovarianceStamped::SharedPtr msg);
 
   /**
    * @brief set twistWithCovariance measurement
    */
-  void callbackTwistWithCovariance(geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
+  void callbackTwistWithCovariance(TwistWithCovarianceStamped::SharedPtr msg);
 
   /**
    * @brief set initial_pose to current EKF pose
    */
-  void callbackInitialPose(geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+  void callbackInitialPose(PoseWithCovarianceStamped::SharedPtr msg);
 
   /**
    * @brief initialization of EKF
@@ -288,7 +290,7 @@ private:
    */
   void updatePredictFrequency();
 
-  void updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose);
+  void updateSimple1DFilters(const PoseWithCovarianceStamped & pose);
 
   friend class EKFLocalizerTestSuite;  // for test code
 };

@@ -15,12 +15,13 @@
 #ifndef KALMAN_FILTER__TIME_DELAY_KALMAN_FILTER_HPP_
 #define KALMAN_FILTER__TIME_DELAY_KALMAN_FILTER_HPP_
 
-#include "kalman_filter/kalman_filter.hpp"
-
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 
 #include <iostream>
+
+#include "kalman_filter/kalman_filter.hpp"
+
 
 /**
  * @file time_delay_kalman_filter.h

@@ -30,9 +30,10 @@
 #define LIDAR_FEATURE_LOCALIZATION__MAP_IO_HPP_
 
 #include <pcl/io/auto_io.h>
-#include <rclcpp/rclcpp.hpp>
 
 #include <string>
+
+#include <rclcpp/rclcpp.hpp>
 
 
 template<typename PointType>

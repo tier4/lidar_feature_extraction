@@ -15,6 +15,7 @@
 #ifndef EKF_LOCALIZER__WARNING_HPP_
 #define EKF_LOCALIZER__WARNING_HPP_
 
+#include <string>
 
 #include <rclcpp/rclcpp.hpp>
 

@@ -26,10 +26,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <rclcpp/rclcpp.hpp>
-
 #include <vector>
 #include <memory>
+
+#include <rclcpp/rclcpp.hpp>
 
 #include "imu_integration/integration.hpp"
 

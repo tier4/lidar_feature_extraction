@@ -36,11 +36,11 @@
 #include <pcl/common/eigen.h>
 #include <pcl/common/transforms.h>
 
-#include <range/v3/all.hpp>
-
 #include <algorithm>
 #include <tuple>
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 
 template<typename PointType>

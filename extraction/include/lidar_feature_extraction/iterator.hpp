@@ -29,9 +29,9 @@
 #ifndef LIDAR_FEATURE_EXTRACTION__ITERATOR_HPP_
 #define LIDAR_FEATURE_EXTRACTION__ITERATOR_HPP_
 
-#include <range/v3/all.hpp>
-
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 template<typename Iterator>
 using ElementType = typename std::iterator_traits<typename Iterator::iterator>::value_type;

@@ -29,10 +29,10 @@
 #ifndef LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
 #define LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
 
-#include <range/v3/all.hpp>
-
 #include <algorithm>
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 template<typename Collection>
 std::vector<typename Collection::value_type> GetByIndices(

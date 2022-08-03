@@ -14,9 +14,6 @@
 
 #include "ekf_localizer/ekf_localizer.hpp"
 
-#include <rclcpp/logging.hpp>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -24,6 +21,9 @@
 #include <queue>
 #include <string>
 #include <utility>
+
+#include <rclcpp/logging.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
@@ -115,9 +115,9 @@ void publishEstimateResult(
   const Eigen::Vector3d & linear,
   const Eigen::Vector3d & angular,
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
-  const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr & pub_biased_pose_)
+  const rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr & pub_biased_pose_)
 {
-  geometry_msgs::msg::PoseWithCovarianceStamped biased_pose_msg;
+  PoseWithCovarianceStamped biased_pose_msg;
   biased_pose_msg.pose.pose = MakePose(biased_pose);
   biased_pose_msg.pose.covariance = EKFCovarianceToPoseMessageCovariance(P);
   biased_pose_msg.header.stamp = current_time;
@@ -174,15 +174,15 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
 : rclcpp::Node(node_name, node_options),
   warning_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
-  pub_biased_pose_(create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+  pub_biased_pose_(create_publisher<PoseWithCovarianceStamped>(
     "ekf_biased_pose_with_covariance", 1)),
-  sub_initialpose_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+  sub_initialpose_(create_subscription<PoseWithCovarianceStamped>(
     "initialpose", 1,
     std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1))),
-  sub_pose_with_cov_(create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+  sub_pose_with_cov_(create_subscription<PoseWithCovarianceStamped>(
     "in_pose_with_covariance", 1,
     std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, std::placeholders::_1))),
-  sub_twist_with_cov_(create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+  sub_twist_with_cov_(create_subscription<TwistWithCovarianceStamped>(
     "in_twist_with_covariance", 1,
     std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1))),
   last_predict_time_(std::nullopt),
@@ -596,8 +596,7 @@ bool getTransformFromTF(
 /*
  * callbackInitialPose
  */
-void EKFLocalizer::callbackInitialPose(
-  geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr initialpose)
+void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr initialpose)
 {
   geometry_msgs::msg::TransformStamped transform;
   if (!getTransformFromTF(warning_, pose_frame_id_, initialpose->header.frame_id, transform)) {
@@ -631,7 +630,7 @@ void EKFLocalizer::callbackInitialPose(
  * callbackPoseWithCovariance
  */
 void EKFLocalizer::callbackPoseWithCovariance(
-  geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+  PoseWithCovarianceStamped::SharedPtr msg)
 {
   pose_messages_.push(msg);
 
@@ -641,13 +640,12 @@ void EKFLocalizer::callbackPoseWithCovariance(
 /*
  * callbackTwistWithCovariance
  */
-void EKFLocalizer::callbackTwistWithCovariance(
-  geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
+void EKFLocalizer::callbackTwistWithCovariance(TwistWithCovarianceStamped::SharedPtr msg)
 {
   twist_messages_.push(msg);
 }
 
-void EKFLocalizer::updateSimple1DFilters(const geometry_msgs::msg::PoseWithCovarianceStamped & pose)
+void EKFLocalizer::updateSimple1DFilters(const PoseWithCovarianceStamped & pose)
 {
   const double z = pose.pose.pose.position.z;
 

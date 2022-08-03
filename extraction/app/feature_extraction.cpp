@@ -27,8 +27,6 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-
 #include <algorithm>
 #include <deque>
 #include <functional>
@@ -39,6 +37,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "lidar_feature_extraction/cloud_iterator.hpp"
 #include "lidar_feature_extraction/color_points.hpp"

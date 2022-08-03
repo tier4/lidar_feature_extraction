@@ -15,9 +15,9 @@
 #ifndef EKF_LOCALIZER__NUMERIC_HPP_
 #define EKF_LOCALIZER__NUMERIC_HPP_
 
-#include <cmath>
-
 #include <Eigen/Core>
+
+#include <cmath>
 
 inline bool HasInf(const Eigen::MatrixXd & v)
 {

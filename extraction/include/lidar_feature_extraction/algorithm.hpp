@@ -30,11 +30,11 @@
 #ifndef LIDAR_FEATURE_EXTRACTION__ALGORITHM_HPP_
 #define LIDAR_FEATURE_EXTRACTION__ALGORITHM_HPP_
 
-#include <range/v3/all.hpp>
-
 #include <algorithm>
 #include <vector>
 #include <iterator>
+
+#include <range/v3/all.hpp>
 
 #include "iterator.hpp"
 

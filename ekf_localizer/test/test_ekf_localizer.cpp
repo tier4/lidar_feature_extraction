@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ekf_localizer/ekf_localizer.hpp"
-
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
-#include <rclcpp/rclcpp.hpp>
-
-#include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include <gtest/gtest.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -29,7 +24,13 @@
 #include <string>
 #include <utility>
 
+#include <rclcpp/rclcpp.hpp>
+
+#include <geometry_msgs/msg/transform_stamped.hpp>
+
+#include "ekf_localizer/ekf_localizer.hpp"
 #include "ekf_localizer/numeric.hpp"
+
 
 using std::placeholders::_1;
 

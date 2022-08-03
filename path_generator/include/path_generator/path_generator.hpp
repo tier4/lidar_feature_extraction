@@ -30,14 +30,14 @@
 #ifndef PATH_GENERATOR__PATH_GENERATOR_HPP_
 #define PATH_GENERATOR__PATH_GENERATOR_HPP_
 
+#include <functional>
+#include <memory>
+#include <string>
+
 #include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-
-#include <functional>
-#include <memory>
-#include <string>
 
 #include "lidar_feature_library/qos.hpp"
 

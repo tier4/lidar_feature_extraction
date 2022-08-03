@@ -30,7 +30,7 @@ inline double ComputeInterval(double frequency)
 class UpdateInterval
 {
  public:
-  UpdateInterval(const double default_frequency)
+  explicit UpdateInterval(const double default_frequency)
   : default_frequency_(default_frequency), last_time_(std::nullopt)
   {
   }

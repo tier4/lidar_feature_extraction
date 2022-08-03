@@ -27,9 +27,9 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#include <iterator>
-
 #include <gmock/gmock.h>
+
+#include <iterator>
 
 #include <range/v3/all.hpp>
 

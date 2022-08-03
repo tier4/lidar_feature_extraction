@@ -29,18 +29,18 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <tf2_eigen/tf2_eigen.hpp>
 
 #include <memory>
 #include <string>
+
+#include <rclcpp/rclcpp.hpp>
+
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 #include "lidar_feature_library/point_type.hpp"
 #include "lidar_feature_library/qos.hpp"

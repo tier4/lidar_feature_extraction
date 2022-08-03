@@ -30,17 +30,17 @@
 #define LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_
 
 
-#include <Eigen/Eigenvalues>
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/eigen.h>
 
-#include <range/v3/all.hpp>
+#include <Eigen/Eigenvalues>
 
 #include <algorithm>
 #include <tuple>
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 #include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_localization/degenerate.hpp"

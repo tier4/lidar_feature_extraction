@@ -26,9 +26,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <range/v3/all.hpp>
-
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 std::vector<int> irange(const int size)
 {

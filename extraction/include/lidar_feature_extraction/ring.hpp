@@ -32,8 +32,6 @@
 
 #include <fmt/core.h>
 #include <pcl/point_cloud.h>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <sensor_msgs/msg/point_field.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -42,6 +40,9 @@
 #include <iterator>
 #include <unordered_map>
 #include <vector>
+
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/point_field.hpp>
 
 #include "cloud_iterator.hpp"
 #include "iterator.hpp"

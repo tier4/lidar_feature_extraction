@@ -29,12 +29,12 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__LOCALIZER_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__LOCALIZER_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
 #include <tuple>
+
+#include <rclcpp/rclcpp.hpp>
 
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"

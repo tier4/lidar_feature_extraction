@@ -29,13 +29,13 @@
 #ifndef LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
 #define LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
 
-#include <range/v3/all.hpp>
-
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
 #include <string>
 #include <vector>
+
+#include <range/v3/all.hpp>
 
 
 template<int N>

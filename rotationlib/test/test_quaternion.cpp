@@ -32,7 +32,11 @@
 #include "rotationlib/quaternion.hpp"
 
 
-using namespace rotationlib;
+using rotationlib::FromWXYZ;
+using rotationlib::ToWXYZ;
+using rotationlib::LeftMultiplicationMatrix;
+using rotationlib::RightMultiplicationMatrix;
+using rotationlib::RPYToQuaternionXYZ;
 
 
 TEST(Quaternion, LeftMultiplicationMatrix)

@@ -27,12 +27,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <gmock/gmock.h>
-#include <nav_msgs/msg/path.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <memory>
 #include <chrono>
 #include <thread>
+
+#include <nav_msgs/msg/path.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 #include "lidar_feature_library/qos.hpp"
 

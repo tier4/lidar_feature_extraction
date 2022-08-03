@@ -27,22 +27,23 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 
-#include <rclcpp/rclcpp.hpp>
-
 #include <Eigen/Geometry>
+
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/exact_time.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
 
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/exact_time.h>
-
 #include <memory>
 #include <string>
+
+#include <rclcpp/rclcpp.hpp>
+
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_mapping/map.hpp"
