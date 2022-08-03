@@ -26,11 +26,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "hat.hpp"
+#include <gmock/gmock.h>
+
+#include "rotationlib/hat.hpp"
 
 TEST(Hat, Hat)
 {
-  const Eigen::Matrix3d K = rotationlib::Hat([1, 2, 3]);
+  const Eigen::Matrix3d K = rotationlib::Hat(Eigen::Vector3d(1, 2, 3));
   Eigen::Matrix3d expected;
   expected <<
     0., -3., 2.,
