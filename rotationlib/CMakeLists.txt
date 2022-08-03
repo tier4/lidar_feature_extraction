@@ -37,7 +37,7 @@ endfunction()
 
 if(BUILD_TESTING)
   set(TEST_FILES
-    test/test_hat.hpp
+    test/test_hat.cpp
     test/test_quaternion.cpp
     test/test_jacobian_quaternion.cpp)
 
