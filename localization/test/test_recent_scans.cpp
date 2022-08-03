@@ -78,7 +78,7 @@ TEST(RecentScans, RecentScans)
         0, 0, -1,
         -1, 0, 0,
         0, 1, 0
-      ).finished();
+    ).finished();
     pose.translation() = Eigen::Vector3d(0, 2, 0);
     scans.Add(pose, scan);
   }

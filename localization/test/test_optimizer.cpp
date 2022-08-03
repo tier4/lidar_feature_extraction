@@ -59,7 +59,7 @@ TEST(Optimizer, Alignment)
       -3, -2, -5,
       -4, 0, 2,
       -3, -3, 3
-    ).finished();
+  ).finished();
 
   const Eigen::MatrixXd Y = (transform_true * X.transpose()).transpose();
 
