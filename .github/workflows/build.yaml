@@ -4,7 +4,7 @@ on: push
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -14,19 +14,26 @@ jobs:
       - name: Install ROS
         run: |
           DEBIAN_FRONTEND=noninteractive \
-          sudo sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu focal main" \
-            > /etc/apt/sources.list.d/ros2-latest.list' \
-          && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
-            --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+                -o /usr/share/keyrings/ros-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null \
           && sudo apt-get update \
-          && sudo apt-get install -y --no-install-recommends ros-galactic-ros-base \
+          && sudo apt-get install -y --no-install-recommends ros-humble-ros-base \
           && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Install colcon and rosdep
         run: |
           DEBIAN_FRONTEND=noninteractive sudo apt-get update \
             && sudo apt-get install -y python3-pip \
-            && sudo python3 -m pip install colcon-common-extensions rosdep pytest-rerunfailures \
+            && sudo python3 -m pip install \
+              colcon-common-extensions colcon-lcov-result colcon-coveragepy-result colcon-mixin \
+              pytest-rerunfailures rosdep vcstool \
+            && sudo rm -rf /var/lib/apt/lists/*
+
+      - name: Install lcov
+        run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt-get update \
+            && sudo apt-get install -y lcov \
             && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Run rosdep install
@@ -35,15 +42,27 @@ jobs:
             && sudo rm -rf /etc/ros/rosdep/* \
             && sudo rosdep init \
             && rosdep update \
-            && rosdep install -y --rosdistro galactic -i --from-paths . \
+            && rosdep install -y --rosdistro humble -i --from-paths . \
             && sudo rm -rf /var/lib/apt/lists/*
 
       - name: Build
         run: |
-          . /opt/ros/galactic/setup.sh
+          . /opt/ros/humble/setup.sh
           colcon build
 
       - name: Test
         run: |
-          . /opt/ros/galactic/setup.sh
-          colcon test
+          . /opt/ros/humble/setup.sh
+          colcon lcov-result --zero-counters
+          colcon lcov-result --initial
+          colcon test \
+            --event-handlers console_cohesion+ \
+            --return-code-on-test-failure
+          colcon lcov-result --verbose
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: false
+          verbose: true
+          flags: total
