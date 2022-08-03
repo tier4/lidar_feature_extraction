@@ -36,11 +36,12 @@ TEST(PCL_UTILS, ThrowsIfPointCloudIsEmpty)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   EXPECT_THROW(
     try {
-      ThrowsIfPointCloudIsEmpty<pcl::PointXYZ>(cloud);
-    } catch (std::invalid_argument & e) {
-      EXPECT_STREQ("Point cloud is empty!", e.what());
-      throw e;
-    },
+    ThrowsIfPointCloudIsEmpty<pcl::PointXYZ>(cloud);
+  } catch (std::invalid_argument & e) {
+    EXPECT_STREQ("Point cloud is empty!", e.what());
+    throw e;
+  }
+    ,
     std::invalid_argument);
 
   cloud->push_back(pcl::PointXYZ(0., 1., 2.));
@@ -50,8 +51,8 @@ TEST(PCL_UTILS, ThrowsIfPointCloudIsEmpty)
 TEST(PCL_UTILS, TransformPointCloud)
 {
   auto to_vector = [](const pcl::PointXYZ & p) {
-    return Eigen::Vector3d(p.x, p.y, p.z);
-  };
+      return Eigen::Vector3d(p.x, p.y, p.z);
+    };
 
   const Eigen::Quaterniond q = Eigen::Quaterniond(-1., 1., 1., -1.).normalized();
   const Eigen::Vector3d t(1., 2., 4.);

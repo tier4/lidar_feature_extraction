@@ -50,18 +50,18 @@ TEST(TransformXYZ, TransformXYZ)
 
   Eigen::Isometry3d transform;
   transform.linear() <<
-      -1., -0.,  0.,
-       0.,  1., -0.,
-       0.,  0., -1.;
+    -1., -0., 0.,
+    0., 1., -0.,
+    0., 0., -1.;
   transform.translation() <<
-      2, 4, 1;
+    2, 4, 1;
 
   const Eigen::VectorXd p1 = TransformXYZ(transform, p0);
 
   Eigen::VectorXd expected(5);
   expected << 1, 4, -1, 5, 4;
 
-  EXPECT_THAT((p1 - expected).norm(), 0);;
+  EXPECT_THAT((p1 - expected).norm(), 0);
 }
 
 TEST(Eigen, VectorsToEigen)
@@ -77,11 +77,11 @@ TEST(Eigen, VectorsToEigen)
 
   const Eigen::MatrixXd expected =
     (Eigen::MatrixXd(4, 2) <<
-      0, 1,
-      2, 3,
-      4, 5,
-      6, 7
-  ).finished();
+    0, 1,
+    2, 3,
+    4, 5,
+    6, 7
+    ).finished();
 
   EXPECT_EQ(M.rows(), 4);
   EXPECT_EQ(M.cols(), 2);
@@ -93,13 +93,13 @@ TEST(Eigen, HorizontalStack)
 {
   const Eigen::Matrix<double, 2, 3> M0 = (
     Eigen::Matrix<double, 2, 3>() <<
-    0, 1, 2,
-    3, 4, 5).finished();
+      0, 1, 2,
+      3, 4, 5).finished();
 
   const Eigen::Matrix<double, 2, 3> M1 = (
     Eigen::Matrix<double, 2, 3>() <<
-    1, 3, 5,
-    2, 4, 6).finished();
+      1, 3, 5,
+      2, 4, 6).finished();
 
   const std::vector<Eigen::Matrix<double, 2, 3>> vectors{M0, M1};
 
@@ -107,11 +107,11 @@ TEST(Eigen, HorizontalStack)
 
   const Eigen::MatrixXd expected =
     (Eigen::MatrixXd(4, 3) <<
-      0, 1, 2,
-      3, 4, 5,
-      1, 3, 5,
-      2, 4, 6
-  ).finished();
+    0, 1, 2,
+    3, 4, 5,
+    1, 3, 5,
+    2, 4, 6
+    ).finished();
 
   EXPECT_EQ(M.rows(), 4);
   EXPECT_EQ(M.cols(), 3);
@@ -134,11 +134,11 @@ TEST(Eigen, GetRows)
 {
   const Eigen::MatrixXd matrix =
     (Eigen::MatrixXd(4, 3) <<
-      0, 1, 2,
-      3, 4, 5,
-      1, 3, 5,
-      2, 4, 6
-  ).finished();
+    0, 1, 2,
+    3, 4, 5,
+    1, 3, 5,
+    2, 4, 6
+    ).finished();
 
   std::vector<std::uint64_t> indices{0, 2};
 

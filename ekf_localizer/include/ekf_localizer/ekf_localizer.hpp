@@ -60,7 +60,8 @@ template<typename Message>
 class AgedMessageQueue
 {
 public:
-  explicit AgedMessageQueue(const int max_age) : max_age_(max_age)
+  explicit AgedMessageQueue(const int max_age)
+  : max_age_(max_age)
   {
   }
 
@@ -112,7 +113,7 @@ public:
     stddev_ = 1e9;
     proc_stddev_x_c_ = 0.0;
     return;
-  };
+  }
   void init(const double init_obs, const double obs_stddev, const rclcpp::Time time)
   {
     x_ = init_obs;
@@ -120,7 +121,7 @@ public:
     latest_time_ = time;
     initialized_ = true;
     return;
-  };
+  }
   void update(const double obs, const double obs_stddev, const rclcpp::Time time)
   {
     if (!initialized_) {
@@ -140,9 +141,9 @@ public:
 
     latest_time_ = time;
     return;
-  };
-  void set_proc_stddev(const double proc_stddev) { proc_stddev_x_c_ = proc_stddev; }
-  double get_x() { return x_; }
+  }
+  void set_proc_stddev(const double proc_stddev) {proc_stddev_x_c_ = proc_stddev;}
+  double get_x() {return x_;}
 
 private:
   bool initialized_;
@@ -164,8 +165,8 @@ public:
     const double yaw_covariance,
     const double yaw_bias_covariance,
     const double vx_covariance,
-    const double wz_covariance) :
-    yaw_covariance_(yaw_covariance),
+    const double wz_covariance)
+  : yaw_covariance_(yaw_covariance),
     yaw_bias_covariance_(yaw_bias_covariance),
     vx_covariance_(vx_covariance),
     wz_covariance_(wz_covariance)
@@ -226,7 +227,7 @@ private:
   /* parameters */
   const double tf_rate_;                   //!< @brief  tf publish rate
   const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
-                                     //!< if true,publish /estimate_yaw_bias
+  //!< if true,publish /estimate_yaw_bias
   const int extend_state_step_;  //!< @brief  for time delay compensation
 
   const std::string pose_frame_id_;
@@ -239,7 +240,7 @@ private:
   const double pose_gate_dist_;
 
   const double twist_additional_delay_;  //!< @brief  compensated delay = (twist.header.stamp - now)
-                                   //!< + additional_delay [s]
+  //!< + additional_delay [s]
   //!< @brief  measurement is ignored if the mahalanobis distance is larger than this value.
   const double twist_gate_dist_;
 

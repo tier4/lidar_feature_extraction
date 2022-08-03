@@ -88,13 +88,14 @@ TEST(IndexRange, IndexRange)
   {
     EXPECT_THROW(
       try {
-        IndexRange index_range(1, 3, 3);
-      } catch (std::out_of_range & e) {
-        EXPECT_STREQ(
-          "end_index - start_index (which is 2) cannot be smaller than n_blocks (which is 3)",
-          e.what());
-        throw e;
-      },
+      IndexRange index_range(1, 3, 3);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ(
+        "end_index - start_index (which is 2) cannot be smaller than n_blocks (which is 3)",
+        e.what());
+      throw e;
+    }
+      ,
       std::invalid_argument);
   }
 
@@ -103,38 +104,42 @@ TEST(IndexRange, IndexRange)
 
     EXPECT_THROW(
       try {
-        index_range.Begin(-1);
-      } catch (std::out_of_range & e) {
-        EXPECT_STREQ("j (which is -1) < 0 (which is 0)", e.what());
-        throw e;
-      },
+      index_range.Begin(-1);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is -1) < 0 (which is 0)", e.what());
+      throw e;
+    }
+      ,
       std::out_of_range);
 
     EXPECT_THROW(
       try {
-        index_range.End(-1);
-      } catch (std::out_of_range & e) {
-        EXPECT_STREQ("j (which is -1) < 0 (which is 0)", e.what());
-        throw e;
-      },
+      index_range.End(-1);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is -1) < 0 (which is 0)", e.what());
+      throw e;
+    }
+      ,
       std::out_of_range);
 
     EXPECT_THROW(
       try {
-        index_range.Begin(3);
-      } catch (std::out_of_range & e) {
-        EXPECT_STREQ("j (which is 3) >= n_blocks (which is 3)", e.what());
-        throw e;
-      },
+      index_range.Begin(3);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is 3) >= n_blocks (which is 3)", e.what());
+      throw e;
+    }
+      ,
       std::out_of_range);
 
     EXPECT_THROW(
       try {
-        index_range.End(3);
-      } catch (std::out_of_range & e) {
-        EXPECT_STREQ("j (which is 3) >= n_blocks (which is 3)", e.what());
-        throw e;
-      },
+      index_range.End(3);
+    } catch (std::out_of_range & e) {
+      EXPECT_STREQ("j (which is 3) >= n_blocks (which is 3)", e.what());
+      throw e;
+    }
+      ,
       std::out_of_range);
   }
 }

@@ -40,15 +40,15 @@ using testing::ElementsAre;
 TEST(ColorPoints, ColorPointsByLabel)
 {
   auto to_vector = [](const pcl::PointXYZRGB & p) {
-    return std::vector<float>{
+      return std::vector<float>{
       static_cast<float>(p.x),
       static_cast<float>(p.y),
       static_cast<float>(p.z),
       static_cast<float>(p.r),
       static_cast<float>(p.g),
       static_cast<float>(p.b)
+      };
     };
-  };
 
   std::vector<PointLabel> labels = InitLabels(6);
   labels.at(0) = PointLabel::Default;
@@ -70,9 +70,9 @@ TEST(ColorPoints, ColorPointsByLabel)
   const auto colored = ColorPointsByLabel<pcl::PointXYZ>(ref_points, labels);
 
   EXPECT_THAT(to_vector(colored->at(0)), ElementsAre(0., 0., 0., 255., 255., 255.));
-  EXPECT_THAT(to_vector(colored->at(1)), ElementsAre(1., 0., 0., 255.,   0.,   0.));
-  EXPECT_THAT(to_vector(colored->at(2)), ElementsAre(2., 0., 0., 255.,  63.,   0.));
+  EXPECT_THAT(to_vector(colored->at(1)), ElementsAre(1., 0., 0., 255., 0., 0.));
+  EXPECT_THAT(to_vector(colored->at(2)), ElementsAre(2., 0., 0., 255., 63., 0.));
   EXPECT_THAT(to_vector(colored->at(3)), ElementsAre(3., 0., 0., 127., 127., 127.));
-  EXPECT_THAT(to_vector(colored->at(4)), ElementsAre(4., 0., 0., 255.,   0., 255.));
-  EXPECT_THAT(to_vector(colored->at(5)), ElementsAre(5., 0., 0.,   0., 255.,   0.));
+  EXPECT_THAT(to_vector(colored->at(4)), ElementsAre(4., 0., 0., 255., 0., 255.));
+  EXPECT_THAT(to_vector(colored->at(5)), ElementsAre(5., 0., 0., 0., 255., 0.));
 }

@@ -23,7 +23,8 @@
 class Warning
 {
 public:
-  Warning(rclcpp::Node* node) : node_(node)
+  Warning(rclcpp::Node * node)
+  : node_(node)
   {
   }
 

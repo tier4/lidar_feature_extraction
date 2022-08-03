@@ -50,21 +50,23 @@ TEST(Span, NonConstSpan)
 
   EXPECT_THROW(
     try {
-      span.at(-1);
-    } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "Index out of range. -1 < 0");
-      throw e;
-    },
+    span.at(-1);
+  } catch (std::out_of_range & e) {
+    EXPECT_STREQ(e.what(), "Index out of range. -1 < 0");
+    throw e;
+  }
+    ,
     std::out_of_range
   );
 
   EXPECT_THROW(
     try {
-      span.at(7);
-    } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "Index out of range. 7 >= this->size()");
-      throw e;
-    },
+    span.at(7);
+  } catch (std::out_of_range & e) {
+    EXPECT_STREQ(e.what(), "Index out of range. 7 >= this->size()");
+    throw e;
+  }
+    ,
     std::out_of_range
   );
 }

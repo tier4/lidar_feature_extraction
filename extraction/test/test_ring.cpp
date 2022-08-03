@@ -40,22 +40,23 @@ TEST(Ring, RingIsAvailable)
 {
   const std::vector<sensor_msgs::msg::PointField> with_ring = {
     sensor_msgs::msg::PointField()
-      .set__name("intensity").set__offset(16).set__datatype(7).set__count(1),
+    .set__name("intensity").set__offset(16).set__datatype(7).set__count(1),
     sensor_msgs::msg::PointField()
-      .set__name("ring").set__offset(20).set__datatype(4).set__count(1)
+    .set__name("ring").set__offset(20).set__datatype(4).set__count(1)
   };
   EXPECT_TRUE(RingIsAvailable(with_ring));
 
   const std::vector<sensor_msgs::msg::PointField> without_ring = {
     sensor_msgs::msg::PointField()
-      .set__name("intensity").set__offset(16).set__datatype(7).set__count(1)
+    .set__name("intensity").set__offset(16).set__datatype(7).set__count(1)
   };
   EXPECT_FALSE(RingIsAvailable(without_ring));
 }
 
 TEST(Ring, SortByAtan2)
 {
-  struct Point {
+  struct Point
+  {
     double x;
     double y;
   };
@@ -104,22 +105,23 @@ TEST(Ring, RemoveSparseRings)
 }
 
 TEST(Ring, ExtractAngleSortedRings) {
-  struct PointWithRing {
+  struct PointWithRing
+  {
     int ring;
     double x;
     double y;
   };
 
   std::vector<PointWithRing> points;
-  points.push_back(PointWithRing{0,  1.,  1.});
-  points.push_back(PointWithRing{0,  1.,  0.});
+  points.push_back(PointWithRing{0, 1., 1.});
+  points.push_back(PointWithRing{0, 1., 0.});
 
-  points.push_back(PointWithRing{1,  1., -1.});
-  points.push_back(PointWithRing{1,  1.,  0.});
-  points.push_back(PointWithRing{1,  0.,  1.});
+  points.push_back(PointWithRing{1, 1., -1.});
+  points.push_back(PointWithRing{1, 1., 0.});
+  points.push_back(PointWithRing{1, 0., 1.});
 
-  points.push_back(PointWithRing{2,  1.,  1.});
-  points.push_back(PointWithRing{2,  0., -1.});
+  points.push_back(PointWithRing{2, 1., 1.});
+  points.push_back(PointWithRing{2, 0., -1.});
   points.push_back(PointWithRing{2, -1., -1.});
 
   const auto rings = ExtractAngleSortedRings(points);

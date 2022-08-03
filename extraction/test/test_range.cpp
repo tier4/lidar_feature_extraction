@@ -35,7 +35,8 @@
 
 
 template<typename T>
-bool Equal(const T & a, const T & b) {
+bool Equal(const T & a, const T & b)
+{
   return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
@@ -50,8 +51,8 @@ TEST(Range, IsInInclusiveRange) {
 
 TEST(Range, Range) {
   auto norm = [](const pcl::PointXYZ & p) {
-    return std::sqrt(p.x * p.x + p.y * p.y);
-  };
+      return std::sqrt(p.x * p.x + p.y * p.y);
+    };
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   cloud->push_back(pcl::PointXYZ(3., 4., 0.));

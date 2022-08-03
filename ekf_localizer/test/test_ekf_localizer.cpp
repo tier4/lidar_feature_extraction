@@ -54,7 +54,7 @@ public:
   TestEKFLocalizerNode(const std::string & node_name, const rclcpp::NodeOptions & node_options)
   : EKFLocalizer(node_name, node_options),
     sub_odom(this->create_subscription<nav_msgs::msg::Odometry>(
-      "/ekf_odom", 1, std::bind(&TestEKFLocalizerNode::testCallbackOdom, this, _1)))
+        "/ekf_odom", 1, std::bind(&TestEKFLocalizerNode::testCallbackOdom, this, _1)))
   {
     using std::chrono_literals::operator""ms;
     test_timer_ = rclcpp::create_timer(

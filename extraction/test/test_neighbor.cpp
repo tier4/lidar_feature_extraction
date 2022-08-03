@@ -98,41 +98,45 @@ TEST(Neighbor, ThrowOutOfRange)
 
   EXPECT_THROW(
     try {
-      is_neighbor(-1, 0);
-    } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "index1 (which is -1) < 0 (which is 0)");
-      throw e;
-    },
+    is_neighbor(-1, 0);
+  } catch (std::out_of_range & e) {
+    EXPECT_STREQ(e.what(), "index1 (which is -1) < 0 (which is 0)");
+    throw e;
+  }
+    ,
     std::out_of_range
   );
 
   EXPECT_THROW(
     try {
-      is_neighbor(3, 0);
-    } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "index1 (which is 3) >= this->size() (which is 3)");
-      throw e;
-    },
+    is_neighbor(3, 0);
+  } catch (std::out_of_range & e) {
+    EXPECT_STREQ(e.what(), "index1 (which is 3) >= this->size() (which is 3)");
+    throw e;
+  }
+    ,
     std::out_of_range
   );
 
   EXPECT_THROW(
     try {
-      is_neighbor(0, -1);
-    } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "index2 (which is -1) < 0 (which is 0)");
-      throw e;
-    },
+    is_neighbor(0, -1);
+  } catch (std::out_of_range & e) {
+    EXPECT_STREQ(e.what(), "index2 (which is -1) < 0 (which is 0)");
+    throw e;
+  }
+    ,
     std::out_of_range
   );
 
   EXPECT_THROW(
     try {
-      is_neighbor(0, 3);
-    } catch(std::out_of_range & e) {
-      EXPECT_STREQ(e.what(), "index2 (which is 3) >= this->size() (which is 3)");
-      throw e;
-    },
+    is_neighbor(0, 3);
+  } catch (std::out_of_range & e) {
+    EXPECT_STREQ(e.what(), "index2 (which is 3) >= this->size() (which is 3)");
+    throw e;
+  }
+    ,
     std::out_of_range
   );
 }
@@ -146,12 +150,13 @@ TEST(Neighbor, ThrowIfInsufficientPoints)
 
   EXPECT_THROW(
     try {
-      const NeighborCheckXY is_neighbor(ref_points, 0.);
-      EXPECT_EQ(is_neighbor.size(), 4);
-    } catch(std::invalid_argument & e) {
-      EXPECT_STREQ(e.what(), "The input point size (which is 1) cannot be smaller than 2");
-      throw e;
-    },
+    const NeighborCheckXY is_neighbor(ref_points, 0.);
+    EXPECT_EQ(is_neighbor.size(), 4);
+  } catch (std::invalid_argument & e) {
+    EXPECT_STREQ(e.what(), "The input point size (which is 1) cannot be smaller than 2");
+    throw e;
+  }
+    ,
     std::invalid_argument
   );
 }

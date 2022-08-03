@@ -55,11 +55,12 @@ TEST(Math, CalcRadian)
 
   EXPECT_THROW(
     try {
-      CalcRadian(0., 0., 0., 0.);
-    } catch(const std::invalid_argument & e) {
-      EXPECT_STREQ("All input values are zero. Angle cannot be calculated", e.what());
-      throw e;
-    },
+    CalcRadian(0., 0., 0., 0.);
+  } catch (const std::invalid_argument & e) {
+    EXPECT_STREQ("All input values are zero. Angle cannot be calculated", e.what());
+    throw e;
+  }
+    ,
     std::invalid_argument);
 }
 

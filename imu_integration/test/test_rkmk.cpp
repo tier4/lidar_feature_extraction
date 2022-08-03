@@ -27,4 +27,3 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <gmock/gmock.h>
-

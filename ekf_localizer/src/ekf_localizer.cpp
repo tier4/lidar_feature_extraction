@@ -152,7 +152,8 @@ double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_v
   return 0.;
 }
 
-std::chrono::nanoseconds DoubleToNanoSeconds(const double time) {
+std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
+{
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
     std::chrono::duration<double>(time));
 }
@@ -175,19 +176,19 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   warning_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
   pub_biased_pose_(create_publisher<PoseWithCovarianceStamped>(
-    "ekf_biased_pose_with_covariance", 1)),
+      "ekf_biased_pose_with_covariance", 1)),
   sub_initialpose_(create_subscription<PoseWithCovarianceStamped>(
-    "initialpose", 1,
-    std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1))),
+      "initialpose", 1,
+      std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1))),
   sub_pose_with_cov_(create_subscription<PoseWithCovarianceStamped>(
-    "in_pose_with_covariance", 1,
-    std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, std::placeholders::_1))),
+      "in_pose_with_covariance", 1,
+      std::bind(&EKFLocalizer::callbackPoseWithCovariance, this, std::placeholders::_1))),
   sub_twist_with_cov_(create_subscription<TwistWithCovarianceStamped>(
-    "in_twist_with_covariance", 1,
-    std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1))),
+      "in_twist_with_covariance", 1,
+      std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1))),
   last_predict_time_(std::nullopt),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
-    std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
+      std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   default_frequency_(declare_parameter("predict_frequency", 50.0)),
   interval_(default_frequency_),
   tf_rate_(declare_parameter("tf_rate", 10.0)),
@@ -236,7 +237,7 @@ Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
   x_next <<
     x + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
     y + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
-    normalizeYaw(biased_yaw + wz*dt),                    // dyaw = omega + omega_bias
+    normalizeYaw(biased_yaw + wz * dt),                  // dyaw = omega + omega_bias
     yaw_bias,
     vx,
     wz;
@@ -309,7 +310,7 @@ Eigen::Matrix2d TwistObservationCovariance(
   Eigen::Matrix2d R;
   //   vx                wz
   R << covariance(0, 0), covariance(0, 5),   // vx
-       covariance(5, 0), covariance(5, 5);   // wz
+    covariance(5, 0), covariance(5, 5);      // wz
 
   /* In order to avoid a large change by update, measurement update is performed
    * by dividing at every step. measurement update is performed by dividing at every step. */
@@ -397,7 +398,8 @@ bool CheckDelayStep(const Warning & warning_, const int delay_step, const int ma
   return good;
 }
 
-bool CheckMeasurementMatrixNanInf(const Warning & warning_, const Eigen::MatrixXd & M) {
+bool CheckMeasurementMatrixNanInf(const Warning & warning_, const Eigen::MatrixXd & M)
+{
   const bool good = !HasNan(M) && !HasInf(M);
 
   if (!good) {
@@ -548,7 +550,10 @@ void EKFLocalizer::timerCallback()
   const Eigen::Vector3d linear(vx, 0, 0);
   const Eigen::Vector3d angular(0, 0, wz);
 
-  tf_br_->sendTransform(MakeTransformStamped(unbiased_pose, this->now(), pose_frame_id_, "base_link"));
+  tf_br_->sendTransform(
+    MakeTransformStamped(
+      unbiased_pose,
+      this->now(), pose_frame_id_, "base_link"));
 
   /* publish ekf result */
   publishEstimateResult(

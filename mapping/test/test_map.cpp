@@ -85,10 +85,10 @@ TEST(Map, TransformAdd)
   map.Save(".__testfile.pcd");
 
   pcl::PointCloud<pcl::PointXYZ> loaded;
-  const int retval = pcl::io::loadPCDFile<pcl::PointXYZ> (".__testfile.pcd", loaded);
+  const int retval = pcl::io::loadPCDFile<pcl::PointXYZ>(".__testfile.pcd", loaded);
   ASSERT_EQ(retval, 0);
 
-  auto to_vector = [](const pcl::PointXYZ & p) { return std::vector<double>{p.x, p.y, p.z}; };
+  auto to_vector = [](const pcl::PointXYZ & p) {return std::vector<double>{p.x, p.y, p.z};};
 
   EXPECT_EQ(loaded.size(), static_cast<std::uint32_t>(3));
   EXPECT_THAT(to_vector(loaded.at(0)), testing::ElementsAre(0., 1., 0.));

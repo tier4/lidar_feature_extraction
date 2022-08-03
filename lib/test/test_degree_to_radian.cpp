@@ -33,7 +33,7 @@
 
 TEST(DegreeToRadian, DegreeToRadian)
 {
-  EXPECT_EQ(DegreeToRadian(-90.), - M_PI / 2.);
+  EXPECT_EQ(DegreeToRadian(-90.), -M_PI / 2.);
   EXPECT_EQ(DegreeToRadian(0.), 0.);
   EXPECT_EQ(DegreeToRadian(180.), M_PI);
   EXPECT_EQ(DegreeToRadian(360.), 2. * M_PI);

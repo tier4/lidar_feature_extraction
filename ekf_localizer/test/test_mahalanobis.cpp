@@ -58,4 +58,3 @@ TEST(MahalanobisGate, mahalanobisGate)
   EXPECT_FALSE(mahalanobisGate(1.00, x, y, C));
   EXPECT_TRUE(mahalanobisGate(1.01, x, y, C));
 }
-

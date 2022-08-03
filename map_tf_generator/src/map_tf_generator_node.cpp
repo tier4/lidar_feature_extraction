@@ -85,8 +85,8 @@ private:
 
     RCLCPP_INFO_STREAM(
       get_logger(), "broadcast static tf. map_frame:"
-                      << map_frame_ << ", viewer_frame:" << viewer_frame_ << ", x:" << coordinate[0]
-                      << ", y:" << coordinate[1] << ", z:" << coordinate[2]);
+        << map_frame_ << ", viewer_frame:" << viewer_frame_ << ", x:" << coordinate[0]
+        << ", y:" << coordinate[1] << ", z:" << coordinate[2]);
   }
 };
 

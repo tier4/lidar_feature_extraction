@@ -46,11 +46,12 @@ TEST(UpdateInterval, DetectJumpBackInTime)
 
   EXPECT_THROW(
     try {
-      interval.Compute(10000.49);
-    } catch(std::invalid_argument & e) {
-      EXPECT_STREQ("Detected jump back in time", e.what());
-      throw e;
-    },
+    interval.Compute(10000.49);
+  } catch (std::invalid_argument & e) {
+    EXPECT_STREQ("Detected jump back in time", e.what());
+    throw e;
+  }
+    ,
     std::invalid_argument
   );
 }

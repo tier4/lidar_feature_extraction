@@ -60,11 +60,12 @@ TEST(Convolution, Convolution1D) {
     std::vector<double> weight{1., 0., -1};
     EXPECT_THROW(
       try {
-        Convolution1D(input, weight);
-      } catch (const std::invalid_argument & e) {
-        EXPECT_STREQ("Input array size 2 cannot be smaller than weight size 3", e.what());
-        throw e;
-      },
+      Convolution1D(input, weight);
+    } catch (const std::invalid_argument & e) {
+      EXPECT_STREQ("Input array size 2 cannot be smaller than weight size 3", e.what());
+      throw e;
+    }
+      ,
       std::invalid_argument);
   }
 }

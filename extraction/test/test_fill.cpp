@@ -79,22 +79,24 @@ TEST(Label, FillFromLeft)
 
     EXPECT_THROW(
       try {
-        FillFromLeft(labels, is_neighbor, 1, 4, PointLabel::Default);
-      } catch(const std::invalid_argument & e) {
-        EXPECT_STREQ("end_index (which is 4) > labels.size() (which is 3)", e.what());
-        throw e;
-      },
+      FillFromLeft(labels, is_neighbor, 1, 4, PointLabel::Default);
+    } catch (const std::invalid_argument & e) {
+      EXPECT_STREQ("end_index (which is 4) > labels.size() (which is 3)", e.what());
+      throw e;
+    }
+      ,
       std::invalid_argument
     );
 
     FillFromLeft(labels, is_neighbor, 0, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        FillFromLeft(labels, is_neighbor, -1, 2, PointLabel::Default);
-      } catch(const std::invalid_argument & e) {
-        EXPECT_STREQ("begin_index (which is -1) < 0 (which is 0)", e.what());
-        throw e;
-      },
+      FillFromLeft(labels, is_neighbor, -1, 2, PointLabel::Default);
+    } catch (const std::invalid_argument & e) {
+      EXPECT_STREQ("begin_index (which is -1) < 0 (which is 0)", e.what());
+      throw e;
+    }
+      ,
       std::invalid_argument
     );
   }
@@ -157,22 +159,24 @@ TEST(Label, FillFromRight)
     FillFromRight(labels, is_neighbor, 1, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        FillFromRight(labels, is_neighbor, 1, 3, PointLabel::Default);
-      } catch(const std::invalid_argument & e) {
-        EXPECT_STREQ("end_index (which is 3) >= labels.size() (which is 3)", e.what());
-        throw e;
-      },
+      FillFromRight(labels, is_neighbor, 1, 3, PointLabel::Default);
+    } catch (const std::invalid_argument & e) {
+      EXPECT_STREQ("end_index (which is 3) >= labels.size() (which is 3)", e.what());
+      throw e;
+    }
+      ,
       std::invalid_argument
     );
 
     FillFromRight(labels, is_neighbor, -1, 2, PointLabel::Default);
     EXPECT_THROW(
       try {
-        FillFromRight(labels, is_neighbor, -2, 2, PointLabel::Default);
-      } catch(const std::invalid_argument & e) {
-        EXPECT_STREQ("begin_index (which is -2) < -1 (which is -1)", e.what());
-        throw e;
-      },
+      FillFromRight(labels, is_neighbor, -2, 2, PointLabel::Default);
+    } catch (const std::invalid_argument & e) {
+      EXPECT_STREQ("begin_index (which is -2) < -1 (which is -1)", e.what());
+      throw e;
+    }
+      ,
       std::invalid_argument
     );
   }
