@@ -26,6 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <Eigen/Eigenvalues>
+
 #include <tuple>
 
 #include "lidar_feature_localization/edge.hpp"

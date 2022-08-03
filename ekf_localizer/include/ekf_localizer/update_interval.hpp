@@ -15,7 +15,7 @@
 #ifndef EKF_LOCALIZER__UPDATE_INTERVAL_HPP_
 #define EKF_LOCALIZER__UPDATE_INTERVAL_HPP_
 
-
+#include <algorithm>
 #include <optional>
 
 

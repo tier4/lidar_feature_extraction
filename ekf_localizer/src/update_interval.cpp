@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
 
 #include "ekf_localizer/update_interval.hpp"
 

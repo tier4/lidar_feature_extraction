@@ -15,6 +15,7 @@
 #include "ekf_localizer/ekf_localizer.hpp"
 
 #include <rclcpp/logging.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <algorithm>
 #include <functional>
