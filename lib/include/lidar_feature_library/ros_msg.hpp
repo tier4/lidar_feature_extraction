@@ -36,7 +36,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <tf2/convert.h>
-#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
