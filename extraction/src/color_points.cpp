@@ -30,6 +30,11 @@
 
 #include "lidar_feature_extraction/color_points.hpp"
 
+inline void ThrowIfInvalidLabelDetected(const PointLabel & label)
+{
+  const uint8_t x = static_cast<uint8_t>(label);
+  throw std::invalid_argument(fmt::format("Invalid label {}", x));
+}
 
 std::vector<uint8_t> LabelToColor(const PointLabel & label)
 {
@@ -51,7 +56,9 @@ std::vector<uint8_t> LabelToColor(const PointLabel & label)
   if (label == PointLabel::ParallelBeam) {
     return std::vector<uint8_t>{0, 255, 0};
   }
-  throw std::invalid_argument(fmt::format("Invalid label {}", label));
+
+  ThrowIfInvalidLabelDetected(label);
+  return std::vector<uint8_t>{};  // should not reach here
 }
 
 std::vector<uint8_t> ValueToColor(const double value, const double min, const double max)
