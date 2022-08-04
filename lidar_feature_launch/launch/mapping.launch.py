@@ -32,6 +32,7 @@ from launch_ros.actions import Node
 
 scan_edge_topic = '/scan_edge'
 colored_scan_topic = '/colored_scan'
+converted_points_topic = '/points_converted'
 curvature_scan_topic = '/curvature_scan'
 
 input_sensor_points_topic = LaunchConfiguration(
@@ -49,6 +50,16 @@ output_path_topic = LaunchConfiguration(
 
 
 def generate_launch_description():
+    converter = Node(
+        package='point_type_converter',
+        executable='listener',
+        name='point_type_converter',
+        remappings=[
+            ('points_raw', input_sensor_points_topic),
+            ('points_converted', converted_points_topic),
+        ]
+    )
+
     extraction = Node(
         package='lidar_feature_extraction',
         executable='lidar_feature_extraction',
@@ -57,7 +68,7 @@ def generate_launch_description():
             'lidar_feature_launch/config/lidar_feature_extraction.param.yaml'
         ],
         remappings=[
-            ('points_raw', input_sensor_points_topic),
+            ('points_raw', converted_points_topic),
             ('colored_scan', colored_scan_topic),
             ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
@@ -74,18 +85,8 @@ def generate_launch_description():
         ]
     )
 
-    path_generator = Node(
-        package='path_generator',
-        executable='path_generator',
-        name='path_generator',
-        remappings=[
-            ('pose', input_pose_topic),
-            ('path', output_path_topic),
-        ]
-    )
-
     return LaunchDescription([
+        converter,
         extraction,
-        mapping,
-        path_generator,
+        mapping
     ])
