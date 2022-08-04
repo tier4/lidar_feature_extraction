@@ -232,14 +232,14 @@ class TestPointTypeConverter(unittest.TestCase):
         pub_node = rclpy.create_node('pub_node', context=context)
         sub_node = rclpy.create_node('sub_node', context=context)
 
-        input_topic = '/os1_cloud_node/points'
+        input_topic = '/points_raw'
 
         converter = PointTypeConverter(context=context)
         converter
 
         pub = pub_node.create_publisher(PointCloud2, input_topic, 10)
         sub = sub_node.create_subscription(
-            PointCloud2, 'points_raw', self.check_output_cloud, 10)
+            PointCloud2, 'points_converted', self.check_output_cloud, 10)
         sub
 
         executor = MultiThreadedExecutor(context=context)

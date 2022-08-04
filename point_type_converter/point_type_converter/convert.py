@@ -166,14 +166,14 @@ class PointTypeConverter(Node):
         super(PointTypeConverter, self).__init__(
             'point_type_converter', *args, **kwargs)
         self.subscription = self.create_subscription(
-            PointCloud2, '/os1_cloud_node/points', self.callback, 10)
+            PointCloud2, '/points_raw', self.callback, 10)
         self.subscription  # prevent unused variable warning
 
         qos = QoSProfile(
             reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
             history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_ALL
         )
-        self.publisher = self.create_publisher(PointCloud2, '/points_raw', qos)
+        self.publisher = self.create_publisher(PointCloud2, '/points_converted', qos)
 
     def callback(self, input_cloud):
         input_fields = input_cloud.fields
