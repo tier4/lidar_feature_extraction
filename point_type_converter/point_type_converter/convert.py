@@ -160,20 +160,32 @@ def make_fields():
     ]
 
 
+def best_effort_keep_all():
+    return QoSProfile(
+        reliability=QoSReliabilityPolicy.BEST_EFFORT,
+        history=QoSHistoryPolicy.KEEP_ALL
+    )
+
+
+def reliable_keep_all():
+    return QoSProfile(
+        reliability=QoSReliabilityPolicy.RELIABLE,
+        history=QoSHistoryPolicy.KEEP_ALL
+    )
+
+
 class PointTypeConverter(Node):
 
     def __init__(self, *args, **kwargs):
         super(PointTypeConverter, self).__init__(
             'point_type_converter', *args, **kwargs)
+
         self.subscription = self.create_subscription(
-            PointCloud2, '/points_raw', self.callback, 10)
+            PointCloud2, '/points_raw', self.callback, best_effort_keep_all())
         self.subscription  # prevent unused variable warning
 
-        qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_ALL
-        )
-        self.publisher = self.create_publisher(PointCloud2, '/points_converted', qos)
+        self.publisher = self.create_publisher(
+            PointCloud2, '/points_converted', reliable_keep_all())
 
     def callback(self, input_cloud):
         input_fields = input_cloud.fields

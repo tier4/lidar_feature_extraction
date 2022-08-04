@@ -34,6 +34,7 @@ from point_type_converter.convert import (
 
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
+from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 
 from sensor_msgs.msg import PointCloud2, PointField
 
@@ -237,9 +238,19 @@ class TestPointTypeConverter(unittest.TestCase):
         converter = PointTypeConverter(context=context)
         converter
 
-        pub = pub_node.create_publisher(PointCloud2, input_topic, 10)
+        publisher_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            history=QoSHistoryPolicy.KEEP_ALL
+        )
+        subscription_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_ALL
+        )
+
+        pub = pub_node.create_publisher(PointCloud2, input_topic, publisher_qos)
         sub = sub_node.create_subscription(
-            PointCloud2, 'points_converted', self.check_output_cloud, 10)
+            PointCloud2, 'points_converted',
+            self.check_output_cloud, subscription_qos)
         sub
 
         executor = MultiThreadedExecutor(context=context)
