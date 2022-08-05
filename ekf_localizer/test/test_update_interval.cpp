@@ -42,13 +42,16 @@ TEST(UpdateInterval, DetectJumpBackInTime)
 {
   UpdateInterval interval(10.);
 
-  interval.Compute(10000.50);
+  interval.Compute(1659000000.200000048);
 
   EXPECT_THROW(
-    try {
-    interval.Compute(10000.49);
+  try {
+    interval.Compute(1659000000.099999905);
   } catch (std::invalid_argument & e) {
-    EXPECT_STREQ("Detected jump back in time", e.what());
+    EXPECT_STREQ(
+      "Detected jump back in time. "
+      "current time = 1659000000.099999905, last time = 1659000000.200000048",
+      e.what());
     throw e;
   }
     ,

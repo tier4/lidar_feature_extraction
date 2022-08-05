@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fmt/core.h>
+
 #include <stdexcept>
 
 #include "ekf_localizer/update_interval.hpp"
@@ -25,7 +27,11 @@ double UpdateInterval::Compute(const double current_time_second)
   }
 
   if (current_time_second < last_time_.value()) {
-    throw std::invalid_argument("Detected jump back in time");
+    throw std::invalid_argument(
+      fmt::format(
+        "Detected jump back in time. "
+        "current time = {:10.9f}, last time = {:10.9f}",
+        current_time_second, last_time_.value()));
   }
 
   const double frequency = 1.0 / (current_time_second - last_time_.value());
