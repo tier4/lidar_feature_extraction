@@ -67,7 +67,7 @@ public:
   : rclcpp::Node(node_name),
     cloud_subscriber_(this, cloud_topic_name, QOS_RELIABLE_VOLATILE.get_rmw_qos_profile()),
     pose_subscriber_(this, pose_topic_name, QOS_RELIABLE_VOLATILE.get_rmw_qos_profile()),
-    sync_(std::make_shared<Synchronizer>(Exact(10), cloud_subscriber_, pose_subscriber_))
+    sync_(std::make_shared<Synchronizer>(Exact(1000), cloud_subscriber_, pose_subscriber_))
   {
     sync_->registerCallback(
       std::bind(

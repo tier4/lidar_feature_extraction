@@ -57,7 +57,8 @@ def generate_launch_description():
         remappings=[
             ('points_raw', input_sensor_points_topic),
             ('points_converted', converted_points_topic),
-        ]
+        ],
+        parameters=[{'use_sim_time': True}]
     )
 
     extraction = Node(
@@ -65,7 +66,8 @@ def generate_launch_description():
         executable='lidar_feature_extraction',
         name='lidar_feature_extraction',
         parameters=[
-            'lidar_feature_launch/config/lidar_feature_extraction.param.yaml'
+            'lidar_feature_launch/config/lidar_feature_extraction.param.yaml',
+            {'use_sim_time': True}
         ],
         remappings=[
             ('points_raw', converted_points_topic),
@@ -82,7 +84,8 @@ def generate_launch_description():
         remappings=[
             ('scan_edge', scan_edge_topic),
             ('pose', input_pose_topic),
-        ]
+        ],
+        parameters=[{'use_sim_time': True}]
     )
 
     return LaunchDescription([
