@@ -199,8 +199,6 @@ class PointTypeConverter(Node):
         unpacked = tuple(c for c in unpacked if not (c[0] == 0. and c[1] == 0. and c[2] == 0.))
         filtered = filter_point_data(unpacked, input_fields, output_fields)
 
-        self.get_logger().info('len(filtered) = {}'.format(len(filtered)))
-
         data = pack_point_data(
             filtered, output_fields, output_point_step, False)
 
