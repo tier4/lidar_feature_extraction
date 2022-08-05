@@ -34,6 +34,7 @@ from launch_ros.actions import Node
 scan_edge_topic = '/scan_edge'
 colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
+converted_points_topic = '/points_converted'
 map_path = 'maps/edge.pcd'
 
 ekf_initial_pose_topic = LaunchConfiguration(
@@ -60,7 +61,6 @@ estimated_path_topic = LaunchConfiguration(
     'estimated_path_topic',
     default='/estimated_path'
 )
-
 ekf_odometry = LaunchConfiguration(
     'ekf_odometry',
     default='/ekf_odom'
@@ -68,6 +68,16 @@ ekf_odometry = LaunchConfiguration(
 
 
 def generate_launch_description():
+    converter = Node(
+        package='point_type_converter',
+        executable='listener',
+        name='point_type_converter',
+        remappings=[
+            ('points_raw', input_sensor_points_topic),
+            ('points_converted', converted_points_topic),
+        ]
+    )
+
     extraction = Node(
         package='lidar_feature_extraction',
         executable='lidar_feature_extraction',
@@ -76,7 +86,7 @@ def generate_launch_description():
             'lidar_feature_launch/config/lidar_feature_extraction.param.yaml'
         ],
         remappings=[
-            ('points_raw', input_sensor_points_topic),
+            ('points_raw', converted_points_topic),
             ('colored_scan', colored_scan_topic),
             ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
@@ -143,7 +153,9 @@ def generate_launch_description():
         ],
         parameters=[{'use_sim_time': True}]
     )
+
     return LaunchDescription([
+        converter,
         ekf_localizer,
         extraction,
         localization,
