@@ -49,9 +49,9 @@ input_sensor_points_topic = LaunchConfiguration(
     'input_sensor_points_topic',
     default='/points_raw'
 )
-estimated_pose_topic = LaunchConfiguration(
-    'estimated_pose_topic',
-    default='/estimated_pose'
+lidar_feature_pose_topic = LaunchConfiguration(
+    'lidar_feature_pose_topic',
+    default='/lidar_feature_pose'
 )
 edge_map_topic = LaunchConfiguration(
     'edge_map_topic',
@@ -100,7 +100,7 @@ def generate_launch_description():
         remappings=[
             ('scan_edge', scan_edge_topic),
             ('optimization_start_odom', ekf_odometry),
-            ('estimated_pose', estimated_pose_topic),
+            ('estimated_pose', lidar_feature_pose_topic),
         ]
     )
 
@@ -131,16 +131,6 @@ def generate_launch_description():
         ]
     )
 
-    path_generator = Node(
-        package='path_generator',
-        executable='path_generator',
-        name='path_generator',
-        remappings=[
-            ('pose', estimated_pose_topic),
-            ('path', estimated_path_topic),
-        ]
-    )
-
     ekf_localizer = Node(
         package='ekf_localizer',
         executable='ekf_localizer',
@@ -148,7 +138,7 @@ def generate_launch_description():
         remappings=[
             ('initialpose', ekf_initial_pose_topic),
             ('ekf_odom', ekf_odometry),
-            ('in_pose_with_covariance', estimated_pose_topic),
+            ('in_pose_with_covariance', lidar_feature_pose_topic),
             ('in_twist_with_covariance', input_twist_topic),
         ],
         parameters=[{'use_sim_time': True}]
@@ -161,5 +151,4 @@ def generate_launch_description():
         localization,
         map_loader,
         map_tf_generator,
-        path_generator
     ])
