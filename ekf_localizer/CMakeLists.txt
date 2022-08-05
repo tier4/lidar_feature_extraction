@@ -41,7 +41,4 @@ if(BUILD_TESTING)
   endforeach()
 endif()
 
-ament_auto_package(
-  INSTALL_TO_SHARE
-  launch
-)
+ament_auto_package()
