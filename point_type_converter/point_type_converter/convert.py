@@ -105,22 +105,6 @@ def pack_point_data(point_data, fields, point_step, is_bigendian):
     return struct.pack(format_, *flatten(point_data))
 
 
-class BytesToPoint(object):
-
-    def __init__(self, fields):
-        self.names = [f.name for f in fields]
-        self.offsets = [f.offset for f in fields]
-        self.types = [get_datatype(f.datatype) for f in fields]
-        self.sizes = [data_size(datatype) for datatype in self.types]
-
-    def __call__(self, point_byte):
-        def extract(offset, datatype, size):
-            return point_byte[offset:offset+size].view(datatype)[0]
-
-        d = zip(self.names, self.offsets, self.types, self.sizes)
-        return {n: extract(o, t, s) for n, o, t, s in d}
-
-
 def flatten(chunks):
     return [e for chunk in chunks for e in chunk]
 
