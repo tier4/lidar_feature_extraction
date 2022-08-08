@@ -26,6 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import array
 import struct
 
 import numpy as np
@@ -162,6 +163,10 @@ def nonzero(c):
     return not (c[0] == 0. and c[1] == 0. and c[2] == 0.)
 
 
+def toarray(data):
+    return array.array('B', data)
+
+
 class PointTypeConverter(Node):
 
     def __init__(self, *args, **kwargs):
@@ -201,7 +206,7 @@ class PointTypeConverter(Node):
         output_cloud.is_bigendian = False
         output_cloud.point_step = output_point_step
         output_cloud.row_step = output_point_step * output_cloud.width
-        output_cloud.data = data
+        output_cloud.data = toarray(data)
         output_cloud.is_dense = True
 
         self.publisher.publish(output_cloud)
