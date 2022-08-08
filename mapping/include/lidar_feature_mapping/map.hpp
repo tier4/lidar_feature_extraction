@@ -89,6 +89,11 @@ public:
 const double translation_threshold = 1.0;
 const double rotation_threshold = 0.1;
 
+rclcpp::Logger GetMappingLogger()
+{
+  return rclcpp::get_logger("lidar_feature_mapping");
+}
+
 template<typename PointType>
 class MapBuilder
 {
@@ -104,11 +109,16 @@ public:
     const auto cloud = GetPointCloud<PointType>(*cloud_msg);
 
     RCLCPP_INFO(
-      rclcpp::get_logger("lidar_feature_mapping"),
+      GetMappingLogger(),
       "Recieved cloud of size %lu at %d.%d",
       cloud->size(),
       cloud_msg->header.stamp.sec,
       cloud_msg->header.stamp.nanosec);
+
+    if (cloud->size() == 0) {
+      RCLCPP_INFO(GetMappingLogger(), "Empty cloud observed. Do nothing and continue");
+      return;
+    }
 
     const bool pose_diff_small = PoseDiffIsSufficientlySmall(
       prev_transform_, transform, translation_threshold, rotation_threshold
