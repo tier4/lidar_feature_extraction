@@ -450,17 +450,22 @@ int ComputeDelayStep(const double delay_time, const double dt)
  */
 void EKFLocalizer::timerCallback()
 {
-  /* update predict frequency with measured timer rate */
-
-  const double dt = [&]{
+  const auto maybe_dt = [&]() -> std::optional<double> {
     try {
-      const rclcpp::Time current_time = get_clock()->now();
-      return interval_.Compute(current_time.seconds());
+      const rclcpp::Time current_time = this->get_clock()->now();
+      const double dt = interval_.Compute(current_time.seconds());
+      return std::make_optional<double>(dt);
     } catch(const std::invalid_argument & e) {
       RCLCPP_WARN(this->get_logger(), e.what());
-      return 1. / default_frequency_;
+      return std::nullopt;
     }
   }();
+
+  if (!maybe_dt.has_value()) {
+    return;
+  }
+
+  const double dt = maybe_dt.value();
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, dt);
