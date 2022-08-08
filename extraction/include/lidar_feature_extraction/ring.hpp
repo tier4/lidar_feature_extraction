@@ -56,12 +56,15 @@ void SortByAtan2(std::vector<int> & indices, const Iter & iter)
 {
   typedef ElementType<Iter> Element;
 
+  std::unordered_map<int, double> atan2;
+
+  for (const int i : indices) {
+    const Element p = iter.at(i);
+    atan2[i] = std::atan2(p.y, p.x);
+  }
+
   auto f = [&](const int & index1, const int & index2) {
-      const Element & p1 = iter.at(index1);
-      const Element & p2 = iter.at(index2);
-      const double angle1 = std::atan2(p1.y, p1.x);
-      const double angle2 = std::atan2(p2.y, p2.x);
-      return angle1 < angle2;
+      return atan2.at(index1) < atan2.at(index2);
     };
 
   std::sort(indices.begin(), indices.end(), f);
