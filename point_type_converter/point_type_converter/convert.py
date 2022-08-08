@@ -133,7 +133,7 @@ def make_point_field(name, offset, datatype, count):
 def split(collection, chunk_size):
     n = len(collection)
     m = chunk_size
-    return tuple(collection[i:i+m] for i in range(n) if i % m == 0)
+    return tuple(collection[i:i+m] for i in range(0, n, m))
 
 
 def find_indices(fields, retained_names):
