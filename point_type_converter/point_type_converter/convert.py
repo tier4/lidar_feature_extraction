@@ -174,6 +174,10 @@ def reliable_keep_all():
     )
 
 
+def nonzero(c):
+    return not (c[0] == 0. and c[1] == 0. and c[2] == 0.)
+
+
 class PointTypeConverter(Node):
 
     def __init__(self, *args, **kwargs):
@@ -196,7 +200,7 @@ class PointTypeConverter(Node):
             input_cloud.point_step, input_cloud.is_bigendian)
 
         output_fields = make_fields()
-        unpacked = tuple(c for c in unpacked if not (c[0] == 0. and c[1] == 0. and c[2] == 0.))
+        unpacked = tuple(c for c in unpacked if nonzero(c))
         filtered = filter_point_data(unpacked, input_fields, output_fields)
 
         data = pack_point_data(
