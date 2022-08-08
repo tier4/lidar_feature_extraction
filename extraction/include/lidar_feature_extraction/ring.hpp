@@ -68,8 +68,7 @@ void SortByAtan2(std::vector<int> & indices, const Iter & iter)
 }
 
 template<typename Iter>
-std::unordered_map<int, std::vector<int>>
-MakeReferenceVectorsPerRing(const Iter & points)
+std::unordered_map<int, std::vector<int>> MakePointIndices(const Iter & points)
 {
   typedef ElementType<Iter> Element;
 
@@ -98,7 +97,7 @@ void SortEachRingByAngle(
 template<typename Iter>
 std::unordered_map<int, std::vector<int>> ExtractAngleSortedRings(const Iter & iterator)
 {
-  auto point_indices = MakeReferenceVectorsPerRing(iterator);
+  auto point_indices = MakePointIndices(iterator);
   SortEachRingByAngle<Iter>(point_indices, iterator);
   return point_indices;
 }
