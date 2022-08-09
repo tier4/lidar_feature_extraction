@@ -113,7 +113,15 @@ public:
     localizer_.Update(edge);
 
     const Eigen::Isometry3d pose = localizer_.Get();
-    const RowMatrix6d covariance = RowMatrix6d::Identity();
+    RowMatrix6d covariance;
+    covariance <<
+      10., 0, 0, 0, 0, 0,
+      0, 10., 0, 0, 0, 0,
+      0, 0, 10., 0, 0, 0,
+      0, 0, 0, 0.1, 0, 0,
+      0, 0, 0, 0, 0.1, 0,
+      0, 0, 0, 0, 0, 0.1;
+
     pose_publisher_->publish(
       MakePoseWithCovarianceStamped(pose, covariance, edge_msg->header.stamp, "map")
     );
