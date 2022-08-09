@@ -29,6 +29,7 @@
 #include "lidar_feature_library/ros_msg.hpp"
 #include "rotationlib/quaternion.hpp"
 
+#include "ekf_localizer/check.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/warning.hpp"
@@ -366,60 +367,6 @@ double ComputeDelayTime(
   const double additional_delay)
 {
   return (current_time - message_stamp).seconds() + additional_delay;
-}
-
-bool CheckFrameId(
-  const Warning & warning_,
-  const std::string & frame_id,
-  const std::string & expected_frame_id)
-{
-  const bool good = frame_id == expected_frame_id;
-  if (!good) {
-    ShowFrameIdWarning(warning_, frame_id, expected_frame_id);
-  }
-  return good;
-}
-
-bool CheckDelayTime(const Warning & warning_, const double delay_time)
-{
-  const bool good = delay_time >= 0.0;
-  if (!good) {
-    ShowDelayTimeWarning(warning_, delay_time);
-  }
-  return good;
-}
-
-bool CheckDelayStep(const Warning & warning_, const int delay_step, const int max_delay_step)
-{
-  const bool good = delay_step < max_delay_step;
-  if (!good) {
-    ShowDelayStepWarning(warning_, delay_step, max_delay_step);
-  }
-  return good;
-}
-
-bool CheckMeasurementMatrixNanInf(const Warning & warning_, const Eigen::MatrixXd & M)
-{
-  const bool good = !HasNan(M) && !HasInf(M);
-
-  if (!good) {
-    ShowMeasurementMatrixNanInfWarning(warning_);
-  }
-  return good;
-}
-
-bool CheckMahalanobisGate(
-  const Warning & warning_,
-  const double & dist_max,
-  const Eigen::MatrixXd & x1,
-  const Eigen::MatrixXd & x2,
-  const Eigen::MatrixXd & cov)
-{
-  const bool good = mahalanobisGate(dist_max, x1, x2, cov);
-  if (!good) {
-    ShowMahalanobisGateWarning(warning_);
-  }
-  return good;
 }
 
 int ComputeDelayStep(const double delay_time, const double dt)
