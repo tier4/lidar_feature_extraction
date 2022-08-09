@@ -32,6 +32,7 @@
 #include "ekf_localizer/check.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/numeric.hpp"
+#include "ekf_localizer/string.hpp"
 #include "ekf_localizer/warning.hpp"
 
 using Vector6d = Eigen::Matrix<double, 6, 1>;
@@ -518,15 +519,6 @@ void EKFLocalizer::timerCallback()
   publishEstimateResult(
     ekf_.getLatestP(), this->now(), pose_frame_id_,
     unbiased_pose, biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
-}
-
-std::string EraseBeginSlash(const std::string & s)
-{
-  std::string a = s;
-  if (a.front() == '/') {
-    a.erase(0, 1);
-  }
-  return a;
 }
 
 /*
