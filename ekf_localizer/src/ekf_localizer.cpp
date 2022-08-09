@@ -531,7 +531,6 @@ bool getTransformFromTF(
   geometry_msgs::msg::TransformStamped & transform)
 {
   tf2::BufferCore tf_buffer;
-  tf2_ros::TransformListener tf_listener(tf_buffer);
   rclcpp::sleep_for(std::chrono::milliseconds(100));
 
   const std::string parent = EraseBeginSlash(parent_frame);
