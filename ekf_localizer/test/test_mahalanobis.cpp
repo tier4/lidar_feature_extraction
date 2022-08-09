@@ -45,7 +45,7 @@ TEST(MahalanobisGate, SquaredMahalanobis)
   }
 }
 
-TEST(MahalanobisGate, mahalanobisGate)
+TEST(MahalanobisGate, MahalanobisGate)
 {
   Eigen::Vector2d x(0, 1);
   Eigen::Vector2d y(3, 2);
@@ -54,7 +54,7 @@ TEST(MahalanobisGate, mahalanobisGate)
     10, 0,
     0, 10;
 
-  EXPECT_FALSE(mahalanobisGate(0.99, x, y, C));
-  EXPECT_FALSE(mahalanobisGate(1.00, x, y, C));
-  EXPECT_TRUE(mahalanobisGate(1.01, x, y, C));
+  EXPECT_FALSE(MahalanobisGate(0.99, x, y, C));
+  EXPECT_FALSE(MahalanobisGate(1.00, x, y, C));
+  EXPECT_TRUE(MahalanobisGate(1.01, x, y, C));
 }

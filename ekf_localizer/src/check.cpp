@@ -106,7 +106,7 @@ bool CheckMahalanobisGate(
   const Eigen::MatrixXd & x2,
   const Eigen::MatrixXd & cov)
 {
-  const bool good = mahalanobisGate(dist_max, x1, x2, cov);
+  const bool good = MahalanobisGate(dist_max, x1, x2, cov);
   if (!good) {
     ShowMahalanobisGateWarning(warning);
   }

@@ -25,7 +25,7 @@ double SquaredMahalanobis(
   const Eigen::VectorXd & y,
   const Eigen::MatrixXd & C);
 
-bool mahalanobisGate(
+bool MahalanobisGate(
   const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
   const Eigen::MatrixXd & cov);
 

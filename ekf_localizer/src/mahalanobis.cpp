@@ -25,7 +25,7 @@ double SquaredMahalanobis(
   return d.dot(C.inverse() * d);
 }
 
-bool mahalanobisGate(
+bool MahalanobisGate(
   const double & dist_max, const Eigen::MatrixXd & x, const Eigen::MatrixXd & obj_x,
   const Eigen::MatrixXd & cov)
 {
