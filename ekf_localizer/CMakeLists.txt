@@ -16,6 +16,7 @@ ament_auto_add_library(ekf_localizer_lib SHARED
   src/mahalanobis.cpp
   src/update_interval.cpp
   src/string.cpp
+  src/tf.cpp
 )
 
 target_link_libraries(ekf_localizer_lib Eigen3::Eigen)

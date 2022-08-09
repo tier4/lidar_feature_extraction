@@ -33,6 +33,7 @@
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/string.hpp"
+#include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/warning.hpp"
 
 using Vector6d = Eigen::Matrix<double, 6, 1>;
@@ -522,39 +523,17 @@ void EKFLocalizer::timerCallback()
 }
 
 /*
- * getTransformFromTF
- */
-bool getTransformFromTF(
-  const Warning & warning_,
-  const std::string & parent_frame,
-  const std::string & child_frame,
-  geometry_msgs::msg::TransformStamped & transform)
-{
-  tf2::BufferCore tf_buffer;
-  rclcpp::sleep_for(std::chrono::milliseconds(100));
-
-  const std::string parent = EraseBeginSlash(parent_frame);
-  const std::string child = EraseBeginSlash(child_frame);
-
-  for (int i = 0; i < 50; ++i) {
-    try {
-      transform = tf_buffer.lookupTransform(parent, child, tf2::TimePointZero);
-      return true;
-    } catch (tf2::TransformException & ex) {
-      warning_.Warn(ex.what());
-      rclcpp::sleep_for(std::chrono::milliseconds(100));
-    }
-  }
-  return false;
-}
-
-/*
  * callbackInitialPose
  */
 void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr initialpose)
 {
   geometry_msgs::msg::TransformStamped transform;
-  if (!getTransformFromTF(warning_, pose_frame_id_, initialpose->header.frame_id, transform)) {
+
+  if (!getTransformFromTF(
+         warning_,
+         EraseBeginSlash(pose_frame_id_),
+         EraseBeginSlash(initialpose->header.frame_id),
+         transform)) {
     RCLCPP_ERROR(
       get_logger(), "[EKF] TF transform failed. parent = %s, child = %s", pose_frame_id_.c_str(),
       initialpose->header.frame_id.c_str());
