@@ -160,7 +160,7 @@ private:
       }
     }
 
-    const std::string lidar_frame = "base_link";
+    const std::string lidar_frame = "lidar_feature_base_link";
     const auto stamp = cloud_msg->header.stamp;
     const auto colored_msg = ToRosMsg<pcl::PointXYZRGB>(colored_cloud, stamp, lidar_frame);
     const auto filtered = FilterByCoordinate<PointXYZCR>(edge);

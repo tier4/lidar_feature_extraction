@@ -127,7 +127,7 @@ public:
     );
 
     tf_broadcaster_.sendTransform(
-      MakeTransformStamped(pose, edge_msg->header.stamp, "map", "base_link")
+      MakeTransformStamped(pose, edge_msg->header.stamp, "map", "lidar_feature_base_link")
     );
 
     RCLCPP_INFO(this->get_logger(), "Pose update done");
@@ -178,7 +178,7 @@ public:
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
 
     tf_broadcaster_.sendTransform(
-      MakeTransformStamped(pose, edge_msg->header.stamp, "map", "base_link")
+      MakeTransformStamped(pose, edge_msg->header.stamp, "map", "lidar_feature_base_link")
     );
 
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback finished");
