@@ -36,8 +36,9 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
   set(TEST_FILES
-    test/test_mahalanobis.cpp
+    test/test_check.cpp
     test/test_ekf_localizer.cpp
+    test/test_mahalanobis.cpp
     test/test_update_interval.cpp)
   foreach(filepath ${TEST_FILES})
     add_testcase(${filepath})
