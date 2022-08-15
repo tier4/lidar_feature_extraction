@@ -37,39 +37,34 @@
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
-template<typename PointToVector>
-using LOAMOptimizer = Optimizer<
-  LOAMOptimizationProblem<PointToVector>,
-  typename pcl::PointCloud<typename PointToVector::PointType>::Ptr>;
 
 template<typename PointToVector>
-LOAMOptimizer<PointToVector> MakeLOAMOptimizer(
-  const typename pcl::PointCloud<typename PointToVector::PointType>::Ptr & map)
-{
-  using Problem = LOAMOptimizationProblem<PointToVector>;
-  return LOAMOptimizer<PointToVector>(Problem(map));
-}
-
-
-template<typename PointToVector, typename PointType>
 class LOAMPoseUpdater
 {
 public:
-  explicit LOAMPoseUpdater(
-    const typename pcl::PointCloud<PointType>::Ptr & local_map)
-  : optimizer_(MakeLOAMOptimizer<PointToVector>(local_map))
+  using Problem = LOAMOptimizationProblem<PointToVector>;
+  using PointType = typename PointToVector::PointType;
+  using PointCloudPtr = typename pcl::PointCloud<PointType>::Ptr;
+  using LOAMOptimizer = Optimizer<LOAMOptimizationProblem<PointToVector>, PointCloudPtr>;
+
+  explicit LOAMPoseUpdater(const PointCloudPtr & local_map)
+  : optimizer_(MakeLOAMOptimizer(local_map))
   {
   }
 
-  Eigen::Isometry3d operator()(
-    const typename pcl::PointCloud<PointType>::Ptr & scan,
-    const Eigen::Isometry3d & pose) const
+  Eigen::Isometry3d operator()(const PointCloudPtr & scan, const Eigen::Isometry3d & pose) const
   {
     return optimizer_.Run(scan, pose);
   }
 
 private:
-  const LOAMOptimizer<PointToVector> optimizer_;
+  LOAMOptimizer MakeLOAMOptimizer(const PointCloudPtr & map)
+  {
+    const Problem problem(map);
+    return LOAMOptimizer(problem);
+  }
+
+  const LOAMOptimizer optimizer_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__POSE_UPDATER_HPP_
