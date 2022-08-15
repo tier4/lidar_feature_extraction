@@ -50,10 +50,12 @@
 const int n_neighbors = 5;
 
 
-template<typename PointToVector, typename PointType>
+template<typename PointToVector>
 class LOAMOptimizationProblem
 {
 public:
+  using PointType = typename PointToVector::PointType;
+
   LOAMOptimizationProblem(
     const typename pcl::PointCloud<PointType>::Ptr & edge_map)
   : edge_(edge_map, n_neighbors)
@@ -79,7 +81,7 @@ public:
   }
 
 private:
-  const Edge<PointToVector, PointType> edge_;
+  const Edge<PointToVector> edge_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__LOAM_HPP_

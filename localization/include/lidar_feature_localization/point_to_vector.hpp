@@ -38,6 +38,8 @@
 class PointXYZCRToVector
 {
 public:
+  using PointType = PointXYZCR;
+
   static Eigen::VectorXd Convert(const PointXYZCR & p)
   {
     return Eigen::Vector4d(p.x, p.y, p.z, p.curvature);
@@ -52,6 +54,8 @@ public:
 class PointXYZCRToXYZVector
 {
 public:
+  using PointType = PointXYZCR;
+
   static Eigen::VectorXd Convert(const PointXYZCR & p)
   {
     return Eigen::Vector3d(p.x, p.y, p.z);
@@ -66,6 +70,8 @@ public:
 class PointXYZToVector
 {
 public:
+  using PointType = pcl::PointXYZ;
+
   static Eigen::VectorXd Convert(const pcl::PointXYZ & p)
   {
     return Eigen::Vector3d(p.x, p.y, p.z);

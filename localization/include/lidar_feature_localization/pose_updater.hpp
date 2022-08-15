@@ -37,17 +37,17 @@
 #include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
-template<typename PointToVector, typename PointType>
+template<typename PointToVector>
 using LOAMOptimizer = Optimizer<
-  LOAMOptimizationProblem<PointToVector, PointType>,
-  typename pcl::PointCloud<PointType>::Ptr>;
+  LOAMOptimizationProblem<PointToVector>,
+  typename pcl::PointCloud<typename PointToVector::PointType>::Ptr>;
 
-template<typename PointToVector, typename PointType>
-LOAMOptimizer<PointToVector, PointType> MakeLOAMOptimizer(
-  const typename pcl::PointCloud<PointType>::Ptr & map)
+template<typename PointToVector>
+LOAMOptimizer<PointToVector> MakeLOAMOptimizer(
+  const typename pcl::PointCloud<typename PointToVector::PointType>::Ptr & map)
 {
-  using Problem = LOAMOptimizationProblem<PointToVector, PointType>;
-  return LOAMOptimizer<PointToVector, PointType>(Problem(map));
+  using Problem = LOAMOptimizationProblem<PointToVector>;
+  return LOAMOptimizer<PointToVector>(Problem(map));
 }
 
 
@@ -57,7 +57,7 @@ class LOAMPoseUpdater
 public:
   explicit LOAMPoseUpdater(
     const typename pcl::PointCloud<PointType>::Ptr & local_map)
-  : optimizer_(MakeLOAMOptimizer<PointToVector, PointType>(local_map))
+  : optimizer_(MakeLOAMOptimizer<PointToVector>(local_map))
   {
   }
 
@@ -69,7 +69,7 @@ public:
   }
 
 private:
-  const LOAMOptimizer<PointToVector, PointType> optimizer_;
+  const LOAMOptimizer<PointToVector> optimizer_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__POSE_UPDATER_HPP_

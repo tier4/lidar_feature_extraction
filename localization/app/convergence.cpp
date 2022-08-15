@@ -90,10 +90,12 @@ visualization_msgs::msg::Marker AnalyzeConvergence(
   return lines;
 }
 
-template<typename PointToVector, typename PointType>
+template<typename PointToVector>
 class ConvergenceAnalysis : public rclcpp::Node
 {
 public:
+  using PointType = typename PointToVector::PointType;
+
   ConvergenceAnalysis(
     const std::string & edge_topic_name,
     const std::string & pose_topic_name,
@@ -128,7 +130,7 @@ public:
     const auto transform = MakeTransformStamped(pose, edge_msg->header.stamp, "map", "lidar_feature_base_link");
     tf_broadcaster_.sendTransform(transform);
 
-    using OptimizationProblem = LOAMOptimizationProblem<PointToVector, PointType>;
+    using OptimizationProblem = LOAMOptimizationProblem<PointToVector>;
     using OptimizerType = Optimizer<OptimizationProblem, typename pcl::PointCloud<PointType>::Ptr>;
 
     const OptimizationProblem problem(edge_map_);
@@ -157,7 +159,7 @@ int main(int argc, char * argv[])
   pcl::PointCloud<PointXYZCR>::Ptr edge_map(new pcl::PointCloud<PointXYZCR>());
   pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
 
-  using Convergence = ConvergenceAnalysis<PointXYZCRToVector, PointXYZCR>;
+  using Convergence = ConvergenceAnalysis<PointXYZCRToVector>;
   auto convergence = std::make_shared<Convergence>(
     "scan_edge", "pose", "convergence_marker", edge_map);
   rclcpp::spin(convergence);

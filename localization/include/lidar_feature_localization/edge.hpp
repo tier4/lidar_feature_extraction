@@ -77,10 +77,12 @@ std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType
   return std::make_shared<KDTreeEigen>(matrix, 10);
 }
 
-template<typename PointToVector, typename PointType>
+template<typename PointToVector>
 class Edge
 {
 public:
+  using PointType = typename PointToVector::PointType;
+
   Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int n_neighbors)
   : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map)),
     n_neighbors_(n_neighbors)

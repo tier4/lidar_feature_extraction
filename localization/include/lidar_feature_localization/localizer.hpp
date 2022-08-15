@@ -45,8 +45,8 @@ template<typename PointToVector, typename PointType>
 class Localizer
 {
   using OptimizerType = Optimizer<
-    LOAMOptimizationProblem<PointToVector, PointType>,
-    typename pcl::PointCloud<PointType>::Ptr>;
+    LOAMOptimizationProblem<PointToVector>,
+    typename pcl::PointCloud<typename PointToVector::PointType>::Ptr>;
 
 public:
   explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
@@ -97,7 +97,7 @@ private:
     return std::make_tuple(new_pose, true);
   }
 
-  const LOAMOptimizationProblem<PointToVector, PointType> problem_;
+  const LOAMOptimizationProblem<PointToVector> problem_;
 
   bool is_initialized_;
   Eigen::Isometry3d pose_;
