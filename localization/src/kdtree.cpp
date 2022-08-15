@@ -31,6 +31,13 @@
 
 #include "lidar_feature_localization/kdtree.hpp"
 
+KDTreeEigen::KDTreeEigen(
+  const Eigen::MatrixXd & map,
+  const int max_leaf_size)
+: map_(map),
+  kdtree_(std::make_shared<KDTreeType>(map.cols(), std::ref(map_), max_leaf_size))
+{
+}
 
 std::tuple<Eigen::MatrixXd, std::vector<double>> KDTreeEigen::NearestKSearch(
   const Eigen::VectorXd & query, const int n_neighbors) const

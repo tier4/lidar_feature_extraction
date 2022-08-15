@@ -31,6 +31,7 @@
 #define LIDAR_FEATURE_LOCALIZATION__EDGE_HPP_
 
 #include <algorithm>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -69,11 +70,11 @@ Eigen::Vector3d MakeEdgeResidual(
 Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix);
 
 template<typename PointToVector, typename PointType>
-KDTreeEigen MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
+std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
 {
   ThrowsIfPointCloudIsEmpty<PointType>(map);
   const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
-  return KDTreeEigen(matrix, 10);
+  return std::make_shared<KDTreeEigen>(matrix, 10);
 }
 
 template<typename PointToVector, typename PointType>
@@ -102,7 +103,8 @@ public:
     for (int i = 0; i < n; i++) {
       const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
       const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
-      const auto [neighbors, _] = kdtree_.NearestKSearch(query, n_neighbors_);
+
+      const auto [neighbors, _] = kdtree_->NearestKSearch(query, n_neighbors_);
       const Eigen::MatrixXd X = GetXYZ(neighbors);
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
@@ -120,7 +122,7 @@ public:
   }
 
 private:
-  const KDTreeEigen kdtree_;
+  const std::shared_ptr<KDTreeEigen> kdtree_;
   const int n_neighbors_;
 };
 

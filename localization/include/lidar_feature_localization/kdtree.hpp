@@ -53,11 +53,9 @@ using KDTreeType = nanoflann::KDTreeEigenMatrixAdaptor<
 class KDTreeEigen
 {
 public:
-  explicit KDTreeEigen(const Eigen::MatrixXd & map, int max_leaf_size)
-  : map_(map),
-    kdtree_(std::make_shared<KDTreeType>(map_.cols(), map_, max_leaf_size))
-  {
-  }
+  KDTreeEigen() = delete;
+
+  KDTreeEigen(const Eigen::MatrixXd & map, const int max_leaf_size);
 
   std::tuple<Eigen::MatrixXd, std::vector<double>> NearestKSearch(
     const Eigen::VectorXd & query, const int n_neighbors) const;
