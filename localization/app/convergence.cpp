@@ -46,10 +46,10 @@
 #include <memory>
 #include <string>
 
+#include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
-#include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 
@@ -130,7 +130,7 @@ public:
     const auto transform = MakeTransformStamped(pose, edge_msg->header.stamp, "map", "lidar_feature_base_link");
     tf_broadcaster_.sendTransform(transform);
 
-    using OptimizationProblem = LOAMOptimizationProblem<PointToVector>;
+    using OptimizationProblem = Edge<PointToVector>;
     using OptimizerType = Optimizer<OptimizationProblem, typename pcl::PointCloud<PointType>::Ptr>;
 
     const OptimizationProblem problem(edge_map_);

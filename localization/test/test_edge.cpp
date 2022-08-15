@@ -30,7 +30,7 @@
 
 #include <vector>
 
-#include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/point_type.hpp"
@@ -222,9 +222,8 @@ TEST(Edge, Convergence)
 
   const auto scan = TransformPointCloud<PointXYZCR>(transform_true.inverse(), map);
 
-  const int n_neighbors = 5;
   using EdgeType = Edge<PointXYZCRToVector>;
-  const EdgeType edge(map, n_neighbors);
+  const EdgeType edge(map);
 
   const Eigen::Quaterniond q_initial = Eigen::Quaterniond::Identity();
   const Eigen::Vector3d t_initial = Eigen::Vector3d::Zero();

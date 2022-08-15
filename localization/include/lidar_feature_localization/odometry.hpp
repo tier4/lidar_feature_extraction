@@ -35,7 +35,6 @@
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 
-#include "lidar_feature_localization/loam.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 #include "lidar_feature_localization/recent_scans.hpp"
 

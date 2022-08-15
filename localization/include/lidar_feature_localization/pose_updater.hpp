@@ -34,7 +34,7 @@
 
 #include <tuple>
 
-#include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 
@@ -42,10 +42,10 @@ template<typename PointToVector>
 class LOAMPoseUpdater
 {
 public:
-  using Problem = LOAMOptimizationProblem<PointToVector>;
+  using Problem = Edge<PointToVector>;
   using PointType = typename PointToVector::PointType;
   using PointCloudPtr = typename pcl::PointCloud<PointType>::Ptr;
-  using LOAMOptimizer = Optimizer<LOAMOptimizationProblem<PointToVector>, PointCloudPtr>;
+  using LOAMOptimizer = Optimizer<Edge<PointToVector>, PointCloudPtr>;
 
   explicit LOAMPoseUpdater(const PointCloudPtr & local_map)
   : optimizer_(MakeLOAMOptimizer(local_map))

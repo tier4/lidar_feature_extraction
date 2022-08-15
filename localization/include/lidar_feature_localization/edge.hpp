@@ -38,6 +38,7 @@
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/pcl_utils.hpp"
 
+#include "lidar_feature_localization/degenerate.hpp"
 #include "lidar_feature_localization/filter.hpp"
 #include "lidar_feature_localization/jacobian.hpp"
 #include "lidar_feature_localization/kdtree.hpp"
@@ -77,15 +78,18 @@ std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType
   return std::make_shared<KDTreeEigen>(matrix, 10);
 }
 
+
+constexpr int N_NEIGHBORS = 5;
+
+
 template<typename PointToVector>
 class Edge
 {
 public:
   using PointType = typename PointToVector::PointType;
 
-  Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int n_neighbors)
-  : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map)),
-    n_neighbors_(n_neighbors)
+  explicit Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
+  : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map))
   {
   }
 
@@ -106,7 +110,8 @@ public:
       const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
       const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
 
-      const auto [neighbors, _] = kdtree_->NearestKSearch(query, n_neighbors_);
+      const auto [neighbors, _] = kdtree_->NearestKSearch(query, N_NEIGHBORS);
+
       const Eigen::MatrixXd X = GetXYZ(neighbors);
       const Eigen::Matrix3d C = CalcCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
@@ -123,9 +128,18 @@ public:
     return {J, r};
   }
 
+  bool IsDegenerate(
+    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
+    const Eigen::Isometry3d & point_to_map) const
+  {
+    const auto [J, r] = this->Make(edge_scan, point_to_map);
+    const Eigen::MatrixXd JtJ = J.transpose() * J;
+
+    return ::IsDegenerate(JtJ);
+  }
+
 private:
   const std::shared_ptr<KDTreeEigen> kdtree_;
-  const int n_neighbors_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__EDGE_HPP_

@@ -36,16 +36,20 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "lidar_feature_localization/loam.hpp"
+#include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
+
+
+constexpr int n_neighbors = 5;
+
 
 template<typename PointToVector, typename PointType>
 class Localizer
 {
   using OptimizerType = Optimizer<
-    LOAMOptimizationProblem<PointToVector>,
+    Edge<PointToVector>,
     typename pcl::PointCloud<typename PointToVector::PointType>::Ptr>;
 
 public:
@@ -97,7 +101,7 @@ private:
     return std::make_tuple(new_pose, true);
   }
 
-  const LOAMOptimizationProblem<PointToVector> problem_;
+  const Edge<PointToVector> problem_;
 
   bool is_initialized_;
   Eigen::Isometry3d pose_;
