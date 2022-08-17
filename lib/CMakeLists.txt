@@ -17,7 +17,8 @@ set(SOURCE_FILES
   src/lib.cpp
   src/eigen.cpp
   src/pcl_utils.cpp
-  src/ros_msg.cpp)
+  src/ros_msg.cpp
+  src/random.cpp)
 
 ament_auto_add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
@@ -45,7 +46,7 @@ if(BUILD_TESTING)
 
   ament_lint_auto_find_test_dependencies()
 
-  file(GLOB FILES_TO_CHECK include/lidar_feature_library/*)
+  file(GLOB FILES_TO_CHECK include/lidar_feature_library/* src/*)
 
   find_package(ament_cmake_cpplint)
   ament_cpplint(${FILES_TO_CHECK})
