@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
       Splitter Ratio: 0.5
-    Tree Height: 485
+    Tree Height: 474
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
@@ -120,7 +120,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 10; 10; 10
-    Fixed Frame: map
+    Fixed Frame: lidar_feature_base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -146,22 +146,22 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Scale: 33.79933547973633
-      Target Frame: viewer
+      Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 247.62527465820312
-      Y: -54.885894775390625
+      X: 0
+      Y: 0
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1414
+  Height: 1391
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000003760000052cfc0200000003fb000000100044006900730070006c006100790073010000003d00000270000000c900fffffffb0000000a0056006900650077007301000002b3000001ff000000a400fffffffb0000000800540069006d006501000004b8000000b10000003900ffffff000009f40000052c00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000037600000515fc0200000003fb000000100044006900730070006c006100790073010000003d00000265000000c900fffffffb0000000a0056006900650077007301000002a8000001f6000000a400fffffffb0000000800540069006d006501000004a4000000ae0000003900ffffff000009f40000051500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Time:
     collapsed: false
   Views:
     collapsed: false
   Width: 3440
   X: 0
-  Y: 0
+  Y: 25
