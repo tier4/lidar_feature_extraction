@@ -32,11 +32,13 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
 #include "lidar_feature_library/eigen.hpp"
 #include "lidar_feature_library/pcl_utils.hpp"
+#include "lidar_feature_library/random.hpp"
 
 #include "lidar_feature_localization/degenerate.hpp"
 #include "lidar_feature_localization/filter.hpp"
@@ -100,14 +102,17 @@ public:
     // f(dx) \approx f(0) + J * dx + dx^T * H * dx
     // dx can be obtained by solving H * dx = -J
 
-    const int n = scan->size();
     const Eigen::Quaterniond q(point_to_map.rotation());
 
-    Eigen::MatrixXd J(3 * n, 7);
-    Eigen::VectorXd r(3 * n);
+    const size_t n_used_points = static_cast<size_t>(scan->size() * 0.1);
+    const std::vector<size_t> indices = RandomizedUniqueIndices(scan->size());
 
-    for (int i = 0; i < n; i++) {
-      const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
+    Eigen::MatrixXd J(3 * n_used_points, 7);
+    Eigen::VectorXd r(3 * n_used_points);
+
+    for (size_t i = 0; i < n_used_points; i++) {
+      const size_t index = indices.at(i);
+      const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(index));
       const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
 
       const auto [neighbors, _] = kdtree_->NearestKSearch(query, N_NEIGHBORS);
@@ -125,9 +130,11 @@ public:
       r.segment(3 * i, 3) = MakeEdgeResidual(point_to_map, p0, p1, p2);
     }
 
-    return {J, r};
+    return std::make_tuple(J, r);
   }
 
+  // TODO(IshitaTakeshi) Maybe this function is not necessary?
+  // Almost the same can be realized by validating that the scan size >= 3
   bool IsDegenerate(
     const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
     const Eigen::Isometry3d & point_to_map) const
