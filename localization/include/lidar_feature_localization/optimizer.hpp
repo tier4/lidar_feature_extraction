@@ -34,6 +34,7 @@
 
 #include <tuple>
 
+#include "lidar_feature_localization/irls.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/math.hpp"
 #include "lidar_feature_localization/posevec.hpp"
@@ -44,11 +45,10 @@
 
 bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt);
 
-Eigen::VectorXd CalcUpdate(const Eigen::MatrixXd & J, const Eigen::VectorXd & r);
-
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q);
 
 std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
+  const Eigen::VectorXd & weights,
   const Eigen::MatrixXd & J,
   const Eigen::VectorXd & r,
   const Eigen::Quaterniond & q);
@@ -92,7 +92,8 @@ public:
 
       r_prev = r;
 
-      const auto [dq, dt] = CalcUpdate(J, r, q);
+      const Eigen::VectorXd weights = HuberWeights(r);
+      const auto [dq, dt] = CalcUpdate(weights, J, r, q);
 
       q = q * dq;
       t = t + dt;

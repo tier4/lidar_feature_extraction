@@ -26,47 +26,19 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <tuple>
 
-#include "lidar_feature_localization/optimizer.hpp"
+#include <gtest/gtest.h>
+
+#include "lidar_feature_localization/irls.hpp"
 
 
-bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
+TEST(HuberWeights, HuberWeights)
 {
-  return dq.vec().norm() < 1e-3 && dt.norm() < 1e-3;
-}
+  using Vector7d = Eigen::Matrix<double, 1, 7>;
+  const Vector7d r(0., 1., -1., 2., -2., 4., -4.);
+  const Vector7d weights = HuberWeights(r, 2.);
+  const Vector7d expected(1., 1., 1., 1., 1., 0.5, 0.5);
 
-Eigen::VectorXd WeightedUpdate(
-  const Eigen::VectorXd & weights,
-  const Eigen::MatrixXd & J,
-  const Eigen::VectorXd & r)
-{
-  const Eigen::MatrixXd W = weights.asDiagonal();
-  return (J.transpose() * W * J).ldlt().solve(-J.transpose() * W * r);
-}
-
-Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
-{
-  const Eigen::Matrix4d L = rotationlib::LeftMultiplicationMatrix(q);
-  const Eigen::Matrix<double, 4, 3> Q = 0.5 * L.block<4, 3>(0, 1);
-
-  Eigen::Matrix<double, 7, 6> M;
-  M.block<4, 3>(0, 0) = Q;
-  M.block<4, 3>(0, 3) = Eigen::MatrixXd::Zero(4, 3);
-  M.block<3, 3>(4, 0) = Eigen::Matrix3d::Zero();
-  M.block<3, 3>(4, 3) = Eigen::Matrix3d::Identity();
-  return M;
-}
-
-std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
-  const Eigen::VectorXd & weights,
-  const Eigen::MatrixXd & J,
-  const Eigen::VectorXd & r,
-  const Eigen::Quaterniond & q)
-{
-  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
-  const Vector6d dx = WeightedUpdate(weights, J * M, r);
-  const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
-  const Eigen::Vector3d dt = dx.tail(3);
-  return {dq, dt};
+  EXPECT_EQ(weights.size(), r.size());
+  EXPECT_EQ((weights - expected).norm(), 0.);
 }

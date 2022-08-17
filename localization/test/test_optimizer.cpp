@@ -34,6 +34,7 @@
 #include <tuple>
 
 #include "lidar_feature_localization/alignment.hpp"
+#include "lidar_feature_localization/irls.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/eigen.hpp"
@@ -75,7 +76,8 @@ TEST(Optimizer, Alignment)
 
     const auto [J, r] = problem.Make(std::make_tuple(X, Y), initial);
 
-    const auto [dq, dt] = CalcUpdate(J, r, initial_q);
+    const Eigen::VectorXd weights = HuberWeights(r);
+    const auto [dq, dt] = CalcUpdate(weights, J, r, initial_q);
 
     const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
 
