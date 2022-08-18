@@ -58,7 +58,7 @@ jobs:
           colcon test \
             --event-handlers console_cohesion+ \
             --return-code-on-test-failure
-          colcon lcov-result --verbose
+          colcon lcov-result --filter "*/test/*" --verbose
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3
