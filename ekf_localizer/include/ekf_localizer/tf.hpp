@@ -26,7 +26,7 @@
 
 
 bool getTransformFromTF(
-  const Warning & warning_,
+  std::shared_ptr<rclcpp::Node> node,
   const std::string & parent_frame,
   const std::string & child_frame,
   geometry_msgs::msg::TransformStamped & transform);

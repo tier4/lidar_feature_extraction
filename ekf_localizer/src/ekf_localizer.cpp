@@ -530,7 +530,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   geometry_msgs::msg::TransformStamped transform;
 
   if (!getTransformFromTF(
-         warning_,
+         std::shared_ptr<rclcpp::Node>(this),
          EraseBeginSlash(pose_frame_id_),
          EraseBeginSlash(initialpose->header.frame_id),
          transform)) {
