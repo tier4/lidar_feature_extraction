@@ -28,6 +28,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <rcpputils/filesystem_helper.hpp>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/io.h>
@@ -46,12 +48,23 @@ using PointType = PointXYZCR;
 using PointToVector = PointXYZCRToXYZVector;
 using Subscriber = LocalizationSubscriber<Localizer<PointToVector, PointType>, PointType>;
 
+
+const std::string map_path = "maps/edge.pcd";
+
+
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
+  if (!rcpputils::fs::exists(map_path)) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("lidar_feature_localization"),
+      "Map %s does not exist!", map_path.c_str());
+    return -1;
+  }
+
   pcl::PointCloud<PointType>::Ptr edge_map(new pcl::PointCloud<PointType>());
-  pcl::io::loadPCDFile("maps/edge.pcd", *edge_map);
+  pcl::io::loadPCDFile(map_path, *edge_map);
 
   Localizer<PointToVector, PointType> localizer(edge_map);
   rclcpp::spin(std::make_shared<Subscriber>(localizer));
