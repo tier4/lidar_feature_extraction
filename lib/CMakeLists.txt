@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 
 find_package(fmt REQUIRED)
+find_package(PCL REQUIRED)
 
 ament_auto_find_build_dependencies()
 
@@ -21,6 +22,7 @@ set(SOURCE_FILES
   src/random.cpp)
 
 ament_auto_add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
 
 function(add_testcase filepath)
   find_package(ament_cmake_gmock REQUIRED)
