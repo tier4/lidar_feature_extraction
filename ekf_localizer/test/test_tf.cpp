@@ -72,18 +72,32 @@ TEST_F(EKFLocalizerTestSuite, getTransformFromTF)
   auto broadcaster = std::make_shared<TfBroadcasterNode>();
 
   auto timer = rclcpp::create_timer(
-    broadcaster, broadcaster->get_clock(), std::chrono::milliseconds(10),
+    broadcaster, broadcaster->get_clock(), std::chrono::milliseconds(100),
     std::bind(&TfBroadcasterNode::Broadcast, broadcaster));
 
-  geometry_msgs::msg::TransformStamped recieved;
+  TransformListener listener(broadcaster);
 
-  EXPECT_TRUE(getTransformFromTF(broadcaster, "map", "base_link", recieved));
+  rclcpp::Rate r(10);
 
-  EXPECT_EQ(recieved.transform.translation.x, 10.);
-  EXPECT_EQ(recieved.transform.translation.y, 20.);
-  EXPECT_EQ(recieved.transform.translation.z, 30.);
-  EXPECT_EQ(recieved.transform.rotation.w, 1.);
-  EXPECT_EQ(recieved.transform.rotation.x, 0.);
-  EXPECT_EQ(recieved.transform.rotation.y, 0.);
-  EXPECT_EQ(recieved.transform.rotation.z, 0.);
+  r.sleep();
+  rclcpp::spin_some(broadcaster);
+
+  std::optional<geometry_msgs::msg::TransformStamped> maybe_transform;
+  for (int i = 0; i < 10; ++i) {
+    maybe_transform = listener.LookupTransform("map", "base_link");
+
+    r.sleep();
+    rclcpp::spin_some(broadcaster);
+  }
+
+  ASSERT_TRUE(maybe_transform.has_value());
+
+  EXPECT_EQ(maybe_transform->transform.translation.x, 10.);
+  EXPECT_EQ(maybe_transform->transform.translation.y, 20.);
+  EXPECT_EQ(maybe_transform->transform.translation.z, 30.);
+  EXPECT_EQ(maybe_transform->transform.rotation.w, 1.);
+  EXPECT_EQ(maybe_transform->transform.rotation.x, 0.);
+  EXPECT_EQ(maybe_transform->transform.rotation.y, 0.);
+  EXPECT_EQ(maybe_transform->transform.rotation.z, 0.);
+
 }

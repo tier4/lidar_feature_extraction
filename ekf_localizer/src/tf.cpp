@@ -19,29 +19,20 @@
 
 #include "ekf_localizer/tf.hpp"
 
-
-bool getTransformFromTF(
-  std::shared_ptr<rclcpp::Node> node,
+std::optional<geometry_msgs::msg::TransformStamped> TransformListener::LookupTransform(
   const std::string & parent_frame,
-  const std::string & child_frame,
-  geometry_msgs::msg::TransformStamped & transform)
+  const std::string & child_frame) const
 {
-  tf2::BufferCore tf_buffer;
-  tf2_ros::TransformListener tfl(tf_buffer, node, false);
+  rclcpp::sleep_for(std::chrono::milliseconds(100));
 
-  rclcpp::Rate r(10);
-  rclcpp::spin_some(node);
-
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 50; ++i) {
     try {
-      transform = tf_buffer.lookupTransform(parent_frame, child_frame, tf2::TimePointZero);
-      return true;
+      auto transform = tf_buffer_->lookupTransform(parent_frame, child_frame, tf2::TimePointZero);
+      return std::make_optional<geometry_msgs::msg::TransformStamped>(transform);
     } catch (tf2::TransformException & ex) {
-      Warning(node.get()).Warn(ex.what());
+      warning_->Warn(ex.what());
+      rclcpp::sleep_for(std::chrono::milliseconds(100));
     }
-
-    r.sleep();
-    rclcpp::spin_some(node);
   }
-  return false;
+  return std::nullopt;
 }

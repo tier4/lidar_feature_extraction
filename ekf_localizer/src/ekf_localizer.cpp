@@ -529,11 +529,12 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
 {
   geometry_msgs::msg::TransformStamped transform;
 
-  if (!getTransformFromTF(
-         std::shared_ptr<rclcpp::Node>(this),
+  TransformListener listener(std::shared_ptr<rclcpp::Node>(this));
+
+  const auto maybe_transform = listener.LookupTransform(
          EraseBeginSlash(pose_frame_id_),
-         EraseBeginSlash(initialpose->header.frame_id),
-         transform)) {
+         EraseBeginSlash(initialpose->header.frame_id));
+  if (!maybe_transform.has_value()) {
     RCLCPP_ERROR(
       get_logger(), "[EKF] TF transform failed. parent = %s, child = %s", pose_frame_id_.c_str(),
       initialpose->header.frame_id.c_str());
@@ -542,10 +543,10 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   // TODO(mitsudome-r) need mutex
 
   const Eigen::Vector3d initial_position = ToVector3d(initialpose->pose.pose.position);
-  const Eigen::Vector3d translation = ToVector3d(transform.transform.translation);
+  const Eigen::Vector3d translation = ToVector3d(maybe_transform->transform.translation);
   const Eigen::Vector3d t = initial_position + translation;
   const double initial_yaw = tf2::getYaw(initialpose->pose.pose.orientation);
-  const double yaw = tf2::getYaw(transform.transform.rotation);
+  const double yaw = tf2::getYaw(maybe_transform->transform.rotation);
 
   const Vector6d x = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
 
