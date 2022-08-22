@@ -92,7 +92,8 @@ public:
 
       r_prev = r;
 
-      const Eigen::VectorXd weights = HuberWeights(r);
+      const double scale = Scale(r);
+      const Eigen::VectorXd weights = HuberWeights(r / (scale + 1e-16));
       const auto [dq, dt] = CalcUpdate(weights, J, r, q);
 
       q = q * dq;
