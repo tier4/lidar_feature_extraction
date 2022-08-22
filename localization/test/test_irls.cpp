@@ -31,6 +31,30 @@
 
 #include "lidar_feature_localization/irls.hpp"
 
+TEST(IRLS, MedianAbsoluteDeviation)
+{
+  {
+    Eigen::VectorXd v(5);
+    v << 7, 9, 3, 0, 1;
+
+    // median(v) = 3
+    // | v - median(v) | = [4, 6, 0, 3, 2]
+    // median(| v - median(v) |) = 3
+
+    EXPECT_EQ(MedianAbsoluteDeviation(v), 3);
+  }
+
+  {
+    Eigen::VectorXd v(6);
+    v << 8, 3, 4, 0, 5, 1;
+
+    // median(v) = 3.5
+    // | v - median(v) | = [4.5, 0.5, 0.5, 3.5, 1.5, 2.5]
+    // median(| v - median(v) |) = (1.5 + 2.5) / 2 = 2.0
+
+    EXPECT_EQ(MedianAbsoluteDeviation(v), 2.);
+  }
+}
 
 TEST(HuberWeights, HuberWeights)
 {

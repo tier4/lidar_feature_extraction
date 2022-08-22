@@ -30,8 +30,25 @@
 
 #include <cmath>
 
+#include "lidar_feature_library/stats.hpp"
 #include "lidar_feature_localization/irls.hpp"
 
+
+double MedianAbsoluteDeviation(const Eigen::VectorXd & v)
+{
+  const double median = Median(v);
+  return Median((v.array() - median).abs().eval());
+}
+
+double Scale(const Eigen::VectorXd & v)
+{
+  // >>> from scipy.stats import norm
+  // >>> 1 / norm.ppf(3 / 4)
+  // 1.482602218505602
+
+  const double b = 1.482602218505602;
+  return b * MedianAbsoluteDeviation(v);
+}
 
 Eigen::VectorXd HuberWeights(const Eigen::VectorXd & residuals, const double k)
 {
