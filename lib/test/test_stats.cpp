@@ -26,45 +26,45 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <Eigen/Core>
-
-#include <cmath>
+#include <gtest/gtest.h>
 
 #include "lidar_feature_library/stats.hpp"
-#include "lidar_feature_localization/irls.hpp"
 
 
-double MedianAbsoluteDeviation(const Eigen::VectorXd & v)
+TEST(Median, OddLengthInput)
 {
-  const double median = Median(v);
-  return Median((v.array() - median).abs().eval());
-}
+  {
+    Eigen::VectorXd v(9);
+    v << 7, 8, 2, 0, 5, 1, 3, 4, 6;
 
-double Scale(const Eigen::VectorXd & v)
-{
-  // >>> from scipy.stats import norm
-  // >>> 1 / norm.ppf(3 / 4)
-  // 1.482602218505602
-
-  const double b = 1.482602218505602;
-  return b * MedianAbsoluteDeviation(v);
-}
-
-Eigen::VectorXd HuberWeights(const Eigen::VectorXd & residuals, const double k)
-{
-  auto compute = [&k](const double r) {
-      const double abs_r = std::fabs(r);
-      if (abs_r <= k) {
-        return 1.;
-      }
-      return k / abs_r;
-    };
-
-  Eigen::VectorXd weights(residuals.size());
-
-  for (int64_t i = 0; i < residuals.size(); i++) {
-    weights(i) = compute(residuals(i));
+    EXPECT_EQ(Median(v), 4);
   }
 
-  return weights;
+  {
+    Eigen::VectorXd v(5);
+    v << 1, 2, -2, -1, 0;
+
+    EXPECT_EQ(Median(v), 0);
+  }
+}
+
+TEST(Median, EvenLengthInput)
+{
+  {
+    Eigen::VectorXd v(10);
+    v << 7, 8, 2, 0, 5, 9, 1, 3, 4, 6;
+    EXPECT_EQ(Median(v), 4.5);
+  }
+
+  {
+    Eigen::VectorXd v(6);
+    v << -6, -1, -4, -5, -3, -2;
+    EXPECT_EQ(Median(v), -3.5);
+  }
+
+  {
+    Eigen::VectorXd v(6);
+    v << 4.5, 0.5, 0.5, 3.5, 1.5, 2.5;
+    EXPECT_EQ(Median(v), 2.0);
+  }
 }

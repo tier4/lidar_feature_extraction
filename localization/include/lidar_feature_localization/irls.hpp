@@ -31,6 +31,8 @@
 
 #include <Eigen/Core>
 
+double MedianAbsoluteDeviation(const Eigen::VectorXd & v);
+double Scale(const Eigen::VectorXd & v);
 Eigen::VectorXd HuberWeights(const Eigen::VectorXd & residuals, const double k = 1.345);
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__IRLS_HPP_

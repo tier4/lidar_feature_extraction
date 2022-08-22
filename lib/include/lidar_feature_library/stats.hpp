@@ -26,45 +26,42 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef LIDAR_FEATURE_LIBRARY__STATS_HPP_
+#define LIDAR_FEATURE_LIBRARY__STATS_HPP_
+
 #include <Eigen/Core>
+#include <vector>
 
-#include <cmath>
-
-#include "lidar_feature_library/stats.hpp"
-#include "lidar_feature_localization/irls.hpp"
-
-
-double MedianAbsoluteDeviation(const Eigen::VectorXd & v)
+// private method, because the argument will be modified
+double Median_(std::vector<double> & v)
 {
-  const double median = Median(v);
-  return Median((v.array() - median).abs().eval());
-}
-
-double Scale(const Eigen::VectorXd & v)
-{
-  // >>> from scipy.stats import norm
-  // >>> 1 / norm.ppf(3 / 4)
-  // 1.482602218505602
-
-  const double b = 1.482602218505602;
-  return b * MedianAbsoluteDeviation(v);
-}
-
-Eigen::VectorXd HuberWeights(const Eigen::VectorXd & residuals, const double k)
-{
-  auto compute = [&k](const double r) {
-      const double abs_r = std::fabs(r);
-      if (abs_r <= k) {
-        return 1.;
-      }
-      return k / abs_r;
-    };
-
-  Eigen::VectorXd weights(residuals.size());
-
-  for (int64_t i = 0; i < residuals.size(); i++) {
-    weights(i) = compute(residuals(i));
+  if (v.size() % 2 == 1) {
+    const int n = (v.size() - 1) / 2;
+    std::nth_element(v.begin(), v.begin() + n, v.end());
+    return v[n];
   }
 
-  return weights;
+  const int n = v.size() / 2;
+
+  std::nth_element(v.begin(), v.begin() + n - 0, v.end());
+  const double e0 = v[n - 0];
+
+  std::nth_element(v.begin(), v.begin() + n - 1, v.end());
+  const double e1 = v[n - 1];
+
+  return (e0 + e1) / 2.;
 }
+
+double Median(const Eigen::VectorXd & m)
+{
+  std::vector<double> v(m.begin(), m.end());
+  return Median_(v);
+}
+
+double Median(const Eigen::ArrayXd & m)
+{
+  std::vector<double> v(m.begin(), m.end());
+  return Median_(v);
+}
+
+#endif  // LIDAR_FEATURE_LIBRARY__STATS_HPP_
