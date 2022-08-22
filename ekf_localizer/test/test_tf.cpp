@@ -75,7 +75,7 @@ TEST_F(EKFLocalizerTestSuite, getTransformFromTF)
     broadcaster, broadcaster->get_clock(), std::chrono::milliseconds(100),
     std::bind(&TfBroadcasterNode::Broadcast, broadcaster));
 
-  TransformListener listener(broadcaster);
+  TransformListener listener(broadcaster.get());
 
   rclcpp::Rate r(10);
 

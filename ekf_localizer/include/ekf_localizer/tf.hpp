@@ -29,10 +29,10 @@
 class TransformListener
 {
 public:
-  TransformListener(std::shared_ptr<rclcpp::Node> node)
+  TransformListener(rclcpp::Node * node)
   : tf_buffer_(std::make_shared<tf2::BufferCore>()),
     listener_(*tf_buffer_, node, false),
-    warning_(std::make_shared<Warning>(node.get()))
+    warning_(std::make_shared<Warning>(node))
   {
   }
 

@@ -529,7 +529,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
 {
   geometry_msgs::msg::TransformStamped transform;
 
-  TransformListener listener(std::shared_ptr<rclcpp::Node>(this));
+  TransformListener listener(this);
 
   const auto maybe_transform = listener.LookupTransform(
          EraseBeginSlash(pose_frame_id_),
