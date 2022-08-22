@@ -177,6 +177,7 @@ TimeDelayKalmanFilter InitEKF(const int extend_state_step_, const double yaw_bia
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
+  listener_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
   pub_biased_pose_(create_publisher<PoseWithCovarianceStamped>(
       "ekf_biased_pose_with_covariance", 1)),
@@ -529,9 +530,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
 {
   geometry_msgs::msg::TransformStamped transform;
 
-  TransformListener listener(this);
-
-  const auto maybe_transform = listener.LookupTransform(
+  const auto maybe_transform = listener_.LookupTransform(
          EraseBeginSlash(pose_frame_id_),
          EraseBeginSlash(initialpose->header.frame_id));
   if (!maybe_transform.has_value()) {
