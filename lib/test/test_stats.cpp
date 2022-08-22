@@ -61,4 +61,10 @@ TEST(Median, EvenLengthInput)
     v << -6, -1, -4, -5, -3, -2;
     EXPECT_EQ(Median(v), -3.5);
   }
+
+  {
+    Eigen::VectorXd v(6);
+    v << 4.5, 0.5, 0.5, 3.5, 1.5, 2.5;
+    EXPECT_EQ(Median(v), 2.0);
+  }
 }
