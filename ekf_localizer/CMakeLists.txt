@@ -42,6 +42,7 @@ if(BUILD_TESTING)
     test/test_ekf_localizer.cpp
     test/test_mahalanobis.cpp
     test/test_string.cpp
+    test/test_tf.cpp
     test/test_update_interval.cpp)
 
   foreach(filepath ${TEST_FILES})

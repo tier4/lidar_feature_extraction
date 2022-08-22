@@ -39,6 +39,7 @@
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
 
@@ -197,6 +198,8 @@ public:
 private:
   const Warning warning_;
 
+  const TransformListener listener_;
+
   //!< @brief estimated ekf odometry publisher
   const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_;
   //!< @brief ekf estimated yaw bias publisher
@@ -253,6 +256,7 @@ private:
   const double wz_covariance_;        //!< @brief  wz process noise
 
   const DefaultVariance variance_;
+
   TimeDelayKalmanFilter ekf_;
 
   AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> pose_messages_;

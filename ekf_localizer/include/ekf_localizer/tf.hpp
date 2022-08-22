@@ -20,16 +20,30 @@
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
+#include <memory>
 #include <string>
 
 #include "ekf_localizer/warning.hpp"
 
 
-bool getTransformFromTF(
-  const Warning & warning_,
-  const std::string & parent_frame,
-  const std::string & child_frame,
-  geometry_msgs::msg::TransformStamped & transform);
+class TransformListener
+{
+public:
+  TransformListener(rclcpp::Node * node)
+  : tf_buffer_(std::make_shared<tf2::BufferCore>()),
+    listener_(*tf_buffer_, node, false),
+    warning_(std::make_shared<Warning>(node))
+  {
+  }
 
+  std::optional<geometry_msgs::msg::TransformStamped> LookupTransform(
+    const std::string & parent_frame,
+    const std::string & child_frame) const;
+
+private:
+  const std::shared_ptr<tf2::BufferCore> tf_buffer_;
+  const tf2_ros::TransformListener listener_;
+  const std::shared_ptr<Warning> warning_;
+};
 
 #endif  // EKF_LOCALIZER__TF_HPP_
