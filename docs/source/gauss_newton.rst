@@ -52,34 +52,10 @@ Gauss-Newton
     &= \sum_{i=1}^{n} \rho(e_{i}(\mathbf{\beta}_0 + \mathbf{\delta}))
     \end{align}
 
-:math:`\mathbf{r}` の微分を
-
-.. math::
-    J_{i}
-    =
-    \frac{\partial \mathbf{r}_{i}}{\partial \mathbf{\beta}}
-    =
-    \lim_{\Delta\mathbf{\beta} \to \mathbf{0}} \frac{\mathbf{r}_{i}(\mathbf{\beta} + \Delta\mathbf{\beta}) - \mathbf{r}_{i}(\mathbf{\beta})}{\Delta\mathbf{\beta}}
-
-とおくと、関数 :math:`e_{i}` は次のように近似できる。
-
-.. math::
-    \begin{align}
-    e_{i}(\mathbf{\beta} + \mathbf{\delta})
-    &=
-    \mathbf{r}_{i}(\mathbf{\beta} + \mathbf{\delta})^{\top} \mathbf{r}_{i}(\mathbf{\beta} + \mathbf{\delta}) \\
-    &\approx
-    [\mathbf{r}_{i}(\mathbf{\beta}) + J_{i}\mathbf{\delta}]^{\top} [\mathbf{r}_{i}(\mathbf{\beta}) + J_{i}\mathbf{\delta}] \\
-    &=
-    \mathbf{r}_{i}(\mathbf{\beta})^{\top}\mathbf{r}_{i}(\mathbf{\beta}) +
-    2\mathbf{\delta}^{\top}J_{i}^{\top}\mathbf{r}_{i}(\mathbf{\beta}) +
-    \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}
-    \end{align}
-
 さて、このとき誤差関数 :math:`E(\mathbf{\beta}_{0} + \mathbf{\delta})` を最小化するパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}` はどのように表されるだろうか。
 :math:`\mathbf{\beta}_{0}` は初期値として固定されているため、 :math:`\mathbf{\delta}` のみを変動させ、誤差の値の変化を観察すればよい。
 
-変数 :math:`\Delta \mathbf{\delta}` を導入し、誤差関数 :math:`E` が :math:`\mathbf{\beta}_{0}` の周辺で最小値をとるパラメータを探そう。
+微小な変数 :math:`\Delta \mathbf{\delta}` を導入し、誤差関数 :math:`E` が :math:`\mathbf{\beta}_{0}` の周辺で最小値をとるパラメータを探そう。
 
 .. math::
     \begin{align}
@@ -91,7 +67,7 @@ Gauss-Newton
 .. math::
    \frac{\partial E(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}}
    &=
-   \frac{\partial E}{\partial e_{i}}\cdot\frac{\partial e_{i}}{\partial \Delta \mathbf{\delta}} \\
+   \frac{\partial E}{\partial e_{i}}\cdot\frac{\partial e_{i}}{\partial \mathbf{\beta}} \Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}} \\
    &=
    \lim_{\Delta\mathbf{\delta} \to \mathbf{0}}
    \sum_{i=1}^{n}
@@ -105,11 +81,36 @@ Gauss-Newton
    {(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - (\mathbf{\beta}_{0} + \mathbf{\delta})}
    \right]
 
-ここで先ほどの近似結果より
+
+:math:`\mathbf{r}` の微分を
+
+.. math::
+    J_{i}
+    =
+    \frac{\partial \mathbf{r}_{i}}{\partial \mathbf{\beta}}
+    =
+    \lim_{\Delta\mathbf{\beta} \to \mathbf{0}} \frac{\mathbf{r}_{i}(\mathbf{\beta} + \Delta\mathbf{\beta}) - \mathbf{r}_{i}(\mathbf{\beta})}{\Delta\mathbf{\beta}}
+
+とおくと、関数 :math:`e_{i}` は次のように近似できる。
 
 .. math::
     \begin{align}
-    e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})
+    e_{i}(\mathbf{\beta} + \Delta\mathbf{\beta})
+    &=
+    \mathbf{r}_{i}(\mathbf{\beta} + \Delta\mathbf{\beta})^{\top} \mathbf{r}_{i}(\mathbf{\beta} + \Delta\mathbf{\beta}) \\
+    &\approx
+    [\mathbf{r}_{i}(\mathbf{\beta}) + J_{i}\Delta\mathbf{\beta}]^{\top} [\mathbf{r}_{i}(\mathbf{\beta}) + J_{i}\Delta\mathbf{\beta}] \\
+    &=
+    \mathbf{r}_{i}(\mathbf{\beta})^{\top}\mathbf{r}_{i}(\mathbf{\beta}) +
+    2\Delta\mathbf{\beta}^{\top}J_{i}^{\top}\mathbf{r}_{i}(\mathbf{\beta}) +
+    \Delta\mathbf{\beta}^{\top}J_{i}^{\top}J_{i}\Delta\mathbf{\beta}
+    \end{align}
+
+この近似結果を利用すると、
+
+.. math::
+    \begin{align}
+    e_{i}(\mathbf{\beta}_{0} + (\mathbf{\delta} + \Delta\mathbf{\delta})) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})
     &\approx [\mathbf{r}_{i}(\mathbf{\beta})^{\top}\mathbf{r}_{i}(\mathbf{\beta})
     + 2(\mathbf{\delta} + \Delta \mathbf{\delta})^{\top}J_{i}^{\top}\mathbf{r}_{i}(\mathbf{\beta})
     + (\mathbf{\delta} + \Delta \mathbf{\delta})^{\top}J_{i}^{\top}J_{i}(\mathbf{\delta} + \Delta \mathbf{\delta})]
@@ -144,3 +145,4 @@ Gauss-Newton
     + 2J_{i}^{\top}J_{i}\mathbf{\delta}
     \end{align}
 
+が得られるため、誤差関数の微分は
