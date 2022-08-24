@@ -71,7 +71,7 @@ Gauss-Newton
     [\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta}) + J_{i}\mathbf{\delta}]^{\top} [\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta}) + J_{i}\mathbf{\delta}] \\
     &=
     \mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta}) +
-    2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\mathbf{\delta} +
+    2\mathbf{\delta}^{\top}J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta}) +
     \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}
     \end{align}
 
@@ -110,25 +110,13 @@ Gauss-Newton
     \begin{align}
     e(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e(\mathbf{\beta}_{0} + \mathbf{\delta})
     &\approx [\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
-    + 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}(\mathbf{\delta} + \Delta \mathbf{\delta})
+    + 2(\mathbf{\delta} + \Delta \mathbf{\delta})^{\top}J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
     + (\mathbf{\delta} + \Delta \mathbf{\delta})^{\top}J_{i}^{\top}J_{i}(\mathbf{\delta} + \Delta \mathbf{\delta})]
     - [\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
-    + 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\mathbf{\delta}
+    + 2\mathbf{\delta}^{\top}J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
     + \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}]  \\
-    &= 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}(\mathbf{\delta} + \Delta \mathbf{\delta})
-    + (\mathbf{\delta} + \Delta \mathbf{\delta})^{\top}J_{i}^{\top}J_{i}(\mathbf{\delta} + \Delta \mathbf{\delta})
-    - 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\mathbf{\delta}
-    - \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta} \\
-    &= 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\mathbf{\delta}
-    + 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\Delta \mathbf{\delta}
-    + \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}
-    + \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\Delta \mathbf{\delta}
-    + \Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}
-    + \Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\Delta \mathbf{\delta}
-    - 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\mathbf{\delta}
-    - \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}  \\
-    &= 2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\Delta \mathbf{\delta}
-    + 2\mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\Delta \mathbf{\delta}
+    &= 2\Delta \mathbf{\delta}^{\top}J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
+    + 2\Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}
     + \Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\Delta \mathbf{\delta}
     \end{align}
 
@@ -139,19 +127,20 @@ Gauss-Newton
     &=
     \frac{e(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e(\mathbf{\beta}_{0} + \mathbf{\delta})}{\Delta\mathbf{\delta}}  \\
     &\approx
-    \frac{2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}\Delta \mathbf{\delta}
-    + 2\mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\Delta \mathbf{\delta}
+    \frac{
+    2\Delta \mathbf{\delta}^{\top}J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
+    + 2\Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\mathbf{\delta}
     + \Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}\Delta \mathbf{\delta}}{\Delta\mathbf{\delta}}  \\
     &=
     \lim_{\Delta\mathbf{\delta} \to \mathbf{0}}
     \left[
-    2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}
-    + 2\mathbf{\delta}^{\top}J_{i}^{\top}J_{i}
-    + \Delta \mathbf{\delta}^{\top}J_{i}^{\top}J_{i}
+    2J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
+    + 2J_{i}^{\top}J_{i}\mathbf{\delta}
+    + J_{i}^{\top}J_{i}\Delta \mathbf{\delta}
     \right] \\
     &=
-    2\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top}J_{i}
-    + 2\mathbf{\delta}^{\top}J_{i}^{\top}J_{i}
+    2J_{i}^{\top}\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
+    + 2J_{i}^{\top}J_{i}\mathbf{\delta}
     \end{align}
 
 .. math::
