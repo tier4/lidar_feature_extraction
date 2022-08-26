@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>外れ値に頑強な標準偏差推定法 &#8212; Localization  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="姿勢最適化" href="gauss_newton.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="id1">
+<h1>外れ値に頑強な標準偏差推定法<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h1>
+<p>標準偏差の推定は非常に広範な問題に出現する。ここでは一般的な計算方法よりも外れ値に対してロバストな標準偏差の推定方法を紹介する。</p>
+<section id="id2">
+<h2>通常の計算方法<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<p>ある正規分布から生成される実数列を考える。</p>
+<div class="math notranslate nohighlight">
+\[x_{i} \sim \mathcal{N}(\mu,\, \sigma^2),\,i=1,...,n\]</div>
+<p>このとき、標準偏差はふつう次のように計算される。</p>
+<div class="math notranslate nohighlight" id="equation-sigma-std">
+<span class="eqno">(1)<a class="headerlink" href="#equation-sigma-std" title="Permalink to this equation">¶</a></span>\[\hat{\sigma}_{std} = \frac{1}{n-1}\sum_{i=1}^{n}(x_{i} - \bar{x})\]</div>
+</section>
+<section id="id3">
+<h2>外れ値が含まれる場合<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<p>なんらかの要因により、 <span class="math notranslate nohighlight">\(x_{i}\)</span> のいくらかが正規分布に従わない場合、通常の標準偏差の計算方法 <a class="reference internal" href="#equation-sigma-std">(1)</a> では問題が生じる。
+<a class="reference internal" href="#equation-sigma-std">(1)</a> の計算方法ではすべてのサンプルについて平均値との二乗誤差を計算し、合算している。このため、 <span class="math notranslate nohighlight">\(x_{i}\)</span> に少数でも外れ値が含まれていると標準偏差 <span class="math notranslate nohighlight">\(\hat{\sigma}_{std}\)</span> の計算結果に影響を与えてしまう。</p>
+</section>
+<section id="id4">
+<h2>外れ値に頑強な標準偏差推定法<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<p>この問題に対処できる標準偏差の計算方法が、MAD(Median Absolute Deviation)を用いた次の式である。</p>
+<div class="math notranslate nohighlight" id="equation-sigma-robust">
+<span class="eqno">(2)<a class="headerlink" href="#equation-sigma-robust" title="Permalink to this equation">¶</a></span>\[\begin{split}\sigma_{robust}=\frac{\operatorname{MAD}}{\Phi^{-1}(\frac{3}{4})}\\\end{split}\]</div>
+<p>ここで、 <span class="math notranslate nohighlight">\(\Phi\)</span> は正規分布の累積分布関数(CDF, Cumulative Distribution Function)である。逆関数の <span class="math notranslate nohighlight">\(\Phi^{-1}\)</span> はPPF(Percent Point Function)などと呼ばれる。MADは次のように計算される指標である。</p>
+<div class="math notranslate nohighlight">
+\[\operatorname{MAD}=\operatorname{median}_{i}(\left|x_{i}−\operatorname{median}_{j}(x_{j})\right|)\]</div>
+<p>この標準偏差推定法 <a class="reference internal" href="#equation-sigma-robust">(2)</a> は、通常の計算方法 <a class="reference internal" href="#equation-sigma-std">(1)</a> に比べて外れ値に対して頑強であることが知られている。</p>
+</section>
+<section id="id5">
+<h2>実験<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<p>通常の標準偏差の計算方法 <a class="reference internal" href="#equation-sigma-std">(1)</a> と外れ値に対して頑強な計算方法 <a class="reference internal" href="#equation-sigma-robust">(2)</a> を、実験により比較した。</p>
+<p>データセット全体のサイズを <span class="math notranslate nohighlight">\(N\)</span> とする。このうち <span class="math notranslate nohighlight">\(m\)</span> 個のサンプルを平均 <span class="math notranslate nohighlight">\(0\)</span> 、標準偏差 <span class="math notranslate nohighlight">\(\sigma\)</span> の正規分布に基づいて生成し、残りの <span class="math notranslate nohighlight">\(N-m\)</span> サンプルを外れ値として <span class="math notranslate nohighlight">\(-20\sigma\)</span> から <span class="math notranslate nohighlight">\(20\sigma\)</span> までの範囲の一様分布に従って生成した。</p>
+<div class="math notranslate nohighlight" id="equation-experiment-dataset">
+<span class="eqno">(3)<a class="headerlink" href="#equation-experiment-dataset" title="Permalink to this equation">¶</a></span>\[\begin{split}\begin{align}
+ x_{i} &amp;\sim \mathcal{N}(0,\, \sigma^2),\, &amp;&amp; i = 1,...,m \\
+ x_{j} &amp;\sim \mathcal{U}(-20\sigma,\, 20\sigma),\, &amp;&amp; j = N-m+1,...,N
+\end{align}\end{split}\]</div>
+<p>このデータセットに対して通常の方法 <a class="reference internal" href="#equation-sigma-std">(1)</a> とロバストな方法 <a class="reference internal" href="#equation-sigma-robust">(2)</a> それぞれの方法で標準偏差を計算した。
+データセットのうち外れ値の割合 <span class="math notranslate nohighlight">\((N-m)/N\)</span> を0%から20%まで徐々に増やしていき、それぞれの方法で計算した標準偏差の値がどのように変化していくかを観察した。</p>
+<p>外れ値の割合が0%、10%、20%のときのデータのヒストグラムを示す。</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><figure class="align-default" id="id6">
+<a class="reference internal image-reference" href="_images/outlier00.png"><img alt="_images/outlier00.png" src="_images/outlier00.png" style="width: 384.0px; height: 288.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">外れ値の割合0%</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+<tr class="row-even"><td><figure class="align-default" id="id7">
+<a class="reference internal image-reference" href="_images/outlier10.png"><img alt="_images/outlier10.png" src="_images/outlier10.png" style="width: 384.0px; height: 288.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">外れ値の割合10%</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+<tr class="row-odd"><td><figure class="align-default" id="id8">
+<a class="reference internal image-reference" href="_images/outlier20.png"><img alt="_images/outlier20.png" src="_images/outlier20.png" style="width: 384.0px; height: 288.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">外れ値の割合20%</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+</tbody>
+</table>
+<p>外れ値の割合を0%から20%まで変化させたときの標準偏差の値の変化を示す。</p>
+<figure class="align-default">
+<a class="reference internal image-reference" href="_images/stddev_comparison.png"><img alt="_images/stddev_comparison.png" src="_images/stddev_comparison.png" style="width: 640.0px; height: 480.0px;" /></a>
+</figure>
+<p>赤い点が母分布のうちの正規分布の標準偏差( <a class="reference internal" href="#equation-experiment-dataset">(3)</a> の <span class="math notranslate nohighlight">\(\sigma\)</span> )、緑の点が標準的な方法 <a class="reference internal" href="#equation-sigma-std">(1)</a> で計算した標準偏差、青い点がロバストな手法で計算した標準偏差 <a class="reference internal" href="#equation-sigma-robust">(2)</a> の値である。</p>
+<p>データセットはそれぞれの外れ値の割合について20回生成しているため、標準偏差も各割合について20回計算して表示している。</p>
+<p>標準的な方法で計算した場合、外れ値が1%でも含まれていると、標準偏差の値は約1.5倍も大きく推定されてしまう。一方でロバストな手法で計算すると、外れ値が10%程度含まれていても標準偏差の値はそれほど大きく推定されず、外れ値に対して極めて頑強であることがわかる。</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Localization</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gauss_newton.html">姿勢最適化</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">外れ値に頑強な標準偏差推定法</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">通常の計算方法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">外れ値が含まれる場合</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">外れ値に頑強な標準偏差推定法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">実験</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="gauss_newton.html" title="previous chapter">姿勢最適化</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Takeshi Ishita.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/robust_stddev_estimator.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
