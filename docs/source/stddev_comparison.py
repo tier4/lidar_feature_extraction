@@ -4,16 +4,16 @@ from scipy.stats import norm
 
 
 n_samples = 10000
-n_estimation_times = 80
+n_estimation_times = 20
 
 
 def mad(x):
     return np.median(np.abs(x - np.median(x)))
 
 
-def generate_data(stddev, outlier_rate):
-    n_inliers = int((1. - outlier_rate) * n_samples)
-    n_outliers = int(outlier_rate * n_samples)
+def generate_data(stddev, outlier_ratio):
+    n_inliers = int((1. - outlier_ratio) * n_samples)
+    n_outliers = int(outlier_ratio * n_samples)
 
     # inliers follow the normal distribution
     inliers = np.random.normal(0., stddev, n_inliers)
@@ -35,11 +35,11 @@ def estimate_stddev_by_std(data):
     return np.std(data, ddof=1)
 
 
-def run_estimation(stddev_true, outlier_rate):
+def run_estimation(stddev_true, outlier_ratio):
     stddev_est_mad = np.empty(n_estimation_times)
     stddev_est_std = np.empty(n_estimation_times)
     for i in range(n_estimation_times):
-        data = generate_data(stddev_true, outlier_rate)
+        data = generate_data(stddev_true, outlier_ratio)
         stddev_est_mad[i] = estimate_stddev_by_mad(data)
         stddev_est_std[i] = estimate_stddev_by_std(data)
     return stddev_est_mad, stddev_est_std
@@ -50,7 +50,7 @@ ax = fig.add_subplot(111)
 
 stddev_true = 2
 
-outlier_ratios = np.linspace(0., 0.2, 11)
+outlier_ratios = np.linspace(0., 0.2, 21)
 
 for outlier_ratio in outlier_ratios:
     stddev_est_mad, stddev_est_std = run_estimation(stddev_true, outlier_ratio)
@@ -64,6 +64,7 @@ for outlier_ratio in outlier_ratios:
     ax.scatter(stddev_est_std, ys, c="green", label="standard method")
     ax.scatter(stddev_true, outlier_percentage, c="red", label="ground truth")
 
+ax.set_xticks(np.linspace(2., 12., 11))
 ax.set_yticks(100. * outlier_ratios)
 
 ax.set_ylabel("Outlier percentage [%]")
