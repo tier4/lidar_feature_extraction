@@ -1,78 +1,97 @@
 姿勢最適化
 ==========
 
-
 重み付きGauss-Newton
 --------------------
 
-概要
-~~~~
+Gauss-Newton法はその収束の速さからさまざまな場面で扱われる数理最適化手法であるが、一般的に誤差関数として二乗誤差を用いるため、外れ値に弱いという問題がある。
 
-姿勢最適化問題を例として扱うが、
+ここでは外れ値に対して頑強な誤差関数とその最適化手法について解説する。例として point-set registration を取り扱うが、ここで解説する手法は他のさまざまな最適化問題にも適用することができる。
+
+問題設定
+~~~~~~~~
 
 最適化問題のパラメータを :math:`\mathbf{\beta} = \{\mathbf{q}, \mathbf{t}\}` で表現する。ここで :math:`\mathbf{q} \in \mathbb{H}` は回転を表す四元数、 :math:`\mathbf{t} \in \mathbb{R}^{3}` は並進を表す3次元ベクトルである。
 
-残差 :math:`\mathbf{r}_{i}(\mathbf{\beta}) = \mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})` をクロス積を用いて
+2つの3次元点群の集合をそれぞれ :math:`P` と :math:`U` とする。
 
 .. math::
     \begin{align}
-        \mathbf{r}_{i}(\mathbf{\beta}) = \mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta}) &= (\mathbf{v}_{1} - \mathbf{p}_{i}^{\prime}) \times (\mathbf{v}_{2} - \mathbf{p}_{i}^{\prime}), \; \mathbf{p}_{i}^{\prime} = R(\mathbf{q}) \cdot \mathbf{p}_{i} + \mathbf{t}
-   \end{align}
+    P &= \{\mathbf{p}_{i}\},\,\mathbf{p}_{i} \in \mathrm{R}^{3},\,i=1,...,n \\
+    U &= \{\mathbf{u}_{j}\},\,\mathbf{u}_{j} \in \mathrm{R}^{3},\,j=1,...,n
+    \end{align}
 
-と表現する。
-
-また、残差 :math:`\mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})` を用いて関数 :math:`e_{i}(\mathbf{\beta}) = e(\mathbf{p}_{i}; \mathbf{\beta})` を次のように定義する。
-
-.. math::
-    e_{i}(\mathbf{\beta})
-    = e(\mathbf{p}_{i}; \mathbf{\beta})
-    = \mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})^{\top} \mathbf{r}(\mathbf{p}_{i}; \mathbf{\beta})
-    = \mathbf{r}_{i}(\mathbf{\beta})^{\top} \mathbf{r}_{i}(\mathbf{\beta})
-
-これらを用いて誤差関数を
+Point-set registration とは、これら点群を用いてなんらかの誤差関数 :math:`E` を設定し、それを最小化することで、これら点群の間の尤もらしい変換 :math:`\mathbf{\beta} = \{\mathbf{q}, \mathbf{t}\}` を求める問題である。
 
 .. math::
-    E(\mathbf{\beta}) = \sum_{i=1}^{n} \rho(e_{i}(\mathbf{\beta}))
+    \underset{\mathbf{\beta}}{\arg\min}\, E(P, U;\, \mathbf{\beta}),
 
-と定め、これを最小化するパラメータ :math:`\mathbf{\beta}` を求める。
-ここで :math:`\rho` はロバスト性を調整するための関数であり、たとえば通常の二乗誤差であれば :math:`\rho(e) = e` となる。
-ほかにもさまざまな種類の関数が提案されており、たとえば huber loss
-
+誤差関数には一般的に平均二乗誤差がよく用いられる。
 
 .. math::
-    \rho(e)= \begin{cases}
+    \begin{align}
+    \mathrm{MSE}(P, U; \mathbf{\beta}) &= \frac{1}{n} \sum_{i=1}^{n} || \mathbf{r}(\mathbf{p}_{i}, \mathbf{u}_{i};\, \mathbf{\beta}) ||^{2} \\[10pt]
+    &\text{where}\quad\mathbf{r}(\mathbf{p}_{i}, \mathbf{u}_{i};\, \mathbf{\beta}) = R(\mathbf{q}) \cdot \mathbf{p}_{i} + \mathbf{t} - \mathbf{u}_{i}
+    \end{align}
+
+:math:`\mathbf{p}_{i}` と :math:`\mathbf{u}_{i}` はパラメータ :math:`\mathbf{\beta}` の変化の影響を受けない値であり、 :math:`n` も最適化のプロセス内では固定値として扱えるので、簡単のために誤差関数を :math:`E_{s}` としてこう表記しておこう。
+
+.. math::
+    \begin{align}
+    E_{s}(\mathbf{\beta}) &= \sum_{i=1}^{n} e_{i}(\mathbf{\beta}) \\[10pt]
+    e_{i}(\mathbf{\beta}) &= || \mathbf{r}_{i}(\mathbf{\beta}) ||^{2} = \mathbf{r}_{i}(\mathbf{\beta})^{\top}\mathbf{r}_{i}(\mathbf{\beta}) \\[10pt]
+    \mathbf{r}_{i}(\mathbf{\beta}) &= R(\mathbf{q}) \cdot \mathbf{p}_{i} + \mathbf{t} - \mathbf{u}_{i}
+    \end{align}
+
+外れ値に対する脆弱性
+~~~~~~~~~~~~~~~~~~~~
+
+さて、ここで問題がある。平均二乗誤差は外れ値に弱いため、入力データ :math:`P,\, U` に少しでも外れ値が含まれていると、パラメータの推定結果 :math:`\hat{\mathbf{\beta}}` は真の値 :math:`\mathbf{\beta}^{*}` から大きく外れてしまう。
+
+
+外れ値に対する頑強性の確保
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+この問題に対処するための方法は数多く提案されており、ここではGauss-Newtonの最適化プロセスとともによく用いられる重み付けGauss-Newton法を紹介する。
+これはある関数 :math:`\rho` を導入することで、平均二乗誤差よりも外れ値の影響を受けにくくする手法である。
+
+.. math::
+    E_{\rho}(\mathbf{\beta}) = \sum_{i=1}^{n} \rho(e_{i}(\mathbf{\beta}))
+
+:math:`\rho` にはさまざまなものが提案されており、たとえば huber loss
+
+.. math::
+    \rho(e) = \begin{cases}
         e,          & \text{if } e\lt k^2\\
         2k\sqrt{e} - k^2,  & \text{if } e\geq k^2\\
     \end{cases}
 
-などが用いられる。
+などがよく用いられる。
 
-さて、誤差関数を最小化するパラメータを求めよう。誤差関数 :math:`E(\mathbf{\beta})` を微分して0とおいても、誤差関数を最小化するパラメータ :math:`\mathbf{\beta}^{*}` を解析的に求めることはできない。代わりに、Gauss-Newton法によって反復的に誤差を最小化する。
+.. figure:: gauss_newton/square_vs_huber.png
+    :scale: 100%
 
-ある値 :math:`\mathbf{\beta}_0` の周辺で関数 :math:`E` を近似し、これを最小化するパラメータ :math:`\mathbf{\beta}_0 + \mathbf{\delta}` を求めよう。
+    通常の二乗誤差とHuber関数の比較(k=2.0)。二乗誤差と比較すると、Huber関数は大きな残差を持つサンプルに対して小さな誤差を割り当てるため、外れ値の影響が小さくなる。
+
+二乗誤差は大きな残差 :math:`\mathbf{r}_{i}` を持つサンプル(外れ値)に対して大きな誤差 :math:`e_{i}` を割り当てる。最適なパラメータ :math:`{\arg\min}_{\mathbf{\beta}} E_{s}` を求める際には、外れ値に対応する誤差を重点的に減少させようとしてしまい、結果として推定値 :math:`\hat{\mathbf{\beta}}` が外れ値に引っ張られてしまう。一方でHuber関数などは外れ値が生み出す誤差を :math:`\rho(e_{i})` として抑制するため、外れ値が生み出す誤差を重点的に最小化しようとせず、結果としてロバストな推定ができるようになる。
+
+Gauss-Newton法による誤差最小化
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+さて、外れ値に対する頑強性を確保する関数 :math:`\rho` を導入したので、これ考慮しつつ誤差 :math:`E_{\rho}(\mathbf{\beta})` を最小化する方法を導出しよう。
+
+通常のGauss-Newton法と同じ枠組みで誤差最小化を行う。:math:`\mathbf{\beta}_{0}` は初期値として固定されているため、 :math:`\mathbf{\delta}` のみを変動させ、誤差の値の変化を観察すればよい。
+ある値 :math:`\mathbf{\beta}_0` の周辺で関数 :math:`E_{\rho}` を近似し、これを最小化するパラメータ :math:`\mathbf{\beta}_0 + \mathbf{\delta}^{*},\,\mathbf{\delta}^{*} = {\arg\min}_{\mathbf{\delta}}\, E_{\rho}(\mathbf{\beta}_0 + \mathbf{\delta})` を求めよう。
+
+微小な変数 :math:`\Delta \mathbf{\delta}` を導入し、 :math:`E_{\rho}` を微分してその変化を観察することで、:math:`E_{\rho}` を :math:`\mathbf{\beta}_{0}` の周辺で局所的に最小化するパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}` を見つけることができる。
 
 .. math::
     \begin{align}
-    E(\mathbf{\beta}_0 + \mathbf{\delta})
-    &= \sum_{i=1}^{n} \rho(e_{i}(\mathbf{\beta}_0 + \mathbf{\delta}))
-    \end{align}
-
-さて、このとき誤差関数 :math:`E(\mathbf{\beta}_{0} + \mathbf{\delta})` を最小化するパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}` はどのように表されるだろうか。
-:math:`\mathbf{\beta}_{0}` は初期値として固定されているため、 :math:`\mathbf{\delta}` のみを変動させ、誤差の値の変化を観察すればよい。
-
-誤差関数 :math:`E` が :math:`\mathbf{\beta}_{0}` の周辺で最小値をとるパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}` を探そう。
-微小な変数 :math:`\Delta \mathbf{\delta}` を導入し、 :math:`E` を微分してその変化を観察することで、:math:`E` を :math:`\mathbf{\beta}_{0}` の周辺で局所的に最小化するパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}^{*}` を見つけることができる [#delta_star]_ 。
-
-.. math::
-    \begin{align}
-    \frac{\partial E(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}}
+    \frac{\partial E_{\rho}(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}}
     &=
     \lim_{\Delta\mathbf{\delta} \to \mathbf{0}}
-    \frac{E(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - E(\mathbf{\beta}_{0} + \mathbf{\delta})}
+    \frac{E_{\rho}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - E_{\rho}(\mathbf{\beta}_{0} + \mathbf{\delta})}
     {(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - (\mathbf{\beta}_{0} + \mathbf{\delta})} \\
-    &=
-    \frac{\partial E}{\partial e_{i}}\Big|_{e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}
-    \cdot\frac{\partial e_{i}}{\partial \mathbf{\beta}} \Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}} \\
     &=
     \lim_{\Delta\mathbf{\delta} \to \mathbf{0}}
     \sum_{i=1}^{n}
@@ -84,13 +103,24 @@
     \frac
     {e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}
     {(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - (\mathbf{\beta}_{0} + \mathbf{\delta})}
+    \right] \\
+    &=
+    \lim_{\Delta\mathbf{\delta} \to \mathbf{0}}
+    \sum_{i=1}^{n}
+    \left[
+    \frac
+    {\partial \rho}{\partial e_{i}}\Big|_{e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}
+    \cdot
+    \frac
+    {e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}
+    {\Delta\mathbf{\delta}}
     \right]
     \end{align}
 
 
-:math:`\frac{\partial E(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}} = \mathbf{0}` とおけば最適なパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}^{*}` を導出することができるだろう。
+:math:`\frac{\partial E_{\rho}(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}} = \mathbf{0}` とおけば最適なパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}^{*}` を導出することができるだろう。
 
-:math:`\mathbf{r}` の微分を
+:math:`\mathbf{r}_{i}` の微分を :math:`J_{i}` とおいて、関数 :math:`e_{i}` を近似する。
 
 .. math::
     J_{i}(\mathbf{\beta}_{0})
@@ -98,8 +128,6 @@
     \frac{\partial \mathbf{r}_{i}}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0}}
     =
     \lim_{\Delta\mathbf{\beta} \to \mathbf{0}} \frac{\mathbf{r}_{i}(\mathbf{\beta}_{0} + \Delta\mathbf{\beta}) - \mathbf{r}_{i}(\mathbf{\beta}_{0})}{\Delta\mathbf{\beta}}
-
-とおくと、関数 :math:`e_{i}` は次のように近似できる。
 
 .. math::
     \begin{align}
@@ -114,7 +142,7 @@
     \Delta\mathbf{\beta}^{\top}J_{i}^{\top}J_{i}\Delta\mathbf{\beta}
     \end{align}
 
-この近似結果を利用すると、
+この結果を利用すると、 :math:`e_{i}` の微分を簡易な式で近似することができる。
 
 .. math::
     \begin{align}
@@ -133,9 +161,7 @@
 
 .. math::
     \begin{align}
-    \frac{e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}{(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - (\mathbf{\beta}_{0} + \mathbf{\delta})}
-    &=
-    \frac{e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}{\Delta\mathbf{\delta}}  \\
+    \frac{e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta} + \Delta\mathbf{\delta}) - e_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}{\Delta\mathbf{\delta}}
     &\approx
     \frac{
     2\Delta \mathbf{\delta}^{\top}J_{i}^{\top}\mathbf{r}_{i}(\mathbf{\beta}_{0})
@@ -153,11 +179,11 @@
     + 2J_{i}^{\top}J_{i}\mathbf{\delta}
     \end{align}
 
-が得られるため、誤差関数の微分は
+結果として、誤差関数の微分は
 
 .. math::
     \begin{align}
-    \frac{\partial E(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}}
+    \frac{\partial E_{\rho}(\mathbf{\beta})}{\partial \mathbf{\beta}}\Big|_{\mathbf{\beta}_{0} + \mathbf{\delta}}
     &\approx
     \sum_{i=1}^{n}
     \left[
@@ -168,7 +194,7 @@
     \right]
     \end{align}
 
-となり、これを0とおけば次のような線型方程式が得られる。
+となり、これを :math:`\mathbf{0}` とおけば線型方程式が得られる。
 
 .. math::
     \begin{align}
@@ -197,13 +223,6 @@
     A\mathbf{\delta} &= b
     \end{align}
 
-この線型方程式を解けば :math:`\mathbf{\beta}_{0}` の周辺で :math:`E(\mathbf{\beta})` を近似的に最小化させるパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}^{*}` を見つけることができる。
+この線型方程式を解けば :math:`\mathbf{\beta}_{0}` の周辺で :math:`E_{\rho}(\mathbf{\beta})` を近似的に最小化させるパラメータ :math:`\mathbf{\beta}_{0} + \mathbf{\delta}^{*},\, \mathbf{\delta}^{*} = A^{-1}b` を見つけることができる。
 
-繰り返しによる最小化
-~~~~~~~~~~~~~~~~~~~~
-
-上記の解法は近似を含んでおり、必ずしも一度の計算で誤差関数を最小化させるパラメータ :math:`\mathbf{\beta}^{*} = {\arg\min}_{\mathbf{\beta}} E(\mathbf{\beta})` を見つけられるわけではない。
-
-ここで得た解を :math:`\mathbf{\beta}_{1} = \mathbf{\beta}_{0} + \mathbf{\delta}^{*}` とし、誤差関数 :math:`E` を :math:`\mathbf{\beta}_{1}` の周辺で近似して最小化すると、 :math:`E` をさらに小さくするパラメータ :math:`\mathbf{\beta}_{2} = \mathbf{\beta}_{1} + \mathbf{\delta}^{*},\, E(\mathbf{\beta}_{2}) \leq E(\mathbf{\beta}_{1})` を見つけることができる。以降は :math:`E` の値が収束するまで同じ操作を繰り返していくことで :math:`E` を局所的に最小化させるパラメータ :math:`\mathbf{\beta}*` を見つけることができる。
-
-.. [#delta_star] 最適解であることを表すために :math:`\mathbf{\delta}^{*}` と表記している
+あとは通常のGauss-Newton法と同じように :math:`\mathbf{\beta}_{m+1} = \mathbf{\beta}_{m} + \mathbf{\delta}` とし、誤差関数 :math:`E_{\rho}` を最小化する操作を誤差またはパラメータの変化が収束するまで繰り返せばよい。
