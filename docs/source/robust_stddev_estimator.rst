@@ -10,7 +10,7 @@
 ある正規分布から生成される実数列を考える。
 
 .. math::
-    x_{i} \sim \mathcal{N}(\mu,\, \sigma^2),\,i=1...n
+    x_{i} \sim \mathcal{N}(\mu,\, \sigma^2),\,i=1,...,n
 
 このとき、標準偏差はふつう次のように計算される。
 
@@ -49,8 +49,8 @@
 
 .. math::
    \begin{align}
-    x_{i} &\sim \mathcal{N}(0,\, \sigma^2),\, && i = 1..m \\
-    x_{j} &\sim \mathcal{U}(-20\sigma,\, 20\sigma),\, && j = N-m+1...N
+    x_{i} &\sim \mathcal{N}(0,\, \sigma^2),\, && i = 1,...,m \\
+    x_{j} &\sim \mathcal{U}(-20\sigma,\, 20\sigma),\, && j = N-m+1,...,N
    \end{align}
    :label: experiment_dataset
 

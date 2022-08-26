@@ -11,6 +11,7 @@ Welcome to Localization's documentation!
    :caption: Contents:
 
    gauss_newton
+   robust_stddev_estimator
 
 
 Indices and tables
