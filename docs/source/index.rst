@@ -10,7 +10,7 @@ Localization documentation
    :maxdepth: 2
    :caption: Contents:
 
-   gauss_newton
+   weighted_gauss_newton
    robust_stddev_estimator
 
 
