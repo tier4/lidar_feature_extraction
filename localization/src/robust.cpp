@@ -31,7 +31,7 @@
 #include <cmath>
 
 #include "lidar_feature_library/stats.hpp"
-#include "lidar_feature_localization/irls.hpp"
+#include "lidar_feature_localization/robust.hpp"
 
 
 double MedianAbsoluteDeviation(const Eigen::VectorXd & v)

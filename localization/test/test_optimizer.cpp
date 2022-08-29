@@ -34,7 +34,7 @@
 #include <tuple>
 
 #include "lidar_feature_localization/alignment.hpp"
-#include "lidar_feature_localization/irls.hpp"
+#include "lidar_feature_localization/robust.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/eigen.hpp"
