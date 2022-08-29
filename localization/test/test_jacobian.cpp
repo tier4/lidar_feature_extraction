@@ -28,19 +28,28 @@
 
 #include <gmock/gmock.h>
 
+#include <iostream>
 #include "lidar_feature_localization/jacobian.hpp"
 
-TEST(Jacobian, FillJacobianRow)
+TEST(Jacobian, MakeJacobian)
 {
-  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, 7);
-  Eigen::Matrix<double, 3, 4> drpdq;
-  drpdq <<
-    0, 1, 2, 0,
-    1, 0, 1, 1,
-    0, 2, 0, -2;
-  const Eigen::Vector3d coeff(1, -1, 2);
-  const int i = 1;
-  FillJacobianRow(J, i, drpdq, coeff);
-  EXPECT_EQ((J.row(i).head(4) - coeff.transpose() * drpdq).norm(), 0.);
-  EXPECT_EQ((J.row(i).tail(3) - coeff.transpose()).norm(), 0.);
+  std::vector<Eigen::Vector3d> points;
+  points.push_back(Eigen::Vector3d(1, 3, 4));
+  points.push_back(Eigen::Vector3d(3, 2, 5));
+
+  std::vector<Eigen::Vector3d> coeffs;
+  coeffs.push_back(Eigen::Vector3d(0, 1, 2));
+  coeffs.push_back(Eigen::Vector3d(2, 3, 4));
+
+  Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
+
+  const Eigen::MatrixXd J = MakeJacobian(points, coeffs, q);
+
+  const Eigen::Matrix<double, 3, 4> drpdq0 = rotationlib::DRpDq(q, points.at(0));
+  EXPECT_EQ((J.row(0).head(4) - coeffs.at(0).transpose() * drpdq0).norm(), 0.);
+  EXPECT_EQ((J.row(0).tail(3) - coeffs.at(0).transpose()).norm(), 0.);
+
+  const Eigen::Matrix<double, 3, 4> drpdq1 = rotationlib::DRpDq(q, points.at(1));
+  EXPECT_EQ((J.row(1).head(4) - coeffs.at(1).transpose() * drpdq1).norm(), 0.);
+  EXPECT_EQ((J.row(1).tail(3) - coeffs.at(1).transpose()).norm(), 0.);
 }
