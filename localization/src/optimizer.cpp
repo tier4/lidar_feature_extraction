@@ -37,12 +37,10 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
 }
 
 Eigen::VectorXd WeightedUpdate(
-  const Eigen::VectorXd & weights,
   const Eigen::MatrixXd & J,
   const Eigen::VectorXd & r)
 {
-  const Eigen::MatrixXd W = weights.asDiagonal();
-  return (J.transpose() * W * J).ldlt().solve(-J.transpose() * W * r);
+  return (J.transpose() * J).ldlt().solve(-J.transpose() * r);
 }
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
@@ -59,13 +57,12 @@ Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
 }
 
 std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
-  const Eigen::VectorXd & weights,
   const Eigen::MatrixXd & J,
   const Eigen::VectorXd & r,
   const Eigen::Quaterniond & q)
 {
   const Eigen::Matrix<double, 7, 6> M = MakeM(q);
-  const Vector6d dx = WeightedUpdate(weights, J * M, r);
+  const Vector6d dx = WeightedUpdate(J * M, r);
   const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
   const Eigen::Vector3d dt = dx.tail(3);
   return {dq, dt};

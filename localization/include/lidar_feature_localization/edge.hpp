@@ -104,15 +104,13 @@ public:
 
     const Eigen::Quaterniond q(point_to_map.rotation());
 
-    const size_t n_used_points = static_cast<size_t>(scan->size() * 0.1);
-    const std::vector<size_t> indices = RandomizedUniqueIndices(scan->size());
+    const size_t n = scan->size();
 
-    Eigen::MatrixXd J(3 * n_used_points, 7);
-    Eigen::VectorXd r(3 * n_used_points);
+    Eigen::MatrixXd J(3 * n, 7);
+    Eigen::VectorXd r(3 * n);
 
-    for (size_t i = 0; i < n_used_points; i++) {
-      const size_t index = indices.at(i);
-      const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(index));
+    for (size_t i = 0; i < n; i++) {
+      const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
       const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
 
       const auto [neighbors, _] = kdtree_->NearestKSearch(query, N_NEIGHBORS);

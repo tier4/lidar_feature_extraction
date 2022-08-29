@@ -48,7 +48,6 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q);
 
 std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
-  const Eigen::VectorXd & weights,
   const Eigen::MatrixXd & J,
   const Eigen::VectorXd & r,
   const Eigen::Quaterniond & q);
@@ -92,9 +91,7 @@ public:
 
       r_prev = r;
 
-      const double scale = Scale(r);
-      const Eigen::VectorXd weights = HuberWeights(r / (scale + 1e-16));
-      const auto [dq, dt] = CalcUpdate(weights, J, r, q);
+      const auto [dq, dt] = CalcUpdate(J, r, q);
 
       q = q * dq;
       t = t + dt;

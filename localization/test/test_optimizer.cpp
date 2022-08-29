@@ -76,8 +76,7 @@ TEST(Optimizer, Alignment)
 
     const auto [J, r] = problem.Make(std::make_tuple(X, Y), initial);
 
-    const Eigen::VectorXd weights = HuberWeights(r);
-    const auto [dq, dt] = CalcUpdate(weights, J, r, initial_q);
+    const auto [dq, dt] = CalcUpdate(J, r, initial_q);
 
     const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
 
