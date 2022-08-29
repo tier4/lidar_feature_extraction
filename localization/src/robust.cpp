@@ -31,7 +31,7 @@
 #include <cmath>
 
 #include "lidar_feature_library/stats.hpp"
-#include "lidar_feature_localization/irls.hpp"
+#include "lidar_feature_localization/robust.hpp"
 
 
 double MedianAbsoluteDeviation(const Eigen::VectorXd & v)
@@ -50,21 +50,20 @@ double Scale(const Eigen::VectorXd & v)
   return b * MedianAbsoluteDeviation(v);
 }
 
-Eigen::VectorXd HuberWeights(const Eigen::VectorXd & residuals, const double k)
+double Huber(const double e, const double k)
 {
-  auto compute = [&k](const double r) {
-      const double abs_r = std::fabs(r);
-      if (abs_r <= k) {
-        return 1.;
-      }
-      return k / abs_r;
-    };
-
-  Eigen::VectorXd weights(residuals.size());
-
-  for (int64_t i = 0; i < residuals.size(); i++) {
-    weights(i) = compute(residuals(i));
+  if (e < k * k) {
+    return 1.;
   }
 
-  return weights;
+  return 2 * k * std::sqrt(e) - k * k;
+}
+
+double HuberDerivative(const double e, const double k)
+{
+  if (e < k * k) {
+    return 0.;
+  }
+
+  return k / std::sqrt(e);
 }

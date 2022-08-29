@@ -33,8 +33,9 @@
 #include <Eigen/Geometry>
 
 #include <tuple>
+#include <vector>
 
-#include "lidar_feature_localization/irls.hpp"
+#include "lidar_feature_localization/robust.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/math.hpp"
 #include "lidar_feature_localization/posevec.hpp"
@@ -43,15 +44,19 @@
 #include "rotationlib/quaternion.hpp"
 
 
+Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals);
+std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors);
 bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt);
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q);
 
 std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
+  const Eigen::Quaterniond & q,
   const Eigen::VectorXd & weights,
-  const Eigen::MatrixXd & J,
-  const Eigen::VectorXd & r,
-  const Eigen::Quaterniond & q);
+  const std::vector<Eigen::MatrixXd> & jacobians,
+  const std::vector<Eigen::VectorXd> & residuals);
+
+std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors);
 
 // Sola, Joan. Course on SLAM. Technical Report IRI-TR-16-04, Institut de Robòtica i, 2017.
 // Section 4.2.5
@@ -68,33 +73,29 @@ public:
     const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
   {
-    auto error = [](const Eigen::VectorXd & residual) {
-        return residual.dot(residual);
-      };
-
     Eigen::Quaterniond q(initial_pose.linear());
     Eigen::Vector3d t(initial_pose.translation());
 
-    Eigen::VectorXd r_prev;
+    double scale_prev;
 
     for (int iter = 0; iter < 10; iter++) {
       const Eigen::Isometry3d pose = MakePose(q, t);
-      const auto [J, r] = problem_.Make(x, pose);
-      assert(J.rows() == r.size());
+      const auto [jacobians, residuals] = problem_.Make(x, pose);
 
-      if (J.rows() == 0) {
+      const Eigen::VectorXd errors = ComputeErrors(residuals);
+      const auto [weights, scale] = ComputeWeights(errors);
+
+      if (jacobians.size() == 0) {
         break;
       }
 
-      if (iter != 0 && error(r) > error(r_prev)) {
+      if (iter != 0 && scale > scale_prev) {
         return MakePose(q, t);
       }
 
-      r_prev = r;
+      scale_prev = scale;
 
-      const double scale = Scale(r);
-      const Eigen::VectorXd weights = HuberWeights(r / (scale + 1e-16));
-      const auto [dq, dt] = CalcUpdate(weights, J, r, q);
+      const auto [dq, dt] = CalcUpdate(q, weights, jacobians, residuals);
 
       q = q * dq;
       t = t + dt;

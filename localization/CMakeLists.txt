@@ -20,7 +20,7 @@ set(SOURCE_FILES
   src/alignment.cpp
   src/degenerate.cpp
   src/edge.cpp
-  src/irls.cpp
+  src/robust.cpp
   src/jacobian.cpp
   src/kdtree.cpp
   src/optimizer.cpp

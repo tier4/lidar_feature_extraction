@@ -26,43 +26,14 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef LIDAR_FEATURE_LOCALIZATION__ROBUST_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__ROBUST_HPP_
 
-#include <gtest/gtest.h>
+#include <Eigen/Core>
 
-#include "lidar_feature_localization/irls.hpp"
+double MedianAbsoluteDeviation(const Eigen::VectorXd & v);
+double Scale(const Eigen::VectorXd & v);
+double Huber(const double e, const double k = 1.345);
+double HuberDerivative(const double e, const double k = 1.345);
 
-TEST(IRLS, MedianAbsoluteDeviation)
-{
-  {
-    Eigen::VectorXd v(5);
-    v << 7, 9, 3, 0, 1;
-
-    // median(v) = 3
-    // | v - median(v) | = [4, 6, 0, 3, 2]
-    // median(| v - median(v) |) = 3
-
-    EXPECT_EQ(MedianAbsoluteDeviation(v), 3);
-  }
-
-  {
-    Eigen::VectorXd v(6);
-    v << 8, 3, 4, 0, 5, 1;
-
-    // median(v) = 3.5
-    // | v - median(v) | = [4.5, 0.5, 0.5, 3.5, 1.5, 2.5]
-    // median(| v - median(v) |) = (1.5 + 2.5) / 2 = 2.0
-
-    EXPECT_EQ(MedianAbsoluteDeviation(v), 2.);
-  }
-}
-
-TEST(HuberWeights, HuberWeights)
-{
-  using Vector7d = Eigen::Matrix<double, 1, 7>;
-  const Vector7d r(0., 1., -1., 2., -2., 4., -4.);
-  const Vector7d weights = HuberWeights(r, 2.);
-  const Vector7d expected(1., 1., 1., 1., 1., 0.5, 0.5);
-
-  EXPECT_EQ(weights.size(), r.size());
-  EXPECT_EQ((weights - expected).norm(), 0.);
-}
+#endif  // LIDAR_FEATURE_LOCALIZATION__ROBUST_HPP_

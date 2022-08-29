@@ -33,16 +33,17 @@
 #include <Eigen/Geometry>
 
 #include <tuple>
+#include <vector>
 
 #include "lidar_feature_localization/math.hpp"
 #include "rotationlib/jacobian/quaternion.hpp"
 
 
-Eigen::MatrixXd MakeJacobian(
+std::vector<Eigen::MatrixXd> MakeJacobian(
   const Eigen::Quaterniond & q,
   const Eigen::MatrixXd & points);
 
-Eigen::VectorXd MakeResidual(
+std::vector<Eigen::VectorXd> MakeResidual(
   const Eigen::Isometry3d & point_to_map,
   const Eigen::MatrixXd & source_points,
   const Eigen::MatrixXd & target_points);
@@ -52,7 +53,7 @@ class AlignmentProblem
 public:
   AlignmentProblem() {}
 
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd>
+  std::tuple<std::vector<Eigen::MatrixXd>, std::vector<Eigen::VectorXd>>
   Make(
     const std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> & points,
     const Eigen::Isometry3d & point_to_map) const;
