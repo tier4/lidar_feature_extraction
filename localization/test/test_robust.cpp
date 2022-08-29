@@ -65,7 +65,7 @@ TEST(Scale, StandardDeviation)
   // sample variance
 
   const double mean = 0.;
-  const double stddev = 10.;
+  const double stddev = 1.;
   const int n = 100000;
 
   const Eigen::VectorXd errors = [&] {
