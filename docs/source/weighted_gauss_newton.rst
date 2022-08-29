@@ -228,14 +228,15 @@ Gauss-Newton法による誤差最小化
 .. math::
     \begin{align}
     b &= \sum_{i=1}^{n}
-    \frac{\partial \rho}{\partial \tilde{e}_{i}}\Big|_{\tilde{e}_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}
+    w_{i}
     \cdot
     J_{i}^{\top}\mathbf{r}_{i}(\mathbf{\beta}_{0}) \\
     A &=
     -\sum_{i=1}^{n}
-    \frac{\partial \rho}{\partial \tilde{e}_{i}}\Big|_{\tilde{e}_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})}
+    w_{i}
     \cdot
     J_{i}^{\top}J_{i} \\
+    w_{i} &= \frac{\partial \rho}{\partial \tilde{e}_{i}}\Big|_{\tilde{e}_{i}(\mathbf{\beta}_{0} + \mathbf{\delta})} \\
     A\mathbf{\delta} &= b
     \end{align}
 
