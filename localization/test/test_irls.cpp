@@ -29,6 +29,9 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
+#include <random>
+
 #include "lidar_feature_localization/irls.hpp"
 
 TEST(IRLS, MedianAbsoluteDeviation)
@@ -56,13 +59,41 @@ TEST(IRLS, MedianAbsoluteDeviation)
   }
 }
 
-TEST(HuberWeights, HuberWeights)
+TEST(Scale, StandardDeviation)
 {
-  using Vector7d = Eigen::Matrix<double, 1, 7>;
-  const Vector7d r(0., 1., -1., 2., -2., 4., -4.);
-  const Vector7d weights = HuberWeights(r, 2.);
-  const Vector7d expected(1., 1., 1., 1., 1., 0.5, 0.5);
+  // generate random numbers, compute the sample variance, and compare to the
+  // sample variance
 
-  EXPECT_EQ(weights.size(), r.size());
-  EXPECT_EQ((weights - expected).norm(), 0.);
+  const double mean = 0.;
+  const double stddev = 10.;
+  const int n = 100000;
+
+  const Eigen::VectorXd errors = [&] {
+      std::random_device rd{};
+      std::mt19937 gen{rd()};
+
+      std::normal_distribution<> normal{mean, stddev};
+
+      Eigen::VectorXd errors(n);
+      for (int i = 0; i < n; ++i) {
+        errors(i) = normal(gen);
+      }
+      return errors;
+    }();
+
+  const double nf = static_cast<double>(n);
+  const double sample_stddev = std::sqrt(((nf - 1) / nf) * (stddev * stddev));
+  const double scale = Scale(errors);
+
+  EXPECT_LE(std::fabs(sample_stddev - scale), 0.05);
+}
+
+TEST(HuberDerivative, NumericalDiff)
+{
+  const double k = 1.0;
+
+  {
+    const double d = (Huber(0.90 + 1e-4, k) - Huber(0.90, k)) / 1e-4;
+    ASSERT_LT(std::fabs(d - HuberDerivative(0.90)), 1e-3);
+  }
 }

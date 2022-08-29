@@ -95,7 +95,7 @@ public:
   {
   }
 
-  std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Make(
+  std::tuple<std::vector<Eigen::MatrixXd>, std::vector<Eigen::VectorXd>> Make(
     const typename pcl::PointCloud<PointType>::Ptr & scan,
     const Eigen::Isometry3d & point_to_map) const
   {
@@ -106,8 +106,8 @@ public:
 
     const size_t n = scan->size();
 
-    Eigen::MatrixXd J(3 * n, 7);
-    Eigen::VectorXd r(3 * n);
+    std::vector<Eigen::MatrixXd> jacobians;
+    std::vector<Eigen::VectorXd> residuals;
 
     for (size_t i = 0; i < n; i++) {
       const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
@@ -124,11 +124,12 @@ public:
       const Eigen::Vector3d p0 = scan_point.head(3);
       const Eigen::Vector3d p1 = center - principal;
       const Eigen::Vector3d p2 = center + principal;
-      J.block<3, 7>(3 * i, 0) = MakeEdgeJacobianRow(q, p0, p1, p2);
-      r.segment(3 * i, 3) = MakeEdgeResidual(point_to_map, p0, p1, p2);
+
+      jacobians.push_back(MakeEdgeJacobianRow(q, p0, p1, p2));
+      residuals.push_back(MakeEdgeResidual(point_to_map, p0, p1, p2));
     }
 
-    return std::make_tuple(J, r);
+    return std::make_tuple(jacobians, residuals);
   }
 
   // TODO(IshitaTakeshi) Maybe this function is not necessary?
@@ -137,8 +138,14 @@ public:
     const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
     const Eigen::Isometry3d & point_to_map) const
   {
-    const auto [J, r] = this->Make(edge_scan, point_to_map);
-    const Eigen::MatrixXd JtJ = J.transpose() * J;
+    const auto [jacobians, _] = this->Make(edge_scan, point_to_map);
+
+    const int d = jacobians.at(0).cols();
+    Eigen::MatrixXd JtJ = Eigen::MatrixXd::Zero(d, d);
+    for (size_t i = 0; i < jacobians.size(); i++) {
+      const Eigen::MatrixXd J = jacobians.at(i);
+      JtJ += J.transpose() * J;
+    }
 
     return ::IsDegenerate(JtJ);
   }

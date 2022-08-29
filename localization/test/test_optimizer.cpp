@@ -74,16 +74,24 @@ TEST(Optimizer, Alignment)
 
     const Eigen::Isometry3d initial = MakeIsometry3d(initial_q, initial_t);
 
-    const auto [J, r] = problem.Make(std::make_tuple(X, Y), initial);
+    const auto [jacobians, residuals] = problem.Make(std::make_tuple(X, Y), initial);
 
-    const auto [dq, dt] = CalcUpdate(J, r, initial_q);
+    const Eigen::VectorXd errors = ComputeErrors(residuals);
+    const auto [weights, scale] = ComputeWeights(errors);
+    const auto [dq, dt] = CalcUpdate(initial_q, weights, jacobians, residuals);
 
     const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
 
-    const auto r_initial = MakeResidual(initial, X, Y);
-    const auto r_updated = MakeResidual(updated, X, Y);
+    const std::vector<Eigen::VectorXd> initial_r = MakeResidual(initial, X, Y);
+    const std::vector<Eigen::VectorXd> updated_r = MakeResidual(updated, X, Y);
 
-    EXPECT_TRUE(r_updated.squaredNorm() < r_initial.squaredNorm());
+    double initial_error = 0.;
+    double updated_error = 0.;
+    for (size_t i = 0; i < initial_r.size(); i++) {
+      initial_error += initial_r.at(i).squaredNorm();
+      updated_error += updated_r.at(i).squaredNorm();
+    }
+    EXPECT_TRUE(updated_error < initial_error);
   }
 
   {

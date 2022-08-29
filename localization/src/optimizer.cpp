@@ -37,10 +37,28 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
 }
 
 Eigen::VectorXd WeightedUpdate(
-  const Eigen::MatrixXd & J,
-  const Eigen::VectorXd & r)
+  const Eigen::Quaterniond & q,
+  const Eigen::VectorXd & weights,
+  const std::vector<Eigen::MatrixXd> & jacobians,
+  const std::vector<Eigen::VectorXd> & residuals)
 {
-  return (J.transpose() * J).ldlt().solve(-J.transpose() * r);
+  assert(static_cast<size_t>(weights.size()) == jacobians.size());
+  assert(static_cast<size_t>(weights.size()) == residuals.size());
+
+  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(6, 6);
+  Eigen::VectorXd b = Eigen::VectorXd::Zero(6);
+
+  for (size_t i = 0; i < jacobians.size(); i++) {
+    assert(jacobians.at(i).cols() == 7);
+    const Eigen::MatrixXd J = jacobians.at(i) * M;
+    const Eigen::VectorXd r = residuals.at(i);
+    A += weights(i) * J.transpose() * J;
+    b += weights(i) * J.transpose() * r;
+  }
+
+  return -A.ldlt().solve(b);
 }
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
@@ -57,13 +75,33 @@ Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
 }
 
 std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
-  const Eigen::MatrixXd & J,
-  const Eigen::VectorXd & r,
-  const Eigen::Quaterniond & q)
+  const Eigen::Quaterniond & q,
+  const Eigen::VectorXd & weights,
+  const std::vector<Eigen::MatrixXd> & jacobians,
+  const std::vector<Eigen::VectorXd> & residuals)
 {
-  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
-  const Vector6d dx = WeightedUpdate(J * M, r);
+  const Vector6d dx = WeightedUpdate(q, weights, jacobians, residuals);
   const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
   const Eigen::Vector3d dt = dx.tail(3);
   return {dq, dt};
+}
+
+Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals)
+{
+  Eigen::VectorXd errors(residuals.size());
+  for (size_t i = 0; i < residuals.size(); i++) {
+    const Eigen::VectorXd r = residuals.at(i);
+    errors(i) = r.dot(r);
+  }
+  return errors;
+}
+
+std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors)
+{
+  const double scale = Scale(errors);
+  Eigen::VectorXd weights(errors.size());
+  for (int32_t i = 0; i < errors.size(); i++) {
+    weights(i) = HuberDerivative(errors(i) / (scale + 1e-16));
+  }
+  return std::make_tuple(weights, scale);
 }

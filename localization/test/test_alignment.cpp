@@ -39,14 +39,11 @@ TEST(Alignment, MakeJacobian)
 
   const Eigen::Quaterniond q = Eigen::Quaterniond(1, -1, 1, -1).normalized();
 
-  const Eigen::MatrixXd J = MakeJacobian(q, points);
-
-  ASSERT_EQ(J.rows(), 6);
-  ASSERT_EQ(J.cols(), 7);
+  const std::vector<Eigen::MatrixXd> J = MakeJacobian(q, points);
 
   {
-    const Eigen::Matrix<double, 3, 4> J0 = J.block<3, 4>(0, 0);
-    const Eigen::Matrix<double, 3, 4> J1 = J.block<3, 4>(3, 0);
+    const Eigen::Matrix<double, 3, 4> J0 = J.at(0).block<3, 4>(0, 0);
+    const Eigen::Matrix<double, 3, 4> J1 = J.at(1).block<3, 4>(0, 0);
 
     const Eigen::Matrix<double, 3, 4> expected0 = rotationlib::DRpDq(q, points.row(0));
     const Eigen::Matrix<double, 3, 4> expected1 = rotationlib::DRpDq(q, points.row(1));
@@ -58,8 +55,8 @@ TEST(Alignment, MakeJacobian)
   {
     const Eigen::Matrix3d identity = Eigen::Matrix3d::Identity();
 
-    const Eigen::Matrix3d J0 = J.block<3, 3>(0, 4);
-    const Eigen::Matrix3d J1 = J.block<3, 3>(3, 4);
+    const Eigen::Matrix3d J0 = J.at(0).block<3, 3>(0, 4);
+    const Eigen::Matrix3d J1 = J.at(1).block<3, 3>(0, 4);
 
     EXPECT_THAT((J0 - identity).norm(), testing::Le(1e-6));
     EXPECT_THAT((J1 - identity).norm(), testing::Le(1e-6));
@@ -79,13 +76,13 @@ TEST(Alignment, MakeResidual)
   const Eigen::MatrixXd source = Eigen::MatrixXd::Random(N, 3);
   const Eigen::MatrixXd target = Eigen::MatrixXd::Random(N, 3);
 
-  const Eigen::VectorXd residual = MakeResidual(transform, source, target);
+  const std::vector<Eigen::VectorXd> residual = MakeResidual(transform, source, target);
 
-  ASSERT_EQ(residual.size(), 3 * N);
+  ASSERT_EQ(static_cast<int>(residual.size()), N);
 
   const Eigen::Vector3d expected0 = q * source.row(0).transpose() + t - target.row(0).transpose();
   const Eigen::Vector3d expected1 = q * source.row(1).transpose() + t - target.row(1).transpose();
-  const Eigen::VectorXd expected = (Eigen::VectorXd(3 * N) << expected0, expected1).finished();
 
-  EXPECT_THAT((residual - expected).norm(), testing::Le(1e-4));
+  EXPECT_THAT((residual.at(0) - expected0).norm(), testing::Le(1e-4));
+  EXPECT_THAT((residual.at(1) - expected1).norm(), testing::Le(1e-4));
 }
