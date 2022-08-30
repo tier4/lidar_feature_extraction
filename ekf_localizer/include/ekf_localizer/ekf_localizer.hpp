@@ -257,7 +257,7 @@ private:
 
   const DefaultVariance variance_;
 
-  TimeDelayKalmanFilter ekf_;
+  std::shared_ptr<TimeDelayKalmanFilter> ekf_;
 
   AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> pose_messages_;
   AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> twist_messages_;

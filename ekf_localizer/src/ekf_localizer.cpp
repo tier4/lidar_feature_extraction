@@ -161,7 +161,8 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
     std::chrono::duration<double>(time));
 }
 
-TimeDelayKalmanFilter InitEKF(const int extend_state_step_, const double yaw_bias_variance)
+std::shared_ptr<TimeDelayKalmanFilter> InitEKF(
+  const int extend_state_step_, const double yaw_bias_variance)
 {
   Matrix6d P = Matrix6d::Identity() * 1.0E15;    // for x & y
   P(2, 2) = 50.0;                                // for yaw
@@ -169,9 +170,7 @@ TimeDelayKalmanFilter InitEKF(const int extend_state_step_, const double yaw_bia
   P(4, 4) = 1000.0;                              // for vx
   P(5, 5) = 50.0;                                // for wz
 
-  TimeDelayKalmanFilter ekf;
-  ekf.init(Vector6d::Zero(), P, extend_state_step_);
-  return ekf;
+  return std::make_shared<TimeDelayKalmanFilter>(Vector6d::Zero(), P, extend_state_step_);
 }
 
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
@@ -323,28 +322,28 @@ Eigen::Matrix2d TwistObservationCovariance(
 }
 
 Eigen::Vector3d PoseMeasurementVector(
-  const TimeDelayKalmanFilter & ekf,
+  const std::shared_ptr<TimeDelayKalmanFilter> & ekf,
   const geometry_msgs::msg::Pose & pose,
   const int delay_step)
 {
   const double yaw = tf2::getYaw(pose.orientation);
-  const double ekf_yaw = ekf.getXelement(delay_step, 2);
+  const double ekf_yaw = ekf->getXelement(delay_step, 2);
   const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
 
   return Eigen::Vector3d(pose.position.x, pose.position.y, yaw_error + ekf_yaw);
 }
 
-Eigen::Vector3d PoseStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
+Eigen::Vector3d PoseStateVector(const std::shared_ptr<TimeDelayKalmanFilter> & ekf, const int delay_step)
 {
   return Eigen::Vector3d(
-    ekf.getXelement(delay_step, 0),
-    ekf.getXelement(delay_step, 1),
-    ekf.getXelement(delay_step, 2));
+    ekf->getXelement(delay_step, 0),
+    ekf->getXelement(delay_step, 1),
+    ekf->getXelement(delay_step, 2));
 }
 
-Eigen::Matrix3d PoseCovariance(const TimeDelayKalmanFilter & ekf)
+Eigen::Matrix3d PoseCovariance(const std::shared_ptr<TimeDelayKalmanFilter> & ekf)
 {
-  return ekf.getLatestP().block(0, 0, 3, 3);
+  return ekf->getLatestP().block(0, 0, 3, 3);
 }
 
 Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
@@ -352,16 +351,16 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
 }
 
-Eigen::Vector2d TwistStateVector(const TimeDelayKalmanFilter & ekf, const int delay_step)
+Eigen::Vector2d TwistStateVector(const std::shared_ptr<TimeDelayKalmanFilter> & ekf, const int delay_step)
 {
   return Eigen::Vector2d(
-    ekf.getXelement(delay_step, 4),
-    ekf.getXelement(delay_step, 5));
+    ekf->getXelement(delay_step, 4),
+    ekf->getXelement(delay_step, 5));
 }
 
-Eigen::Matrix2d TwistCovariance(const TimeDelayKalmanFilter & ekf)
+Eigen::Matrix2d TwistCovariance(const std::shared_ptr<TimeDelayKalmanFilter> & ekf)
 {
-  return ekf.getLatestP().block(4, 4, 2, 2);
+  return ekf->getLatestP().block(4, 4, 2, 2);
 }
 
 double ComputeDelayTime(
@@ -417,12 +416,12 @@ void EKFLocalizer::timerCallback()
 
   const double dt = maybe_dt.value();
 
-  const Vector6d x_curr = ekf_.getLatestX();  // current state
+  const Vector6d x_curr = ekf_->getLatestX();  // current state
   const Vector6d x_next = PredictNextState(x_curr, dt);
   const Matrix6d A = StateTransitionModel(x_curr, dt);
   const Matrix6d Q = ProcessNoiseCovariance(variance_.TimeScaledVariances(dt));
 
-  ekf_.predictWithDelay(x_next, A, Q);
+  ekf_->predictWithDelay(x_next, A, Q);
 
   /* pose measurement update */
   const size_t n_pose_msgs = pose_messages_.size();
@@ -456,7 +455,7 @@ void EKFLocalizer::timerCallback()
     const Matrix6d covariance = GetEigenCovariance(pose->pose.covariance);
     const Eigen::Matrix3d R = PoseObservationCovariance(covariance, pose_smoothing_steps_);
 
-    ekf_.updateWithDelay(y, C, R, delay_step);
+    ekf_->updateWithDelay(y, C, R, delay_step);
   }
 
   /* twist measurement update */
@@ -490,10 +489,10 @@ void EKFLocalizer::timerCallback()
     const Eigen::Matrix<double, 2, 6> C = TwistObservationModel();
     const Matrix6d covariance = GetEigenCovariance(twist->twist.covariance);
     const Eigen::Matrix2d R = TwistObservationCovariance(covariance, twist_smoothing_steps_);
-    ekf_.updateWithDelay(y, C, R, delay_step);
+    ekf_->updateWithDelay(y, C, R, delay_step);
   }
 
-  const Vector6d x_est = ekf_.getLatestX();
+  const Vector6d x_est = ekf_->getLatestX();
   const double x = x_est(0);
   const double y = x_est(1);
   const double biased_yaw = x_est(2);
@@ -513,13 +512,11 @@ void EKFLocalizer::timerCallback()
   const Eigen::Vector3d angular(0, 0, wz);
 
   tf_br_->sendTransform(
-    MakeTransformStamped(
-      unbiased_pose,
-      this->now(), pose_frame_id_, "base_link"));
+    MakeTransformStamped(unbiased_pose, this->now(), pose_frame_id_, "base_link"));
 
   /* publish ekf result */
   publishEstimateResult(
-    ekf_.getLatestP(), this->now(), pose_frame_id_,
+    ekf_->getLatestP(), this->now(), pose_frame_id_,
     unbiased_pose, biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
 }
 
@@ -553,7 +550,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   const Vector6d d = (Vector6d() << C(0, 0), C(1, 1), C(5, 5), 0.0001, 0.01, 0.01).finished();
   const Matrix6d P = d.asDiagonal();
 
-  ekf_.init(x, P, extend_state_step_);
+  ekf_.reset(new TimeDelayKalmanFilter(x, P, extend_state_step_));
 
   updateSimple1DFilters(*initialpose);
 

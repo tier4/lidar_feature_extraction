@@ -34,18 +34,13 @@ class TimeDelayKalmanFilter : public KalmanFilter
 {
 public:
   /**
-   * @brief No initialization constructor.
-   */
-  TimeDelayKalmanFilter();
-
-  /**
    * @brief initialization of kalman filter
    * @param x initial state
    * @param P0 initial covariance of estimated state
    * @param max_delay_step Maximum number of delay steps, which determines the dimension of the
    * extended kalman filter
    */
-  void init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P, const int max_delay_step);
+  TimeDelayKalmanFilter(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P, const int max_delay_step);
 
   /**
    * @brief get latest time estimated state
