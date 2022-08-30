@@ -84,8 +84,8 @@ public:
     const int delay_step);
 
 private:
-  int max_delay_step_;  //!< @brief maximum number of delay steps
-  int dim_x_;           //!< @brief dimension of latest state
-  int dim_x_ex_;        //!< @brief dimension of extended state with dime delay
+  const int max_delay_step_;  //!< @brief maximum number of delay steps
+  const int dim_x_;           //!< @brief dimension of latest state
+  const int dim_x_ex_;        //!< @brief dimension of extended state with dime delay
 };
 #endif  // KALMAN_FILTER__TIME_DELAY_KALMAN_FILTER_HPP_
