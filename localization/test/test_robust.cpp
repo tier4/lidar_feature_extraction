@@ -88,12 +88,37 @@ TEST(Scale, StandardDeviation)
   EXPECT_LE(std::fabs(sample_stddev - scale), 0.05);
 }
 
+TEST(Huber, Huber)
+{
+  const double k = 1.0;
+
+  {
+    const double r = 2.;
+    EXPECT_EQ(Huber(r * r, k), 3.);
+  }
+
+  {
+    const double r = 1.;
+    EXPECT_EQ(Huber(r * r, k), 1.);
+  }
+
+  {
+    const double r = 0.5;
+    EXPECT_EQ(Huber(r * r, k), 1.);
+  }
+}
+
 TEST(HuberDerivative, NumericalDiff)
 {
   const double k = 1.0;
 
   {
     const double d = (Huber(0.90 + 1e-4, k) - Huber(0.90, k)) / 1e-4;
-    ASSERT_LT(std::fabs(d - HuberDerivative(0.90)), 1e-3);
+    EXPECT_LT(std::fabs(d - HuberDerivative(0.90, k)), 1e-3);
+  }
+
+  {
+    const double d = (Huber(1.20 + 1e-4, k) - Huber(1.20, k)) / 1e-4;
+    EXPECT_LT(std::fabs(d - HuberDerivative(1.20, k)), 1e-3);
   }
 }
