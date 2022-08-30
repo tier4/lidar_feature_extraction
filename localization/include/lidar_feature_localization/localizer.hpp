@@ -89,13 +89,6 @@ private:
     const typename pcl::PointCloud<PointType>::Ptr & edge,
     const Eigen::Isometry3d & pose) const
   {
-    if (problem_.IsDegenerate(edge, pose)) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("lidar_feature_localization"),
-        "The optimization problem is degenerate. Pose not optimized");
-      return std::make_tuple(pose, false);
-    }
-
     const OptimizerType optimizer(problem_);
     const Eigen::Isometry3d new_pose = optimizer.Run(edge, pose);
     return std::make_tuple(new_pose, true);

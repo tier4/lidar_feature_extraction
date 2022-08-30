@@ -28,6 +28,7 @@
 
 #include <tuple>
 
+#include "lidar_feature_localization/degenerate.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 
@@ -36,7 +37,7 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
   return dq.vec().norm() < 1e-3 && dt.norm() < 1e-3;
 }
 
-Eigen::VectorXd WeightedUpdate(
+Vector6d WeightedUpdate(
   const Eigen::Quaterniond & q,
   const Eigen::VectorXd & weights,
   const std::vector<Eigen::MatrixXd> & jacobians,
@@ -47,15 +48,26 @@ Eigen::VectorXd WeightedUpdate(
 
   const Eigen::Matrix<double, 7, 6> M = MakeM(q);
 
+  // It's not so beautiful to compute these many matrices at the same time but
+  // we need to avoid recomputing matrix multiplications
+  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(6, 6);
   Eigen::VectorXd b = Eigen::VectorXd::Zero(6);
 
   for (size_t i = 0; i < jacobians.size(); i++) {
     assert(jacobians.at(i).cols() == 7);
+
     const Eigen::MatrixXd J = jacobians.at(i) * M;
     const Eigen::VectorXd r = residuals.at(i);
-    A += weights(i) * J.transpose() * J;
+    const Eigen::MatrixXd JtJ = J.transpose() * J;
+
+    D += JtJ;
+    A += weights(i) * JtJ;
     b += weights(i) * J.transpose() * r;
+  }
+
+  if (IsDegenerate(D)) {
+    return Vector6d::Zero();  // corresponds to identity
   }
 
   return -A.ldlt().solve(b);

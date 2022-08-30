@@ -35,14 +35,13 @@
 #include <tuple>
 #include <vector>
 
-#include "lidar_feature_localization/robust.hpp"
 #include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/math.hpp"
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/rad2deg.hpp"
+#include "lidar_feature_localization/robust.hpp"
 
 #include "rotationlib/quaternion.hpp"
-
 
 Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals);
 std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors);
