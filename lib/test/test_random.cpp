@@ -29,6 +29,9 @@
 
 #include <gmock/gmock.h>
 
+#include <Eigen/Core>
+
+#include <cmath>
 #include <unordered_set>
 
 #include "lidar_feature_library/random.hpp"
@@ -63,4 +66,44 @@ TEST(RandomizedUniqueIndices, SmokeTest)
 TEST(RandomizedUniqueIndices, Empty)
 {
   ASSERT_EQ(RandomizedUniqueIndices(0).size(), 0U);
+}
+
+constexpr double tolerance = 1e-2;
+constexpr int N = 100000;
+
+double StandardDeviation(const Eigen::VectorXd & v)
+{
+  const double n = static_cast<double>(v.size());
+  return std::sqrt((v.array() - v.mean()).square().sum() / (n - 1.));
+}
+
+TEST(Random, NormalDistribution)
+{
+  auto generate = [&](const double mean, const double stddev) {
+      NormalDistribution<double> normal(mean, stddev);
+
+      Eigen::VectorXd v(N);
+      for (size_t i = 0; i < N; i++) {
+        v(i) = normal();
+      }
+      return v;
+    };
+
+  {
+    const double mean = 0.;
+    const double stddev = 1.0;
+
+    const Eigen::VectorXd v = generate(mean, stddev);
+    EXPECT_NEAR(v.mean(), mean, tolerance);
+    EXPECT_NEAR(StandardDeviation(v), stddev, tolerance);
+  }
+
+  {
+    const double mean = 2.;
+    const double stddev = 0.3;
+
+    const Eigen::VectorXd v = generate(mean, stddev);
+    EXPECT_NEAR(v.mean(), mean, tolerance);
+    EXPECT_NEAR(StandardDeviation(v), stddev, tolerance);
+  }
 }

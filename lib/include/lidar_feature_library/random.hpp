@@ -29,8 +29,28 @@
 #ifndef LIDAR_FEATURE_LIBRARY__RANDOM_HPP_
 #define LIDAR_FEATURE_LIBRARY__RANDOM_HPP_
 
+#include <random>
 #include <vector>
 
 std::vector<size_t> RandomizedUniqueIndices(const size_t size);
+
+template<typename RealType>
+class NormalDistribution
+{
+public:
+  NormalDistribution(const double mean, const double stddev)
+  : distribution_(mean, stddev)
+  {
+  }
+
+  RealType operator()()
+  {
+    return distribution_(generator_);
+  }
+
+private:
+  std::default_random_engine generator_;
+  std::normal_distribution<RealType> distribution_;
+};
 
 #endif  // LIDAR_FEATURE_LIBRARY__RANDOM_HPP_
