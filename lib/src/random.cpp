@@ -40,3 +40,9 @@ std::vector<size_t> RandomizedUniqueIndices(const size_t size)
   std::shuffle(v.begin(), v.end(), std::mt19937{std::random_device{}()});
   return v;
 }
+
+double SampleStandardDeviation(const Eigen::VectorXd & v)
+{
+  const double n = static_cast<double>(v.size());
+  return std::sqrt((v.array() - v.mean()).square().sum() / (n - 1.));
+}

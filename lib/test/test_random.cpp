@@ -68,17 +68,36 @@ TEST(RandomizedUniqueIndices, Empty)
   ASSERT_EQ(RandomizedUniqueIndices(0).size(), 0U);
 }
 
-constexpr double tolerance = 1e-2;
-constexpr int N = 100000;
-
-double StandardDeviation(const Eigen::VectorXd & v)
+TEST(Random, SampleStandardDeviation)
 {
-  const double n = static_cast<double>(v.size());
-  return std::sqrt((v.array() - v.mean()).square().sum() / (n - 1.));
+  const int N = 100000;
+  auto generate = [&](const double stddev) {
+      std::default_random_engine generator;
+      std::normal_distribution<double> distribution(0, stddev);
+
+      Eigen::VectorXd x(N);
+      for (size_t i = 0; i < N; i++) {
+        x(i) = distribution(generator);
+      }
+      return x;
+    };
+
+  {
+    const Eigen::VectorXd x = generate(0.5);
+    EXPECT_NEAR(SampleStandardDeviation(x), 0.5, 1e-2);
+  }
+
+  {
+    const Eigen::VectorXd x = generate(2.0);
+    EXPECT_NEAR(SampleStandardDeviation(x), 2.0, 1e-2);
+  }
 }
 
 TEST(Random, NormalDistribution)
 {
+  const double tolerance = 1e-2;
+  const int N = 100000;
+
   auto generate = [&](const double mean, const double stddev) {
       NormalDistribution<double> normal(mean, stddev);
 
@@ -95,7 +114,7 @@ TEST(Random, NormalDistribution)
 
     const Eigen::VectorXd v = generate(mean, stddev);
     EXPECT_NEAR(v.mean(), mean, tolerance);
-    EXPECT_NEAR(StandardDeviation(v), stddev, tolerance);
+    EXPECT_NEAR(SampleStandardDeviation(v), stddev, tolerance);
   }
 
   {
@@ -104,6 +123,6 @@ TEST(Random, NormalDistribution)
 
     const Eigen::VectorXd v = generate(mean, stddev);
     EXPECT_NEAR(v.mean(), mean, tolerance);
-    EXPECT_NEAR(StandardDeviation(v), stddev, tolerance);
+    EXPECT_NEAR(SampleStandardDeviation(v), stddev, tolerance);
   }
 }

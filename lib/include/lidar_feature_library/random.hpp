@@ -29,10 +29,13 @@
 #ifndef LIDAR_FEATURE_LIBRARY__RANDOM_HPP_
 #define LIDAR_FEATURE_LIBRARY__RANDOM_HPP_
 
+#include <Eigen/Core>
+
 #include <random>
 #include <vector>
 
 std::vector<size_t> RandomizedUniqueIndices(const size_t size);
+double SampleStandardDeviation(const Eigen::VectorXd & v);
 
 template<typename RealType>
 class NormalDistribution
