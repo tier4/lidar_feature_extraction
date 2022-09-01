@@ -43,8 +43,6 @@
 
 #include "rotationlib/quaternion.hpp"
 
-Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals);
-std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors);
 bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt);
 
 Vector6d WeightedUpdate(
@@ -61,7 +59,9 @@ std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
   const std::vector<Eigen::MatrixXd> & jacobians,
   const std::vector<Eigen::VectorXd> & residuals);
 
-std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors);
+Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals);
+std::tuple<Eigen::VectorXd, double> NormalizeErrorScale(const Eigen::VectorXd & errors);
+Eigen::VectorXd ComputeWeights(const Eigen::VectorXd & scale_normalized_errors);
 
 // Sola, Joan. Course on SLAM. Technical Report IRI-TR-16-04, Institut de Robòtica i, 2017.
 // Section 4.2.5
@@ -88,7 +88,8 @@ public:
       const auto [jacobians, residuals] = problem_.Make(x, pose);
 
       const Eigen::VectorXd errors = ComputeErrors(residuals);
-      const auto [weights, scale] = ComputeWeights(errors);
+      const auto [normalized, scale] = NormalizeErrorScale(errors);
+      const Eigen::VectorXd weights = ComputeWeights(normalized);
 
       if (jacobians.size() == 0) {
         break;

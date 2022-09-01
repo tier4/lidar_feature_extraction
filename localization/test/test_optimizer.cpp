@@ -79,7 +79,8 @@ TEST(Optimizer, Alignment)
     const auto [jacobians, residuals] = problem.Make(std::make_tuple(X, Y), initial);
 
     const Eigen::VectorXd errors = ComputeErrors(residuals);
-    const auto [weights, scale] = ComputeWeights(errors);
+    const auto [normalized, scale] = NormalizeErrorScale(errors);
+    const Eigen::VectorXd weights = ComputeWeights(normalized);
     const auto [dq, dt] = CalcUpdate(initial_q, weights, jacobians, residuals);
 
     const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
@@ -249,4 +250,31 @@ TEST(WeightedUpdate, ShouldReturnZeroIfDegenerate)
   Eigen::Vector2d weights(0.5, 0.5);
   const Vector6d delta = WeightedUpdate(M, weights, jacobians, residuals);
   EXPECT_EQ(delta.norm(), 0.);
+}
+
+TEST(ComputeErrors, SmokeTest)
+{
+  Eigen::Vector3d r0(0., 1., 2.);
+  Eigen::Vector3d r1(2., 1., 1.);
+  const Eigen::Vector2d errors = ComputeErrors(std::vector<Eigen::VectorXd>{r0, r1});
+  Eigen::Vector2d expected(5, 6);
+  EXPECT_EQ((errors - expected).norm(), 0.);
+}
+
+TEST(NormalizeErrorScale, StatisticalTest)
+{
+  const int N = 100000;
+
+  const double stddev = 0.5;
+
+  NormalDistribution<double> normal(0., stddev);
+
+  Eigen::VectorXd errors(N);
+  for (size_t i = 0; i < N; i++) {
+    errors(i) = normal();
+  }
+
+  const auto [normalized, scale] = NormalizeErrorScale(errors);
+  EXPECT_NEAR(SampleStandardDeviation(normalized), 1.0, 1e-2);
+  EXPECT_NEAR(scale, stddev, 1e-2);
 }
