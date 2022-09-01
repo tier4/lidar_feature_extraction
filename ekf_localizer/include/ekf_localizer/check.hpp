@@ -17,6 +17,8 @@
 
 #include <Eigen/Core>
 
+#include <string>
+
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/warning.hpp"

@@ -37,6 +37,18 @@ endfunction()
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
+  file(GLOB
+    FILES_TO_CHECK
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/*
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/*)
+
+  find_package(ament_cmake_cpplint)
+  ament_cpplint(${FILES_TO_CHECK})
+
+  find_package(ament_cmake_uncrustify)
+  ament_uncrustify(${FILES_TO_CHECK})
+
   set(TEST_FILES
     test/test_check.cpp
     test/test_ekf_localizer.cpp

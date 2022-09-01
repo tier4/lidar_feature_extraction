@@ -45,7 +45,7 @@ TEST(UpdateInterval, DetectJumpBackInTime)
   interval.Compute(1659000000.200000048);
 
   EXPECT_THROW(
-  try {
+    try {
     interval.Compute(1659000000.099999905);
   } catch (std::invalid_argument & e) {
     EXPECT_STREQ(

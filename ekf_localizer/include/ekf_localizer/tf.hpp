@@ -15,13 +15,11 @@
 #ifndef EKF_LOCALIZER__TF_HPP_
 #define EKF_LOCALIZER__TF_HPP_
 
-
-#include <rclcpp/rclcpp.hpp>
-
-#include <geometry_msgs/msg/transform_stamped.hpp>
-
 #include <memory>
 #include <string>
+
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include "ekf_localizer/warning.hpp"
 
@@ -29,7 +27,7 @@
 class TransformListener
 {
 public:
-  TransformListener(rclcpp::Node * node)
+  explicit TransformListener(rclcpp::Node * node)
   : tf_buffer_(std::make_shared<tf2::BufferCore>()),
     listener_(*tf_buffer_, node, false),
     warning_(std::make_shared<Warning>(node))

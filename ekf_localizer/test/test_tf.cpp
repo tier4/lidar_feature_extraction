@@ -99,5 +99,4 @@ TEST_F(EKFLocalizerTestSuite, getTransformFromTF)
   EXPECT_EQ(maybe_transform->transform.rotation.x, 0.);
   EXPECT_EQ(maybe_transform->transform.rotation.y, 0.);
   EXPECT_EQ(maybe_transform->transform.rotation.z, 0.);
-
 }

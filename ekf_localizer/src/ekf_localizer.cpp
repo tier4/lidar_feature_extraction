@@ -401,15 +401,15 @@ int ComputeDelayStep(const double delay_time, const double dt)
 void EKFLocalizer::timerCallback()
 {
   const auto maybe_dt = [&]() -> std::optional<double> {
-    try {
-      const rclcpp::Time current_time = this->get_clock()->now();
-      const double dt = interval_.Compute(current_time.seconds());
-      return std::make_optional<double>(dt);
-    } catch(const std::invalid_argument & e) {
-      RCLCPP_WARN(this->get_logger(), e.what());
-      return std::nullopt;
-    }
-  }();
+      try {
+        const rclcpp::Time current_time = this->get_clock()->now();
+        const double dt = interval_.Compute(current_time.seconds());
+        return std::make_optional<double>(dt);
+      } catch (const std::invalid_argument & e) {
+        RCLCPP_WARN(this->get_logger(), e.what());
+        return std::nullopt;
+      }
+    }();
 
   if (!maybe_dt.has_value()) {
     return;
@@ -531,8 +531,8 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   geometry_msgs::msg::TransformStamped transform;
 
   const auto maybe_transform = listener_.LookupTransform(
-         EraseBeginSlash(pose_frame_id_),
-         EraseBeginSlash(initialpose->header.frame_id));
+    EraseBeginSlash(pose_frame_id_),
+    EraseBeginSlash(initialpose->header.frame_id));
   if (!maybe_transform.has_value()) {
     RCLCPP_ERROR(
       get_logger(), "[EKF] TF transform failed. parent = %s, child = %s", pose_frame_id_.c_str(),

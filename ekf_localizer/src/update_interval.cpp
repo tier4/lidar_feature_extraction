@@ -28,10 +28,10 @@ double UpdateInterval::Compute(const double current_time_second)
 
   if (current_time_second < last_time_.value()) {
     throw std::invalid_argument(
-      fmt::format(
-        "Detected jump back in time. "
-        "current time = {:10.9f}, last time = {:10.9f}",
-        current_time_second, last_time_.value()));
+            fmt::format(
+              "Detected jump back in time. "
+              "current time = {:10.9f}, last time = {:10.9f}",
+              current_time_second, last_time_.value()));
   }
 
   const double frequency = 1.0 / (current_time_second - last_time_.value());
