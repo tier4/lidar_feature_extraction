@@ -33,6 +33,8 @@
 
 #include <tuple>
 
+#include "lidar_feature_library/random.hpp"
+
 #include "lidar_feature_localization/alignment.hpp"
 #include "lidar_feature_localization/robust.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
@@ -77,7 +79,8 @@ TEST(Optimizer, Alignment)
     const auto [jacobians, residuals] = problem.Make(std::make_tuple(X, Y), initial);
 
     const Eigen::VectorXd errors = ComputeErrors(residuals);
-    const auto [weights, scale] = ComputeWeights(errors);
+    const auto [normalized, scale] = NormalizeErrorScale(errors);
+    const Eigen::VectorXd weights = ComputeWeights(normalized);
     const auto [dq, dt] = CalcUpdate(initial_q, weights, jacobians, residuals);
 
     const Eigen::Isometry3d updated = MakeIsometry3d(initial_q * dq, initial_t + dt);
@@ -195,4 +198,83 @@ TEST(Optimizer, MakeM)
       0, 0, 0, 0, 0, 1;
     EXPECT_THAT((M - expected).norm(), testing::Le(1e-8));
   }
+}
+
+TEST(WeightedUpdate, SmokeTest)
+{
+  NormalDistribution<double> normal(0.0, 0.5);
+
+  Eigen::MatrixXd J0(3, 7);
+  Eigen::MatrixXd J1(3, 7);
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 7; j++) {
+      J0(i, j) = normal();
+      J1(i, j) = normal();
+    }
+  }
+
+  std::vector<Eigen::MatrixXd> jacobians{J0, J1};
+
+  Eigen::Vector3d r0;
+  Eigen::Vector3d r1;
+  for (size_t i = 0; i < 3; i++) {
+    r0(i) = normal();
+    r1(i) = normal();
+  }
+
+  std::vector<Eigen::VectorXd> residuals{r0, r1};
+
+  Eigen::Vector2d weights(1., 1.);
+
+  const Eigen::Matrix<double, 7, 6> M = MakeM(Eigen::Quaterniond::Identity());
+  const Vector6d delta = WeightedUpdate(M, weights, jacobians, residuals);
+
+  // we just make sure that delta is non zero
+  // the convergence test is done in another part
+  EXPECT_LT(delta.norm(), 0.5);
+}
+
+TEST(WeightedUpdate, ShouldReturnZeroIfDegenerate)
+{
+  const Eigen::Matrix<double, 7, 6> M = MakeM(Eigen::Quaterniond::Identity());
+
+  Eigen::MatrixXd J0 = Eigen::MatrixXd::Zero(3, 7);
+  Eigen::MatrixXd J1 = Eigen::MatrixXd::Zero(3, 7);
+  std::vector<Eigen::MatrixXd> jacobians{J0, J1};
+
+  Eigen::Vector3d r0(0.1, 0.2, 0.3);
+  Eigen::Vector3d r1(0.2, 0.4, 0.5);
+  std::vector<Eigen::VectorXd> residuals{r0, r1};
+
+  Eigen::Vector2d weights(0.5, 0.5);
+  const Vector6d delta = WeightedUpdate(M, weights, jacobians, residuals);
+  EXPECT_EQ(delta.norm(), 0.);
+}
+
+TEST(ComputeErrors, SmokeTest)
+{
+  Eigen::Vector3d r0(0., 1., 2.);
+  Eigen::Vector3d r1(2., 1., 1.);
+  const Eigen::Vector2d errors = ComputeErrors(std::vector<Eigen::VectorXd>{r0, r1});
+  Eigen::Vector2d expected(5, 6);
+  EXPECT_EQ((errors - expected).norm(), 0.);
+}
+
+TEST(NormalizeErrorScale, StatisticalTest)
+{
+  const int N = 100000;
+
+  const double stddev = 0.5;
+
+  NormalDistribution<double> normal(0., stddev);
+
+  Eigen::VectorXd errors(N);
+  for (size_t i = 0; i < N; i++) {
+    errors(i) = normal();
+  }
+
+  const auto [normalized, scale] = NormalizeErrorScale(errors);
+  EXPECT_NEAR(SampleStandardDeviation(normalized), 1.0, 1e-2);
+  EXPECT_NEAR(scale, stddev, 1e-2);
 }

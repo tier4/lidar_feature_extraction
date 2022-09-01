@@ -38,15 +38,13 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
 }
 
 Vector6d WeightedUpdate(
-  const Eigen::Quaterniond & q,
+  const Eigen::Matrix<double, 7, 6> & M,
   const Eigen::VectorXd & weights,
   const std::vector<Eigen::MatrixXd> & jacobians,
   const std::vector<Eigen::VectorXd> & residuals)
 {
   assert(static_cast<size_t>(weights.size()) == jacobians.size());
   assert(static_cast<size_t>(weights.size()) == residuals.size());
-
-  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
 
   // It's not so beautiful to compute these many matrices at the same time but
   // we need to avoid recomputing matrix multiplications
@@ -92,7 +90,8 @@ std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
   const std::vector<Eigen::MatrixXd> & jacobians,
   const std::vector<Eigen::VectorXd> & residuals)
 {
-  const Vector6d dx = WeightedUpdate(q, weights, jacobians, residuals);
+  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+  const Vector6d dx = WeightedUpdate(M, weights, jacobians, residuals);
   const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
   const Eigen::Vector3d dt = dx.tail(3);
   return {dq, dt};
@@ -108,12 +107,22 @@ Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals)
   return errors;
 }
 
-std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors)
+std::tuple<Eigen::VectorXd, double> NormalizeErrorScale(const Eigen::VectorXd & errors)
 {
   const double scale = Scale(errors);
-  Eigen::VectorXd weights(errors.size());
+  Eigen::VectorXd normalized(errors.size());
   for (int32_t i = 0; i < errors.size(); i++) {
-    weights(i) = HuberDerivative(errors(i) / (scale + 1e-16));
+    normalized(i) = errors(i) / (scale + 1e-16);
   }
-  return std::make_tuple(weights, scale);
+  return std::make_tuple(normalized, scale);
+}
+
+Eigen::VectorXd ComputeWeights(const Eigen::VectorXd & scale_normalized_errors)
+{
+  // The stddev scale_normalized_errors should be close to 1.
+  Eigen::VectorXd weights(scale_normalized_errors.size());
+  for (int32_t i = 0; i < scale_normalized_errors.size(); i++) {
+    weights(i) = HuberDerivative(scale_normalized_errors(i));
+  }
+  return weights;
 }
