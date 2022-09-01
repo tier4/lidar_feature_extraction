@@ -104,7 +104,7 @@ TEST(Huber, Huber)
 
   {
     const double r = 0.5;
-    EXPECT_EQ(Huber(r * r, k), 1.);
+    EXPECT_EQ(Huber(r * r, k), 0.25);
   }
 }
 
@@ -115,6 +115,11 @@ TEST(HuberDerivative, NumericalDiff)
   {
     const double d = (Huber(0.90 + 1e-4, k) - Huber(0.90, k)) / 1e-4;
     EXPECT_LT(std::fabs(d - HuberDerivative(0.90, k)), 1e-3);
+  }
+
+  {
+    const double d = (Huber(1. - 1e-4 + 2e-4, k) - Huber(1. - 1e-4, k)) / 2e-4;
+    EXPECT_LT(std::fabs(d - HuberDerivative(1.00 - 1e-4, k)), 1e-3);
   }
 
   {

@@ -53,7 +53,7 @@ double Scale(const Eigen::VectorXd & v)
 double Huber(const double e, const double k)
 {
   if (e < k * k) {
-    return 1.;
+    return e;
   }
 
   return 2 * k * std::sqrt(e) - k * k;
@@ -62,7 +62,7 @@ double Huber(const double e, const double k)
 double HuberDerivative(const double e, const double k)
 {
   if (e < k * k) {
-    return 0.;
+    return 1.;
   }
 
   return k / std::sqrt(e);
