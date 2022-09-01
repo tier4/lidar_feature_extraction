@@ -48,14 +48,14 @@ Vector6d WeightedUpdate(
 
   // It's not so beautiful to compute these many matrices at the same time but
   // we need to avoid recomputing matrix multiplications
-  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(6, 6);
-  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(6, 6);
-  Eigen::VectorXd b = Eigen::VectorXd::Zero(6);
+  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(7, 7);
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(7, 7);
+  Eigen::VectorXd b = Eigen::VectorXd::Zero(7);
 
   for (size_t i = 0; i < jacobians.size(); i++) {
     assert(jacobians.at(i).cols() == 7);
 
-    const Eigen::MatrixXd J = jacobians.at(i) * M;
+    const Eigen::MatrixXd J = jacobians.at(i);
     const Eigen::VectorXd r = residuals.at(i);
     const Eigen::MatrixXd JtJ = J.transpose() * J;
 
@@ -68,7 +68,8 @@ Vector6d WeightedUpdate(
     return Vector6d::Zero();  // corresponds to identity
   }
 
-  return -A.ldlt().solve(b);
+
+  return -(M.transpose() * A * M).ldlt().solve(M.transpose() * b);
 }
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
