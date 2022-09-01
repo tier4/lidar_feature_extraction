@@ -47,6 +47,12 @@ Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals);
 std::tuple<Eigen::VectorXd, double> ComputeWeights(const Eigen::VectorXd & errors);
 bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt);
 
+Vector6d WeightedUpdate(
+  const Eigen::Matrix<double, 7, 6> & M,
+  const Eigen::VectorXd & weights,
+  const std::vector<Eigen::MatrixXd> & jacobians,
+  const std::vector<Eigen::VectorXd> & residuals);
+
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q);
 
 std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(

@@ -38,15 +38,13 @@ bool CheckConvergence(const Eigen::Quaterniond & dq, const Eigen::Vector3d & dt)
 }
 
 Vector6d WeightedUpdate(
-  const Eigen::Quaterniond & q,
+  const Eigen::Matrix<double, 7, 6> & M,
   const Eigen::VectorXd & weights,
   const std::vector<Eigen::MatrixXd> & jacobians,
   const std::vector<Eigen::VectorXd> & residuals)
 {
   assert(static_cast<size_t>(weights.size()) == jacobians.size());
   assert(static_cast<size_t>(weights.size()) == residuals.size());
-
-  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
 
   // It's not so beautiful to compute these many matrices at the same time but
   // we need to avoid recomputing matrix multiplications
@@ -92,7 +90,8 @@ std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
   const std::vector<Eigen::MatrixXd> & jacobians,
   const std::vector<Eigen::VectorXd> & residuals)
 {
-  const Vector6d dx = WeightedUpdate(q, weights, jacobians, residuals);
+  const Eigen::Matrix<double, 7, 6> M = MakeM(q);
+  const Vector6d dx = WeightedUpdate(M, weights, jacobians, residuals);
   const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
   const Eigen::Vector3d dt = dx.tail(3);
   return {dq, dt};
