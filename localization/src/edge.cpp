@@ -38,10 +38,12 @@ Eigen::VectorXd Center(const Eigen::MatrixXd & X)
   return X.colwise().mean();
 }
 
-Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X)
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> CalcMeanAndCovariance(const Eigen::MatrixXd & X)
 {
-  const Eigen::MatrixXd D = X.rowwise() - Center(X).transpose();
-  return D.transpose() * D / X.rows();
+  const Eigen::VectorXd mean = Center(X);
+  const Eigen::MatrixXd D = X.rowwise() - mean.transpose();
+  const Eigen::MatrixXd covariance = D.transpose() * D / X.rows();
+  return std::make_tuple(mean, covariance);
 }
 
 Eigen::Vector3d TripletCross(

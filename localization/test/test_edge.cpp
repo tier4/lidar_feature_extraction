@@ -85,8 +85,8 @@ TEST(Edge, PrincipalComponents)
       const double x = 0.1 * i;
       X.row(i) = Eigen::Vector3d(x, 0., 0.);
     }
-    const Eigen::Matrix3d C = CalcCovariance(X);
-    const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
+    const auto [mean, covariance] = CalcMeanAndCovariance(X);
+    const auto [eigenvalues, eigenvectors] = PrincipalComponents(covariance);
     EXPECT_EQ((eigenvectors.col(2) - Eigen::Vector3d(1, 0, 0)).norm(), 0.);
     EXPECT_EQ(eigenvalues(0), 0.);
     EXPECT_EQ(eigenvalues(1), 0.);
@@ -108,7 +108,7 @@ TEST(Edge, Center)
   EXPECT_THAT(v, ElementsAre(3.8, 3.8, 4.6));
 }
 
-TEST(Edge, CalcCovariance)
+TEST(Edge, CalcMeanAndCovariance)
 {
   const Eigen::MatrixXd X =
     (Eigen::MatrixXd(4, 3) <<
@@ -123,10 +123,13 @@ TEST(Edge, CalcCovariance)
     -9., 18., 21.,
     -6., 21., 46.).finished() / 4.;
 
-  const Eigen::MatrixXd C = CalcCovariance(X);
-  ASSERT_EQ(C.rows(), 3);
-  ASSERT_EQ(C.cols(), 3);
-  EXPECT_EQ((C - expected).norm(), 0.);
+  const auto [mean, covariance] = CalcMeanAndCovariance(X);
+
+  ASSERT_EQ(mean, Center(X));
+
+  ASSERT_EQ(covariance.rows(), 3);
+  ASSERT_EQ(covariance.cols(), 3);
+  EXPECT_EQ((covariance - expected).norm(), 0.);
 }
 
 TEST(Edge, ApproximateError)

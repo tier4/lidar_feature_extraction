@@ -49,7 +49,7 @@
 
 Eigen::VectorXd Center(const Eigen::MatrixXd & X);
 
-Eigen::MatrixXd CalcCovariance(const Eigen::MatrixXd & X);
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> CalcMeanAndCovariance(const Eigen::MatrixXd & X);
 
 Eigen::Vector3d TripletCross(
   const Eigen::Vector3d & p0,
@@ -116,14 +116,13 @@ public:
       const auto [neighbors, _] = kdtree_->NearestKSearch(query, N_NEIGHBORS);
 
       const Eigen::MatrixXd X = GetXYZ(neighbors);
-      const Eigen::Matrix3d C = CalcCovariance(X);
-      const auto [eigenvalues, eigenvectors] = PrincipalComponents(C);
+      const auto [mean, covariance] = CalcMeanAndCovariance(X);
+      const auto [eigenvalues, eigenvectors] = PrincipalComponents(covariance);
 
-      const Eigen::Vector3d center = Center(X);
       const Eigen::Vector3d principal = eigenvectors.col(2);
       const Eigen::Vector3d p0 = scan_point.head(3);
-      const Eigen::Vector3d p1 = center - principal;
-      const Eigen::Vector3d p2 = center + principal;
+      const Eigen::Vector3d p1 = mean - principal;
+      const Eigen::Vector3d p2 = mean + principal;
 
       jacobians.push_back(MakeEdgeJacobianRow(q, p0, p1, p2));
       residuals.push_back(MakeEdgeResidual(point_to_map, p0, p1, p2));
