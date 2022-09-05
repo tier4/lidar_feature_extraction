@@ -87,13 +87,13 @@ public:
       const Eigen::Isometry3d pose = MakePose(q, t);
       const auto [jacobians, residuals] = problem_.Make(x, pose);
 
+      if (residuals.size() == 0) {
+        return MakePose(q, t);
+      }
+
       const Eigen::VectorXd errors = ComputeErrors(residuals);
       const auto [normalized, scale] = NormalizeErrorScale(errors);
       const Eigen::VectorXd weights = ComputeWeights(normalized);
-
-      if (jacobians.size() == 0) {
-        break;
-      }
 
       if (iter != 0 && scale > scale_prev) {
         return MakePose(q, t);
@@ -107,9 +107,10 @@ public:
       t = t + dt;
 
       if (CheckConvergence(dq, dt)) {
-        break;
+        return MakePose(q, t);
       }
     }
+
     return MakePose(q, t);
   }
 
