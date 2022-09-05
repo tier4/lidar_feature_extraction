@@ -41,7 +41,7 @@ Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance)
   return matrix;
 }
 
-std::array<double, 36> FromEigenCovariance(const RowMatrix6d & covariance)
+std::array<double, 36> FromEigenCovariance(const Matrix6d & covariance)
 {
   std::array<double, 36> array;
   for (size_t i = 0; i < 6; i++) {
@@ -76,7 +76,7 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
 
 geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
   const Eigen::Isometry3d & pose,
-  const RowMatrix6d & covariance)
+  const Matrix6d & covariance)
 {
   geometry_msgs::msg::PoseWithCovariance msg;
   msg.pose = MakePose(pose);
@@ -86,7 +86,7 @@ geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
 
 geometry_msgs::msg::PoseWithCovarianceStamped MakePoseWithCovarianceStamped(
   const Eigen::Isometry3d & pose,
-  const RowMatrix6d & covariance,
+  const Matrix6d & covariance,
   const rclcpp::Time & stamp,
   const std::string & frame_id)
 {

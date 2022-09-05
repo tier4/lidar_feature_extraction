@@ -51,11 +51,9 @@
 
 using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
-using RowMatrix6d = Eigen::Matrix<double, 6, 6, Eigen::RowMajor>;
-
 Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance);
 
-std::array<double, 36> FromEigenCovariance(const RowMatrix6d & covariance);
+std::array<double, 36> FromEigenCovariance(const Matrix6d & covariance);
 
 template<typename T>
 sensor_msgs::msg::PointCloud2 ToRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
@@ -94,11 +92,11 @@ geometry_msgs::msg::PoseStamped MakePoseStamped(
 
 geometry_msgs::msg::PoseWithCovariance MakePoseWithCovariance(
   const Eigen::Isometry3d & pose,
-  const RowMatrix6d & covariance);
+  const Matrix6d & covariance);
 
 geometry_msgs::msg::PoseWithCovarianceStamped MakePoseWithCovarianceStamped(
   const Eigen::Isometry3d & pose,
-  const RowMatrix6d & covariance,
+  const Matrix6d & covariance,
   const rclcpp::Time & stamp,
   const std::string & frame_id);
 

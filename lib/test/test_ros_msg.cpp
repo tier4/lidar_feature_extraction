@@ -216,19 +216,9 @@ TEST(RosMsg, MakeTwistStamped)
   EXPECT_EQ(msg.header.frame_id, frame_id);
 }
 
-TEST(RosMsg, FromEigenCovariance)
+TEST(RosMsg, GetEigenCovariance)
 {
-  Eigen::Matrix<double, 6, 6> covariance;
-  covariance <<
-    0, 1, 2, 3, 4, 5,
-    6, 7, 8, 9, 10, 11,
-    12, 13, 14, 15, 16, 17,
-    18, 19, 20, 21, 22, 23,
-    24, 25, 26, 27, 28, 29,
-    30, 31, 32, 33, 34, 35;
-
-  const std::array<double, 36> array = FromEigenCovariance(covariance);
-  std::array<double, 36> expected = {
+  const std::array<double, 36ul> covarinace = {
     0, 1, 2, 3, 4, 5,
     6, 7, 8, 9, 10, 11,
     12, 13, 14, 15, 16, 17,
@@ -237,9 +227,29 @@ TEST(RosMsg, FromEigenCovariance)
     30, 31, 32, 33, 34, 35
   };
 
-  for (size_t i = 0; i < 36; i++) {
-    EXPECT_EQ(array[i], expected[i]);
-  }
+  const Matrix6d C = GetEigenCovariance(covarinace);
+  EXPECT_EQ(C(0, 0), 0);
+  EXPECT_EQ(C(2, 0), 12);
+  EXPECT_EQ(C(3, 4), 22);
+  EXPECT_EQ(C(5, 2), 32);
+}
+
+TEST(RosMsg, FromEigenCovariance)
+{
+  Matrix6d C;
+  C <<
+    0, 1, 2, 3, 4, 5,
+    6, 7, 8, 9, 10, 11,
+    12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35;
+
+  const std::array<double, 36ul> covarinace = FromEigenCovariance(C);
+  EXPECT_EQ(covarinace[0 * 6 + 0], 0);
+  EXPECT_EQ(covarinace[2 * 6 + 0], 12);
+  EXPECT_EQ(covarinace[3 * 6 + 4], 22);
+  EXPECT_EQ(covarinace[5 * 6 + 2], 32);
 }
 
 TEST(RosMsg, MakePoseWithCovariance)
