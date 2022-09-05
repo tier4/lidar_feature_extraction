@@ -132,24 +132,6 @@ public:
     return std::make_tuple(jacobians, residuals);
   }
 
-  // TODO(IshitaTakeshi) Maybe this function is not necessary?
-  // Almost the same can be realized by validating that the scan size >= 3
-  bool IsDegenerate(
-    const typename pcl::PointCloud<PointType>::Ptr & edge_scan,
-    const Eigen::Isometry3d & point_to_map) const
-  {
-    const auto [jacobians, _] = this->Make(edge_scan, point_to_map);
-
-    const int d = jacobians.at(0).cols();
-    Eigen::MatrixXd JtJ = Eigen::MatrixXd::Zero(d, d);
-    for (size_t i = 0; i < jacobians.size(); i++) {
-      const Eigen::MatrixXd J = jacobians.at(i);
-      JtJ += J.transpose() * J;
-    }
-
-    return ::IsDegenerate(JtJ);
-  }
-
 private:
   const std::shared_ptr<KDTreeEigen> kdtree_;
 };
