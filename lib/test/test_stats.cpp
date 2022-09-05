@@ -31,6 +31,22 @@
 #include "lidar_feature_library/stats.hpp"
 
 
+TEST(Median, EmptyInput)
+{
+  Eigen::VectorXd v(0);
+
+  EXPECT_THROW({
+      try {
+      Median(v);
+      } catch (std::invalid_argument & e) {
+      EXPECT_STREQ(e.what(), "Empty array is passed to the median function");
+      throw e;
+      }
+    },
+    std::invalid_argument
+  );
+}
+
 TEST(Median, OddLengthInput)
 {
   {

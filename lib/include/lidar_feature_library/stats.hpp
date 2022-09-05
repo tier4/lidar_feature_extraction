@@ -30,11 +30,17 @@
 #define LIDAR_FEATURE_LIBRARY__STATS_HPP_
 
 #include <Eigen/Core>
+
+#include <exception>
 #include <vector>
 
 // private method, because the argument will be modified
 double Median_(std::vector<double> & v)
 {
+  if (v.size() == 0) {
+    throw std::invalid_argument("Empty array is passed to the median function");
+  }
+
   if (v.size() % 2 == 1) {
     const int n = (v.size() - 1) / 2;
     std::nth_element(v.begin(), v.begin() + n, v.end());
