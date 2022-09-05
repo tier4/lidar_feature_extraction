@@ -14,15 +14,10 @@
 
 #include "kalman_filter/time_delay_kalman_filter.hpp"
 
-TimeDelayKalmanFilter::TimeDelayKalmanFilter() {}
-
-void TimeDelayKalmanFilter::init(
+TimeDelayKalmanFilter::TimeDelayKalmanFilter(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0, const int max_delay_step)
+  : max_delay_step_(max_delay_step), dim_x_(x.rows()), dim_x_ex_(dim_x_ * max_delay_step)
 {
-  max_delay_step_ = max_delay_step;
-  dim_x_ = x.rows();
-  dim_x_ex_ = dim_x_ * max_delay_step;
-
   x_ = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
   P_ = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
 
