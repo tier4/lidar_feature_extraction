@@ -14,9 +14,10 @@ ament_auto_add_library(ekf_localizer_lib SHARED
   src/check.cpp
   src/ekf_localizer.cpp
   src/mahalanobis.cpp
-  src/update_interval.cpp
+  src/state_transition.cpp
   src/string.cpp
   src/tf.cpp
+  src/update_interval.cpp
 )
 
 target_link_libraries(ekf_localizer_lib Eigen3::Eigen)
@@ -53,6 +54,7 @@ if(BUILD_TESTING)
     test/test_check.cpp
     test/test_ekf_localizer.cpp
     test/test_mahalanobis.cpp
+    test/test_state_transition.cpp
     test/test_string.cpp
     test/test_tf.cpp
     test/test_update_interval.cpp)

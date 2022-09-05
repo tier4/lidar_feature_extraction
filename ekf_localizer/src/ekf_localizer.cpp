@@ -32,6 +32,7 @@
 #include "ekf_localizer/check.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/numeric.hpp"
+#include "ekf_localizer/state_transition.hpp"
 #include "ekf_localizer/string.hpp"
 #include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/warning.hpp"
@@ -227,53 +228,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pitch_filter_.set_proc_stddev(0.1);
 }
 
-Vector6d PredictNextState(const Vector6d & x_curr, const double dt)
-{
-  const double x = x_curr(0);
-  const double y = x_curr(1);
-  const double biased_yaw = x_curr(2);
-  const double yaw_bias = x_curr(3);
-  const double vx = x_curr(4);
-  const double wz = x_curr(5);
-  const double yaw = biased_yaw + yaw_bias;
-
-  Vector6d x_next;
-  x_next <<
-    x + vx * cos(yaw) * dt,  // dx = v * cos(yaw)
-    y + vx * sin(yaw) * dt,  // dy = v * sin(yaw)
-    normalizeYaw(biased_yaw + wz * dt),                  // dyaw = omega + omega_bias
-    yaw_bias,
-    vx,
-    wz;
-  return x_next;
-}
-
-Matrix6d StateTransitionModel(const Vector6d & x_curr, const double dt)
-{
-  const double biased_yaw = x_curr(2);
-  const double yaw_bias = x_curr(3);
-  const double vx = x_curr(4);
-  const double yaw = biased_yaw + yaw_bias;
-
-  /* Set A matrix for latest state */
-  Matrix6d A = Matrix6d::Identity();
-  A(0, 2) = -vx * sin(yaw) * dt;
-  A(0, 3) = -vx * sin(yaw) * dt;
-  A(0, 4) = cos(yaw) * dt;
-  A(1, 2) = vx * cos(yaw) * dt;
-  A(1, 3) = vx * cos(yaw) * dt;
-  A(1, 4) = sin(yaw) * dt;
-  A(2, 5) = dt;
-  return A;
-}
-
-Matrix6d ProcessNoiseCovariance(const Eigen::Vector4d & variances)
-{
-  Vector6d q;
-  q << 0., 0., variances(0), variances(1), variances(2), variances(3);
-  return q.asDiagonal();
-}
-
 Eigen::Matrix<double, 3, 6> PoseObservationModel()
 {
   /* Set measurement matrix */
@@ -418,9 +372,9 @@ void EKFLocalizer::timerCallback()
   const double dt = maybe_dt.value();
 
   const Vector6d x_curr = ekf_.getLatestX();  // current state
-  const Vector6d x_next = PredictNextState(x_curr, dt);
-  const Matrix6d A = StateTransitionModel(x_curr, dt);
-  const Matrix6d Q = ProcessNoiseCovariance(variance_.TimeScaledVariances(dt));
+  const Vector6d x_next = predictNextState(x_curr, dt);
+  const Matrix6d A = createStateTransitionMatrix(x_curr, dt);
+  const Matrix6d Q = processNoiseCovariance(variance_.TimeScaledVariances(dt));
 
   ekf_.predictWithDelay(x_next, A, Q);
 
