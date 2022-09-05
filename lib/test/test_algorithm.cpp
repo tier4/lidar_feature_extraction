@@ -44,3 +44,26 @@ TEST(Algorithm, GetByIndices)
   EXPECT_THAT(GetByIndices(std::vector<size_t>{0, 1}, array), testing::ElementsAre(0, 3));
   EXPECT_THAT(GetByIndices(std::vector<size_t>{2, 4}, array), testing::ElementsAre(2, 5));
 }
+
+TEST(Algorithm, SortThreeValues)
+{
+  {
+    Eigen::Vector3d expected(0, 1, 2);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(0, 1, 2)) - expected).norm(), 0);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(0, 2, 1)) - expected).norm(), 0);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(1, 0, 2)) - expected).norm(), 0);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(1, 2, 0)) - expected).norm(), 0);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(2, 0, 1)) - expected).norm(), 0);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(2, 1, 0)) - expected).norm(), 0);
+  }
+
+  {
+    Eigen::Vector3d expected(0, 1, 1);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(1, 1, 0)) - expected).norm(), 0);
+  }
+
+  {
+    Eigen::Vector3d expected(0, 0, 0);
+    EXPECT_EQ((SortThreeValues(Eigen::Vector3d(0, 0, 0)) - expected).norm(), 0);
+  }
+}

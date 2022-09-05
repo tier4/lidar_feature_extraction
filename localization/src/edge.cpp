@@ -30,6 +30,8 @@
 
 #include <tuple>
 
+#include "lidar_feature_library/algorithm.hpp"
+
 #include "lidar_feature_localization/edge.hpp"
 
 
@@ -85,4 +87,10 @@ Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix)
 {
   const int rows = matrix.rows();
   return matrix.block(0, 0, rows, 3);
+}
+
+bool PrincipalIsReliable(const Eigen::Vector3d & eigenvalues)
+{
+  const Eigen::Vector3d sorted = SortThreeValues(eigenvalues);
+  return sorted(2) > sorted(1) * 3.0;
 }

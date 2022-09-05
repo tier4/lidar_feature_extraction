@@ -132,6 +132,17 @@ TEST(Edge, CalcMeanAndCovariance)
   EXPECT_EQ((covariance - expected).norm(), 0.);
 }
 
+TEST(Edge, PrincipalIsReliable)
+{
+  EXPECT_TRUE(PrincipalIsReliable(Eigen::Vector3d(7., 2., 0.)));
+  EXPECT_TRUE(PrincipalIsReliable(Eigen::Vector3d(0., 2., 7.)));
+  EXPECT_TRUE(PrincipalIsReliable(Eigen::Vector3d(0., 1., 0.)));
+  EXPECT_FALSE(PrincipalIsReliable(Eigen::Vector3d(0., 2., 6.)));
+  EXPECT_FALSE(PrincipalIsReliable(Eigen::Vector3d(1., 3., 0.)));
+  EXPECT_FALSE(PrincipalIsReliable(Eigen::Vector3d(1., 1., 1.)));
+  EXPECT_FALSE(PrincipalIsReliable(Eigen::Vector3d(0., 0., 0.)));
+}
+
 TEST(Edge, ApproximateError)
 {
   auto residual = [](

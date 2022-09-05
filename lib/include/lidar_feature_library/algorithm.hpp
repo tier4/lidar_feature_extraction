@@ -29,6 +29,8 @@
 #ifndef LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
 #define LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_
 
+#include <Eigen/Core>
+
 #include <algorithm>
 #include <vector>
 
@@ -58,5 +60,7 @@ std::vector<size_t> GetIndicesByValue(
   }
   return indices;
 }
+
+Eigen::Vector3d SortThreeValues(const Eigen::Vector3d & v);
 
 #endif  // LIDAR_FEATURE_LIBRARY__ALGORITHM_HPP_

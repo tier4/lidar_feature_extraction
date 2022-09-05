@@ -72,6 +72,8 @@ Eigen::Vector3d MakeEdgeResidual(
 
 Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix);
 
+bool PrincipalIsReliable(const Eigen::Vector3d & eigenvalues);
+
 template<typename PointToVector, typename PointType>
 std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
 {
@@ -80,9 +82,7 @@ std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType
   return std::make_shared<KDTreeEigen>(matrix, 10);
 }
 
-
 constexpr int N_NEIGHBORS = 5;
-
 
 template<typename PointToVector>
 class Edge
@@ -118,6 +118,10 @@ public:
       const Eigen::MatrixXd X = GetXYZ(neighbors);
       const auto [mean, covariance] = CalcMeanAndCovariance(X);
       const auto [eigenvalues, eigenvectors] = PrincipalComponents(covariance);
+
+      if (!PrincipalIsReliable(eigenvalues)) {
+        continue;
+      }
 
       const Eigen::Vector3d principal = eigenvectors.col(2);
       const Eigen::Vector3d p0 = scan_point.head(3);

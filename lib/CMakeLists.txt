@@ -15,6 +15,7 @@ find_package(PCL REQUIRED)
 ament_auto_find_build_dependencies()
 
 set(SOURCE_FILES
+  src/algorithm.cpp
   src/lib.cpp
   src/eigen.cpp
   src/pcl_utils.cpp
