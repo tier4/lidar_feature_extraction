@@ -113,7 +113,7 @@ public:
     localizer_.Update(edge);
 
     const Eigen::Isometry3d pose = localizer_.Get();
-    RowMatrix6d covariance;
+    Matrix6d covariance;
     covariance <<
       0.2, 0, 0, 0, 0, 0,
       0, 0.2, 0, 0, 0, 0,
