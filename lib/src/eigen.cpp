@@ -30,6 +30,28 @@
 #include "lidar_feature_library/eigen.hpp"
 
 
+Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance)
+{
+  Matrix6d matrix;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      matrix(i, j) = covariance[i * 6 + j];
+    }
+  }
+  return matrix;
+}
+
+std::array<double, 36> FromEigenCovariance(const Matrix6d & covariance)
+{
+  std::array<double, 36> array;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      array[i * 6 + j] = covariance(i, j);
+    }
+  }
+  return array;
+}
+
 Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t)
 {
   assert(std::abs(q.norm() - 1.0) < 1e-6);

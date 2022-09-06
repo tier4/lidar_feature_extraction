@@ -26,54 +26,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
-#define LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#ifndef LIDAR_FEATURE_LIBRARY__MATRIX_TYPE_HPP_
+#define LIDAR_FEATURE_LIBRARY__MATRIX_TYPE_HPP_
 
-#include <string>
-#include <vector>
+using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
-#include <range/v3/all.hpp>
-
-#include "lidar_feature_library/matrix_types.hpp"
-
-
-Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance);
-
-std::array<double, 36> FromEigenCovariance(const Matrix6d & covariance);
-
-template<int N>
-Eigen::MatrixXd VectorsToEigen(const std::vector<Eigen::Matrix<double, N, 1>> & vectors)
-{
-  Eigen::MatrixXd X(vectors.size(), N);
-  for (unsigned int i = 0; i < vectors.size(); i++) {
-    X.row(i) = vectors[i];
-  }
-  return X;
-}
-
-template<int N, int M>
-Eigen::MatrixXd HorizontalStack(const std::vector<Eigen::Matrix<double, N, M>> & matrices)
-{
-  Eigen::MatrixXd X(N * matrices.size(), M);
-  for (unsigned int i = 0; i < matrices.size(); i++) {
-    X.block<N, M>(i * N, 0) = matrices[i];
-  }
-  return X;
-}
-
-Eigen::Isometry3d MakeIsometry3d(const Eigen::Quaterniond & q, const Eigen::Vector3d & t);
-
-Eigen::VectorXd TransformXYZ(const Eigen::Isometry3d & transform, const Eigen::VectorXd & p0);
-
-Eigen::VectorXd VectorToEigen(const std::vector<double> & values);
-
-std::string EigenToString(const Eigen::MatrixXd & matrix);
-
-Eigen::MatrixXd GetRows(
-  const Eigen::MatrixXd & matrix,
-  const std::vector<std::uint64_t> & indices);
-
-#endif  // LIDAR_FEATURE_LIBRARY__EIGEN_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__MATRIX_TYPE_HPP_

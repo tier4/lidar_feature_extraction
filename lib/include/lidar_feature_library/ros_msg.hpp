@@ -48,12 +48,7 @@
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-
-using Matrix6d = Eigen::Matrix<double, 6, 6>;
-
-Matrix6d GetEigenCovariance(const std::array<double, 36> & covariance);
-
-std::array<double, 36> FromEigenCovariance(const Matrix6d & covariance);
+#include "lidar_feature_library/matrix_types.hpp"
 
 template<typename T>
 sensor_msgs::msg::PointCloud2 ToRosMsg(const typename pcl::PointCloud<T>::Ptr & cloud_ptr)
