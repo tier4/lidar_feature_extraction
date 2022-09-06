@@ -30,11 +30,102 @@
 #include <gmock/gmock.h>
 
 #include <iterator>
+#include <random>
+#include <utility>
+#include <vector>
 
 #include <range/v3/all.hpp>
 
 #include "lidar_feature_extraction/ring.hpp"
 
+struct Point
+{
+  double x;
+  double y;
+};
+
+TEST(AHasSmallerPolarAngleThanB, SpecificValues)
+{
+  const std::vector<std::pair<Point, Point>> points = {
+    // both are zero
+    std::make_pair(Point{0, 0}, Point{0, 0}),
+    // either one is zero
+    std::make_pair(Point{0, 0}, Point{0, 1}),
+    std::make_pair(Point{0, 0}, Point{1, 0}),
+    std::make_pair(Point{0, 1}, Point{0, 0}),
+    std::make_pair(Point{1, 0}, Point{0, 0}),
+    std::make_pair(Point{0, 0}, Point{0, -1}),
+    std::make_pair(Point{0, 0}, Point{-1, 0}),
+    std::make_pair(Point{0, -1}, Point{0, 0}),
+    std::make_pair(Point{-1, 0}, Point{0, 0}),
+    // same polar angle
+    std::make_pair(Point{-1, 1}, Point{-1, 1}),
+    std::make_pair(Point{1, 1}, Point{1, 1}),
+    std::make_pair(Point{1, -1}, Point{1, -1}),
+    std::make_pair(Point{-1, -1}, Point{-1, -1}),
+    std::make_pair(Point{-1, 0}, Point{-1, 0}),
+    std::make_pair(Point{0, 1}, Point{0, 1}),
+    std::make_pair(Point{1, 0}, Point{1, 0}),
+    std::make_pair(Point{0, -1}, Point{0, -1}),
+    // a.y == 0
+    std::make_pair(Point{1, 0}, Point{1, 1}),
+    std::make_pair(Point{1, 0}, Point{1, -1}),
+    std::make_pair(Point{-1, 0}, Point{-1, 1}),
+    std::make_pair(Point{-1, 0}, Point{-1, -1}),
+    // b.y == 0
+    std::make_pair(Point{1, 1}, Point{1, 0}),
+    std::make_pair(Point{1, -1}, Point{1, 0}),
+    std::make_pair(Point{-1, 1}, Point{-1, 0}),
+    std::make_pair(Point{-1, -1}, Point{-1, 0}),
+    // compare to {1, 1}
+    std::make_pair(Point{-1, 1}, Point{1, 1}),
+    std::make_pair(Point{1, -1}, Point{1, 1}),
+    std::make_pair(Point{1, 1}, Point{-1, 1}),
+    std::make_pair(Point{1, 1}, Point{1, -1}),
+    // compare to {-1, -1}
+    std::make_pair(Point{-1, 1}, Point{-1, -1}),
+    std::make_pair(Point{1, -1}, Point{-1, -1}),
+    std::make_pair(Point{-1, -1}, Point{-1, 1}),
+    std::make_pair(Point{-1, -1}, Point{1, -1})
+  };
+
+  auto compare_atan2 = [](const Point & a, const Point & b) {
+      return std::atan2(a.y, a.x) < std::atan2(b.y, b.x);
+    };
+
+  const AHasSmallerPolarAngleThanB<Point> comparator;
+
+  for (const auto & [a, b] : points) {
+    std::cerr << " a = {" << a.x << ", " << a.y << "}, b = {" << b.x << ", " << b.y << "}" << std::endl;
+    EXPECT_EQ(comparator(a, b), compare_atan2(a, b));
+  }
+}
+
+TEST(AHasSmallerPolarAngleThanB, Random)
+{
+  std::default_random_engine generator;
+  std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+
+  std::vector<Point> points;
+  for (int i = 0; i < 10000; i++) {
+    const double x = distribution(generator);
+    const double y = distribution(generator);
+    points.push_back(Point{x, y});
+  }
+
+  std::vector<Point> pred(points.begin(), points.end());
+  std::sort(pred.begin(), pred.end(), AHasSmallerPolarAngleThanB<Point>{});
+
+  auto compare_atan2 = [](const Point & a, const Point & b) {
+      return std::atan2(a.y, a.x) < std::atan2(b.y, b.x);
+    };
+  std::sort(points.begin(), points.end(), compare_atan2);
+
+  for (size_t i = 0; i < points.size(); i++) {
+    EXPECT_EQ(pred.at(i).x, points.at(i).x);
+    EXPECT_EQ(pred.at(i).y, points.at(i).y);
+  }
+}
 
 TEST(Ring, RingIsAvailable)
 {
@@ -55,12 +146,6 @@ TEST(Ring, RingIsAvailable)
 
 TEST(Ring, SortByAtan2)
 {
-  struct Point
-  {
-    double x;
-    double y;
-  };
-
   std::vector<Point> points;
   points.push_back(Point{1., 1.});    //       pi / 4
   points.push_back(Point{1., 0.});    //            0

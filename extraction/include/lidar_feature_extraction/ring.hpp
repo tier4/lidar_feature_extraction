@@ -51,20 +51,61 @@
 
 bool RingIsAvailable(const std::vector<sensor_msgs::msg::PointField> & fields);
 
+template<typename T>
+struct AHasSmallerPolarAngleThanB
+{
+  bool operator()(const T & a, const T & b) const
+  {
+    // faster way to compute std::atan2(a.y, a.x) < std::atan2(b.y, b.x)
+
+    // both have the same values,
+    // including the case that a = {0, 0}, b = {0, 0}
+    if (a.x == b.x && a.y == b.y) {
+      return false;
+    }
+
+    const double lena = a.x * a.x + a.y * a.y;
+    const double lenb = b.x * b.x + b.y * b.y;
+
+    if (lena == 0) {
+      if (b.y == 0) {
+        // for the case that b.x > 0
+        // --> atan2(b.x, b.y) == atan2(a.y, a.x) == 0
+        return b.x < 0;
+      }
+      return b.y > 0;
+    }
+
+    if (lenb == 0) {
+      return a.y < 0;
+    }
+
+    if (a.y == 0) {
+      return (a.x >= 0) && (b.y >= 0);
+    }
+
+    if (b.y == 0) {
+      return !((b.x >= 0) && (a.y >= 0));
+    }
+
+    // both have the same y sign
+    if (a.y * b.y > 0) {
+      const double det = a.x * b.y - a.y * b.x;
+      return det > 0;
+    }
+
+    return a.y < 0;
+  }
+};
+
 template<typename Iter>
 void SortByAtan2(std::vector<int> & indices, const Iter & iter)
 {
   typedef ElementType<Iter> Element;
-
-  std::unordered_map<int, double> atan2;
-
-  for (const int i : indices) {
-    const Element p = iter.at(i);
-    atan2[i] = std::atan2(p.y, p.x);
-  }
+  const AHasSmallerPolarAngleThanB<Element> comparator;
 
   auto f = [&](const int & index1, const int & index2) {
-      return atan2.at(index1) < atan2.at(index2);
+      return comparator(iter.at(index1), iter.at(index2));
     };
 
   std::sort(indices.begin(), indices.end(), f);
