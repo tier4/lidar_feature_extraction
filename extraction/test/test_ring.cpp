@@ -96,7 +96,6 @@ TEST(AHasSmallerPolarAngleThanB, SpecificValues)
   const AHasSmallerPolarAngleThanB<Point> comparator;
 
   for (const auto & [a, b] : points) {
-    std::cerr << " a = {" << a.x << ", " << a.y << "}, b = {" << b.x << ", " << b.y << "}" << std::endl;
     EXPECT_EQ(comparator(a, b), compare_atan2(a, b));
   }
 }
