@@ -228,16 +228,10 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pitch_filter_.set_proc_stddev(0.1);
 }
 
-Eigen::Vector3d PoseMeasurementVector(
-  const std::unique_ptr<TimeDelayKalmanFilter> & ekf,
-  const geometry_msgs::msg::Pose & pose,
-  const int delay_step)
+Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
 {
   const double yaw = tf2::getYaw(pose.orientation);
-  const double ekf_yaw = ekf->getXelement(delay_step, 2);
-  const double yaw_error = normalizeYaw(yaw - ekf_yaw);  // normalize the error not to exceed 2 pi
-
-  return Eigen::Vector3d(pose.position.x, pose.position.y, yaw_error + ekf_yaw);
+  return Eigen::Vector3d(pose.position.x, pose.position.y, normalizeYaw(yaw));
 }
 
 Eigen::Vector3d PoseStateVector(
@@ -350,7 +344,7 @@ void EKFLocalizer::timerCallback()
       continue;
     }
 
-    const Eigen::Vector3d y = PoseMeasurementVector(ekf_, pose->pose.pose, delay_step);
+    const Eigen::Vector3d y = PoseMeasurementVector(pose->pose.pose);
     const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
     const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
 
