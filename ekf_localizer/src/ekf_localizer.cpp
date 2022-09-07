@@ -116,19 +116,10 @@ void publishEstimateResult(
   const rclcpp::Time & current_time,
   const std::string & pose_frame_id,
   const Eigen::Isometry3d & unbiased_pose,
-  const Eigen::Isometry3d & biased_pose,
   const Eigen::Vector3d & linear,
   const Eigen::Vector3d & angular,
-  const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_,
-  const rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr & pub_biased_pose_)
+  const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr & pub_odom_)
 {
-  PoseWithCovarianceStamped biased_pose_msg;
-  biased_pose_msg.pose.pose = MakePose(biased_pose);
-  biased_pose_msg.pose.covariance = EKFCovarianceToPoseMessageCovariance(P);
-  biased_pose_msg.header.stamp = current_time;
-  biased_pose_msg.header.frame_id = pose_frame_id;
-  pub_biased_pose_->publish(biased_pose_msg);
-
   /* publish latest pose with covariance */
   geometry_msgs::msg::PoseWithCovariance unbiased_pose_msg;
   unbiased_pose_msg.pose = MakePose(unbiased_pose);
@@ -180,8 +171,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   warning_(this),
   listener_(this),
   pub_odom_(create_publisher<nav_msgs::msg::Odometry>("ekf_odom", 1)),
-  pub_biased_pose_(create_publisher<PoseWithCovarianceStamped>(
-      "ekf_biased_pose_with_covariance", 1)),
   sub_initialpose_(create_subscription<PoseWithCovarianceStamped>(
       "initialpose", 1,
       std::bind(&EKFLocalizer::callbackInitialPose, this, std::placeholders::_1))),
@@ -411,7 +400,6 @@ void EKFLocalizer::timerCallback()
   const double yaw = biased_yaw + yaw_bias;
 
   const Eigen::Isometry3d unbiased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, yaw);
-  const Eigen::Isometry3d biased_pose = MakePoseFromXYZRPY(x, y, z, roll, pitch, biased_yaw);
 
   const Eigen::Vector3d linear(vx, 0, 0);
   const Eigen::Vector3d angular(0, 0, wz);
@@ -424,7 +412,7 @@ void EKFLocalizer::timerCallback()
   /* publish ekf result */
   publishEstimateResult(
     ekf_->getLatestP(), this->now(), pose_frame_id_,
-    unbiased_pose, biased_pose, linear, angular, pub_odom_, pub_biased_pose_);
+    unbiased_pose, linear, angular, pub_odom_);
 }
 
 /*
