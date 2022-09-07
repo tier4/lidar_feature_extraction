@@ -31,6 +31,7 @@
 
 #include "ekf_localizer/check.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
+#include "ekf_localizer/measurement.hpp"
 #include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/state_transition.hpp"
 #include "ekf_localizer/string.hpp"
@@ -227,54 +228,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pitch_filter_.set_proc_stddev(0.1);
 }
 
-Eigen::Matrix<double, 3, 6> PoseObservationModel()
-{
-  /* Set measurement matrix */
-  Eigen::Matrix<double, 3, 6> C = Eigen::Matrix<double, 3, 6>::Zero();
-  C(0, 0) = 1.0;    // for pos x
-  C(1, 1) = 1.0;    // for pos y
-  C(2, 2) = 1.0;  // for yaw
-  return C;
-}
-
-Eigen::Matrix<double, 2, 6> TwistObservationModel()
-{
-  Eigen::Matrix<double, 2, 6> C = Eigen::Matrix<double, 2, 6>::Zero();
-  C(0, 4) = 1.0;  // for vx
-  C(1, 5) = 1.0;  // for wz
-  return C;
-}
-
-Eigen::Matrix3d PoseObservationCovariance(
-  const Matrix6d & covariance,
-  const double smoothing_steps)
-{
-  Eigen::Matrix3d R;
-  R <<
-    covariance(0, 0), covariance(0, 1), covariance(0, 5),
-    covariance(1, 0), covariance(1, 1), covariance(1, 5),
-    covariance(5, 0), covariance(5, 1), covariance(5, 5);
-  /* In order to avoid a large change at the time of updating,
-   * measurement update is performed by dividing at every step. */
-  R *= smoothing_steps;
-  return R;
-}
-
-Eigen::Matrix2d TwistObservationCovariance(
-  const Matrix6d & covariance,
-  const double smoothing_steps)
-{
-  Eigen::Matrix2d R;
-  //   vx                wz
-  R << covariance(0, 0), covariance(0, 5),   // vx
-    covariance(5, 0), covariance(5, 5);      // wz
-
-  /* In order to avoid a large change by update, measurement update is performed
-   * by dividing at every step. measurement update is performed by dividing at every step. */
-  R *= smoothing_steps;
-  return R;
-}
-
 Eigen::Vector3d PoseMeasurementVector(
   const std::unique_ptr<TimeDelayKalmanFilter> & ekf,
   const geometry_msgs::msg::Pose & pose,
@@ -409,9 +362,9 @@ void EKFLocalizer::timerCallback()
       continue;
     }
 
-    const Eigen::Matrix<double, 3, 6> C = PoseObservationModel();
-    const Matrix6d covariance = GetEigenCovariance(pose->pose.covariance);
-    const Eigen::Matrix3d R = PoseObservationCovariance(covariance, pose_smoothing_steps_);
+    const Eigen::Matrix<double, 3, 6> C = PoseMeasurementMatrix();
+    const Eigen::Matrix3d R = PoseMeasurementCovariance(
+      pose->pose.covariance, pose_smoothing_steps_);
 
     ekf_->updateWithDelay(y, C, R, delay_step);
   }
@@ -444,9 +397,9 @@ void EKFLocalizer::timerCallback()
       continue;
     }
 
-    const Eigen::Matrix<double, 2, 6> C = TwistObservationModel();
-    const Matrix6d covariance = GetEigenCovariance(twist->twist.covariance);
-    const Eigen::Matrix2d R = TwistObservationCovariance(covariance, twist_smoothing_steps_);
+    const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
+    const Eigen::Matrix2d R = TwistMeasurementCovariance(
+      twist->twist.covariance, twist_smoothing_steps_);
     ekf_->updateWithDelay(y, C, R, delay_step);
   }
 

@@ -14,6 +14,7 @@ ament_auto_add_library(ekf_localizer_lib SHARED
   src/check.cpp
   src/ekf_localizer.cpp
   src/mahalanobis.cpp
+  src/measurement.cpp
   src/state_transition.cpp
   src/string.cpp
   src/tf.cpp
@@ -54,6 +55,7 @@ if(BUILD_TESTING)
     test/test_check.cpp
     test/test_ekf_localizer.cpp
     test/test_mahalanobis.cpp
+    test/test_measurement.cpp
     test/test_state_transition.cpp
     test/test_string.cpp
     test/test_tf.cpp
