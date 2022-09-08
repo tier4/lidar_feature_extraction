@@ -117,11 +117,12 @@ public:
 
       const Eigen::MatrixXd X = GetXYZ(neighbors);
       const auto [mean, covariance] = CalcMeanAndCovariance(X);
-      const auto [eigenvalues, eigenvectors] = PrincipalComponents(covariance);
 
       if (!PrincipalIsReliable(eigenvalues)) {
         continue;
       }
+      Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver;
+      const Eigen::Matrix3d eigenvectors = solver.computeDirect(covariance).eigenvectors();
 
       const Eigen::Vector3d principal = eigenvectors.col(2);
       const Eigen::Vector3d p0 = scan_point.head(3);

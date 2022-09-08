@@ -58,7 +58,8 @@ Eigen::Vector3d TripletCross(
 
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> PrincipalComponents(const Eigen::Matrix3d & C)
 {
-  const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(C);
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver;
+  solver.computeDirect(C);
   return {solver.eigenvalues(), solver.eigenvectors()};
 }
 
