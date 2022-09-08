@@ -106,8 +106,8 @@ public:
 
     const size_t n = scan->size();
 
-    std::vector<Eigen::MatrixXd> jacobians;
-    std::vector<Eigen::VectorXd> residuals;
+    std::vector<Eigen::MatrixXd> jacobians(n);
+    std::vector<Eigen::VectorXd> residuals(n);
 
     for (size_t i = 0; i < n; i++) {
       const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
@@ -118,9 +118,6 @@ public:
       const Eigen::MatrixXd X = GetXYZ(neighbors);
       const auto [mean, covariance] = CalcMeanAndCovariance(X);
 
-      if (!PrincipalIsReliable(eigenvalues)) {
-        continue;
-      }
       Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver;
       const Eigen::Matrix3d eigenvectors = solver.computeDirect(covariance).eigenvectors();
 
@@ -129,8 +126,8 @@ public:
       const Eigen::Vector3d p1 = mean - principal;
       const Eigen::Vector3d p2 = mean + principal;
 
-      jacobians.push_back(MakeEdgeJacobianRow(q, p0, p1, p2));
-      residuals.push_back(MakeEdgeResidual(point_to_map, p0, p1, p2));
+      jacobians[i] = MakeEdgeJacobianRow(q, p0, p1, p2);
+      residuals[i] = MakeEdgeResidual(point_to_map, p0, p1, p2);
     }
 
     return std::make_tuple(jacobians, residuals);
