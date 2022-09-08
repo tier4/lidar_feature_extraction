@@ -93,7 +93,6 @@ public:
 
       const Eigen::VectorXd errors = ComputeErrors(residuals);
       const auto [normalized, scale] = NormalizeErrorScale(errors);
-      const Eigen::VectorXd weights = ComputeWeights(normalized);
 
       if (iter != 0 && scale > scale_prev) {
         return MakePose(q, t);
@@ -101,6 +100,7 @@ public:
 
       scale_prev = scale;
 
+      const Eigen::VectorXd weights = ComputeWeights(normalized);
       const auto [dq, dt] = CalcUpdate(q, weights, jacobians, residuals);
 
       q = q * dq;
