@@ -98,8 +98,9 @@ TEST(Optimizer, Alignment)
   }
 
   {
+    const int max_iter = 10;
     const AlignmentProblem problem;
-    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), transform_true);
 
@@ -112,8 +113,9 @@ TEST(Optimizer, Alignment)
   }
 
   {
+    const int max_iter = 10;
     const AlignmentProblem problem;
-    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Isometry3d initial = MakeIsometry3d(q_true, Eigen::Vector3d(2, 4, 1));
 
@@ -130,8 +132,9 @@ TEST(Optimizer, Alignment)
   }
 
   {
+    const int max_iter = 10;
     const AlignmentProblem problem;
-    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
     const Eigen::Isometry3d initial = MakeIsometry3d(q, t_true);
@@ -149,8 +152,9 @@ TEST(Optimizer, Alignment)
   }
 
   {
+    const int max_iter = 10;
     const AlignmentProblem problem;
-    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem);
+    const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
     const Eigen::Isometry3d initial = MakeIsometry3d(q, Eigen::Vector3d(-4, -6, 3));

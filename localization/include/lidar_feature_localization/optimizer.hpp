@@ -69,8 +69,8 @@ template<typename ProblemType, typename ArgumentType>
 class Optimizer
 {
 public:
-  explicit Optimizer(const ProblemType & problem)
-  : problem_(problem)
+  explicit Optimizer(const ProblemType & problem, const int max_iter = 20)
+  : problem_(problem), max_iter_(max_iter)
   {
   }
 
@@ -83,7 +83,7 @@ public:
 
     double scale_prev;
 
-    for (int iter = 0; iter < 10; iter++) {
+    for (int iter = 0; iter < max_iter_; iter++) {
       const Eigen::Isometry3d pose = MakePose(q, t);
       const auto [jacobians, residuals] = problem_.Make(x, pose);
 
@@ -116,6 +116,7 @@ public:
 
 private:
   const ProblemType problem_;
+  const int max_iter_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__OPTIMIZER_HPP_

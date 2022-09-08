@@ -50,7 +50,7 @@ using Subscriber = LocalizationSubscriber<Localizer<PointToVector, PointType>, P
 
 
 const std::string map_path = "maps/edge.pcd";
-
+constexpr int max_iter = 20;
 
 int main(int argc, char * argv[])
 {
@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
   pcl::PointCloud<PointType>::Ptr edge_map(new pcl::PointCloud<PointType>());
   pcl::io::loadPCDFile(map_path, *edge_map);
 
-  Localizer<PointToVector, PointType> localizer(edge_map);
+  Localizer<PointToVector, PointType> localizer(edge_map, max_iter);
   rclcpp::spin(std::make_shared<Subscriber>(localizer));
   rclcpp::shutdown();
   return 0;

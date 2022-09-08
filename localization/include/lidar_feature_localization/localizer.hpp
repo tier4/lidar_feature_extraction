@@ -53,8 +53,8 @@ class Localizer
     typename pcl::PointCloud<typename PointToVector::PointType>::Ptr>;
 
 public:
-  explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : optimizer_(Edge<PointToVector>(edge_map)),
+  explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int max_iter)
+  : optimizer_(Edge<PointToVector>(edge_map), max_iter),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
   {

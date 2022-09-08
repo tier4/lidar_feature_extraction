@@ -227,6 +227,7 @@ TEST(Edge, Convergence)
       return lines;
     };
 
+  const int max_iter = 20;
   const auto map = make_lines(20);
 
   const Eigen::Quaterniond q_ture = Eigen::Quaterniond(1.0, 0.1, 0.1, -0.1).normalized();
@@ -243,7 +244,7 @@ TEST(Edge, Convergence)
   const Eigen::Vector3d t_initial = Eigen::Vector3d::Zero();
   const Eigen::Isometry3d initial_pose = MakeIsometry3d(q_initial, t_initial);
 
-  const Optimizer<EdgeType, pcl::PointCloud<PointXYZCR>::Ptr> optimizer(edge);
+  const Optimizer<EdgeType, pcl::PointCloud<PointXYZCR>::Ptr> optimizer(edge, max_iter);
   const Eigen::Isometry3d transform_pred = optimizer.Run(scan, initial_pose);
   const auto transformed = TransformPointCloud<PointXYZCR>(transform_pred, scan);
 
