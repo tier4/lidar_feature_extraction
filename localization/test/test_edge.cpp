@@ -87,9 +87,9 @@ TEST(Edge, PrincipalComponents)
     }
     const auto [mean, covariance] = CalcMeanAndCovariance(X);
     const auto [eigenvalues, eigenvectors] = PrincipalComponents(covariance);
-    EXPECT_EQ((eigenvectors.col(2) - Eigen::Vector3d(1, 0, 0)).norm(), 0.);
-    EXPECT_EQ(eigenvalues(0), 0.);
-    EXPECT_EQ(eigenvalues(1), 0.);
+    EXPECT_THAT((eigenvectors.col(2) - Eigen::Vector3d(1, 0, 0)).norm(), testing::Le(1e-8));
+    EXPECT_NEAR(eigenvalues(0), 0., 1e-8);
+    EXPECT_NEAR(eigenvalues(1), 0., 1e-8);
     EXPECT_THAT(eigenvalues(2), testing::Gt(0.));
   }
 }
