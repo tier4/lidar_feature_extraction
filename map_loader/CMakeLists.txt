@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(lidar_feature_map_loader)
 
-set(CMAKE_CXX_FLAGS "-g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS
+  "-g -O3 -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
