@@ -54,7 +54,8 @@ public:
 
   Eigen::Isometry3d operator()(const PointCloudPtr & scan, const Eigen::Isometry3d & pose) const
   {
-    return optimizer_.Run(scan, pose);
+    const OptimizationResult result = optimizer_.Run(scan, pose);
+    return result.pose;
   }
 
 private:

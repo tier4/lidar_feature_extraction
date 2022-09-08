@@ -245,7 +245,8 @@ TEST(Edge, Convergence)
   const Eigen::Isometry3d initial_pose = MakeIsometry3d(q_initial, t_initial);
 
   const Optimizer<EdgeType, pcl::PointCloud<PointXYZCR>::Ptr> optimizer(edge, max_iter);
-  const Eigen::Isometry3d transform_pred = optimizer.Run(scan, initial_pose);
+  const OptimizationResult result = optimizer.Run(scan, initial_pose);
+  const Eigen::Isometry3d transform_pred = result.pose;
   const auto transformed = TransformPointCloud<PointXYZCR>(transform_pred, scan);
 
   EXPECT_THAT(

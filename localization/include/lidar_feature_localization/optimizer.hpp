@@ -32,11 +32,14 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <limits>
+#include <string>
 #include <tuple>
 #include <vector>
 
-#include "lidar_feature_localization/matrix_type.hpp"
 #include "lidar_feature_localization/math.hpp"
+#include "lidar_feature_localization/matrix_type.hpp"
+#include "lidar_feature_localization/optimization_result.hpp"
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/rad2deg.hpp"
 #include "lidar_feature_localization/robust.hpp"
@@ -74,31 +77,37 @@ public:
   {
   }
 
-  Eigen::Isometry3d Run(
+  OptimizationResult Run(
     const ArgumentType & x,
     const Eigen::Isometry3d & initial_pose) const
   {
     Eigen::Quaterniond q(initial_pose.linear());
     Eigen::Vector3d t(initial_pose.translation());
 
-    double scale_prev;
+    double prev_scale = std::numeric_limits<double>::max();
+    double prev_error = std::numeric_limits<double>::max();
 
     for (int iter = 0; iter < max_iter_; iter++) {
       const Eigen::Isometry3d pose = MakePose(q, t);
       const auto [jacobians, residuals] = problem_.Make(x, pose);
 
       if (residuals.size() == 0) {
-        return MakePose(q, t);
+        return EmptyInput(MakePose(q, t), iter);
       }
 
       const Eigen::VectorXd errors = ComputeErrors(residuals);
       const auto [normalized, scale] = NormalizeErrorScale(errors);
+      const double error = errors.sum();
 
-      if (iter != 0 && scale > scale_prev) {
-        return MakePose(q, t);
+      if (error > prev_error) {
+        return LargerErrorThanPrevious(MakePose(q, t), iter, error, scale);
       }
+      prev_error = error;
 
-      scale_prev = scale;
+      if (scale > prev_scale) {
+        return LargerScaleThanPrevious(MakePose(q, t), iter, error, scale);
+      }
+      prev_scale = scale;
 
       const Eigen::VectorXd weights = ComputeWeights(normalized);
       const auto [dq, dt] = CalcUpdate(q, weights, jacobians, residuals);
@@ -107,11 +116,11 @@ public:
       t = t + dt;
 
       if (CheckConvergence(dq, dt)) {
-        return MakePose(q, t);
+        return SuccessfullyConverged(MakePose(q, t), iter, error, scale);
       }
     }
 
-    return MakePose(q, t);
+    return ReachedMaximumIteration(MakePose(q, t), max_iter_, prev_error, prev_scale);
   }
 
 private:

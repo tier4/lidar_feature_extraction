@@ -50,7 +50,7 @@ const Eigen::Isometry3d MakeTransform(const Eigen::Quaterniond & q, const Eigen:
   return transform;
 }
 
-TEST(Optimizer, Alignment)
+TEST(Alignment, SimpleDatasetConvergenceCheck)
 {
   const Eigen::Quaterniond q_true = Eigen::Quaterniond(1, -1, 1, -1).normalized();
   const Eigen::Vector3d t_true(-1, 3, 2);
@@ -97,12 +97,20 @@ TEST(Optimizer, Alignment)
     EXPECT_TRUE(updated_error < initial_error);
   }
 
+  const int max_iter = 10;
+
   {
-    const int max_iter = 10;
+    // start from the true pose
     const AlignmentProblem problem;
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
-    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), transform_true);
+    const OptimizationResult result = optimizer.Run(std::make_tuple(X, Y), transform_true);
+    const Eigen::Isometry3d transform_pred = result.pose;
+
+    EXPECT_TRUE(result.success);
+    EXPECT_EQ(result.iteration, 0);
+    EXPECT_THAT(result.error, testing::Lt(1e-4));
+    EXPECT_THAT(result.error_scale, testing::Lt(1e-4));
 
     EXPECT_THAT(
       (transform_true.linear() - transform_pred.linear()).norm(),
@@ -113,16 +121,19 @@ TEST(Optimizer, Alignment)
   }
 
   {
-    const int max_iter = 10;
+    // start from a different translation
     const AlignmentProblem problem;
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Isometry3d initial = MakeIsometry3d(q_true, Eigen::Vector3d(2, 4, 1));
+    const OptimizationResult result = optimizer.Run(std::make_tuple(X, Y), initial);
+    const Eigen::Isometry3d transform_pred = result.pose;
 
-    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
+    EXPECT_TRUE(result.success);
+    EXPECT_THAT(result.iteration, testing::Lt(4));
+    EXPECT_THAT(result.error, testing::Lt(1e-4));
+    EXPECT_THAT(result.error_scale, testing::Lt(1e-4));
 
-    const Eigen::Quaterniond q_pred(transform_pred.linear());
-    const Eigen::Vector3d t_pred(transform_pred.translation());
     EXPECT_THAT(
       (transform_true.linear() - transform_pred.linear()).norm(),
       testing::Le(1e-4));
@@ -132,17 +143,21 @@ TEST(Optimizer, Alignment)
   }
 
   {
-    const int max_iter = 10;
+    // start from a different rotation
     const AlignmentProblem problem;
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
     const Eigen::Isometry3d initial = MakeIsometry3d(q, t_true);
 
-    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
+    const OptimizationResult result = optimizer.Run(std::make_tuple(X, Y), initial);
+    const Eigen::Isometry3d transform_pred = result.pose;
 
-    const Eigen::Quaterniond q_pred(transform_pred.linear());
-    const Eigen::Vector3d t_pred(transform_pred.translation());
+    EXPECT_TRUE(result.success);
+    EXPECT_THAT(result.iteration, testing::Lt(6));
+    EXPECT_THAT(result.error, testing::Lt(1e-4));
+    EXPECT_THAT(result.error_scale, testing::Lt(1e-4));
+
     EXPECT_THAT(
       (transform_true.linear() - transform_pred.linear()).norm(),
       testing::Le(1e-4));
@@ -152,17 +167,20 @@ TEST(Optimizer, Alignment)
   }
 
   {
-    const int max_iter = 10;
     const AlignmentProblem problem;
     const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
 
     const Eigen::Quaterniond q = Eigen::Quaterniond(1.1, -1.1, 1.1, -1.1).normalized();
     const Eigen::Isometry3d initial = MakeIsometry3d(q, Eigen::Vector3d(-4, -6, 3));
 
-    const Eigen::Isometry3d transform_pred = optimizer.Run(std::make_tuple(X, Y), initial);
+    const OptimizationResult result = optimizer.Run(std::make_tuple(X, Y), initial);
+    const Eigen::Isometry3d transform_pred = result.pose;
 
-    const Eigen::Quaterniond q_pred(transform_pred.linear());
-    const Eigen::Vector3d t_pred(transform_pred.translation());
+    EXPECT_TRUE(result.success);
+    EXPECT_THAT(result.iteration, testing::Lt(6));
+    EXPECT_THAT(result.error, testing::Lt(1e-4));
+    EXPECT_THAT(result.error_scale, testing::Lt(1e-4));
+
     EXPECT_THAT(
       (transform_true.linear() - transform_pred.linear()).norm(),
       testing::Le(1e-4));
@@ -170,6 +188,59 @@ TEST(Optimizer, Alignment)
       (transform_true.translation() - transform_pred.translation()).norm(),
       testing::Le(1e-4));
   }
+}
+
+TEST(Alignment, ShouldReturnFalseForEmptyData)
+{
+  const Eigen::Matrix<double, 0, 3> X;
+  const Eigen::Matrix<double, 0, 3> Y;
+
+  using ArgumentType = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
+  const int max_iter = 10;
+
+  const AlignmentProblem problem;
+  const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
+
+  const OptimizationResult result = optimizer.Run(
+    std::make_tuple(X, Y), Eigen::Isometry3d::Identity());
+
+  EXPECT_EQ(result.iteration, 0);
+  EXPECT_FALSE(result.success);
+  EXPECT_THAT(result.error, 0.);
+  EXPECT_THAT(result.error_scale, 0.);
+}
+
+TEST(Alignment, ShouldReturnFalseWhenNoConvergence)
+{
+  const int n = 40;
+  const int d = 3;
+
+  NormalDistribution<double> distribution_x(0.0, 1.0);
+  NormalDistribution<double> distribution_y(500.0, 1000.0);
+
+  Eigen::MatrixXd X(n, d);
+  Eigen::MatrixXd Y(n, d);
+
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < d; j++) {
+      X(i, j) = distribution_x();
+      Y(i, j) = distribution_y();
+    }
+  }
+
+  using ArgumentType = std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>;
+  const int max_iter = 1;
+
+  const AlignmentProblem problem;
+  const Optimizer<AlignmentProblem, ArgumentType> optimizer(problem, max_iter);
+
+  const OptimizationResult result = optimizer.Run(
+    std::make_tuple(X, Y), Eigen::Isometry3d::Identity());
+
+  EXPECT_EQ(result.iteration, max_iter);
+  EXPECT_FALSE(result.success);
+  EXPECT_THAT(result.error, testing::Gt(10.0));
+  EXPECT_THAT(result.error_scale, testing::Gt(10.0));
 }
 
 TEST(Optimizer, MakeM)

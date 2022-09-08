@@ -89,8 +89,8 @@ private:
     const typename pcl::PointCloud<PointType>::Ptr & edge,
     const Eigen::Isometry3d & pose) const
   {
-    const Eigen::Isometry3d new_pose = optimizer_.Run(edge, pose);
-    return std::make_tuple(new_pose, true);
+    const OptimizationResult result = optimizer_.Run(edge, pose);
+    return std::make_tuple(result.pose, result.success);
   }
 
   const OptimizerType optimizer_;
