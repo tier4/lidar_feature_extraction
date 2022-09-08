@@ -54,7 +54,7 @@ class Localizer
 
 public:
   explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : problem_(edge_map),
+  : optimizer_(Edge<PointToVector>(edge_map)),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
   {
@@ -89,12 +89,11 @@ private:
     const typename pcl::PointCloud<PointType>::Ptr & edge,
     const Eigen::Isometry3d & pose) const
   {
-    const OptimizerType optimizer(problem_);
-    const Eigen::Isometry3d new_pose = optimizer.Run(edge, pose);
+    const Eigen::Isometry3d new_pose = optimizer_.Run(edge, pose);
     return std::make_tuple(new_pose, true);
   }
 
-  const Edge<PointToVector> problem_;
+  const OptimizerType optimizer_;
 
   bool is_initialized_;
   Eigen::Isometry3d pose_;
