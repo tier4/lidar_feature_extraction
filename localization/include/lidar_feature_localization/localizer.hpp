@@ -68,10 +68,10 @@ public:
 
   bool Update(const typename pcl::PointCloud<PointType>::Ptr & edge_scan)
   {
-    const auto [pose, success] = this->Update(edge_scan, pose_);
+    const OptimizationResult result = optimizer_.Run(edge_scan, pose_);
 
-    pose_ = pose;
-    return success;
+    pose_ = result.pose;
+    return result.success;
   }
 
   Eigen::Isometry3d Get() const
@@ -85,14 +85,6 @@ public:
   }
 
 private:
-  std::tuple<Eigen::Isometry3d, bool> Update(
-    const typename pcl::PointCloud<PointType>::Ptr & edge,
-    const Eigen::Isometry3d & pose) const
-  {
-    const OptimizationResult result = optimizer_.Run(edge, pose);
-    return std::make_tuple(result.pose, result.success);
-  }
-
   const OptimizerType optimizer_;
 
   bool is_initialized_;
