@@ -334,12 +334,13 @@ void EKFLocalizer::timerCallback()
     }
 
     const Eigen::Vector3d y = PoseMeasurementVector(pose->pose.pose);
-    const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
-    const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
 
     if (!CheckMeasurementMatrixNanInf(warning_, y)) {
       continue;
     }
+
+    const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
+    const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
 
     if (!CheckMahalanobisGate(warning_, pose_gate_dist_, y_ekf, y, P_y)) {
       continue;
@@ -369,12 +370,13 @@ void EKFLocalizer::timerCallback()
     }
 
     const Eigen::Vector2d y = TwistMeasurementVector(twist->twist.twist);
-    const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
-    const Eigen::Matrix2d P_y = TwistCovariance(ekf_);
 
     if (!CheckMeasurementMatrixNanInf(warning_, y)) {
       continue;
     }
+
+    const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
+    const Eigen::Matrix2d P_y = TwistCovariance(ekf_);
 
     if (!CheckMahalanobisGate(warning_, twist_gate_dist_, y_ekf, y, P_y)) {
       continue;
@@ -405,14 +407,11 @@ void EKFLocalizer::timerCallback()
   const Eigen::Vector3d angular(0, 0, wz);
 
   tf_br_->sendTransform(
-    MakeTransformStamped(
-      unbiased_pose,
-      this->now(), pose_frame_id_, "base_link"));
+    MakeTransformStamped(unbiased_pose, this->now(), pose_frame_id_, "base_link"));
 
   /* publish ekf result */
   publishEstimateResult(
-    ekf_->getLatestP(), this->now(), pose_frame_id_,
-    unbiased_pose, linear, angular, pub_odom_);
+    ekf_->getLatestP(), this->now(), pose_frame_id_, unbiased_pose, linear, angular, pub_odom_);
 }
 
 /*
