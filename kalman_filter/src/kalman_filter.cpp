@@ -14,6 +14,9 @@
 
 #include "kalman_filter/kalman_filter.hpp"
 
+#include "kalman_filter/matrix_size.hpp"
+
+
 KalmanFilter::KalmanFilter() {}
 KalmanFilter::KalmanFilter(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
@@ -29,12 +32,12 @@ bool KalmanFilter::init(
   const Eigen::MatrixXd & P)
 {
   if (
-    x.cols() == 0 || x.rows() == 0 || A.cols() == 0 || A.rows() == 0 || B.cols() == 0 ||
-    B.rows() == 0 || C.cols() == 0 || C.rows() == 0 || Q.cols() == 0 || Q.rows() == 0 ||
-    R.cols() == 0 || R.rows() == 0 || P.cols() == 0 || P.rows() == 0)
+    hasZeroElements(x) || hasZeroElements(A) || hasZeroElements(B) || hasZeroElements(C) ||
+    hasZeroElements(Q) || hasZeroElements(R) || hasZeroElements(P))
   {
     return false;
   }
+
   x_ = x;
   A_ = A;
   B_ = B;
