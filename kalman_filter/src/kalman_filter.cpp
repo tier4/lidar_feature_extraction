@@ -54,11 +54,6 @@ bool KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
   return true;
 }
 
-void KalmanFilter::setA(const Eigen::MatrixXd & A) {A_ = A;}
-void KalmanFilter::setB(const Eigen::MatrixXd & B) {B_ = B;}
-void KalmanFilter::setC(const Eigen::MatrixXd & C) {C_ = C;}
-void KalmanFilter::setQ(const Eigen::MatrixXd & Q) {Q_ = Q;}
-void KalmanFilter::setR(const Eigen::MatrixXd & R) {R_ = R;}
 void KalmanFilter::getX(Eigen::MatrixXd & x) {x = x_;}
 void KalmanFilter::getP(Eigen::MatrixXd & P) {P = P_;}
 double KalmanFilter::getXelement(unsigned int i) const {return x_(i);}
