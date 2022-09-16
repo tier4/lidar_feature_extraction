@@ -26,3 +26,13 @@ TEST(HasZeroElements, SmokeTest)
   EXPECT_FALSE(hasZeroElements(Eigen::MatrixXd(1, 1)));
   EXPECT_FALSE(hasZeroElements(Eigen::MatrixXd(1, 2)));
 }
+
+TEST(CanTakeProduct, SmokeTest)
+{
+  EXPECT_TRUE(canTakeProduct(Eigen::MatrixXd(0, 0)));
+  EXPECT_TRUE(canTakeProduct(Eigen::MatrixXd(0, 1)));
+  EXPECT_TRUE(canTakeProduct(Eigen::MatrixXd(1, 0)));
+
+  EXPECT_FALSE(canTakeProduct(Eigen::MatrixXd(1, 1)));
+  EXPECT_FALSE(canTakeProduct(Eigen::MatrixXd(1, 2)));
+}
