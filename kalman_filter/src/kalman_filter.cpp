@@ -91,6 +91,13 @@ void KalmanFilter::predict(
 
 void KalmanFilter::predict(const Eigen::MatrixXd & u) {return predict(u, A_, B_, Q_);}
 
+inline Eigen::MatrixXd calcKalmanGain(
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
+{
+  const Eigen::MatrixXd PCT = P * C.transpose();
+  return PCT * ((R + C * PCT).inverse());
+}
+
 void KalmanFilter::update(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & y_pred, const Eigen::MatrixXd & C,
   const Eigen::MatrixXd & R)
@@ -101,8 +108,7 @@ void KalmanFilter::update(
   assert(y.rows() == y_pred.rows());
   assert(y.rows() == C.rows());
 
-  const Eigen::MatrixXd PCT = P_ * C.transpose();
-  const Eigen::MatrixXd K = PCT * ((R + C * PCT).inverse());
+  const Eigen::MatrixXd K = calcKalmanGain(P_, C, R);
 
   if (HasNan(K) || HasInf(K)) {
     throw std::invalid_argument("K has invalid value");
