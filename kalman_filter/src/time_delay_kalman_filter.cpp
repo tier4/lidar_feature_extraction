@@ -16,18 +16,35 @@
 
 #include "lidar_feature_library/numeric.hpp"
 
+Eigen::MatrixXd initX(const Eigen::MatrixXd & x0, const int n)
+{
+  const int d = x0.rows();
+
+  Eigen::MatrixXd x(n * d, 1);
+  for (int i = 0; i < n; ++i) {
+    x.block(i * d, 0, d, 1) = x0;
+  }
+  return x;
+}
+
+Eigen::MatrixXd initP(const Eigen::MatrixXd & P0, const int n)
+{
+  assert(P0.rows() == P0.cols());
+  const int d = P0.rows();
+
+  Eigen::MatrixXd P = Eigen::MatrixXd::Zero(n * d, n * d);
+  for (int i = 0; i < n; ++i) {
+    P.block(i * d, i * d, d, d) = P0;
+  }
+  return P;
+}
 
 TimeDelayKalmanFilter::TimeDelayKalmanFilter(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0, const int max_delay_step)
-: max_delay_step_(max_delay_step), dim_x_(x.rows()), dim_x_ex_(dim_x_ * max_delay_step)
+: x_(initX(x, max_delay_step)), P_(initP(P0, max_delay_step)),
+  max_delay_step_(max_delay_step), dim_x_(x.rows()), dim_x_ex_(dim_x_ * max_delay_step)
 {
-  x_ = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
-  P_ = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
-
-  for (int i = 0; i < max_delay_step_; ++i) {
-    x_.block(i * dim_x_, 0, dim_x_, 1) = x;
-    P_.block(i * dim_x_, i * dim_x_, dim_x_, dim_x_) = P0;
-  }
+  assert(x.size() == P0.rows());
 }
 
 Eigen::MatrixXd TimeDelayKalmanFilter::getLatestX() const

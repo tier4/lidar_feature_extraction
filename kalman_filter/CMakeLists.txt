@@ -43,7 +43,9 @@ if(BUILD_TESTING)
   find_package(ament_cmake_uncrustify)
   ament_uncrustify(${FILES_TO_CHECK})
 
-  set(TEST_FILES test/test_matrix_size.cpp)
+  set(TEST_FILES
+    test/test_matrix_size.cpp
+    test/test_time_delay_kalman_filter.cpp)
 
   foreach(filepath ${TEST_FILES})
     add_testcase(${filepath})

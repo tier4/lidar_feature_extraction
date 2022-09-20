@@ -30,6 +30,9 @@
  * @date 2019.05.01
  */
 
+Eigen::MatrixXd initX(const Eigen::MatrixXd & x0, const int n);
+Eigen::MatrixXd initP(const Eigen::MatrixXd & P0, const int n);
+
 class TimeDelayKalmanFilter
 {
 public:
