@@ -16,6 +16,8 @@
 
 #include "kalman_filter/matrix_size.hpp"
 
+#include <cassert>
+
 
 KalmanFilter::KalmanFilter() {}
 KalmanFilter::KalmanFilter(
@@ -25,18 +27,20 @@ KalmanFilter::KalmanFilter(
 {
   init(x, A, B, C, Q, R, P);
 }
+
 KalmanFilter::~KalmanFilter() {}
 bool KalmanFilter::init(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & C, const Eigen::MatrixXd & Q, const Eigen::MatrixXd & R,
   const Eigen::MatrixXd & P)
 {
-  if (
-    hasZeroElements(x) || hasZeroElements(A) || hasZeroElements(B) || hasZeroElements(C) ||
-    hasZeroElements(Q) || hasZeroElements(R) || hasZeroElements(P))
-  {
-    return false;
-  }
+  assert(!hasZeroElements(x));
+  assert(!hasZeroElements(A));
+  assert(!hasZeroElements(B));
+  assert(!hasZeroElements(C));
+  assert(!hasZeroElements(Q));
+  assert(!hasZeroElements(R));
+  assert(!hasZeroElements(P));
 
   x_ = x;
   A_ = A;
@@ -49,9 +53,8 @@ bool KalmanFilter::init(
 }
 bool KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
 {
-  if (x.cols() == 0 || x.rows() == 0 || P0.cols() == 0 || P0.rows() == 0) {
-    return false;
-  }
+  assert(!hasZeroElements(x));
+  assert(!hasZeroElements(P0));
   x_ = x;
   P_ = P0;
   return true;
@@ -64,12 +67,11 @@ double KalmanFilter::getXelement(unsigned int i) const {return x_(i);}
 bool KalmanFilter::predict(
   const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
-  if (
-    x_.rows() != x_next.rows() || A.cols() != P_.rows() || Q.cols() != Q.rows() ||
-    A.rows() != Q.cols())
-  {
-    return false;
-  }
+  assert(x_.rows() == x_next.rows());
+  assert(A.cols() == P_.rows());
+  assert(Q.cols() == Q.rows());
+  assert(A.rows() == Q.cols());
+
   x_ = x_next;
   P_ = A * P_ * A.transpose() + Q;
   return true;
@@ -83,9 +85,8 @@ bool KalmanFilter::predict(
   const Eigen::MatrixXd & u, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & Q)
 {
-  if (A.cols() != x_.rows() || B.cols() != u.rows()) {
-    return false;
-  }
+  assert(A.cols() == x_.rows());
+  assert(B.cols() == u.rows());
   const Eigen::MatrixXd x_next = A * x_ + B * u;
   return predict(x_next, A, Q);
 }
@@ -95,12 +96,11 @@ bool KalmanFilter::update(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & y_pred, const Eigen::MatrixXd & C,
   const Eigen::MatrixXd & R)
 {
-  if (
-    P_.cols() != C.cols() || R.rows() != R.cols() || R.rows() != C.rows() ||
-    y.rows() != y_pred.rows() || y.rows() != C.rows())
-  {
-    return false;
-  }
+  assert(P_.cols() == C.cols());
+  assert(R.rows() == R.cols());
+  assert(R.rows() == C.rows());
+  assert(y.rows() == y_pred.rows());
+  assert(y.rows() == C.rows());
   const Eigen::MatrixXd PCT = P_ * C.transpose();
   const Eigen::MatrixXd K = PCT * ((R + C * PCT).inverse());
 
@@ -117,9 +117,7 @@ bool KalmanFilter::update(
 bool KalmanFilter::update(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
 {
-  if (C.cols() != x_.rows()) {
-    return false;
-  }
+  assert(C.cols() == x_.rows());
   const Eigen::MatrixXd y_pred = C * x_;
   return update(y, y_pred, C, R);
 }
