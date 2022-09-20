@@ -74,11 +74,6 @@ void KalmanFilter::predict(
   P_ = A * P_ * A.transpose() + Q;
 }
 
-void KalmanFilter::predict(const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A)
-{
-  return predict(x_next, A, Q_);
-}
-
 void KalmanFilter::predict(
   const Eigen::MatrixXd & u, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & Q)
