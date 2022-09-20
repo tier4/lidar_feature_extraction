@@ -32,7 +32,6 @@
 #include "ekf_localizer/check.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/measurement.hpp"
-#include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/state_transition.hpp"
 #include "ekf_localizer/string.hpp"
 #include "ekf_localizer/tf.hpp"

@@ -29,7 +29,6 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include "ekf_localizer/ekf_localizer.hpp"
-#include "ekf_localizer/numeric.hpp"
 
 
 using std::placeholders::_1;
@@ -201,20 +200,4 @@ TEST_F(EKFLocalizerTestSuite, measurementUpdateTwist)
   ekf_vx = ekf->test_current_odom_ptr_->twist.twist.linear.x;
   ASSERT_FALSE(std::isnan(ekf_vx));
   ASSERT_FALSE(std::isinf(ekf_vx));
-}
-
-TEST(Numeric, HasNan)
-{
-  const double nan = std::nan("");
-  EXPECT_TRUE(HasNan(Eigen::Vector3d(0, nan, nan)));
-  EXPECT_TRUE(HasNan(Eigen::Vector3d(nan, 0, 0)));
-  EXPECT_FALSE(HasNan(Eigen::Vector3d(0, 0, 0)));
-}
-
-TEST(Numeric, HasInf)
-{
-  const double inf = std::numeric_limits<double>::infinity();
-  EXPECT_TRUE(HasInf(Eigen::Vector3d(0, inf, inf)));
-  EXPECT_TRUE(HasInf(Eigen::Vector3d(inf, 0, 0)));
-  EXPECT_FALSE(HasInf(Eigen::Vector3d(0, 0, 0)));
 }

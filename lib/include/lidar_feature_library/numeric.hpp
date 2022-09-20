@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EKF_LOCALIZER__NUMERIC_HPP_
-#define EKF_LOCALIZER__NUMERIC_HPP_
+#ifndef LIDAR_FEATURE_LIBRARY__NUMERIC_HPP_
+#define LIDAR_FEATURE_LIBRARY__NUMERIC_HPP_
 
 #include <Eigen/Core>
 
@@ -29,4 +29,4 @@ inline bool HasNan(const Eigen::MatrixXd & v)
   return v.array().isNaN().any();
 }
 
-#endif  // EKF_LOCALIZER__NUMERIC_HPP_
+#endif  // LIDAR_FEATURE_LIBRARY__NUMERIC_HPP_

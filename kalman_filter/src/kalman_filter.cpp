@@ -14,9 +14,11 @@
 
 #include "kalman_filter/kalman_filter.hpp"
 
+#include <cassert>
+
 #include "kalman_filter/matrix_size.hpp"
 
-#include <cassert>
+#include "lidar_feature_library/numeric.hpp"
 
 
 KalmanFilter::KalmanFilter() {}
@@ -104,7 +106,7 @@ bool KalmanFilter::update(
   const Eigen::MatrixXd PCT = P_ * C.transpose();
   const Eigen::MatrixXd K = PCT * ((R + C * PCT).inverse());
 
-  if (isnan(K.array()).any() || isinf(K.array()).any()) {
+  if (HasNan(K.array()) || HasInf(K.array())) {
     return false;
   }
 
