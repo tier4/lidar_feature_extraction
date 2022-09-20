@@ -40,7 +40,8 @@ public:
    * @param max_delay_step Maximum number of delay steps, which determines the dimension of the
    * extended kalman filter
    */
-  TimeDelayKalmanFilter(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P, const int max_delay_step);
+  TimeDelayKalmanFilter(
+    const Eigen::MatrixXd & x, const Eigen::MatrixXd & P, const int max_delay_step);
 
   /**
    * @brief get latest time estimated state
