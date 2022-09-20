@@ -22,9 +22,4 @@ inline bool hasZeroElements(const Eigen::MatrixXd & M)
   return M.size() == 0;
 }
 
-bool canTakeProduct(const Eigen::MatrixXd & A, const Eigen::MatrixXd & B)
-{
-  return A.cols() == B.rows();
-}
-
 #endif  // KALMAN_FILTER__MATRIX_SIZE_HPP_
