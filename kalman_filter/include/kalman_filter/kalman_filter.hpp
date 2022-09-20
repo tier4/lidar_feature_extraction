@@ -69,7 +69,7 @@ public:
   /**
    * @brief No initialization constructor.
    */
-  KalmanFilter();
+  KalmanFilter() = delete;
 
   /**
    * @brief constructor with initialization
@@ -200,18 +200,6 @@ public:
   void predict(const Eigen::MatrixXd & u);
 
   /**
-   * @brief calculate kalman filter state by measurement model with y_pred, C and R matrix. This is
-   * mainly for EKF with variable matrix.
-   * @param y measured values
-   * @param y output values expected from measurement model
-   * @param C coefficient matrix of x for measurement model
-   * @param R covariance matrix for measurement model
-   */
-  void update(
-    const Eigen::MatrixXd & y, const Eigen::MatrixXd & y_pred, const Eigen::MatrixXd & C,
-    const Eigen::MatrixXd & R);
-
-  /**
    * @brief calculate kalman filter state by measurement model with C and R matrix. This is mainly
    * for EKF with variable matrix.
    * @param y measured values
@@ -229,13 +217,11 @@ public:
 
 protected:
   Eigen::MatrixXd x_;  //!< @brief current estimated state
-  Eigen::MatrixXd
-    A_;  //!< @brief coefficient matrix of x for process model x[k+1] = A*x[k] + B*u[k]
-  Eigen::MatrixXd
-    B_;  //!< @brief coefficient matrix of u for process model x[k+1] = A*x[k] + B*u[k]
-  Eigen::MatrixXd C_;  //!< @brief coefficient matrix of x for measurement model y[k] = C * x[k]
-  Eigen::MatrixXd Q_;  //!< @brief covariance matrix for process model x[k+1] = A*x[k] + B*u[k]
-  Eigen::MatrixXd R_;  //!< @brief covariance matrix for measurement model y[k] = C * x[k]
   Eigen::MatrixXd P_;  //!< @brief covariance of estimated state
+  const Eigen::MatrixXd A_;  //!< @brief process model x[k+1] = A*x[k] + B*u[k]
+  const Eigen::MatrixXd B_;  //!< @brief process model x[k+1] = A*x[k] + B*u[k]
+  const Eigen::MatrixXd C_;  //!< @brief measurement model y[k] = C * x[k]
+  const Eigen::MatrixXd Q_;  //!< @brief covariance for process model x[k+1] = A*x[k] + B*u[k]
+  const Eigen::MatrixXd R_;  //!< @brief covariance for measurement model y[k] = C * x[k]
 };
 #endif  // KALMAN_FILTER__KALMAN_FILTER_HPP_

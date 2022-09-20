@@ -21,36 +21,19 @@
 #include "lidar_feature_library/numeric.hpp"
 
 
-KalmanFilter::KalmanFilter() {}
 KalmanFilter::KalmanFilter(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & C, const Eigen::MatrixXd & Q, const Eigen::MatrixXd & R,
   const Eigen::MatrixXd & P)
-{
-  init(x, A, B, C, Q, R, P);
-}
-
-KalmanFilter::~KalmanFilter() {}
-void KalmanFilter::init(
-  const Eigen::MatrixXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
-  const Eigen::MatrixXd & C, const Eigen::MatrixXd & Q, const Eigen::MatrixXd & R,
-  const Eigen::MatrixXd & P)
+: x_(x), P_(P), A_(A), B_(B), C_(C), Q_(Q), R_(R)
 {
   assert(!hasZeroElements(x));
+  assert(!hasZeroElements(P));
   assert(!hasZeroElements(A));
   assert(!hasZeroElements(B));
   assert(!hasZeroElements(C));
   assert(!hasZeroElements(Q));
   assert(!hasZeroElements(R));
-  assert(!hasZeroElements(P));
-
-  x_ = x;
-  A_ = A;
-  B_ = B;
-  C_ = C;
-  Q_ = Q;
-  R_ = R;
-  P_ = P;
 }
 
 void KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
@@ -79,23 +62,14 @@ void KalmanFilter::predict(
 
 void KalmanFilter::predict(const Eigen::MatrixXd & u) {return predict(u, A_, B_, Q_);}
 
-void KalmanFilter::update(
-  const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
+void KalmanFilter::update(const Eigen::MatrixXd & y)
 {
-  assert(P_.cols() == C.cols());
-  assert(R.rows() == R.cols());
-  assert(R.rows() == C.rows());
-  assert(y.rows() == C.rows());
-  assert(C.cols() == x_.rows());
-
-  const Eigen::MatrixXd K = calcKalmanGain(P_, C, R);
+  const Eigen::MatrixXd K = calcKalmanGain(P_, C_, R_);
 
   if (HasNan(K) || HasInf(K)) {
     throw std::invalid_argument("K has invalid value");
   }
 
-  x_ = updateState(x_, y, C, K);
-  P_ = updateCovariance(P_, C, K);
+  x_ = updateState(x_, y, C_, K);
+  P_ = updateCovariance(P_, C_, K);
 }
-
-void KalmanFilter::update(const Eigen::MatrixXd & y) {update(y, C_, R_);}

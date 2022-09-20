@@ -14,6 +14,9 @@
 
 #include "kalman_filter/time_delay_kalman_filter.hpp"
 
+#include "lidar_feature_library/numeric.hpp"
+
+
 TimeDelayKalmanFilter::TimeDelayKalmanFilter(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0, const int max_delay_step)
 : max_delay_step_(max_delay_step), dim_x_(x.rows()), dim_x_ex_(dim_x_ * max_delay_step)
@@ -93,11 +96,14 @@ bool TimeDelayKalmanFilter::updateWithDelay(
   Eigen::MatrixXd C_ex = Eigen::MatrixXd::Zero(dim_y, dim_x_ex_);
   C_ex.block(0, dim_x_ * delay_step, dim_y, dim_x_) = C;
 
-  try {
-    update(y, C_ex, R);
-  } catch (const std::invalid_argument & e) {
+  const Eigen::MatrixXd K = calcKalmanGain(P_, C_ex, R);
+
+  if (HasNan(K) || HasInf(K)) {
     return false;
   }
+
+  x_ = updateState(x_, y, C_ex, K);
+  P_ = updateCovariance(P_, C_ex, K);
 
   return true;
 }

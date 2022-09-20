@@ -30,7 +30,7 @@
  * @date 2019.05.01
  */
 
-class TimeDelayKalmanFilter : public KalmanFilter
+class TimeDelayKalmanFilter
 {
 public:
   /**
@@ -85,6 +85,8 @@ public:
     const int delay_step);
 
 private:
+  Eigen::MatrixXd x_;  //!< @brief current estimated state
+  Eigen::MatrixXd P_;  //!< @brief covariance of the estimated state
   const int max_delay_step_;  //!< @brief maximum number of delay steps
   const int dim_x_;           //!< @brief dimension of latest state
   const int dim_x_ex_;        //!< @brief dimension of extended state with dime delay
