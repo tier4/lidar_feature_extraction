@@ -62,8 +62,6 @@ bool KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
   return true;
 }
 
-void KalmanFilter::getX(Eigen::MatrixXd & x) {x = x_;}
-void KalmanFilter::getP(Eigen::MatrixXd & P) {P = P_;}
 double KalmanFilter::getXelement(unsigned int i) const {return x_(i);}
 
 bool KalmanFilter::predict(
