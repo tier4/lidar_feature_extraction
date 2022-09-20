@@ -25,6 +25,44 @@
  * @date 2019.05.01
  */
 
+inline Eigen::MatrixXd predictNextState(
+  const Eigen::MatrixXd & x,
+  const Eigen::MatrixXd & u,
+  const Eigen::MatrixXd & A,
+  const Eigen::MatrixXd & B)
+{
+  return A * x + B * u;
+}
+
+inline Eigen::MatrixXd predictNextCovariance(
+  const Eigen::MatrixXd & P,
+  const Eigen::MatrixXd & A,
+  const Eigen::MatrixXd & Q)
+{
+  return A * P * A.transpose() + Q;
+}
+
+inline Eigen::MatrixXd calcKalmanGain(
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
+{
+  const Eigen::MatrixXd PCT = P * C.transpose();
+  return PCT * ((R + C * PCT).inverse());
+}
+
+inline Eigen::MatrixXd updateState(
+  const Eigen::MatrixXd & x, const Eigen::MatrixXd & y,
+  const Eigen::MatrixXd & C, const Eigen::MatrixXd & K)
+{
+  return x + K * (y - C * x);
+}
+
+inline Eigen::MatrixXd updateCovariance(
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & C, const Eigen::MatrixXd & K)
+{
+  return P - K * C * P;
+}
+
+
 class KalmanFilter
 {
 public:

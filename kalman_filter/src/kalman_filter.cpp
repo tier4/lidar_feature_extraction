@@ -52,6 +52,7 @@ void KalmanFilter::init(
   R_ = R;
   P_ = P;
 }
+
 void KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
 {
   assert(!hasZeroElements(x));
@@ -63,45 +64,29 @@ void KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
 double KalmanFilter::getXelement(unsigned int i) const {return x_(i);}
 
 void KalmanFilter::predict(
-  const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
-{
-  assert(x_.rows() == x_next.rows());
-  assert(A.cols() == P_.rows());
-  assert(Q.cols() == Q.rows());
-  assert(A.rows() == Q.cols());
-
-  x_ = x_next;
-  P_ = A * P_ * A.transpose() + Q;
-}
-
-void KalmanFilter::predict(
   const Eigen::MatrixXd & u, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & Q)
 {
   assert(A.cols() == x_.rows());
   assert(B.cols() == u.rows());
-  const Eigen::MatrixXd x_next = A * x_ + B * u;
-  return predict(x_next, A, Q);
+  assert(A.cols() == P_.rows());
+  assert(Q.cols() == Q.rows());
+  assert(A.rows() == Q.cols());
+
+  x_ = predictNextState(x_, u, A, B);
+  P_ = predictNextCovariance(P_, A, Q);
 }
 
 void KalmanFilter::predict(const Eigen::MatrixXd & u) {return predict(u, A_, B_, Q_);}
 
-inline Eigen::MatrixXd calcKalmanGain(
-  const Eigen::MatrixXd & P, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
-{
-  const Eigen::MatrixXd PCT = P * C.transpose();
-  return PCT * ((R + C * PCT).inverse());
-}
-
 void KalmanFilter::update(
-  const Eigen::MatrixXd & y, const Eigen::MatrixXd & y_pred, const Eigen::MatrixXd & C,
-  const Eigen::MatrixXd & R)
+  const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
 {
   assert(P_.cols() == C.cols());
   assert(R.rows() == R.cols());
   assert(R.rows() == C.rows());
-  assert(y.rows() == y_pred.rows());
   assert(y.rows() == C.rows());
+  assert(C.cols() == x_.rows());
 
   const Eigen::MatrixXd K = calcKalmanGain(P_, C, R);
 
@@ -109,17 +94,8 @@ void KalmanFilter::update(
     throw std::invalid_argument("K has invalid value");
   }
 
-  x_ = x_ + K * (y - y_pred);
-  P_ = P_ - K * C * P_;
-}
-
-// x <- x + K * (y - C * x)
-void KalmanFilter::update(
-  const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
-{
-  assert(C.cols() == x_.rows());
-  const Eigen::MatrixXd y_pred = C * x_;
-  update(y, y_pred, C, R);
+  x_ = updateState(x_, y, C, K);
+  P_ = updateCovariance(P_, C, K);
 }
 
 void KalmanFilter::update(const Eigen::MatrixXd & y) {update(y, C_, R_);}
