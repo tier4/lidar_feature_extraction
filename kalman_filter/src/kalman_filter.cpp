@@ -31,7 +31,7 @@ KalmanFilter::KalmanFilter(
 }
 
 KalmanFilter::~KalmanFilter() {}
-bool KalmanFilter::init(
+void KalmanFilter::init(
   const Eigen::MatrixXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & C, const Eigen::MatrixXd & Q, const Eigen::MatrixXd & R,
   const Eigen::MatrixXd & P)
@@ -51,20 +51,18 @@ bool KalmanFilter::init(
   Q_ = Q;
   R_ = R;
   P_ = P;
-  return true;
 }
-bool KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
+void KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
 {
   assert(!hasZeroElements(x));
   assert(!hasZeroElements(P0));
   x_ = x;
   P_ = P0;
-  return true;
 }
 
 double KalmanFilter::getXelement(unsigned int i) const {return x_(i);}
 
-bool KalmanFilter::predict(
+void KalmanFilter::predict(
   const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
   assert(x_.rows() == x_next.rows());
@@ -74,14 +72,14 @@ bool KalmanFilter::predict(
 
   x_ = x_next;
   P_ = A * P_ * A.transpose() + Q;
-  return true;
 }
-bool KalmanFilter::predict(const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A)
+
+void KalmanFilter::predict(const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A)
 {
   return predict(x_next, A, Q_);
 }
 
-bool KalmanFilter::predict(
+void KalmanFilter::predict(
   const Eigen::MatrixXd & u, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & Q)
 {
@@ -90,9 +88,10 @@ bool KalmanFilter::predict(
   const Eigen::MatrixXd x_next = A * x_ + B * u;
   return predict(x_next, A, Q);
 }
-bool KalmanFilter::predict(const Eigen::MatrixXd & u) {return predict(u, A_, B_, Q_);}
 
-bool KalmanFilter::update(
+void KalmanFilter::predict(const Eigen::MatrixXd & u) {return predict(u, A_, B_, Q_);}
+
+void KalmanFilter::update(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & y_pred, const Eigen::MatrixXd & C,
   const Eigen::MatrixXd & R)
 {
@@ -101,24 +100,25 @@ bool KalmanFilter::update(
   assert(R.rows() == C.rows());
   assert(y.rows() == y_pred.rows());
   assert(y.rows() == C.rows());
+
   const Eigen::MatrixXd PCT = P_ * C.transpose();
   const Eigen::MatrixXd K = PCT * ((R + C * PCT).inverse());
 
-  if (HasNan(K.array()) || HasInf(K.array())) {
-    return false;
+  if (HasNan(K) || HasInf(K)) {
+    throw std::invalid_argument("K has invalid value");
   }
 
   x_ = x_ + K * (y - y_pred);
-  P_ = P_ - K * (C * P_);
-  return true;
+  P_ = P_ - K * C * P_;
 }
 
 // x <- x + K * (y - C * x)
-bool KalmanFilter::update(
+void KalmanFilter::update(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R)
 {
   assert(C.cols() == x_.rows());
   const Eigen::MatrixXd y_pred = C * x_;
-  return update(y, y_pred, C, R);
+  update(y, y_pred, C, R);
 }
-bool KalmanFilter::update(const Eigen::MatrixXd & y) {return update(y, C_, R_);}
+
+void KalmanFilter::update(const Eigen::MatrixXd & y) {update(y, C_, R_);}
