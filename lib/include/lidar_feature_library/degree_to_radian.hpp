@@ -31,7 +31,7 @@
 
 #include <math.h>
 
-double DegreeToRadian(const double degree)
+inline double DegreeToRadian(const double degree)
 {
   return degree * M_PI / 180.0;
 }
