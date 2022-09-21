@@ -26,15 +26,42 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_LIBRARY__STATS_HPP_
-#define LIDAR_FEATURE_LIBRARY__STATS_HPP_
+#include "lidar_feature_library/stats.hpp"
 
-#include <Eigen/Core>
-
-#include <exception>
 #include <vector>
 
-double Median(const Eigen::VectorXd & m);
-double Median(const Eigen::ArrayXd & m);
+// private method, because the argument will be modified
+double Median_(std::vector<double> & v)
+{
+  if (v.size() == 0) {
+    throw std::invalid_argument("Empty array is passed to the median function");
+  }
 
-#endif  // LIDAR_FEATURE_LIBRARY__STATS_HPP_
+  if (v.size() % 2 == 1) {
+    const int n = (v.size() - 1) / 2;
+    std::nth_element(v.begin(), v.begin() + n, v.end());
+    return v[n];
+  }
+
+  const int n = v.size() / 2;
+
+  std::nth_element(v.begin(), v.begin() + n - 0, v.end());
+  const double e0 = v[n - 0];
+
+  std::nth_element(v.begin(), v.begin() + n - 1, v.end());
+  const double e1 = v[n - 1];
+
+  return (e0 + e1) / 2.;
+}
+
+double Median(const Eigen::VectorXd & m)
+{
+  std::vector<double> v(m.begin(), m.end());
+  return Median_(v);
+}
+
+double Median(const Eigen::ArrayXd & m)
+{
+  std::vector<double> v(m.begin(), m.end());
+  return Median_(v);
+}

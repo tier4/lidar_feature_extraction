@@ -21,7 +21,8 @@ set(SOURCE_FILES
   src/eigen.cpp
   src/pcl_utils.cpp
   src/ros_msg.cpp
-  src/random.cpp)
+  src/random.cpp
+  src/stats.cpp)
 
 ament_auto_add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
