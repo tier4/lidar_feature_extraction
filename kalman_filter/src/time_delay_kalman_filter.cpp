@@ -57,29 +57,30 @@ Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
   return P_.block(0, 0, dim_x_, dim_x_);
 }
 
-Eigen::MatrixXd updateX(
-  const Eigen::MatrixXd & x_, const Eigen::MatrixXd & x_next,
-  const int dim_x_ex_, const int dim_x_)
+Eigen::MatrixXd updateX(const Eigen::MatrixXd & x_, const Eigen::MatrixXd & x_next)
 {
-  const int d_dim_x = dim_x_ex_ - dim_x_;
+  const int a = x_.size();
+  const int b = x_next.size();
+  const int c = a - b;
 
-  Eigen::MatrixXd x_tmp = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
-  x_tmp.block(0, 0, dim_x_, 1) = x_next;
-  x_tmp.block(dim_x_, 0, d_dim_x, 1) = x_.block(0, 0, d_dim_x, 1);
-  return x_tmp;
+  Eigen::MatrixXd updated(a, 1);
+  updated.block(0, 0, b, 1) = x_next;
+  updated.block(b, 0, c, 1) = x_.block(0, 0, c, 1);
+  return updated;
 }
 
 Eigen::MatrixXd updateP(
-  const Eigen::MatrixXd & P_, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q,
-  const int dim_x_ex_, const int dim_x_)
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
-  const int d_dim_x = dim_x_ex_ - dim_x_;
+  const int a = P.rows();
+  const int b = A.rows();
+  const int c = a - b;
 
-  Eigen::MatrixXd updated = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
-  updated.block(0, 0, dim_x_, dim_x_) = A * P_.block(0, 0, dim_x_, dim_x_) * A.transpose() + Q;
-  updated.block(0, dim_x_, dim_x_, d_dim_x) = A * P_.block(0, 0, dim_x_, d_dim_x);
-  updated.block(dim_x_, 0, d_dim_x, dim_x_) = P_.block(0, 0, d_dim_x, dim_x_) * A.transpose();
-  updated.block(dim_x_, dim_x_, d_dim_x, d_dim_x) = P_.block(0, 0, d_dim_x, d_dim_x);
+  Eigen::MatrixXd updated(a, a);
+  updated.block(0, 0, b, b) = A * P.block(0, 0, b, b) * A.transpose() + Q;
+  updated.block(0, b, b, c) = A * P.block(0, 0, b, c);
+  updated.block(b, 0, c, b) = P.block(0, 0, c, b) * A.transpose();
+  updated.block(b, b, c, c) = P.block(0, 0, c, c);
   return updated;
 }
 
@@ -100,8 +101,13 @@ bool TimeDelayKalmanFilter::predictWithDelay(
    *     [     P21*A'    P21    P22]
    */
 
-  x_ = updateX(x_, x_next, dim_x_ex_, dim_x_);
-  P_ = updateP(P_, A, Q, dim_x_ex_, dim_x_);
+  assert(A.rows() == A.cols());
+  assert(Q.rows() == Q.cols());
+  assert(A.rows() == Q.rows());
+  assert(A.rows() == x_next.size());
+
+  x_ = updateX(x_, x_next);
+  P_ = updateP(P_, A, Q);
 
   return true;
 }
