@@ -76,11 +76,16 @@ Eigen::MatrixXd updateP(
   const int b = A.rows();
   const int c = a - b;
 
+  const Eigen::MatrixXd BB = P.block(0, 0, b, b);
+  const Eigen::MatrixXd BC = P.block(0, 0, b, c);
+  const Eigen::MatrixXd CB = P.block(0, 0, c, b);
+  const Eigen::MatrixXd CC = P.block(0, 0, c, c);
+
   Eigen::MatrixXd updated(a, a);
-  updated.block(0, 0, b, b) = A * P.block(0, 0, b, b) * A.transpose() + Q;
-  updated.block(0, b, b, c) = A * P.block(0, 0, b, c);
-  updated.block(b, 0, c, b) = P.block(0, 0, c, b) * A.transpose();
-  updated.block(b, b, c, c) = P.block(0, 0, c, c);
+  updated.block(0, 0, b, b) = A * BB * A.transpose() + Q;
+  updated.block(0, b, b, c) = A * BC;
+  updated.block(b, 0, c, b) = CB * A.transpose();
+  updated.block(b, b, c, c) = CC;
   return updated;
 }
 
