@@ -57,6 +57,20 @@ Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
   return P_.block(0, 0, dim_x_, dim_x_);
 }
 
+Eigen::MatrixXd updateP(
+  const Eigen::MatrixXd & P_, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q,
+  const int dim_x_ex_, const int dim_x_)
+{
+  const int d_dim_x = dim_x_ex_ - dim_x_;
+
+  Eigen::MatrixXd updated = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
+  updated.block(0, 0, dim_x_, dim_x_) = A * P_.block(0, 0, dim_x_, dim_x_) * A.transpose() + Q;
+  updated.block(0, dim_x_, dim_x_, d_dim_x) = A * P_.block(0, 0, dim_x_, d_dim_x);
+  updated.block(dim_x_, 0, d_dim_x, dim_x_) = P_.block(0, 0, d_dim_x, dim_x_) * A.transpose();
+  updated.block(dim_x_, dim_x_, d_dim_x, d_dim_x) = P_.block(0, 0, d_dim_x, d_dim_x);
+  return updated;
+}
+
 bool TimeDelayKalmanFilter::predictWithDelay(
   const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
@@ -82,13 +96,7 @@ bool TimeDelayKalmanFilter::predictWithDelay(
   x_tmp.block(dim_x_, 0, d_dim_x, 1) = x_.block(0, 0, d_dim_x, 1);
   x_ = x_tmp;
 
-  /* update P with delayed measurement A matrix structure */
-  Eigen::MatrixXd P_tmp = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
-  P_tmp.block(0, 0, dim_x_, dim_x_) = A * P_.block(0, 0, dim_x_, dim_x_) * A.transpose() + Q;
-  P_tmp.block(0, dim_x_, dim_x_, d_dim_x) = A * P_.block(0, 0, dim_x_, d_dim_x);
-  P_tmp.block(dim_x_, 0, d_dim_x, dim_x_) = P_.block(0, 0, d_dim_x, dim_x_) * A.transpose();
-  P_tmp.block(dim_x_, dim_x_, d_dim_x, d_dim_x) = P_.block(0, 0, d_dim_x, d_dim_x);
-  P_ = P_tmp;
+  P_ = updateP(P_, A, Q, dim_x_ex_, dim_x_);
 
   return true;
 }
