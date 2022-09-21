@@ -57,6 +57,18 @@ Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
   return P_.block(0, 0, dim_x_, dim_x_);
 }
 
+Eigen::MatrixXd updateX(
+  const Eigen::MatrixXd & x_, const Eigen::MatrixXd & x_next,
+  const int dim_x_ex_, const int dim_x_)
+{
+  const int d_dim_x = dim_x_ex_ - dim_x_;
+
+  Eigen::MatrixXd x_tmp = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
+  x_tmp.block(0, 0, dim_x_, 1) = x_next;
+  x_tmp.block(dim_x_, 0, d_dim_x, 1) = x_.block(0, 0, d_dim_x, 1);
+  return x_tmp;
+}
+
 Eigen::MatrixXd updateP(
   const Eigen::MatrixXd & P_, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q,
   const int dim_x_ex_, const int dim_x_)
@@ -88,14 +100,7 @@ bool TimeDelayKalmanFilter::predictWithDelay(
    *     [     P21*A'    P21    P22]
    */
 
-  const int d_dim_x = dim_x_ex_ - dim_x_;
-
-  /* slide states in the time direction */
-  Eigen::MatrixXd x_tmp = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
-  x_tmp.block(0, 0, dim_x_, 1) = x_next;
-  x_tmp.block(dim_x_, 0, d_dim_x, 1) = x_.block(0, 0, d_dim_x, 1);
-  x_ = x_tmp;
-
+  x_ = updateX(x_, x_next, dim_x_ex_, dim_x_);
   P_ = updateP(P_, A, Q, dim_x_ex_, dim_x_);
 
   return true;
