@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(kalman_filter)
 
+set(CMAKE_CXX_FLAGS "-g -O3 -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
+
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 

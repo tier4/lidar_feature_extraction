@@ -3,7 +3,7 @@ project(ekf_localizer)
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-pg -g -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS "-g -O3 -Wall -Wextra -Wpedantic -Werror -fprofile-arcs -ftest-coverage")
 
 find_package(ament_cmake_auto REQUIRED)
 find_package(Eigen3 REQUIRED)
