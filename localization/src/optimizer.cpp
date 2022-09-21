@@ -68,8 +68,7 @@ Vector6d WeightedUpdate(
     return Vector6d::Zero();  // corresponds to identity
   }
 
-
-  return -(M.transpose() * A * M).ldlt().solve(M.transpose() * b);
+  return -(M.transpose() * A * M).llt().solve(M.transpose() * b);
 }
 
 Eigen::Matrix<double, 7, 6> MakeM(const Eigen::Quaterniond & q)
