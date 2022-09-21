@@ -41,7 +41,7 @@ TEST(RandomizedUniqueIndices, SmokeTest)
 {
   std::srand(3939);
 
-  const size_t size = 40;
+  const size_t size = 100;
   const std::vector<size_t> indices = RandomizedUniqueIndices(size);
 
   ASSERT_EQ(indices.size(), size);
@@ -52,8 +52,12 @@ TEST(RandomizedUniqueIndices, SmokeTest)
   ASSERT_EQ(max, size-1);
 
   // checks if indices are randomized
-  ASSERT_NE(indices.at(0), 0U);
-  ASSERT_NE(indices.at(size-1), size-1);
+
+  bool is_randomized = false;
+  for (size_t i = 0; i < size; i++) {
+    is_randomized |= indices.at(i) != i;
+  }
+  ASSERT_TRUE(is_randomized);
 
   std::unordered_set<size_t> unique;
   for (const size_t i : indices) {
