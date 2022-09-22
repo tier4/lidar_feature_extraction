@@ -39,15 +39,15 @@ Eigen::MatrixXd initP(const Eigen::MatrixXd & P0, const int n)
   return P;
 }
 
-Eigen::MatrixXd updateX(const Eigen::MatrixXd & x_, const Eigen::MatrixXd & x_next)
+Eigen::MatrixXd updateX(const Eigen::MatrixXd & x, const Eigen::MatrixXd & x_next)
 {
-  const int a = x_.size();
+  const int a = x.size();
   const int b = x_next.size();
   const int c = a - b;
 
   Eigen::MatrixXd updated(a, 1);
   updated.block(0, 0, b, 1) = x_next;
-  updated.block(b, 0, c, 1) = x_.block(0, 0, c, 1);
+  updated.block(b, 0, c, 1) = x.block(0, 0, c, 1);
   return updated;
 }
 
@@ -91,9 +91,9 @@ Eigen::MatrixXd makeMeasurementMatrix(
   const int w = C.cols();
   const int h = C.rows();
 
-  Eigen::MatrixXd C_ex = Eigen::MatrixXd::Zero(h, w * max_delay_step);
-  C_ex.block(0, w * delay_step, h, w) = C;
-  return C_ex;
+  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(h, w * max_delay_step);
+  D.block(0, w * delay_step, h, w) = C;
+  return D;
 }
 
 TimeDelayKalmanFilter::TimeDelayKalmanFilter(
@@ -146,15 +146,15 @@ bool TimeDelayKalmanFilter::updateWithDelay(
   assert(C.cols() == dim_x_);
 
   /* set measurement matrix */
-  const Eigen::MatrixXd C_ex = makeMeasurementMatrix(C, max_delay_step_, delay_step);
-  const Eigen::MatrixXd K = calcKalmanGain(P_, C_ex, R);
+  const Eigen::MatrixXd D = makeMeasurementMatrix(C, max_delay_step_, delay_step);
+  const Eigen::MatrixXd K = calcKalmanGain(P_, D, R);
 
   if (HasNan(K) || HasInf(K)) {
     return false;
   }
 
-  x_ = updateState(x_, y, C_ex, K);
-  P_ = updateCovariance(P_, C_ex, K);
+  x_ = updateState(x_, y, D, K);
+  P_ = updateCovariance(P_, D, K);
 
   return true;
 }
