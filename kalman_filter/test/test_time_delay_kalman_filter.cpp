@@ -65,3 +65,14 @@ TEST(InitP, SmokeTest)
   EXPECT_EQ(P.cols(), 6);
   EXPECT_EQ((P - expected).norm(), 0);
 }
+
+TEST(UpdateX, SmokeTest)
+{
+  Eigen::VectorXd x = (Eigen::VectorXd(5) << 1, 2, 3, 4, 5).finished();
+  Eigen::Vector2d y(10, 20);
+  const Eigen::VectorXd z = updateX(x, y);
+  EXPECT_EQ(z.size(), 5);
+
+  Eigen::VectorXd expected = (Eigen::VectorXd(5) << 10, 20, 1, 2, 3).finished();
+  EXPECT_EQ((z - expected).norm(), 0);
+}

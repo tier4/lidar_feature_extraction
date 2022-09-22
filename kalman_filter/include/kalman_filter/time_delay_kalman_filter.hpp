@@ -32,6 +32,10 @@
 
 Eigen::MatrixXd initX(const Eigen::MatrixXd & x0, const int n);
 Eigen::MatrixXd initP(const Eigen::MatrixXd & P0, const int n);
+Eigen::MatrixXd updateX(const Eigen::MatrixXd & x, const Eigen::MatrixXd & x_next);
+Eigen::MatrixXd updateP(
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
+
 
 class TimeDelayKalmanFilter
 {
