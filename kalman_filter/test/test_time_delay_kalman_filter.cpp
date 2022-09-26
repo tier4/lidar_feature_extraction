@@ -143,3 +143,53 @@ TEST(UpdateP, SmokeTest)
   EXPECT_EQ((updated.block<3, 2>(2, 0) - (CB * A.transpose())).norm(), 0);
   EXPECT_EQ((updated.block<3, 3>(2, 2) - CC).norm(), 0);
 }
+
+TEST(UpdateWithDelay, ThrowsInvalidArgumentIfDelayStepExceedsMax)
+{
+  const Eigen::Vector2d x = Eigen::Vector2d::Zero();
+  const Eigen::Matrix2d P = Eigen::Matrix2d::Identity();
+  const int max_delay_step = 10;
+
+  TimeDelayKalmanFilter kf(x, P, max_delay_step);
+
+  const Eigen::Vector2d y = Eigen::Vector2d::Zero();
+  const Eigen::Matrix2d C = Eigen::Matrix2d::Identity();
+  const Eigen::Matrix2d R = Eigen::Matrix2d::Identity();
+
+  kf.updateWithDelay(y, C, R, max_delay_step - 1);
+
+  EXPECT_THROW(
+    try {
+    kf.updateWithDelay(y, C, R, max_delay_step);
+  } catch (std::invalid_argument & e) {
+    EXPECT_STREQ(e.what(), "The delay step is larger than the maximum allowed value");
+    throw e;
+  }
+    ,
+    std::invalid_argument
+  );
+}
+
+TEST(UpdateWithDelay, ThrowsInvalidArgumentIfKalmanGainContainsNanOrInf)
+{
+  const Eigen::Vector2d x = Eigen::Vector2d::Zero();
+  const Eigen::Matrix2d P = Eigen::Matrix2d::Identity();
+  const int max_delay_step = 10;
+
+  TimeDelayKalmanFilter kf(x, P, max_delay_step);
+
+  const Eigen::Vector2d y = Eigen::Vector2d::Zero();
+
+  kf.updateWithDelay(y, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity(), 0);
+
+  EXPECT_THROW(
+    try {
+    kf.updateWithDelay(y, Eigen::Matrix2d::Zero(), Eigen::Matrix2d::Zero(), 0);
+  } catch (std::invalid_argument & e) {
+    EXPECT_STREQ(e.what(), "The kalman gain contains nan or inf");
+    throw e;
+  }
+    ,
+    std::invalid_argument
+  );
+}

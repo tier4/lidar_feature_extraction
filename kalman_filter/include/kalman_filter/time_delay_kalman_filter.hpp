@@ -89,7 +89,7 @@ public:
    * @param R covariance matrix for measurement model
    * @param delay_step measurement delay
    */
-  bool updateWithDelay(
+  void updateWithDelay(
     const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
     const int delay_step);
 

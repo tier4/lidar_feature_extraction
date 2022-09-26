@@ -100,11 +100,11 @@ Eigen::MatrixXd makeMeasurementMatrix(
 }
 
 TimeDelayKalmanFilter::TimeDelayKalmanFilter(
-  const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0, const int max_delay_step)
-: x_(initX(x, max_delay_step)), P_(initP(P0, max_delay_step)),
+  const Eigen::MatrixXd & x, const Eigen::MatrixXd & P, const int max_delay_step)
+: x_(initX(x, max_delay_step)), P_(initP(P, max_delay_step)),
   max_delay_step_(max_delay_step), dim_x_(x.rows())
 {
-  assert(x.size() == P0.rows());
+  assert(x.size() == P.rows());
 }
 
 Eigen::MatrixXd TimeDelayKalmanFilter::getLatestX() const
@@ -143,13 +143,12 @@ double TimeDelayKalmanFilter::getXelement(const int delay_step, const int i) con
   return x_(delay_step * dim_x_ + i);
 }
 
-bool TimeDelayKalmanFilter::updateWithDelay(
+void TimeDelayKalmanFilter::updateWithDelay(
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
   const int delay_step)
 {
   if (delay_step >= max_delay_step_) {
-    std::cerr << "delay step is larger than max_delay_step. ignore update." << std::endl;
-    return false;
+    throw std::invalid_argument("The delay step is larger than the maximum allowed value");
   }
 
   assert(C.rows() == y.rows());
@@ -160,11 +159,9 @@ bool TimeDelayKalmanFilter::updateWithDelay(
   const Eigen::MatrixXd K = calcKalmanGain(P_, D, R);
 
   if (HasNan(K) || HasInf(K)) {
-    return false;
+    throw std::invalid_argument("The kalman gain contains nan or inf");
   }
 
   x_ = updateState(x_, y, D, K);
   P_ = updateCovariance(P_, D, K);
-
-  return true;
 }
