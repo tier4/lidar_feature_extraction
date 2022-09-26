@@ -190,6 +190,38 @@ private:
   const double wz_covariance_;
 };
 
+struct EKFParameters
+{
+  explicit EKFParameters(rclcpp::Node * node)
+  : default_frequency_(node->declare_parameter("predict_frequency", 50.0)),
+    extend_state_step_(node->declare_parameter("extend_state_step", 50)),
+    pose_frame_id_(node->declare_parameter("pose_frame_id", std::string("map"))),
+    pose_smoothing_steps_(node->declare_parameter("pose_smoothing_steps", 5)),
+    pose_gate_dist_(node->declare_parameter("pose_gate_dist", 10000.0)),
+    twist_gate_dist_(node->declare_parameter("twist_gate_dist", 10000.0)),
+    twist_smoothing_steps_(node->declare_parameter("twist_smoothing_steps", 2)),
+    yaw_covariance_(node->declare_parameter("proc_stddev_yaw_c", 0.005)),
+    enable_yaw_bias_estimation(node->declare_parameter("enable_yaw_bias_estimation", true)),
+    proc_stddev_yaw_bias_c(node->declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
+    vx_covariance_(node->declare_parameter("proc_stddev_vx_c", 5.0)),
+    wz_covariance_(node->declare_parameter("proc_stddev_wz_c", 1.0))
+  {
+  }
+
+  const double default_frequency_;
+  const int extend_state_step_;
+  const std::string pose_frame_id_;
+  const int pose_smoothing_steps_;
+  const double pose_gate_dist_;
+  const double twist_gate_dist_;
+  const int twist_smoothing_steps_;
+  const double yaw_covariance_;
+  const bool enable_yaw_bias_estimation;
+  const double proc_stddev_yaw_bias_c;
+  const double vx_covariance_;
+  const double wz_covariance_;
+};
+
 class EKFLocalizer : public rclcpp::Node
 {
 public:
@@ -221,30 +253,10 @@ private:
   Simple1DFilter roll_filter_;
   Simple1DFilter pitch_filter_;
 
-  const double default_frequency_;
-
+  const EKFParameters params;
   UpdateInterval interval_;
 
-  /* parameters */
-  const int extend_state_step_;  //!< @brief  for time delay compensation
-
-  const std::string pose_frame_id_;
-
-  const int pose_smoothing_steps_;
-
-  //!< @brief  the mahalanobis distance threshold to ignore pose measurement
-  const double pose_gate_dist_;
-
-  //!< @brief  measurement is ignored if the mahalanobis distance is larger than this value.
-  const double twist_gate_dist_;
-
-  const int twist_smoothing_steps_;
-
-  /* process noise standard deviation */
-  const double yaw_covariance_;       //!< @brief  yaw process noise
-  const double yaw_bias_covariance_;  //!< @brief  yaw bias process noise
-  const double vx_covariance_;        //!< @brief  vx process noise
-  const double wz_covariance_;        //!< @brief  wz process noise
+  const double yaw_bias_covariance_;
 
   const DefaultVariance variance_;
 

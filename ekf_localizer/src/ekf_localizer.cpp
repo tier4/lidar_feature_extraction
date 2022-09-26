@@ -196,9 +196,7 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
 }
 
-double ComputeDelayTime(
-  const rclcpp::Time & current_time,
-  const rclcpp::Time & message_stamp)
+double ComputeDelayTime(const rclcpp::Time & current_time, const rclcpp::Time & message_stamp)
 {
   return (current_time - message_stamp).seconds();
 }
@@ -225,28 +223,19 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   last_predict_time_(std::nullopt),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
       std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
-  default_frequency_(declare_parameter("predict_frequency", 50.0)),
-  interval_(default_frequency_),
-  extend_state_step_(declare_parameter("extend_state_step", 50)),
-  pose_frame_id_(declare_parameter("pose_frame_id", std::string("map"))),
-  pose_smoothing_steps_(declare_parameter("pose_smoothing_steps", 5)),
-  pose_gate_dist_(declare_parameter("pose_gate_dist", 10000.0)),
-  twist_gate_dist_(declare_parameter("twist_gate_dist", 10000.0)),
-  twist_smoothing_steps_(declare_parameter("twist_smoothing_steps", 2)),
-  yaw_covariance_(declare_parameter("proc_stddev_yaw_c", 0.005)),
+  params(EKFParameters(this)),
+  interval_(params.default_frequency_),
   yaw_bias_covariance_(
-    InitYawBias(
-      declare_parameter("enable_yaw_bias_estimation", true),
-      declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
-  vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
-  wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
-  variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
-  pose_messages_(pose_smoothing_steps_),
-  twist_messages_(twist_smoothing_steps_)
+    InitYawBias(params.enable_yaw_bias_estimation, params.proc_stddev_yaw_bias_c)),
+  variance_(
+    params.yaw_covariance_, yaw_bias_covariance_, params.vx_covariance_, params.wz_covariance_),
+  pose_messages_(params.pose_smoothing_steps_),
+  twist_messages_(params.twist_smoothing_steps_)
 {
-  const double timer_interval = ComputeInterval(default_frequency_);
+  const double timer_interval = ComputeInterval(params.default_frequency_);
 
-  ekf_ = InitEKF(extend_state_step_, TimeScaledVariance(yaw_bias_covariance_, timer_interval));
+  ekf_ = InitEKF(
+    params.extend_state_step_, TimeScaledVariance(yaw_bias_covariance_, timer_interval));
 
   timer_control_ = rclcpp::create_timer(
     this, get_clock(), DoubleToNanoSeconds(timer_interval),
@@ -308,13 +297,13 @@ void EKFLocalizer::timerCallback()
   for (size_t i = 0; i < pose_messages_.size(); ++i) {
     const auto pose = pose_messages_.pop();
 
-    CheckFrameId(warning_, pose->header.frame_id, pose_frame_id_);
+    CheckFrameId(warning_, pose->header.frame_id, params.pose_frame_id_);
 
     const double delay_time = ComputeDelayTime(this->now(), pose->header.stamp);
     CheckDelayTime(warning_, delay_time);
 
     const int delay_step = ComputeDelayStep(delay_time, dt);
-    if (!CheckDelayStep(warning_, delay_step, extend_state_step_)) {
+    if (!CheckDelayStep(warning_, delay_step, params.extend_state_step_)) {
       continue;
     }
 
@@ -327,13 +316,13 @@ void EKFLocalizer::timerCallback()
     const Eigen::Vector3d y_ekf = GetPoseState(ekf_->getX(delay_step));
     const Eigen::Matrix3d P_y = PoseCovariance(ekf_->getLatestP());
 
-    if (!CheckMahalanobisGate(warning_, pose_gate_dist_, y_ekf, y, P_y)) {
+    if (!CheckMahalanobisGate(warning_, params.pose_gate_dist_, y_ekf, y, P_y)) {
       continue;
     }
 
     const Eigen::Matrix<double, 3, 6> C = PoseMeasurementMatrix();
     const Eigen::Matrix3d R = PoseMeasurementCovariance(
-      pose->pose.covariance, pose_smoothing_steps_);
+      pose->pose.covariance, params.pose_smoothing_steps_);
 
     ekf_->updateWithDelay(y, C, R, delay_step);
   }
@@ -348,7 +337,7 @@ void EKFLocalizer::timerCallback()
     CheckDelayTime(warning_, delay_time);
 
     const int delay_step = ComputeDelayStep(delay_time, dt);
-    if (!CheckDelayStep(warning_, delay_step, extend_state_step_)) {
+    if (!CheckDelayStep(warning_, delay_step, params.extend_state_step_)) {
       continue;
     }
 
@@ -361,13 +350,13 @@ void EKFLocalizer::timerCallback()
     const Eigen::Vector2d y_ekf = GetTwistState(ekf_->getX(delay_step));
     const Eigen::Matrix2d P_y = TwistCovariance(ekf_->getLatestP());
 
-    if (!CheckMahalanobisGate(warning_, twist_gate_dist_, y_ekf, y, P_y)) {
+    if (!CheckMahalanobisGate(warning_, params.twist_gate_dist_, y_ekf, y, P_y)) {
       continue;
     }
 
     const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
     const Eigen::Matrix2d R = TwistMeasurementCovariance(
-      twist->twist.covariance, twist_smoothing_steps_);
+      twist->twist.covariance, params.twist_smoothing_steps_);
 
     ekf_->updateWithDelay(y, C, R, delay_step);
   }
@@ -391,11 +380,12 @@ void EKFLocalizer::timerCallback()
   const Eigen::Vector3d angular(0, 0, wz);
 
   tf_br_->sendTransform(
-    MakeTransformStamped(unbiased_pose, this->now(), pose_frame_id_, "base_link"));
+    MakeTransformStamped(unbiased_pose, this->now(), params.pose_frame_id_, "base_link"));
 
   /* publish ekf result */
   publishEstimateResult(
-    ekf_->getLatestP(), this->now(), pose_frame_id_, unbiased_pose, linear, angular, pub_odom_);
+    ekf_->getLatestP(), this->now(), params.pose_frame_id_,
+    unbiased_pose, linear, angular, pub_odom_);
 }
 
 /*
@@ -406,12 +396,12 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   geometry_msgs::msg::TransformStamped transform;
 
   const auto maybe_transform = listener_.LookupTransform(
-    EraseBeginSlash(pose_frame_id_),
+    EraseBeginSlash(params.pose_frame_id_),
     EraseBeginSlash(initialpose->header.frame_id));
   if (!maybe_transform.has_value()) {
     RCLCPP_ERROR(
-      get_logger(), "[EKF] TF transform failed. parent = %s, child = %s", pose_frame_id_.c_str(),
-      initialpose->header.frame_id.c_str());
+      get_logger(), "[EKF] TF transform failed. parent = %s, child = %s",
+      params.pose_frame_id_.c_str(), initialpose->header.frame_id.c_str());
   }
 
   // TODO(mitsudome-r) need mutex
@@ -428,7 +418,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   const Vector6d d = (Vector6d() << C(0, 0), C(1, 1), C(5, 5), 0.0001, 0.01, 0.01).finished();
   const Matrix6d P = d.asDiagonal();
 
-  ekf_.reset(new TimeDelayKalmanFilter(x, P, extend_state_step_));
+  ekf_.reset(new TimeDelayKalmanFilter(x, P, params.extend_state_step_));
 
   updateSimple1DFilters(*initialpose);
 
