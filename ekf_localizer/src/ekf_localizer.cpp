@@ -222,14 +222,14 @@ Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
   return Eigen::Vector3d(pose.position.x, pose.position.y, normalizeYaw(yaw));
 }
 
-Eigen::Vector3d PoseStateVector(
-  const std::unique_ptr<TimeDelayKalmanFilter> & ekf,
-  const int delay_step)
+Eigen::Vector3d GetPoseState(const Vector6d & x)
 {
-  return Eigen::Vector3d(
-    ekf->getXelement(delay_step, 0),
-    ekf->getXelement(delay_step, 1),
-    ekf->getXelement(delay_step, 2));
+  return x.head(3);
+}
+
+Eigen::Vector2d GetTwistState(const Vector6d & x)
+{
+  return x.tail(2);
 }
 
 Eigen::Matrix3d PoseCovariance(const std::unique_ptr<TimeDelayKalmanFilter> & ekf)
@@ -240,15 +240,6 @@ Eigen::Matrix3d PoseCovariance(const std::unique_ptr<TimeDelayKalmanFilter> & ek
 Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 {
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
-}
-
-Eigen::Vector2d TwistStateVector(
-  const std::unique_ptr<TimeDelayKalmanFilter> & ekf,
-  const int delay_step)
-{
-  return Eigen::Vector2d(
-    ekf->getXelement(delay_step, 4),
-    ekf->getXelement(delay_step, 5));
 }
 
 Eigen::Matrix2d TwistCovariance(const std::unique_ptr<TimeDelayKalmanFilter> & ekf)
@@ -338,7 +329,7 @@ void EKFLocalizer::timerCallback()
       continue;
     }
 
-    const Eigen::Vector3d y_ekf = PoseStateVector(ekf_, delay_step);
+    const Eigen::Vector3d y_ekf = GetPoseState(ekf_->getX(delay_step));
     const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
 
     if (!CheckMahalanobisGate(warning_, pose_gate_dist_, y_ekf, y, P_y)) {
@@ -374,7 +365,7 @@ void EKFLocalizer::timerCallback()
       continue;
     }
 
-    const Eigen::Vector2d y_ekf = TwistStateVector(ekf_, delay_step);
+    const Eigen::Vector2d y_ekf = GetTwistState(ekf_->getX(delay_step));
     const Eigen::Matrix2d P_y = TwistCovariance(ekf_);
 
     if (!CheckMahalanobisGate(warning_, twist_gate_dist_, y_ekf, y, P_y)) {
@@ -453,8 +444,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
 /*
  * callbackPoseWithCovariance
  */
-void EKFLocalizer::callbackPoseWithCovariance(
-  PoseWithCovarianceStamped::SharedPtr msg)
+void EKFLocalizer::callbackPoseWithCovariance(PoseWithCovarianceStamped::SharedPtr msg)
 {
   pose_messages_.push(msg);
 
