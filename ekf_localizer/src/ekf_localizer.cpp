@@ -165,6 +165,50 @@ std::unique_ptr<TimeDelayKalmanFilter> InitEKF(
   return std::make_unique<TimeDelayKalmanFilter>(Vector6d::Zero(), P, extend_state_step_);
 }
 
+Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
+{
+  const double yaw = tf2::getYaw(pose.orientation);
+  return Eigen::Vector3d(pose.position.x, pose.position.y, normalizeYaw(yaw));
+}
+
+Eigen::Vector3d GetPoseState(const Vector6d & x)
+{
+  return x.head(3);
+}
+
+Eigen::Vector2d GetTwistState(const Vector6d & x)
+{
+  return x.tail(2);
+}
+
+Eigen::Matrix3d PoseCovariance(const Eigen::MatrixXd & P)
+{
+  return P.block(0, 0, 3, 3);
+}
+
+Eigen::Matrix2d TwistCovariance(const Eigen::MatrixXd & P)
+{
+  return P.block(4, 4, 2, 2);
+}
+
+Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
+{
+  return Eigen::Vector2d(twist.linear.x, twist.angular.z);
+}
+
+double ComputeDelayTime(
+  const rclcpp::Time & current_time,
+  const rclcpp::Time & message_stamp,
+  const double additional_delay)
+{
+  return (current_time - message_stamp).seconds() + additional_delay;
+}
+
+int ComputeDelayStep(const double delay_time, const double dt)
+{
+  return std::roundf(std::max(delay_time, 0.) / dt);
+}
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -216,50 +260,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pitch_filter_.set_proc_stddev(0.1);
 }
 
-Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
-{
-  const double yaw = tf2::getYaw(pose.orientation);
-  return Eigen::Vector3d(pose.position.x, pose.position.y, normalizeYaw(yaw));
-}
-
-Eigen::Vector3d GetPoseState(const Vector6d & x)
-{
-  return x.head(3);
-}
-
-Eigen::Vector2d GetTwistState(const Vector6d & x)
-{
-  return x.tail(2);
-}
-
-Eigen::Matrix3d PoseCovariance(const Eigen::MatrixXd & P)
-{
-  return P.block(0, 0, 3, 3);
-}
-
-Eigen::Matrix2d TwistCovariance(const Eigen::MatrixXd & P)
-{
-  return P.block(4, 4, 2, 2);
-}
-
-Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
-{
-  return Eigen::Vector2d(twist.linear.x, twist.angular.z);
-}
-
-double ComputeDelayTime(
-  const rclcpp::Time & current_time,
-  const rclcpp::Time & message_stamp,
-  const double additional_delay)
-{
-  return (current_time - message_stamp).seconds() + additional_delay;
-}
-
-int ComputeDelayStep(const double delay_time, const double dt)
-{
-  return std::roundf(std::max(delay_time, 0.) / dt);
-}
-
 /*  == Nonlinear model ==
  *
  * x_{k+1}   = x_k + vx_k * cos(yaw_k + b_k) * dt
@@ -308,8 +308,7 @@ void EKFLocalizer::timerCallback()
   ekf_->predictWithDelay(x_next, A, Q);
 
   /* pose measurement update */
-  const size_t n_pose_msgs = pose_messages_.size();
-  for (size_t i = 0; i < n_pose_msgs; ++i) {
+  for (size_t i = 0; i < pose_messages_.size(); ++i) {
     const auto pose = pose_messages_.pop();
 
     CheckFrameId(warning_, pose->header.frame_id, pose_frame_id_);
@@ -344,8 +343,7 @@ void EKFLocalizer::timerCallback()
   }
 
   /* twist measurement update */
-  const size_t n_twist_msgs = twist_messages_.size();
-  for (size_t i = 0; i < n_twist_msgs; ++i) {
+  for (size_t i = 0; i < twist_messages_.size(); ++i) {
     const auto twist = twist_messages_.pop();
 
     CheckFrameId(warning_, twist->header.frame_id, "base_link");
