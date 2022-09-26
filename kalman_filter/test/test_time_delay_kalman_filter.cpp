@@ -76,3 +76,64 @@ TEST(UpdateX, SmokeTest)
   Eigen::VectorXd expected = (Eigen::VectorXd(5) << 10, 20, 1, 2, 3).finished();
   EXPECT_EQ((z - expected).norm(), 0);
 }
+
+TEST(GetLatestX, SmokeTest)
+{
+  const Eigen::Vector2d x0(2, 3);
+  TimeDelayKalmanFilter kf(x0, Eigen::Matrix2d::Identity(), 10);
+
+  const Eigen::Vector2d x1(4, 5);
+  kf.predictWithDelay(x1, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
+
+  EXPECT_EQ((kf.getLatestX() - x1).norm(), 0);
+}
+
+TEST(UpdateP, SmokeTest)
+{
+  Eigen::Matrix<double, 5, 5> P;
+  P <<
+    1, 2, 3, 4, 5,
+    3, 5, 7, 9, 1,
+    2, 4, 6, 8, 0,
+    6, 2, 8, 4, 0,
+    7, 4, 1, 8, 5;
+
+  Eigen::Matrix<double, 2, 2> BB;
+  BB <<
+    1, 2,
+    3, 5;
+
+  Eigen::Matrix<double, 2, 3> BC;
+  BC <<
+    1, 2, 3,
+    3, 5, 7;
+
+  Eigen::Matrix<double, 3, 2> CB;
+  CB <<
+    1, 2,
+    3, 5,
+    2, 4;
+
+  Eigen::Matrix<double, 3, 3> CC;
+  CC <<
+    1, 2, 3,
+    3, 5, 7,
+    2, 4, 6;
+
+  Eigen::Matrix<double, 2, 2> A;
+  A <<
+    5, 9,
+    8, 7;
+
+  Eigen::Matrix<double, 2, 2> Q;
+  Q <<
+    4, 1,
+    5, 2;
+
+  const Eigen::MatrixXd updated = updateP(P, A, Q);
+
+  EXPECT_EQ((updated.block<2, 2>(0, 0) - (A * BB * A.transpose() + Q)).norm(), 0);
+  EXPECT_EQ((updated.block<2, 3>(0, 2) - (A * BC)).norm(), 0);
+  EXPECT_EQ((updated.block<3, 2>(2, 0) - (CB * A.transpose())).norm(), 0);
+  EXPECT_EQ((updated.block<3, 3>(2, 2) - CC).norm(), 0);
+}

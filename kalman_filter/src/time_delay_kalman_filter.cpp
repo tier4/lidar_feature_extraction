@@ -63,10 +63,13 @@ Eigen::MatrixXd updateP(
    *
    * covariance calculation in prediction : P = A * P * A' + Q
    *
-   *     [A*P11*A'*+Q  A*P11  A*P12]
-   * P = [     P11*A'    P11    P12]
-   *     [     P21*A'    P21    P22]
+   *     [A*P11*A'+Q  A*P11  A*P12]
+   * P = [    P11*A'    P11    P12]
+   *     [    P21*A'    P21    P22]
    */
+
+  assert(A.rows() == A.cols());
+  assert(Q.rows() == Q.cols());
 
   const int a = P.rows();
   const int b = A.rows();
@@ -117,8 +120,6 @@ Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
 bool TimeDelayKalmanFilter::predictWithDelay(
   const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
-  assert(A.rows() == A.cols());
-  assert(Q.rows() == Q.cols());
   assert(A.rows() == Q.rows());
   assert(A.rows() == x_next.size());
 
