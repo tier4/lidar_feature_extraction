@@ -129,6 +129,15 @@ bool TimeDelayKalmanFilter::predictWithDelay(
   return true;
 }
 
+Eigen::VectorXd TimeDelayKalmanFilter::getX(const int delay_step)
+{
+  Eigen::VectorXd x(dim_x_);
+  for (int i = 0; i < dim_x_; i++) {
+    x(i) = x_(delay_step * dim_x_ + i);
+  }
+  return x;
+}
+
 double TimeDelayKalmanFilter::getXelement(const int delay_step, const int i) const
 {
   return x_(delay_step * dim_x_ + i);

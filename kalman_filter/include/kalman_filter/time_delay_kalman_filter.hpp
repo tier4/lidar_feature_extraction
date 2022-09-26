@@ -79,6 +79,8 @@ public:
   bool predictWithDelay(
     const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
 
+  Eigen::VectorXd getX(const int delay_step);
+
   /**
    * @brief calculate kalman filter covariance by measurement model with time delay. This is mainly
    * for EKF of nonlinear process model.

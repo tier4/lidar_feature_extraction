@@ -86,6 +86,12 @@ TEST(GetLatestX, SmokeTest)
   kf.predictWithDelay(x1, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
 
   EXPECT_EQ((kf.getLatestX() - x1).norm(), 0);
+
+  const Eigen::Vector2d x2(6, 7);
+  kf.predictWithDelay(x2, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
+  EXPECT_EQ((kf.getX(0) - x2).norm(), 0);
+  EXPECT_EQ((kf.getX(1) - x1).norm(), 0);
+  EXPECT_EQ((kf.getX(2) - x0).norm(), 0);
 }
 
 TEST(UpdateP, SmokeTest)
