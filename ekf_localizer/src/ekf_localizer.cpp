@@ -198,10 +198,9 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 
 double ComputeDelayTime(
   const rclcpp::Time & current_time,
-  const rclcpp::Time & message_stamp,
-  const double additional_delay)
+  const rclcpp::Time & message_stamp)
 {
-  return (current_time - message_stamp).seconds() + additional_delay;
+  return (current_time - message_stamp).seconds();
 }
 
 int ComputeDelayStep(const double delay_time, const double dt)
@@ -228,19 +227,17 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
       std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   default_frequency_(declare_parameter("predict_frequency", 50.0)),
   interval_(default_frequency_),
-  tf_rate_(declare_parameter("tf_rate", 10.0)),
-  enable_yaw_bias_estimation_(declare_parameter("enable_yaw_bias_estimation", true)),
   extend_state_step_(declare_parameter("extend_state_step", 50)),
   pose_frame_id_(declare_parameter("pose_frame_id", std::string("map"))),
   pose_smoothing_steps_(declare_parameter("pose_smoothing_steps", 5)),
-  pose_additional_delay_(declare_parameter("pose_additional_delay", 0.0)),
   pose_gate_dist_(declare_parameter("pose_gate_dist", 10000.0)),
-  twist_additional_delay_(declare_parameter("twist_additional_delay", 0.0)),
   twist_gate_dist_(declare_parameter("twist_gate_dist", 10000.0)),
   twist_smoothing_steps_(declare_parameter("twist_smoothing_steps", 2)),
   yaw_covariance_(declare_parameter("proc_stddev_yaw_c", 0.005)),
   yaw_bias_covariance_(
-    InitYawBias(enable_yaw_bias_estimation_, declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
+    InitYawBias(
+      declare_parameter("enable_yaw_bias_estimation", true),
+      declare_parameter("proc_stddev_yaw_bias_c", 0.001))),
   vx_covariance_(declare_parameter("proc_stddev_vx_c", 5.0)),
   wz_covariance_(declare_parameter("proc_stddev_wz_c", 1.0)),
   variance_(yaw_covariance_, yaw_bias_covariance_, vx_covariance_, wz_covariance_),
@@ -313,8 +310,7 @@ void EKFLocalizer::timerCallback()
 
     CheckFrameId(warning_, pose->header.frame_id, pose_frame_id_);
 
-    const double delay_time = ComputeDelayTime(
-      this->now(), pose->header.stamp, pose_additional_delay_);
+    const double delay_time = ComputeDelayTime(this->now(), pose->header.stamp);
     CheckDelayTime(warning_, delay_time);
 
     const int delay_step = ComputeDelayStep(delay_time, dt);
@@ -348,8 +344,7 @@ void EKFLocalizer::timerCallback()
 
     CheckFrameId(warning_, twist->header.frame_id, "base_link");
 
-    const double delay_time = ComputeDelayTime(
-      this->now(), twist->header.stamp, twist_additional_delay_);
+    const double delay_time = ComputeDelayTime(this->now(), twist->header.stamp);
     CheckDelayTime(warning_, delay_time);
 
     const int delay_step = ComputeDelayStep(delay_time, dt);
@@ -373,6 +368,7 @@ void EKFLocalizer::timerCallback()
     const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
     const Eigen::Matrix2d R = TwistMeasurementCovariance(
       twist->twist.covariance, twist_smoothing_steps_);
+
     ekf_->updateWithDelay(y, C, R, delay_step);
   }
 

@@ -226,22 +226,15 @@ private:
   UpdateInterval interval_;
 
   /* parameters */
-  const double tf_rate_;                   //!< @brief  tf publish rate
-  const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
-  //!< if true,publish /estimate_yaw_bias
   const int extend_state_step_;  //!< @brief  for time delay compensation
 
   const std::string pose_frame_id_;
 
   const int pose_smoothing_steps_;
 
-  const double pose_additional_delay_;    //!< @brief  compensated pose delay time =
-                                          //!< (pose.header.stamp - now) + additional_delay [s]
   //!< @brief  the mahalanobis distance threshold to ignore pose measurement
   const double pose_gate_dist_;
 
-  const double twist_additional_delay_;  //!< @brief  compensated delay = (twist.header.stamp - now)
-  //!< + additional_delay [s]
   //!< @brief  measurement is ignored if the mahalanobis distance is larger than this value.
   const double twist_gate_dist_;
 
