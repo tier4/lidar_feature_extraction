@@ -53,7 +53,7 @@ if(BUILD_TESTING)
 
   set(TEST_FILES
     test/test_check.cpp
-    test/test_ekf_localizer.cpp
+    # test/test_ekf_localizer.cpp
     test/test_mahalanobis.cpp
     test/test_measurement.cpp
     test/test_state_transition.cpp
