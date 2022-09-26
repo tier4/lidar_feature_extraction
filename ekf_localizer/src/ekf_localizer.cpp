@@ -323,7 +323,11 @@ void EKFLocalizer::timerCallback()
     const Eigen::Matrix3d R = PoseMeasurementCovariance(
       pose->pose.covariance, params.pose_smoothing_steps_);
 
-    ekf_->updateWithDelay(y, C, R, delay_step);
+    try {
+      ekf_->updateWithDelay(y, C, R, delay_step);
+    } catch (std::invalid_argument & e) {
+      warning_.Warn(e.what());
+    }
   }
 
   /* twist measurement update */
@@ -357,7 +361,11 @@ void EKFLocalizer::timerCallback()
     const Eigen::Matrix2d R = TwistMeasurementCovariance(
       twist->twist.covariance, params.twist_smoothing_steps_);
 
-    ekf_->updateWithDelay(y, C, R, delay_step);
+    try {
+      ekf_->updateWithDelay(y, C, R, delay_step);
+    } catch (std::invalid_argument & e) {
+      warning_.Warn(e.what());
+    }
   }
 
   const Vector6d x_est = ekf_->getLatestX();
