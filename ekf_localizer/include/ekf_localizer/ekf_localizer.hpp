@@ -243,8 +243,6 @@ private:
     sub_twist_with_cov_;
   //!< @brief time for ekf calculation callback
   rclcpp::TimerBase::SharedPtr timer_control_;
-  //!< @brief last predict time
-  std::optional<rclcpp::Time> last_predict_time_;
 
   //!< @brief tf broadcaster
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_br_;

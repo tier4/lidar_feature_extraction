@@ -220,7 +220,6 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   sub_twist_with_cov_(create_subscription<TwistWithCovarianceStamped>(
       "in_twist_with_covariance", 1,
       std::bind(&EKFLocalizer::callbackTwistWithCovariance, this, std::placeholders::_1))),
-  last_predict_time_(std::nullopt),
   tf_br_(std::make_shared<tf2_ros::TransformBroadcaster>(
       std::shared_ptr<rclcpp::Node>(this, [](auto) {}))),
   params(EKFParameters(this)),
