@@ -232,19 +232,19 @@ Eigen::Vector2d GetTwistState(const Vector6d & x)
   return x.tail(2);
 }
 
-Eigen::Matrix3d PoseCovariance(const std::unique_ptr<TimeDelayKalmanFilter> & ekf)
+Eigen::Matrix3d PoseCovariance(const Eigen::MatrixXd & P)
 {
-  return ekf->getLatestP().block(0, 0, 3, 3);
+  return P.block(0, 0, 3, 3);
+}
+
+Eigen::Matrix2d TwistCovariance(const Eigen::MatrixXd & P)
+{
+  return P.block(4, 4, 2, 2);
 }
 
 Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 {
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
-}
-
-Eigen::Matrix2d TwistCovariance(const std::unique_ptr<TimeDelayKalmanFilter> & ekf)
-{
-  return ekf->getLatestP().block(4, 4, 2, 2);
 }
 
 double ComputeDelayTime(
@@ -330,7 +330,7 @@ void EKFLocalizer::timerCallback()
     }
 
     const Eigen::Vector3d y_ekf = GetPoseState(ekf_->getX(delay_step));
-    const Eigen::Matrix3d P_y = PoseCovariance(ekf_);
+    const Eigen::Matrix3d P_y = PoseCovariance(ekf_->getLatestP());
 
     if (!CheckMahalanobisGate(warning_, pose_gate_dist_, y_ekf, y, P_y)) {
       continue;
@@ -366,7 +366,7 @@ void EKFLocalizer::timerCallback()
     }
 
     const Eigen::Vector2d y_ekf = GetTwistState(ekf_->getX(delay_step));
-    const Eigen::Matrix2d P_y = TwistCovariance(ekf_);
+    const Eigen::Matrix2d P_y = TwistCovariance(ekf_->getLatestP());
 
     if (!CheckMahalanobisGate(warning_, twist_gate_dist_, y_ekf, y, P_y)) {
       continue;
