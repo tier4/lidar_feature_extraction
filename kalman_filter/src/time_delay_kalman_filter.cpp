@@ -122,7 +122,6 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> UpdateWithDelay(
   }
 
   assert(C.rows() == y.rows());
-  assert(C.cols() == dim_x_);
 
   /* set measurement matrix */
   const Eigen::MatrixXd D = makeMeasurementMatrix(C, max_delay_step_, delay_step);
