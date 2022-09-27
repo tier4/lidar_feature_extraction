@@ -1,4 +1,4 @@
-// Copyright 2022 Autoware Foundation
+// Copyright 2018-2019 Autoware Foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EKF_LOCALIZER__MEASUREMENT_HPP_
-#define EKF_LOCALIZER__MEASUREMENT_HPP_
+#ifndef EKF_LOCALIZER__DELAY_HPP_
+#define EKF_LOCALIZER__DELAY_HPP_
 
-#include <Eigen/Core>
+#include <algorithm>
 
-Eigen::Matrix<double, 2, 6> TwistMeasurementMatrix();
-Eigen::Matrix2d TwistMeasurementCovariance(
-  const std::array<double, 36ul> & covariance, const size_t smoothing_step);
 
-#endif  // EKF_LOCALIZER__MEASUREMENT_HPP_
+inline double ComputeDelayTime(
+  const rclcpp::Time & current_time,
+  const rclcpp::Time & message_stamp)
+{
+  return (current_time - message_stamp).seconds();
+}
+
+inline int ComputeDelayStep(const double delay_time, const double dt)
+{
+  return std::roundf(std::max(delay_time, 0.) / dt);
+}
+
+#endif  // EKF_LOCALIZER__DELAY_HPP_

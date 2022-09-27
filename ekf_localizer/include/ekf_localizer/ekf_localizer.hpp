@@ -40,10 +40,13 @@
 #include <nav_msgs/msg/odometry.hpp>
 
 #include "ekf_localizer/aged_message_queue.hpp"
+#include "ekf_localizer/ekf_localizer.hpp"
 #include "ekf_localizer/normalize_yaw.hpp"
+#include "ekf_localizer/pose_measurement.hpp"
 #include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
+
 
 using PoseWithCovarianceStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
 using TwistWithCovarianceStamped = geometry_msgs::msg::TwistWithCovarianceStamped;
@@ -202,9 +205,9 @@ private:
 
   const DefaultVariance variance_;
 
-  std::unique_ptr<TimeDelayKalmanFilter> ekf_;
+  std::shared_ptr<TimeDelayKalmanFilter> ekf_;
 
-  AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> pose_messages_;
+  PoseMeasurement pose_measurement_;
   AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> twist_messages_;
 
   std::array<double, 36ul> current_pose_covariance_;

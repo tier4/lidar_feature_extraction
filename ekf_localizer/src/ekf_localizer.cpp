@@ -30,9 +30,11 @@
 #include "rotationlib/quaternion.hpp"
 
 #include "ekf_localizer/check.hpp"
+#include "ekf_localizer/delay.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/matrix_types.hpp"
 #include "ekf_localizer/measurement.hpp"
+#include "ekf_localizer/pose_measurement.hpp"
 #include "ekf_localizer/state_transition.hpp"
 #include "ekf_localizer/string.hpp"
 #include "ekf_localizer/tf.hpp"
@@ -140,25 +142,9 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
     std::chrono::duration<double>(time));
 }
 
-Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
-{
-  const double yaw = tf2::getYaw(pose.orientation);
-  return Eigen::Vector3d(pose.position.x, pose.position.y, normalizeYaw(yaw));
-}
-
-Eigen::Vector3d GetPoseState(const Vector6d & x)
-{
-  return x.head(3);
-}
-
 Eigen::Vector2d GetTwistState(const Vector6d & x)
 {
   return x.tail(2);
-}
-
-Eigen::Matrix3d PoseCovariance(const Eigen::MatrixXd & P)
-{
-  return P.block(0, 0, 3, 3);
 }
 
 Eigen::Matrix2d TwistCovariance(const Eigen::MatrixXd & P)
@@ -169,16 +155,6 @@ Eigen::Matrix2d TwistCovariance(const Eigen::MatrixXd & P)
 Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 {
   return Eigen::Vector2d(twist.linear.x, twist.angular.z);
-}
-
-double ComputeDelayTime(const rclcpp::Time & current_time, const rclcpp::Time & message_stamp)
-{
-  return (current_time - message_stamp).seconds();
-}
-
-int ComputeDelayStep(const double delay_time, const double dt)
-{
-  return std::roundf(std::max(delay_time, 0.) / dt);
 }
 
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
@@ -204,7 +180,9 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   variance_(
     params.yaw_covariance_, yaw_bias_covariance_, params.vx_covariance_, params.wz_covariance_),
   ekf_(nullptr),
-  pose_messages_(params.pose_smoothing_steps_),
+  pose_measurement_(
+    warning_, params.pose_frame_id_, params.extend_state_step_,
+    params.pose_gate_dist_, params.pose_smoothing_steps_),
   twist_messages_(params.twist_smoothing_steps_)
 {
   const double timer_interval = ComputeInterval(params.default_frequency_);
@@ -269,42 +247,8 @@ void EKFLocalizer::timerCallback()
   ekf_->predictWithDelay(x_next, A, Q);
 
   /* pose measurement update */
-  for (size_t i = 0; i < pose_messages_.size(); ++i) {
-    const auto pose = pose_messages_.pop();
 
-    CheckFrameId(warning_, pose->header.frame_id, params.pose_frame_id_);
-
-    const double delay_time = ComputeDelayTime(this->now(), pose->header.stamp);
-    CheckDelayTime(warning_, delay_time);
-
-    const int delay_step = ComputeDelayStep(delay_time, dt);
-    if (!CheckDelayStep(warning_, delay_step, params.extend_state_step_)) {
-      continue;
-    }
-
-    const Eigen::Vector3d y = PoseMeasurementVector(pose->pose.pose);
-
-    if (!CheckMeasurementMatrixNanInf(warning_, y)) {
-      continue;
-    }
-
-    const Eigen::Vector3d y_ekf = GetPoseState(ekf_->getX(delay_step));
-    const Eigen::Matrix3d P_y = PoseCovariance(ekf_->getLatestP());
-
-    if (!CheckMahalanobisGate(warning_, params.pose_gate_dist_, y_ekf, y, P_y)) {
-      continue;
-    }
-
-    const Eigen::Matrix<double, 3, 6> C = PoseMeasurementMatrix();
-    const Eigen::Matrix3d R = PoseMeasurementCovariance(
-      pose->pose.covariance, params.pose_smoothing_steps_);
-
-    try {
-      ekf_->updateWithDelay(y, C, R, delay_step);
-    } catch (std::invalid_argument & e) {
-      warning_.Warn(e.what());
-    }
-  }
+  pose_measurement_.Update(ekf_, this->now(), dt);
 
   /* twist measurement update */
   for (size_t i = 0; i < twist_messages_.size(); ++i) {
@@ -405,7 +349,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
 
   updateSimple1DFilters(*initialpose);
 
-  pose_messages_.clear();
+  pose_measurement_.Clear();
 }
 
 /*
@@ -413,7 +357,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
  */
 void EKFLocalizer::callbackPoseWithCovariance(PoseWithCovarianceStamped::SharedPtr msg)
 {
-  pose_messages_.push(msg);
+  pose_measurement_.Push(msg);
 
   updateSimple1DFilters(*msg);
 }
