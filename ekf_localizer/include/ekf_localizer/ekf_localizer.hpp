@@ -40,23 +40,13 @@
 #include <nav_msgs/msg/odometry.hpp>
 
 #include "ekf_localizer/aged_message_queue.hpp"
+#include "ekf_localizer/normalize_yaw.hpp"
 #include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
 
 using PoseWithCovarianceStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
 using TwistWithCovarianceStamped = geometry_msgs::msg::TwistWithCovarianceStamped;
-
-// Noramlizes the yaw angle so that it fits in the range (-pi, pi)
-/**
-* @brief normalize yaw angle
-* @param yaw yaw angle
-* @return normalized yaw
-*/
-inline double normalizeYaw(const double & yaw)
-{
-  return std::atan2(std::sin(yaw), std::cos(yaw));
-}
 
 class Simple1DFilter
 {
