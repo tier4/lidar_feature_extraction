@@ -141,6 +141,18 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
     std::chrono::duration<double>(time));
 }
 
+Vector6d InitState(const double x, const double y, const double yaw)
+{
+  return (Vector6d() << x, y, yaw, 0.0, 0.0, 0.0).finished();
+}
+
+Matrix6d InitCovariance(const std::array<double, 36> & initial_pose_covariance)
+{
+  const Matrix6d C = GetEigenCovariance(initial_pose_covariance);
+  const Vector6d d = (Vector6d() << C(0, 0), C(1, 1), C(5, 5), 0.0001, 0.01, 0.01).finished();
+  return d.asDiagonal();
+}
+
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -285,12 +297,8 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   const double initial_yaw = tf2::getYaw(initialpose->pose.pose.orientation);
   const double yaw = tf2::getYaw(maybe_transform->transform.rotation);
 
-  const Vector6d x = (Vector6d() << t(0), t(1), initial_yaw + yaw, 0.0, 0.0, 0.0).finished();
-
-  const Matrix6d C = GetEigenCovariance(initialpose->pose.covariance);
-  const Vector6d d = (Vector6d() << C(0, 0), C(1, 1), C(5, 5), 0.0001, 0.01, 0.01).finished();
-  const Matrix6d P = d.asDiagonal();
-
+  const Vector6d x = InitState(t(0), t(1), initial_yaw + yaw);
+  const Matrix6d P = InitCovariance(initialpose->pose.covariance);
   ekf_.reset(new TimeDelayKalmanFilter(x, P, params.extend_state_step_));
 
   updateSimple1DFilters(*initialpose);
