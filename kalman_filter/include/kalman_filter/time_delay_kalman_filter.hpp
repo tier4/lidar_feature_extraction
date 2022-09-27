@@ -76,7 +76,7 @@ public:
    * @param A coefficient matrix of x for process model
    * @param Q covariance matrix for process model
    */
-  bool predictWithDelay(
+  void predictWithDelay(
     const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
 
   Eigen::VectorXd getX(const int delay_step);

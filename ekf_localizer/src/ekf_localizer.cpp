@@ -153,16 +153,14 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
     std::chrono::duration<double>(time));
 }
 
-std::unique_ptr<TimeDelayKalmanFilter> InitEKF(
-  const int extend_state_step_, const double yaw_bias_variance)
+Matrix6d InitCovariance(const double yaw_bias_variance)
 {
   Matrix6d P = Matrix6d::Identity() * 1.0E15;    // for x & y
   P(2, 2) = 50.0;                                // for yaw
   P(3, 3) = yaw_bias_variance;                   // for yaw bias
   P(4, 4) = 1000.0;                              // for vx
   P(5, 5) = 50.0;                                // for wz
-
-  return std::make_unique<TimeDelayKalmanFilter>(Vector6d::Zero(), P, extend_state_step_);
+  return P;
 }
 
 Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
@@ -232,9 +230,9 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   twist_messages_(params.twist_smoothing_steps_)
 {
   const double timer_interval = ComputeInterval(params.default_frequency_);
-
-  ekf_ = InitEKF(
-    params.extend_state_step_, TimeScaledVariance(yaw_bias_covariance_, timer_interval));
+  const double variance = TimeScaledVariance(yaw_bias_covariance_, timer_interval);
+  const Matrix6d P = InitCovariance(variance);
+  ekf_ = std::make_unique<TimeDelayKalmanFilter>(Vector6d::Zero(), P, params.extend_state_step_);
 
   timer_control_ = rclcpp::create_timer(
     this, get_clock(), DoubleToNanoSeconds(timer_interval),

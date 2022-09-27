@@ -54,6 +54,10 @@ Eigen::MatrixXd updateX(const Eigen::MatrixXd & x, const Eigen::MatrixXd & x_nex
 Eigen::MatrixXd updateP(
   const Eigen::MatrixXd & P, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
+  // P = expectation(
+  //     [(A * hat(x3) + b) - (A * x3 + b + w),  hat(x3) - x3,  hat(x2) - x2] *
+  //     [(A * hat(x3) + b) - (A * x3 + b + w),  hat(x3) - x3,  hat(x2) - x2]^T
+  // )
   /*
    * time delay model:
    *
@@ -117,16 +121,21 @@ Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
   return P_.block(0, 0, dim_x_, dim_x_);
 }
 
-bool TimeDelayKalmanFilter::predictWithDelay(
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> PredictWithDelay(
+  const Eigen::VectorXd & x0, const Eigen::MatrixXd & P0,
+  const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
+{
+  const Eigen::VectorXd x1 = updateX(x0, x_next);
+  const Eigen::MatrixXd P1 = updateP(P0, A, Q);
+  return std::make_tuple(x1, P1);
+}
+
+void TimeDelayKalmanFilter::predictWithDelay(
   const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
   assert(A.rows() == Q.rows());
   assert(A.rows() == x_next.size());
-
-  x_ = updateX(x_, x_next);
-  P_ = updateP(P_, A, Q);
-
-  return true;
+  std::tie(x_, P_) = PredictWithDelay(x_, P_, x_next, A, Q);
 }
 
 Eigen::VectorXd TimeDelayKalmanFilter::getX(const int delay_step)
@@ -143,9 +152,10 @@ double TimeDelayKalmanFilter::getXelement(const int delay_step, const int i) con
   return x_(delay_step * dim_x_ + i);
 }
 
-void TimeDelayKalmanFilter::updateWithDelay(
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> UpdateWithDelay(
+  const Eigen::VectorXd & x0, const Eigen::MatrixXd & P0,
   const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
-  const int delay_step)
+  const int delay_step, const int max_delay_step_)
 {
   if (delay_step >= max_delay_step_) {
     throw std::invalid_argument("The delay step is larger than the maximum allowed value");
@@ -156,12 +166,21 @@ void TimeDelayKalmanFilter::updateWithDelay(
 
   /* set measurement matrix */
   const Eigen::MatrixXd D = makeMeasurementMatrix(C, max_delay_step_, delay_step);
-  const Eigen::MatrixXd K = calcKalmanGain(P_, D, R);
+  const Eigen::MatrixXd K = calcKalmanGain(P0, D, R);
 
   if (HasNan(K) || HasInf(K)) {
     throw std::invalid_argument("The kalman gain contains nan or inf");
   }
 
-  x_ = updateState(x_, y, D, K);
-  P_ = updateCovariance(P_, D, K);
+  const Eigen::VectorXd x1 = updateState(x0, y, D, K);
+  const Eigen::MatrixXd P1 = updateCovariance(P0, D, K);
+
+  return std::make_tuple(x1, P1);
+}
+
+void TimeDelayKalmanFilter::updateWithDelay(
+  const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
+  const int delay_step)
+{
+  std::tie(x_, P_) = UpdateWithDelay(x_, P_, y, C, R, delay_step, max_delay_step_);
 }
