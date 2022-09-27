@@ -31,26 +31,13 @@
 
 #include "ekf_localizer/check.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
+#include "ekf_localizer/matrix_types.hpp"
 #include "ekf_localizer/measurement.hpp"
 #include "ekf_localizer/state_transition.hpp"
 #include "ekf_localizer/string.hpp"
 #include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/warning.hpp"
 
-using Vector6d = Eigen::Matrix<double, 6, 1>;
-
-constexpr int DIM_X = 6;
-
-
-// Revival of tf::createQuaternionFromRPY
-// https://answers.ros.org/question/304397/recommended-way-to-construct-quaternion-from-rollpitchyaw-with-tf2/
-inline geometry_msgs::msg::Quaternion createQuaternionFromRPY(
-  const double roll, const double pitch, const double yaw)
-{
-  tf2::Quaternion q;
-  q.setRPY(roll, pitch, yaw);
-  return tf2::toMsg(q);
-}
 
 inline Eigen::Vector3d createRPYfromQuaternion(
   const geometry_msgs::msg::Quaternion & orientation)
