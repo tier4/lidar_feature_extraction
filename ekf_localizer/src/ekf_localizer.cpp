@@ -267,19 +267,13 @@ void EKFLocalizer::timerCallback()
   tf_br_->sendTransform(
     MakeTransformStamped(unbiased_pose, this->now(), params.pose_frame_id_, "base_link"));
 
-  /* publish ekf result */
   publishEstimateResult(
     ekf_->getLatestP(), this->now(), params.pose_frame_id_,
     unbiased_pose, linear, angular, pub_odom_);
 }
 
-/*
- * callbackInitialPose
- */
 void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr initialpose)
 {
-  geometry_msgs::msg::TransformStamped transform;
-
   const auto maybe_transform = listener_.LookupTransform(
     EraseBeginSlash(params.pose_frame_id_),
     EraseBeginSlash(initialpose->header.frame_id));
@@ -288,8 +282,6 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
       get_logger(), "[EKF] TF transform failed. parent = %s, child = %s",
       params.pose_frame_id_.c_str(), initialpose->header.frame_id.c_str());
   }
-
-  // TODO(mitsudome-r) need mutex
 
   const Eigen::Vector3d initial_position = ToVector3d(initialpose->pose.pose.position);
   const Eigen::Vector3d translation = ToVector3d(maybe_transform->transform.translation);
@@ -307,9 +299,6 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   twist_measurement_.Clear();
 }
 
-/*
- * callbackPoseWithCovariance
- */
 void EKFLocalizer::callbackPoseWithCovariance(PoseWithCovarianceStamped::SharedPtr msg)
 {
   pose_measurement_.Push(msg);
@@ -317,9 +306,6 @@ void EKFLocalizer::callbackPoseWithCovariance(PoseWithCovarianceStamped::SharedP
   updateSimple1DFilters(*msg);
 }
 
-/*
- * callbackTwistWithCovariance
- */
 void EKFLocalizer::callbackTwistWithCovariance(TwistWithCovarianceStamped::SharedPtr msg)
 {
   twist_measurement_.Push(msg);
