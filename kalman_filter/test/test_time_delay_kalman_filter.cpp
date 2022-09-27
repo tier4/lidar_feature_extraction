@@ -23,7 +23,7 @@ TEST(InitX, SmokeTest)
 {
   {
     const Eigen::Vector3d x0(1, 2, 3);
-    const Eigen::MatrixXd x = initX(x0, 2);
+    const Eigen::VectorXd x = initX(x0, 2);
 
     Eigen::VectorXd expected(6);
     expected << 1, 2, 3, 1, 2, 3;

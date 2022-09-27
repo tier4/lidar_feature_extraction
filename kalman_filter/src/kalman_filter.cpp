@@ -22,7 +22,7 @@
 
 
 KalmanFilter::KalmanFilter(
-  const Eigen::MatrixXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
+  const Eigen::VectorXd & x, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & C, const Eigen::MatrixXd & Q, const Eigen::MatrixXd & R,
   const Eigen::MatrixXd & P)
 : x_(x), P_(P), A_(A), B_(B), C_(C), Q_(Q), R_(R)
@@ -36,7 +36,7 @@ KalmanFilter::KalmanFilter(
   assert(!hasZeroElements(R));
 }
 
-void KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
+void KalmanFilter::init(const Eigen::VectorXd & x, const Eigen::MatrixXd & P0)
 {
   assert(!hasZeroElements(x));
   assert(!hasZeroElements(P0));
@@ -47,7 +47,7 @@ void KalmanFilter::init(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0)
 double KalmanFilter::getXelement(unsigned int i) const {return x_(i);}
 
 void KalmanFilter::predict(
-  const Eigen::MatrixXd & u, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
+  const Eigen::VectorXd & u, const Eigen::MatrixXd & A, const Eigen::MatrixXd & B,
   const Eigen::MatrixXd & Q)
 {
   assert(A.cols() == x_.rows());
@@ -60,9 +60,9 @@ void KalmanFilter::predict(
   P_ = predictNextCovariance(P_, A, Q);
 }
 
-void KalmanFilter::predict(const Eigen::MatrixXd & u) {return predict(u, A_, B_, Q_);}
+void KalmanFilter::predict(const Eigen::VectorXd & u) {return predict(u, A_, B_, Q_);}
 
-void KalmanFilter::update(const Eigen::MatrixXd & y)
+void KalmanFilter::update(const Eigen::VectorXd & y)
 {
   const Eigen::MatrixXd K = calcKalmanGain(P_, C_, R_);
 
