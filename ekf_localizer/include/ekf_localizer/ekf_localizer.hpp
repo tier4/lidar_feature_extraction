@@ -39,6 +39,7 @@
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include "ekf_localizer/aged_message_queue.hpp"
 #include "ekf_localizer/tf.hpp"
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
@@ -56,53 +57,6 @@ inline double normalizeYaw(const double & yaw)
 {
   return std::atan2(std::sin(yaw), std::cos(yaw));
 }
-
-template<typename Message>
-class AgedMessageQueue
-{
-public:
-  explicit AgedMessageQueue(const int max_age)
-  : max_age_(max_age)
-  {
-  }
-
-  size_t size()
-  {
-    return msgs_.size();
-  }
-
-  void push(const Message & msg)
-  {
-    msgs_.push(msg);
-    ages_.push(0);
-  }
-
-  Message pop()
-  {
-    const auto msg = msgs_.front();
-    const int age = ages_.front() + 1;
-    msgs_.pop();
-    ages_.pop();
-
-    if (age < max_age_) {
-      msgs_.push(msg);
-      ages_.push(age);
-    }
-
-    return msg;
-  }
-
-  void clear()
-  {
-    msgs_ = std::queue<Message>();
-    ages_ = std::queue<int>();
-  }
-
-private:
-  const int max_age_;
-  std::queue<Message> msgs_;
-  std::queue<int> ages_;
-};
 
 class Simple1DFilter
 {
