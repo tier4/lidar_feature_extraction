@@ -153,16 +153,6 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
     std::chrono::duration<double>(time));
 }
 
-Matrix6d InitCovariance(const double yaw_bias_variance)
-{
-  Matrix6d P = Matrix6d::Identity() * 1.0E15;    // for x & y
-  P(2, 2) = 50.0;                                // for yaw
-  P(3, 3) = yaw_bias_variance;                   // for yaw bias
-  P(4, 4) = 1000.0;                              // for vx
-  P(5, 5) = 50.0;                                // for wz
-  return P;
-}
-
 Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
 {
   const double yaw = tf2::getYaw(pose.orientation);
@@ -226,14 +216,11 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
     InitYawBias(params.enable_yaw_bias_estimation, params.proc_stddev_yaw_bias_c)),
   variance_(
     params.yaw_covariance_, yaw_bias_covariance_, params.vx_covariance_, params.wz_covariance_),
+  ekf_(nullptr),
   pose_messages_(params.pose_smoothing_steps_),
   twist_messages_(params.twist_smoothing_steps_)
 {
   const double timer_interval = ComputeInterval(params.default_frequency_);
-  const double variance = TimeScaledVariance(yaw_bias_covariance_, timer_interval);
-  const Matrix6d P = InitCovariance(variance);
-  ekf_ = std::make_unique<TimeDelayKalmanFilter>(Vector6d::Zero(), P, params.extend_state_step_);
-
   timer_control_ = rclcpp::create_timer(
     this, get_clock(), DoubleToNanoSeconds(timer_interval),
     std::bind(&EKFLocalizer::timerCallback, this));
@@ -266,6 +253,10 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
  */
 void EKFLocalizer::timerCallback()
 {
+  if (ekf_ == nullptr) {
+    return;
+  }
+
   const auto maybe_dt = [&]() -> std::optional<double> {
       try {
         const rclcpp::Time current_time = this->get_clock()->now();
