@@ -44,6 +44,7 @@
 #include "ekf_localizer/normalize_yaw.hpp"
 #include "ekf_localizer/pose_measurement.hpp"
 #include "ekf_localizer/tf.hpp"
+#include "ekf_localizer/twist_measurement.hpp"
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
 
@@ -208,7 +209,7 @@ private:
   std::shared_ptr<TimeDelayKalmanFilter> ekf_;
 
   PoseMeasurement pose_measurement_;
-  AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> twist_messages_;
+  TwistMeasurement twist_measurement_;
 
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;

@@ -14,11 +14,11 @@ ament_auto_add_library(ekf_localizer_lib SHARED
   src/check.cpp
   src/ekf_localizer.cpp
   src/mahalanobis.cpp
-  src/measurement.cpp
   src/pose_measurement.cpp
   src/state_transition.cpp
   src/string.cpp
   src/tf.cpp
+  src/twist_measurement.cpp
   src/update_interval.cpp
 )
 

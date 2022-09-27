@@ -33,7 +33,6 @@
 #include "ekf_localizer/delay.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/matrix_types.hpp"
-#include "ekf_localizer/measurement.hpp"
 #include "ekf_localizer/pose_measurement.hpp"
 #include "ekf_localizer/state_transition.hpp"
 #include "ekf_localizer/string.hpp"
@@ -142,21 +141,6 @@ std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
     std::chrono::duration<double>(time));
 }
 
-Eigen::Vector2d GetTwistState(const Vector6d & x)
-{
-  return x.tail(2);
-}
-
-Eigen::Matrix2d TwistCovariance(const Eigen::MatrixXd & P)
-{
-  return P.block(4, 4, 2, 2);
-}
-
-Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
-{
-  return Eigen::Vector2d(twist.linear.x, twist.angular.z);
-}
-
 EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOptions & node_options)
 : rclcpp::Node(node_name, node_options),
   warning_(this),
@@ -183,7 +167,8 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
   pose_measurement_(
     warning_, params.pose_frame_id_, params.extend_state_step_,
     params.pose_gate_dist_, params.pose_smoothing_steps_),
-  twist_messages_(params.twist_smoothing_steps_)
+  twist_measurement_(
+    warning_, params.extend_state_step_, params.twist_gate_dist_, params.twist_smoothing_steps_)
 {
   const double timer_interval = ComputeInterval(params.default_frequency_);
   timer_control_ = rclcpp::create_timer(
@@ -246,47 +231,8 @@ void EKFLocalizer::timerCallback()
 
   ekf_->predictWithDelay(x_next, A, Q);
 
-  /* pose measurement update */
-
   pose_measurement_.Update(ekf_, this->now(), dt);
-
-  /* twist measurement update */
-  for (size_t i = 0; i < twist_messages_.size(); ++i) {
-    const auto twist = twist_messages_.pop();
-
-    CheckFrameId(warning_, twist->header.frame_id, "base_link");
-
-    const double delay_time = ComputeDelayTime(this->now(), twist->header.stamp);
-    CheckDelayTime(warning_, delay_time);
-
-    const int delay_step = ComputeDelayStep(delay_time, dt);
-    if (!CheckDelayStep(warning_, delay_step, params.extend_state_step_)) {
-      continue;
-    }
-
-    const Eigen::Vector2d y = TwistMeasurementVector(twist->twist.twist);
-
-    if (!CheckMeasurementMatrixNanInf(warning_, y)) {
-      continue;
-    }
-
-    const Eigen::Vector2d y_ekf = GetTwistState(ekf_->getX(delay_step));
-    const Eigen::Matrix2d P_y = TwistCovariance(ekf_->getLatestP());
-
-    if (!CheckMahalanobisGate(warning_, params.twist_gate_dist_, y_ekf, y, P_y)) {
-      continue;
-    }
-
-    const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
-    const Eigen::Matrix2d R = TwistMeasurementCovariance(
-      twist->twist.covariance, params.twist_smoothing_steps_);
-
-    try {
-      ekf_->updateWithDelay(y, C, R, delay_step);
-    } catch (std::invalid_argument & e) {
-      warning_.Warn(e.what());
-    }
-  }
+  twist_measurement_.Update(ekf_, this->now(), dt);
 
   const Vector6d x_est = ekf_->getLatestX();
   const double x = x_est(0);
@@ -350,6 +296,7 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
   updateSimple1DFilters(*initialpose);
 
   pose_measurement_.Clear();
+  twist_measurement_.Clear();
 }
 
 /*
@@ -367,7 +314,7 @@ void EKFLocalizer::callbackPoseWithCovariance(PoseWithCovarianceStamped::SharedP
  */
 void EKFLocalizer::callbackTwistWithCovariance(TwistWithCovarianceStamped::SharedPtr msg)
 {
-  twist_messages_.push(msg);
+  twist_measurement_.Push(msg);
 }
 
 void EKFLocalizer::updateSimple1DFilters(const PoseWithCovarianceStamped & pose)

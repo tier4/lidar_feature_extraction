@@ -14,7 +14,7 @@
 
 #include <gtest/gtest.h>
 
-#include "ekf_localizer/measurement.hpp"
+#include "ekf_localizer/twist_measurement.hpp"
 
 
 TEST(Measurement, TwistMeasurementMatrix)
