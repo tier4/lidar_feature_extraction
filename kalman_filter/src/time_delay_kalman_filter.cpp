@@ -45,9 +45,9 @@ Eigen::VectorXd updateX(const Eigen::VectorXd & x, const Eigen::VectorXd & x_nex
   const int b = x_next.size();
   const int c = a - b;
 
-  Eigen::VectorXd updated(a, 1);
-  updated.block(0, 0, b, 1) = x_next;
-  updated.block(b, 0, c, 1) = x.block(0, 0, c, 1);
+  Eigen::VectorXd updated(a);
+  updated(Eigen::seqN(0, b)) = x_next;
+  updated(Eigen::seqN(b, c)) = x(Eigen::seqN(0, c));
   return updated;
 }
 
