@@ -72,7 +72,7 @@ public:
   void predict(
     const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
 
-  Eigen::VectorXd getX(const int delay_step);
+  Eigen::VectorXd getX(const int delay_step) const;
 
   /**
    * @brief calculate kalman filter covariance by measurement model with time delay. This is mainly

@@ -163,7 +163,7 @@ void TimeDelayKalmanFilter::predict(
   std::tie(x_, P_) = PredictWithDelay(x_, P_, x_next, A, Q);
 }
 
-Eigen::VectorXd TimeDelayKalmanFilter::getX(const int delay_step)
+Eigen::VectorXd TimeDelayKalmanFilter::getX(const int delay_step) const
 {
   return x_(Eigen::seqN(delay_step * dim_x_, dim_x_));
 }
