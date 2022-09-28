@@ -168,11 +168,6 @@ Eigen::VectorXd TimeDelayKalmanFilter::getX(const int delay_step)
   return x_(Eigen::seqN(delay_step * dim_x_, dim_x_));
 }
 
-double TimeDelayKalmanFilter::getXelement(const int delay_step, const int i) const
-{
-  return x_(delay_step * dim_x_ + i);
-}
-
 void TimeDelayKalmanFilter::update(
   const Eigen::VectorXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
   const int delay_step)
