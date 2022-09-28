@@ -70,6 +70,8 @@ void TwistMeasurement::Update(
   const rclcpp::Time & current_time,
   const double dt)
 {
+  const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
+
   for (size_t i = 0; i < messages_.size(); ++i) {
     const auto twist = messages_.pop();
 
@@ -96,7 +98,6 @@ void TwistMeasurement::Update(
       continue;
     }
 
-    const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
     const Eigen::Matrix2d R = TwistMeasurementCovariance(twist->twist.covariance, smoothing_steps_);
 
     try {

@@ -76,6 +76,8 @@ void PoseMeasurement::Update(
   const rclcpp::Time & current_time,
   const double dt)
 {
+  const Eigen::Matrix<double, 3, 6> C = PoseMeasurementMatrix();
+
   for (size_t i = 0; i < messages_.size(); ++i) {
     const auto pose = messages_.pop();
 
@@ -102,7 +104,6 @@ void PoseMeasurement::Update(
       continue;
     }
 
-    const Eigen::Matrix<double, 3, 6> C = PoseMeasurementMatrix();
     const Eigen::Matrix3d R = PoseMeasurementCovariance(pose->pose.covariance, smoothing_steps_);
 
     try {
