@@ -241,7 +241,7 @@ void EKFLocalizer::timerCallback()
   const Matrix6d A = createStateTransitionMatrix(x_curr, dt);
   const Matrix6d Q = processNoiseCovariance(variance_.TimeScaledVariances(dt));
 
-  ekf_->predictWithDelay(x_next, A, Q);
+  ekf_->predict(x_next, A, Q);
 
   pose_measurement_.Update(ekf_, this->now(), dt);
   twist_measurement_.Update(ekf_, this->now(), dt);

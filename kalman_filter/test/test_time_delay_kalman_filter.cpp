@@ -83,12 +83,12 @@ TEST(GetLatestX, SmokeTest)
   TimeDelayKalmanFilter kf(x0, Eigen::Matrix2d::Identity(), 10);
 
   const Eigen::Vector2d x1(4, 5);
-  kf.predictWithDelay(x1, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
+  kf.predict(x1, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
 
   EXPECT_EQ((kf.getLatestX() - x1).norm(), 0);
 
   const Eigen::Vector2d x2(6, 7);
-  kf.predictWithDelay(x2, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
+  kf.predict(x2, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity());
   EXPECT_EQ((kf.getX(0) - x2).norm(), 0);
   EXPECT_EQ((kf.getX(1) - x1).norm(), 0);
   EXPECT_EQ((kf.getX(2) - x0).norm(), 0);
@@ -156,11 +156,11 @@ TEST(UpdateWithDelay, ThrowsInvalidArgumentIfDelayStepExceedsMax)
   const Eigen::Matrix2d C = Eigen::Matrix2d::Identity();
   const Eigen::Matrix2d R = Eigen::Matrix2d::Identity();
 
-  kf.updateWithDelay(y, C, R, max_delay_step - 1);
+  kf.update(y, C, R, max_delay_step - 1);
 
   EXPECT_THROW(
     try {
-    kf.updateWithDelay(y, C, R, max_delay_step);
+    kf.update(y, C, R, max_delay_step);
   } catch (std::invalid_argument & e) {
     EXPECT_STREQ(e.what(), "The delay step is larger than the maximum allowed value");
     throw e;
@@ -180,11 +180,11 @@ TEST(UpdateWithDelay, ThrowsInvalidArgumentIfKalmanGainContainsNanOrInf)
 
   const Eigen::Vector2d y = Eigen::Vector2d::Zero();
 
-  kf.updateWithDelay(y, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity(), 0);
+  kf.update(y, Eigen::Matrix2d::Identity(), Eigen::Matrix2d::Identity(), 0);
 
   EXPECT_THROW(
     try {
-    kf.updateWithDelay(y, Eigen::Matrix2d::Zero(), Eigen::Matrix2d::Zero(), 0);
+    kf.update(y, Eigen::Matrix2d::Zero(), Eigen::Matrix2d::Zero(), 0);
   } catch (std::invalid_argument & e) {
     EXPECT_STREQ(e.what(), "The kalman gain contains nan or inf");
     throw e;

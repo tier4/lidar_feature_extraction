@@ -76,7 +76,7 @@ public:
    * @param A coefficient matrix of x for process model
    * @param Q covariance matrix for process model
    */
-  void predictWithDelay(
+  void predict(
     const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
 
   Eigen::VectorXd getX(const int delay_step);
@@ -89,7 +89,7 @@ public:
    * @param R covariance matrix for measurement model
    * @param delay_step measurement delay
    */
-  void updateWithDelay(
+  void update(
     const Eigen::VectorXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
     const int delay_step);
 

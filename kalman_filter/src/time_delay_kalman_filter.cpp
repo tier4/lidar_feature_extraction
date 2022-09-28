@@ -155,7 +155,7 @@ Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
   return P_.block(0, 0, dim_x_, dim_x_);
 }
 
-void TimeDelayKalmanFilter::predictWithDelay(
+void TimeDelayKalmanFilter::predict(
   const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
   assert(A.rows() == Q.rows());
@@ -173,7 +173,7 @@ double TimeDelayKalmanFilter::getXelement(const int delay_step, const int i) con
   return x_(delay_step * dim_x_ + i);
 }
 
-void TimeDelayKalmanFilter::updateWithDelay(
+void TimeDelayKalmanFilter::update(
   const Eigen::VectorXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
   const int delay_step)
 {

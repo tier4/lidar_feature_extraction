@@ -107,7 +107,7 @@ void PoseMeasurement::Update(
       pose->pose.covariance, pose_smoothing_steps_);
 
     try {
-      ekf->updateWithDelay(y, C, R, delay_step);
+      ekf->update(y, C, R, delay_step);
     } catch (std::invalid_argument & e) {
       warning_.Warn(e.what());
     }
