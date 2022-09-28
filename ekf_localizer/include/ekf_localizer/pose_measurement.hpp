@@ -45,14 +45,14 @@ class PoseMeasurement
 public:
   PoseMeasurement(
     const Warning & warning,
-    const std::string & pose_frame_id,
+    const std::string & frame_id,
     const int extend_state_step,
-    const double pose_gate_dist,
-    const int pose_smoothing_steps)
-  : pose_messages_(pose_smoothing_steps),
+    const double gate_dist,
+    const int smoothing_steps)
+  : messages_(smoothing_steps),
     warning_(warning),
-    pose_frame_id_(pose_frame_id), extend_state_step_(extend_state_step),
-    pose_gate_dist_(pose_gate_dist), pose_smoothing_steps_(pose_smoothing_steps)
+    frame_id_(frame_id), extend_state_step_(extend_state_step),
+    gate_dist_(gate_dist), smoothing_steps_(smoothing_steps)
   {
   }
 
@@ -64,12 +64,12 @@ public:
     const double dt);
 
 private:
-  AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> pose_messages_;
+  AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> messages_;
   const Warning warning_;
-  const std::string pose_frame_id_;
+  const std::string frame_id_;
   const int extend_state_step_;
-  const double pose_gate_dist_;
-  const int pose_smoothing_steps_;
+  const double gate_dist_;
+  const int smoothing_steps_;
 };
 
 #endif  // EKF_LOCALIZER__POSE_MEASUREMENT_HPP_

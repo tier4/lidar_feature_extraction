@@ -57,12 +57,12 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 
 void TwistMeasurement::Push(TwistWithCovarianceStamped::SharedPtr msg)
 {
-  twist_messages_.push(msg);
+  messages_.push(msg);
 }
 
 void TwistMeasurement::Clear()
 {
-  twist_messages_.clear();
+  messages_.clear();
 }
 
 void TwistMeasurement::Update(
@@ -70,8 +70,8 @@ void TwistMeasurement::Update(
   const rclcpp::Time & current_time,
   const double dt)
 {
-  for (size_t i = 0; i < twist_messages_.size(); ++i) {
-    const auto twist = twist_messages_.pop();
+  for (size_t i = 0; i < messages_.size(); ++i) {
+    const auto twist = messages_.pop();
 
     CheckFrameId(warning_, twist->header.frame_id, "base_link");
 
@@ -92,13 +92,12 @@ void TwistMeasurement::Update(
     const Eigen::Vector2d y_ekf = GetTwistState(ekf->getX(delay_step));
     const Eigen::Matrix2d P_y = TwistCovariance(ekf->getLatestP());
 
-    if (!CheckMahalanobisGate(warning_, twist_gate_dist_, y_ekf, y, P_y)) {
+    if (!CheckMahalanobisGate(warning_, gate_dist_, y_ekf, y, P_y)) {
       continue;
     }
 
     const Eigen::Matrix<double, 2, 6> C = TwistMeasurementMatrix();
-    const Eigen::Matrix2d R = TwistMeasurementCovariance(
-      twist->twist.covariance, twist_smoothing_steps_);
+    const Eigen::Matrix2d R = TwistMeasurementCovariance(twist->twist.covariance, smoothing_steps_);
 
     try {
       ekf->update(y, C, R, delay_step);

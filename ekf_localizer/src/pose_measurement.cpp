@@ -63,12 +63,12 @@ Eigen::Vector3d PoseMeasurementVector(const geometry_msgs::msg::Pose & pose)
 
 void PoseMeasurement::Push(PoseWithCovarianceStamped::SharedPtr msg)
 {
-  pose_messages_.push(msg);
+  messages_.push(msg);
 }
 
 void PoseMeasurement::Clear()
 {
-  pose_messages_.clear();
+  messages_.clear();
 }
 
 void PoseMeasurement::Update(
@@ -76,10 +76,10 @@ void PoseMeasurement::Update(
   const rclcpp::Time & current_time,
   const double dt)
 {
-  for (size_t i = 0; i < pose_messages_.size(); ++i) {
-    const auto pose = pose_messages_.pop();
+  for (size_t i = 0; i < messages_.size(); ++i) {
+    const auto pose = messages_.pop();
 
-    CheckFrameId(warning_, pose->header.frame_id, pose_frame_id_);
+    CheckFrameId(warning_, pose->header.frame_id, frame_id_);
 
     const double delay_time = ComputeDelayTime(current_time, pose->header.stamp);
     CheckDelayTime(warning_, delay_time);
@@ -98,13 +98,12 @@ void PoseMeasurement::Update(
     const Eigen::Vector3d y_ekf = GetPoseState(ekf->getX(delay_step));
     const Eigen::Matrix3d P_y = PoseCovariance(ekf->getLatestP());
 
-    if (!CheckMahalanobisGate(warning_, pose_gate_dist_, y_ekf, y, P_y)) {
+    if (!CheckMahalanobisGate(warning_, gate_dist_, y_ekf, y, P_y)) {
       continue;
     }
 
     const Eigen::Matrix<double, 3, 6> C = PoseMeasurementMatrix();
-    const Eigen::Matrix3d R = PoseMeasurementCovariance(
-      pose->pose.covariance, pose_smoothing_steps_);
+    const Eigen::Matrix3d R = PoseMeasurementCovariance(pose->pose.covariance, smoothing_steps_);
 
     try {
       ekf->update(y, C, R, delay_step);

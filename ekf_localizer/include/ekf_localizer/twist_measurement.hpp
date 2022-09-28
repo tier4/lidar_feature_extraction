@@ -46,11 +46,11 @@ public:
   TwistMeasurement(
     const Warning & warning,
     const int extend_state_step,
-    const double twist_gate_dist,
-    const int twist_smoothing_steps)
-  : twist_messages_(twist_smoothing_steps),
+    const double gate_dist,
+    const int smoothing_steps)
+  : messages_(smoothing_steps),
     warning_(warning), extend_state_step_(extend_state_step),
-    twist_gate_dist_(twist_gate_dist), twist_smoothing_steps_(twist_smoothing_steps)
+    gate_dist_(gate_dist), smoothing_steps_(smoothing_steps)
   {
   }
 
@@ -62,11 +62,11 @@ public:
     const double dt);
 
 private:
-  AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> twist_messages_;
+  AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> messages_;
   const Warning warning_;
   const int extend_state_step_;
-  const double twist_gate_dist_;
-  const int twist_smoothing_steps_;
+  const double gate_dist_;
+  const int smoothing_steps_;
 };
 
 #endif  // EKF_LOCALIZER__TWIST_MEASUREMENT_HPP_
