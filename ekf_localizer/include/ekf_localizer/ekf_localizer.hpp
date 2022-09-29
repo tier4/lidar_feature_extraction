@@ -39,70 +39,18 @@
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include "ekf_localizer/aged_message_queue.hpp"
+#include "ekf_localizer/ekf_localizer.hpp"
+#include "ekf_localizer/normalize_yaw.hpp"
+#include "ekf_localizer/pose_measurement.hpp"
 #include "ekf_localizer/tf.hpp"
+#include "ekf_localizer/twist_measurement.hpp"
 #include "ekf_localizer/update_interval.hpp"
 #include "ekf_localizer/warning.hpp"
 
+
 using PoseWithCovarianceStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
 using TwistWithCovarianceStamped = geometry_msgs::msg::TwistWithCovarianceStamped;
-
-// Noramlizes the yaw angle so that it fits in the range (-pi, pi)
-/**
-* @brief normalize yaw angle
-* @param yaw yaw angle
-* @return normalized yaw
-*/
-inline double normalizeYaw(const double & yaw)
-{
-  return std::atan2(std::sin(yaw), std::cos(yaw));
-}
-
-template<typename Message>
-class AgedMessageQueue
-{
-public:
-  explicit AgedMessageQueue(const int max_age)
-  : max_age_(max_age)
-  {
-  }
-
-  size_t size()
-  {
-    return msgs_.size();
-  }
-
-  void push(const Message & msg)
-  {
-    msgs_.push(msg);
-    ages_.push(0);
-  }
-
-  Message pop()
-  {
-    const auto msg = msgs_.front();
-    const int age = ages_.front() + 1;
-    msgs_.pop();
-    ages_.pop();
-
-    if (age < max_age_) {
-      msgs_.push(msg);
-      ages_.push(age);
-    }
-
-    return msg;
-  }
-
-  void clear()
-  {
-    msgs_ = std::queue<Message>();
-    ages_ = std::queue<int>();
-  }
-
-private:
-  const int max_age_;
-  std::queue<Message> msgs_;
-  std::queue<int> ages_;
-};
 
 class Simple1DFilter
 {
@@ -190,6 +138,38 @@ private:
   const double wz_covariance_;
 };
 
+struct EKFParameters
+{
+  explicit EKFParameters(rclcpp::Node * node)
+  : default_frequency_(node->declare_parameter("predict_frequency", 50.0)),
+    extend_state_step_(node->declare_parameter("extend_state_step", 50)),
+    pose_frame_id_(node->declare_parameter("pose_frame_id", std::string("map"))),
+    pose_smoothing_steps_(node->declare_parameter("pose_smoothing_steps", 5)),
+    pose_gate_dist_(node->declare_parameter("pose_gate_dist", 10000.0)),
+    twist_gate_dist_(node->declare_parameter("twist_gate_dist", 10000.0)),
+    twist_smoothing_steps_(node->declare_parameter("twist_smoothing_steps", 2)),
+    yaw_covariance_(node->declare_parameter("proc_stddev_yaw_c", 0.005)),
+    enable_yaw_bias_estimation(node->declare_parameter("enable_yaw_bias_estimation", true)),
+    proc_stddev_yaw_bias_c(node->declare_parameter("proc_stddev_yaw_bias_c", 0.001)),
+    vx_covariance_(node->declare_parameter("proc_stddev_vx_c", 5.0)),
+    wz_covariance_(node->declare_parameter("proc_stddev_wz_c", 1.0))
+  {
+  }
+
+  const double default_frequency_;
+  const int extend_state_step_;
+  const std::string pose_frame_id_;
+  const int pose_smoothing_steps_;
+  const double pose_gate_dist_;
+  const double twist_gate_dist_;
+  const int twist_smoothing_steps_;
+  const double yaw_covariance_;
+  const bool enable_yaw_bias_estimation;
+  const double proc_stddev_yaw_bias_c;
+  const double vx_covariance_;
+  const double wz_covariance_;
+};
+
 class EKFLocalizer : public rclcpp::Node
 {
 public:
@@ -211,8 +191,6 @@ private:
     sub_twist_with_cov_;
   //!< @brief time for ekf calculation callback
   rclcpp::TimerBase::SharedPtr timer_control_;
-  //!< @brief last predict time
-  std::optional<rclcpp::Time> last_predict_time_;
 
   //!< @brief tf broadcaster
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_br_;
@@ -221,44 +199,17 @@ private:
   Simple1DFilter roll_filter_;
   Simple1DFilter pitch_filter_;
 
-  const double default_frequency_;
-
+  const EKFParameters params;
   UpdateInterval interval_;
 
-  /* parameters */
-  const double tf_rate_;                   //!< @brief  tf publish rate
-  const bool enable_yaw_bias_estimation_;  //!< @brief for LiDAR mount error.
-  //!< if true,publish /estimate_yaw_bias
-  const int extend_state_step_;  //!< @brief  for time delay compensation
-
-  const std::string pose_frame_id_;
-
-  const int pose_smoothing_steps_;
-
-  const double pose_additional_delay_;    //!< @brief  compensated pose delay time =
-                                          //!< (pose.header.stamp - now) + additional_delay [s]
-  //!< @brief  the mahalanobis distance threshold to ignore pose measurement
-  const double pose_gate_dist_;
-
-  const double twist_additional_delay_;  //!< @brief  compensated delay = (twist.header.stamp - now)
-  //!< + additional_delay [s]
-  //!< @brief  measurement is ignored if the mahalanobis distance is larger than this value.
-  const double twist_gate_dist_;
-
-  const int twist_smoothing_steps_;
-
-  /* process noise standard deviation */
-  const double yaw_covariance_;       //!< @brief  yaw process noise
-  const double yaw_bias_covariance_;  //!< @brief  yaw bias process noise
-  const double vx_covariance_;        //!< @brief  vx process noise
-  const double wz_covariance_;        //!< @brief  wz process noise
+  const double yaw_bias_covariance_;
 
   const DefaultVariance variance_;
 
-  std::unique_ptr<TimeDelayKalmanFilter> ekf_;
+  std::shared_ptr<TimeDelayKalmanFilter> ekf_;
 
-  AgedMessageQueue<PoseWithCovarianceStamped::SharedPtr> pose_messages_;
-  AgedMessageQueue<TwistWithCovarianceStamped::SharedPtr> twist_messages_;
+  PoseMeasurement pose_measurement_;
+  TwistMeasurement twist_measurement_;
 
   std::array<double, 36ul> current_pose_covariance_;
   std::array<double, 36ul> current_twist_covariance_;

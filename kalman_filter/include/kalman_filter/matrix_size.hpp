@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EKF_LOCALIZER__MEASUREMENT_HPP_
-#define EKF_LOCALIZER__MEASUREMENT_HPP_
+#ifndef KALMAN_FILTER__MATRIX_SIZE_HPP_
+#define KALMAN_FILTER__MATRIX_SIZE_HPP_
 
-#include <Eigen/Core>
+#include "kalman_filter/kalman_filter.hpp"
 
-Eigen::Matrix<double, 3, 6> PoseMeasurementMatrix();
-Eigen::Matrix<double, 2, 6> TwistMeasurementMatrix();
-Eigen::Matrix3d PoseMeasurementCovariance(
-  const std::array<double, 36ul> & covariance, const size_t smoothing_step);
-Eigen::Matrix2d TwistMeasurementCovariance(
-  const std::array<double, 36ul> & covariance, const size_t smoothing_step);
+inline bool hasZeroElements(const Eigen::MatrixXd & M)
+{
+  return M.size() == 0;
+}
 
-#endif  // EKF_LOCALIZER__MEASUREMENT_HPP_
+#endif  // KALMAN_FILTER__MATRIX_SIZE_HPP_

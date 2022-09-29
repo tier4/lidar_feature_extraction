@@ -28,15 +28,16 @@ Vector6d predictNextState(const Vector6d & X_curr, const double dt)
 {
   const double x = X_curr(IDX::X);
   const double y = X_curr(IDX::Y);
-  const double yaw = X_curr(IDX::YAW);
+  const double biased_yaw = X_curr(IDX::YAW);
   const double yaw_bias = X_curr(IDX::YAWB);
+  const double yaw = biased_yaw + yaw_bias;
   const double vx = X_curr(IDX::VX);
   const double wz = X_curr(IDX::WZ);
 
   Vector6d X_next;
-  X_next(IDX::X) = x + vx * std::cos(yaw + yaw_bias) * dt;  // dx = v * cos(yaw)
-  X_next(IDX::Y) = y + vx * std::sin(yaw + yaw_bias) * dt;  // dy = v * sin(yaw)
-  X_next(IDX::YAW) = normalizeYaw(yaw + wz * dt);           // dyaw = omega + omega_bias
+  X_next(IDX::X) = x + vx * std::cos(yaw) * dt;  // dx = v * cos(yaw)
+  X_next(IDX::Y) = y + vx * std::sin(yaw) * dt;  // dy = v * sin(yaw)
+  X_next(IDX::YAW) = normalizeYaw(biased_yaw + wz * dt);           // dyaw = omega + omega_bias
   X_next(IDX::YAWB) = yaw_bias;
   X_next(IDX::VX) = vx;
   X_next(IDX::WZ) = wz;
@@ -46,17 +47,18 @@ Vector6d predictNextState(const Vector6d & X_curr, const double dt)
 // TODO(TakeshiIshita) show where the equation come from
 Matrix6d createStateTransitionMatrix(const Vector6d & X_curr, const double dt)
 {
-  const double yaw = X_curr(IDX::YAW);
+  const double biased_yaw = X_curr(IDX::YAW);
   const double yaw_bias = X_curr(IDX::YAWB);
+  const double yaw = biased_yaw + yaw_bias;
   const double vx = X_curr(IDX::VX);
 
   Matrix6d A = Matrix6d::Identity();
-  A(IDX::X, IDX::YAW) = -vx * sin(yaw + yaw_bias) * dt;
-  A(IDX::X, IDX::YAWB) = -vx * sin(yaw + yaw_bias) * dt;
-  A(IDX::X, IDX::VX) = cos(yaw + yaw_bias) * dt;
-  A(IDX::Y, IDX::YAW) = vx * cos(yaw + yaw_bias) * dt;
-  A(IDX::Y, IDX::YAWB) = vx * cos(yaw + yaw_bias) * dt;
-  A(IDX::Y, IDX::VX) = sin(yaw + yaw_bias) * dt;
+  A(IDX::X, IDX::YAW) = -vx * sin(yaw) * dt;
+  A(IDX::X, IDX::YAWB) = -vx * sin(yaw) * dt;
+  A(IDX::X, IDX::VX) = cos(yaw) * dt;
+  A(IDX::Y, IDX::YAW) = vx * cos(yaw) * dt;
+  A(IDX::Y, IDX::YAWB) = vx * cos(yaw) * dt;
+  A(IDX::Y, IDX::VX) = sin(yaw) * dt;
   A(IDX::YAW, IDX::WZ) = dt;
   return A;
 }

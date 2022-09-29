@@ -14,32 +14,50 @@
 
 #include "kalman_filter/time_delay_kalman_filter.hpp"
 
-TimeDelayKalmanFilter::TimeDelayKalmanFilter(
-  const Eigen::MatrixXd & x, const Eigen::MatrixXd & P0, const int max_delay_step)
-  : max_delay_step_(max_delay_step), dim_x_(x.rows()), dim_x_ex_(dim_x_ * max_delay_step)
-{
-  x_ = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
-  P_ = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
+#include "lidar_feature_library/numeric.hpp"
 
-  for (int i = 0; i < max_delay_step_; ++i) {
-    x_.block(i * dim_x_, 0, dim_x_, 1) = x;
-    P_.block(i * dim_x_, i * dim_x_, dim_x_, dim_x_) = P0;
+Eigen::VectorXd initX(const Eigen::VectorXd & x0, const int n)
+{
+  const int d = x0.rows();
+
+  Eigen::VectorXd x(n * d, 1);
+  for (int i = 0; i < n; ++i) {
+    x(Eigen::seqN(i * d, d)) = x0;
   }
+  return x;
 }
 
-Eigen::MatrixXd TimeDelayKalmanFilter::getLatestX() const
+Eigen::MatrixXd initP(const Eigen::MatrixXd & P0, const int n)
 {
-  return x_.block(0, 0, dim_x_, 1);
+  assert(P0.rows() == P0.cols());
+  const int d = P0.rows();
+
+  Eigen::MatrixXd P = Eigen::MatrixXd::Zero(n * d, n * d);
+  for (int i = 0; i < n; ++i) {
+    P.block(i * d, i * d, d, d) = P0;
+  }
+  return P;
 }
 
-Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
+Eigen::VectorXd updateX(const Eigen::VectorXd & x, const Eigen::VectorXd & x_next)
 {
-  return P_.block(0, 0, dim_x_, dim_x_);
+  const int a = x.size();
+  const int b = x_next.size();
+  const int c = a - b;
+
+  Eigen::VectorXd updated(a);
+  updated(Eigen::seqN(0, b)) = x_next;
+  updated(Eigen::seqN(b, c)) = x(Eigen::seqN(0, c));
+  return updated;
 }
 
-bool TimeDelayKalmanFilter::predictWithDelay(
-  const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
+Eigen::MatrixXd updateP(
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
 {
+  // P = expectation(
+  //     [(A * hat(x3) + b) - (A * x3 + b + w),  hat(x3) - x3,  hat(x2) - x2] *
+  //     [(A * hat(x3) + b) - (A * x3 + b + w),  hat(x3) - x3,  hat(x2) - x2]^T
+  // )
   /*
    * time delay model:
    *
@@ -49,54 +67,110 @@ bool TimeDelayKalmanFilter::predictWithDelay(
    *
    * covariance calculation in prediction : P = A * P * A' + Q
    *
-   *     [A*P11*A'*+Q  A*P11  A*P12]
-   * P = [     P11*A'    P11    P12]
-   *     [     P21*A'    P21    P22]
+   *     [A*P11*A'+Q  A*P11  A*P12]
+   * P = [    P11*A'    P11    P12]
+   *     [    P21*A'    P21    P22]
    */
 
-  const int d_dim_x = dim_x_ex_ - dim_x_;
+  assert(A.rows() == A.cols());
+  assert(Q.rows() == Q.cols());
 
-  /* slide states in the time direction */
-  Eigen::MatrixXd x_tmp = Eigen::MatrixXd::Zero(dim_x_ex_, 1);
-  x_tmp.block(0, 0, dim_x_, 1) = x_next;
-  x_tmp.block(dim_x_, 0, d_dim_x, 1) = x_.block(0, 0, d_dim_x, 1);
-  x_ = x_tmp;
+  const int a = P.rows();
+  const int b = A.rows();
+  const int c = a - b;
 
-  /* update P with delayed measurement A matrix structure */
-  Eigen::MatrixXd P_tmp = Eigen::MatrixXd::Zero(dim_x_ex_, dim_x_ex_);
-  P_tmp.block(0, 0, dim_x_, dim_x_) = A * P_.block(0, 0, dim_x_, dim_x_) * A.transpose() + Q;
-  P_tmp.block(0, dim_x_, dim_x_, d_dim_x) = A * P_.block(0, 0, dim_x_, d_dim_x);
-  P_tmp.block(dim_x_, 0, d_dim_x, dim_x_) = P_.block(0, 0, d_dim_x, dim_x_) * A.transpose();
-  P_tmp.block(dim_x_, dim_x_, d_dim_x, d_dim_x) = P_.block(0, 0, d_dim_x, d_dim_x);
-  P_ = P_tmp;
+  const Eigen::MatrixXd BB = P.block(0, 0, b, b);
+  const Eigen::MatrixXd BC = P.block(0, 0, b, c);
+  const Eigen::MatrixXd CB = P.block(0, 0, c, b);
+  const Eigen::MatrixXd CC = P.block(0, 0, c, c);
 
-  return true;
+  Eigen::MatrixXd updated(a, a);
+  updated.block(0, 0, b, b) = A * BB * A.transpose() + Q;
+  updated.block(0, b, b, c) = A * BC;
+  updated.block(b, 0, c, b) = CB * A.transpose();
+  updated.block(b, b, c, c) = CC;
+  return updated;
 }
 
-double TimeDelayKalmanFilter::getXelement(const int delay_step, const int i) const
+Eigen::MatrixXd makeMeasurementMatrix(
+  const Eigen::MatrixXd & C, const int max_delay_step, const int delay_step)
 {
-  return x_(delay_step * dim_x_ + i);
+  const int w = C.cols();
+  const int h = C.rows();
+
+  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(h, w * max_delay_step);
+  D.block(0, w * delay_step, h, w) = C;
+  return D;
 }
 
-bool TimeDelayKalmanFilter::updateWithDelay(
-  const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
-  const int delay_step)
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> PredictWithDelay(
+  const Eigen::VectorXd & x0, const Eigen::MatrixXd & P0,
+  const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
+{
+  const Eigen::VectorXd x1 = updateX(x0, x_next);
+  const Eigen::MatrixXd P1 = updateP(P0, A, Q);
+  return std::make_tuple(x1, P1);
+}
+
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> UpdateWithDelay(
+  const Eigen::VectorXd & x0, const Eigen::MatrixXd & P0,
+  const Eigen::VectorXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
+  const int delay_step, const int max_delay_step_)
 {
   if (delay_step >= max_delay_step_) {
-    std::cerr << "delay step is larger than max_delay_step. ignore update." << std::endl;
-    return false;
+    throw std::invalid_argument("The delay step is larger than the maximum allowed value");
   }
 
-  const int dim_y = y.rows();
+  assert(C.rows() == y.size());
 
   /* set measurement matrix */
-  Eigen::MatrixXd C_ex = Eigen::MatrixXd::Zero(dim_y, dim_x_ex_);
-  C_ex.block(0, dim_x_ * delay_step, dim_y, dim_x_) = C;
+  const Eigen::MatrixXd D = makeMeasurementMatrix(C, max_delay_step_, delay_step);
+  const Eigen::MatrixXd K = calcKalmanGain(P0, D, R);
 
-  /* update */
-  if (!update(y, C_ex, R)) {
-    return false;
+  if (HasNan(K) || HasInf(K)) {
+    throw std::invalid_argument("The kalman gain contains nan or inf");
   }
 
-  return true;
+  const Eigen::VectorXd x1 = updateState(x0, y, D, K);
+  const Eigen::MatrixXd P1 = updateCovariance(P0, D, K);
+
+  return std::make_tuple(x1, P1);
+}
+
+TimeDelayKalmanFilter::TimeDelayKalmanFilter(
+  const Eigen::VectorXd & x, const Eigen::MatrixXd & P, const int max_delay_step)
+: x_(initX(x, max_delay_step)), P_(initP(P, max_delay_step)),
+  max_delay_step_(max_delay_step), dim_x_(x.rows())
+{
+  assert(x.size() == P.rows());
+}
+
+Eigen::VectorXd TimeDelayKalmanFilter::getLatestX() const
+{
+  return x_(Eigen::seqN(0, dim_x_));
+}
+
+Eigen::MatrixXd TimeDelayKalmanFilter::getLatestP() const
+{
+  return P_.block(0, 0, dim_x_, dim_x_);
+}
+
+void TimeDelayKalmanFilter::predict(
+  const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q)
+{
+  assert(A.rows() == Q.rows());
+  assert(A.rows() == x_next.size());
+  std::tie(x_, P_) = PredictWithDelay(x_, P_, x_next, A, Q);
+}
+
+Eigen::VectorXd TimeDelayKalmanFilter::getX(const int delay_step) const
+{
+  return x_(Eigen::seqN(delay_step * dim_x_, dim_x_));
+}
+
+void TimeDelayKalmanFilter::update(
+  const Eigen::VectorXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
+  const int delay_step)
+{
+  std::tie(x_, P_) = UpdateWithDelay(x_, P_, y, C, R, delay_step, max_delay_step_);
 }

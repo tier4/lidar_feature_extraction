@@ -20,8 +20,10 @@
 #include <string>
 
 #include "ekf_localizer/mahalanobis.hpp"
-#include "ekf_localizer/numeric.hpp"
 #include "ekf_localizer/warning.hpp"
+
+#include "lidar_feature_library/numeric.hpp"
+
 
 void ShowDelayTimeWarning(const Warning & warning, const double delay_time);
 

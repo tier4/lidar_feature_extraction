@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Autoware Foundation
+// Copyright 2022 Autoware Foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EKF_LOCALIZER__NUMERIC_HPP_
-#define EKF_LOCALIZER__NUMERIC_HPP_
+#include <gtest/gtest.h>
 
-#include <Eigen/Core>
+#include "kalman_filter/matrix_size.hpp"
 
-#include <cmath>
 
-inline bool HasInf(const Eigen::MatrixXd & v)
+TEST(HasZeroElements, SmokeTest)
 {
-  return v.array().isInf().any();
-}
+  EXPECT_TRUE(hasZeroElements(Eigen::MatrixXd(0, 0)));
+  EXPECT_TRUE(hasZeroElements(Eigen::MatrixXd(0, 1)));
+  EXPECT_TRUE(hasZeroElements(Eigen::MatrixXd(1, 0)));
 
-inline bool HasNan(const Eigen::MatrixXd & v)
-{
-  return v.array().isNaN().any();
+  EXPECT_FALSE(hasZeroElements(Eigen::MatrixXd(1, 1)));
+  EXPECT_FALSE(hasZeroElements(Eigen::MatrixXd(1, 2)));
 }
-
-#endif  // EKF_LOCALIZER__NUMERIC_HPP_

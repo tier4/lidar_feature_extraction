@@ -30,7 +30,14 @@
  * @date 2019.05.01
  */
 
-class TimeDelayKalmanFilter : public KalmanFilter
+Eigen::VectorXd initX(const Eigen::VectorXd & x0, const int n);
+Eigen::MatrixXd initP(const Eigen::MatrixXd & P0, const int n);
+Eigen::VectorXd updateX(const Eigen::VectorXd & x, const Eigen::VectorXd & x_next);
+Eigen::MatrixXd updateP(
+  const Eigen::MatrixXd & P, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
+
+
+class TimeDelayKalmanFilter
 {
 public:
   /**
@@ -40,20 +47,14 @@ public:
    * @param max_delay_step Maximum number of delay steps, which determines the dimension of the
    * extended kalman filter
    */
-  TimeDelayKalmanFilter(const Eigen::MatrixXd & x, const Eigen::MatrixXd & P, const int max_delay_step);
+  TimeDelayKalmanFilter(
+    const Eigen::VectorXd & x, const Eigen::MatrixXd & P, const int max_delay_step);
 
   /**
    * @brief get latest time estimated state
    * @param x latest time estimated state
    */
-  Eigen::MatrixXd getLatestX() const;
-
-  /**
-   * @brief get the estimated state at a specific delay step
-   * @param delay_step the delay step
-   * @param i element index in the specified step
-   */
-  double getXelement(const int delay_step, const int i) const;
+  Eigen::VectorXd getLatestX() const;
 
   /**
    * @brief get latest time estimation covariance
@@ -68,8 +69,10 @@ public:
    * @param A coefficient matrix of x for process model
    * @param Q covariance matrix for process model
    */
-  bool predictWithDelay(
-    const Eigen::MatrixXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
+  void predict(
+    const Eigen::VectorXd & x_next, const Eigen::MatrixXd & A, const Eigen::MatrixXd & Q);
+
+  Eigen::VectorXd getX(const int delay_step) const;
 
   /**
    * @brief calculate kalman filter covariance by measurement model with time delay. This is mainly
@@ -79,13 +82,14 @@ public:
    * @param R covariance matrix for measurement model
    * @param delay_step measurement delay
    */
-  bool updateWithDelay(
-    const Eigen::MatrixXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
+  void update(
+    const Eigen::VectorXd & y, const Eigen::MatrixXd & C, const Eigen::MatrixXd & R,
     const int delay_step);
 
 private:
+  Eigen::VectorXd x_;  //!< @brief current estimated state
+  Eigen::MatrixXd P_;  //!< @brief covariance of the estimated state
   const int max_delay_step_;  //!< @brief maximum number of delay steps
   const int dim_x_;           //!< @brief dimension of latest state
-  const int dim_x_ex_;        //!< @brief dimension of extended state with dime delay
 };
 #endif  // KALMAN_FILTER__TIME_DELAY_KALMAN_FILTER_HPP_

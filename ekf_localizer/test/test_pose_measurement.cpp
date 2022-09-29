@@ -14,29 +14,29 @@
 
 #include <gtest/gtest.h>
 
-#include "ekf_localizer/twist_measurement.hpp"
+#include "ekf_localizer/pose_measurement.hpp"
 
 
-TEST(Measurement, TwistMeasurementMatrix)
+TEST(Measurement, PoseMeasurementMatrix)
 {
-  const Eigen::Matrix<double, 2, 6> M = TwistMeasurementMatrix();
-  Eigen::Matrix<double, 2, 6> expected;
-  expected << 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  const Eigen::Matrix<double, 3, 6> M = PoseMeasurementMatrix();
+  Eigen::Matrix<double, 3, 6> expected;
+  expected << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
   EXPECT_EQ((M - expected).norm(), 0);
 }
 
-TEST(Measurement, TwistMeasurementCovariance)
+TEST(Measurement, PoseMeasurementCovariance)
 {
   {
     const std::array<double, 36> covariance = {
-      1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 6,
+      1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0, 6,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4};
+      0, 0, 0, 0, 0, 0, 7, 8, 0, 0, 0, 9};
 
-    const Eigen::Matrix2d M = TwistMeasurementCovariance(covariance, 2);
+    const Eigen::Matrix3d M = PoseMeasurementCovariance(covariance, 2);
 
-    Eigen::Matrix2d expected;
-    expected << 2, 4, 6, 8;
+    Eigen::Matrix3d expected;
+    expected << 2, 4, 6, 8, 10, 12, 14, 16, 18;
 
     EXPECT_EQ((M - expected).norm(), 0.);
   }
@@ -45,7 +45,7 @@ TEST(Measurement, TwistMeasurementCovariance)
     // Make sure that other elements are not changed
     std::array<double, 36> covariance;
     covariance.fill(0);
-    const Eigen::Matrix2d M = TwistMeasurementCovariance(covariance, 2.);
+    const Eigen::Matrix3d M = PoseMeasurementCovariance(covariance, 2.);
     EXPECT_EQ(M.norm(), 0);
   }
 }
