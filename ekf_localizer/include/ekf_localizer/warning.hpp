@@ -28,9 +28,19 @@ public:
   {
   }
 
+  void Info(const std::string & message) const
+  {
+    RCLCPP_INFO(node_->get_logger(), message.c_str());
+  }
+
   void Warn(const std::string & message) const
   {
     RCLCPP_WARN(node_->get_logger(), message.c_str());
+  }
+
+  void Error(const std::string & message) const
+  {
+    RCLCPP_ERROR(node_->get_logger(), message.c_str());
   }
 
   void WarnThrottle(

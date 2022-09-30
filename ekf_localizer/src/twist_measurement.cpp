@@ -14,6 +14,8 @@
 
 #include <tf2/utils.h>
 
+#include <fmt/format.h>
+
 #include <memory>
 
 #include "ekf_localizer/twist_measurement.hpp"
@@ -57,6 +59,7 @@ Eigen::Vector2d TwistMeasurementVector(const geometry_msgs::msg::Twist & twist)
 
 void TwistMeasurement::Push(TwistWithCovarianceStamped::SharedPtr msg)
 {
+  warning_.Info(fmt::format("ax = {:.6f}", msg->twist.twist.linear.x));
   messages_.push(msg);
 }
 

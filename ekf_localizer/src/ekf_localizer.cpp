@@ -14,6 +14,8 @@
 
 #include "ekf_localizer/ekf_localizer.hpp"
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -278,9 +280,10 @@ void EKFLocalizer::callbackInitialPose(PoseWithCovarianceStamped::SharedPtr init
     EraseBeginSlash(params.pose_frame_id_),
     EraseBeginSlash(initialpose->header.frame_id));
   if (!maybe_transform.has_value()) {
-    RCLCPP_ERROR(
-      get_logger(), "[EKF] TF transform failed. parent = %s, child = %s",
-      params.pose_frame_id_.c_str(), initialpose->header.frame_id.c_str());
+    warning_.Error(
+      fmt::format(
+        "TF transform failed. parent = {}, child = {}",
+        params.pose_frame_id_, initialpose->header.frame_id));
   }
 
   const Eigen::Vector3d initial_position = ToVector3d(initialpose->pose.pose.position);

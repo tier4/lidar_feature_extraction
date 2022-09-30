@@ -62,7 +62,6 @@ inline Eigen::MatrixXd updateCovariance(
   return P - K * C * P;
 }
 
-
 class KalmanFilter
 {
 public:
