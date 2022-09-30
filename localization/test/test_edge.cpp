@@ -238,7 +238,7 @@ TEST(Edge, Convergence)
   const auto scan = TransformPointCloud<PointXYZCR>(transform_true.inverse(), map);
 
   using EdgeType = Edge<PointXYZCRToVector>;
-  const EdgeType edge(map);
+  const EdgeType edge(map, 5);
 
   const Eigen::Quaterniond q_initial = Eigen::Quaterniond::Identity();
   const Eigen::Vector3d t_initial = Eigen::Vector3d::Zero();

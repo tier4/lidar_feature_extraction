@@ -42,7 +42,7 @@
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
 
 
-constexpr int n_neighbors = 5;
+constexpr size_t N_NEIGHBORS = 15;
 
 
 template<typename PointToVector, typename PointType>
@@ -54,7 +54,7 @@ class Localizer
 
 public:
   explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int max_iter)
-  : optimizer_(Edge<PointToVector>(edge_map), max_iter),
+  : optimizer_(Edge<PointToVector>(edge_map, N_NEIGHBORS), max_iter),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
   {

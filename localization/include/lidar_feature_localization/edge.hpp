@@ -82,16 +82,14 @@ std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType
   return std::make_shared<KDTreeEigen>(matrix, 10);
 }
 
-constexpr int N_NEIGHBORS = 5;
-
 template<typename PointToVector>
 class Edge
 {
 public:
   using PointType = typename PointToVector::PointType;
 
-  explicit Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map)
-  : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map))
+  explicit Edge(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const size_t n_neighbors)
+  : kdtree_(MakeKDTree<PointToVector, PointType>(edge_map)), n_neighbors_(n_neighbors)
   {
   }
 
@@ -113,7 +111,7 @@ public:
       const Eigen::VectorXd scan_point = PointToVector::Convert(scan->at(i));
       const Eigen::VectorXd query = TransformXYZ(point_to_map, scan_point);
 
-      const auto [neighbors, _] = kdtree_->NearestKSearch(query, N_NEIGHBORS);
+      const auto [neighbors, _] = kdtree_->NearestKSearch(query, n_neighbors_);
 
       const Eigen::MatrixXd X = GetXYZ(neighbors);
       const auto [mean, covariance] = CalcMeanAndCovariance(X);
@@ -135,6 +133,7 @@ public:
 
 private:
   const std::shared_ptr<KDTreeEigen> kdtree_;
+  const size_t n_neighbors_;
 };
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__EDGE_HPP_

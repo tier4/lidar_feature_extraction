@@ -37,6 +37,7 @@
 #include "lidar_feature_localization/edge.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
+const size_t N_NEIGHBORS = 15;
 
 template<typename PointToVector>
 class LOAMPoseUpdater
@@ -61,7 +62,7 @@ public:
 private:
   LOAMOptimizer MakeLOAMOptimizer(const PointCloudPtr & map)
   {
-    const Problem problem(map);
+    const Problem problem(map, N_NEIGHBORS);
     return LOAMOptimizer(problem);
   }
 
