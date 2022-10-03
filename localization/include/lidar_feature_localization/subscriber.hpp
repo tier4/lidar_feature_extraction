@@ -46,6 +46,9 @@
 #include "lidar_feature_library/qos.hpp"
 #include "lidar_feature_library/ros_msg.hpp"
 
+#include "lidar_feature_localization/stamp_sorted_objects.hpp"
+
+
 inline rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
 {
   rclcpp::CallbackGroup::SharedPtr main_callback_group;
@@ -53,6 +56,11 @@ inline rclcpp::SubscriptionOptions MutuallyExclusiveOption(rclcpp::Node & node)
   auto main_sub_opt = rclcpp::SubscriptionOptions();
   main_sub_opt.callback_group = main_callback_group;
   return main_sub_opt;
+}
+
+double Nanoseconds(const rclcpp::Time & t)
+{
+  return static_cast<double>(t.nanoseconds());
 }
 
 template<typename LocalizerT, typename PointType>
@@ -87,21 +95,20 @@ public:
   }
 
   void OptimizationStartOdomCallback(
-    const nav_msgs::msg::Odometry::ConstSharedPtr optimization_start_odom)
+    const nav_msgs::msg::Odometry::ConstSharedPtr odom)
   {
-    this->SetOptimizationStartPose(optimization_start_odom->pose.pose);
+    this->SetOptimizationStartPose(odom->header.stamp, odom->pose.pose);
   }
 
   void OptimizationStartPoseCallback(
-    const geometry_msgs::msg::PoseStamped::ConstSharedPtr optimization_start_pose)
+    const geometry_msgs::msg::PoseStamped::ConstSharedPtr stamped_pose)
   {
-    this->SetOptimizationStartPose(optimization_start_pose->pose);
+    this->SetOptimizationStartPose(stamped_pose->header.stamp, stamped_pose->pose);
   }
 
-  void SetOptimizationStartPose(const geometry_msgs::msg::Pose & pose_msg)
+  void SetOptimizationStartPose(const rclcpp::Time & stamp, const geometry_msgs::msg::Pose & pose)
   {
-    const Eigen::Isometry3d pose = GetIsometry3d(pose_msg);
-    localizer_.Init(pose);
+    prior_poses_.Insert(Nanoseconds(stamp), GetIsometry3d(pose));
   }
 
   void PoseUpdateCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg)
@@ -110,6 +117,17 @@ public:
 
     const auto edge = GetPointCloud<PointType>(*edge_msg);
 
+    const double msg_stamp_nanosec = Nanoseconds(edge_msg->header.stamp);
+    const auto [prior_stamp_nanosec, prior] = prior_poses_.GetClosest(msg_stamp_nanosec);
+    prior_poses_.RemoveOlderThan(msg_stamp_nanosec + 1e9);  // 1e9 msg_stamp_nanosec = 1s
+
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Received scan message of time %lf", msg_stamp_nanosec / 1e9);
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Obtained a prior pose of time %lf", prior_stamp_nanosec / 1e9);
+    localizer_.Init(prior);
     localizer_.Update(edge);
 
     const Eigen::Isometry3d pose = localizer_.Get();
@@ -140,6 +158,7 @@ private:
   const rclcpp::Subscription<PoseStamped>::SharedPtr optimization_start_pose_subscriber_;
   const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
+  StampSortedObjects<Eigen::Isometry3d> prior_poses_;
   LocalizerT localizer_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 };
