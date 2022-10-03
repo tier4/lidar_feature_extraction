@@ -29,7 +29,6 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__STAMP_SORTED_OBJECTS_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__STAMP_SORTED_OBJECTS_HPP_
 
-#include <iostream>
 #include <map>
 #include <mutex>
 
@@ -44,11 +43,15 @@ public:
 
   void Insert(const double timestamp, const Object & object)
   {
+    std::lock_guard<std::mutex> guard(mutex_);
+
     objects_[timestamp] = object;
   }
 
   Object GetClosest(const double timestamp)
   {
+    std::lock_guard<std::mutex> guard(mutex_);
+
     // g1 is the first element in map that satisfies g1 >= timestamp
     const auto g1 = objects_.lower_bound(timestamp);
 
@@ -72,11 +75,14 @@ public:
 
   size_t Size()
   {
+    std::lock_guard<std::mutex> guard(mutex_);
     return objects_.size();
   }
 
   void RemoveOlderThan(const double timestamp)
   {
+    std::lock_guard<std::mutex> guard(mutex_);
+
     // g is the first element in map that satisfies timestamp < g
     const auto g = objects_.upper_bound(timestamp);
 
@@ -89,7 +95,6 @@ public:
     auto curr = std::prev(objects_.end());
     while (curr != boundary) {
       auto prev = std::prev(curr);
-      std::cerr << "curr = " << curr->first << " " << curr->second << std::endl;
       objects_.erase(curr);
       curr = prev;
     }
