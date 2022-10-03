@@ -61,7 +61,22 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gmock REQUIRED)
 
-  file(GLOB TEST_FILES test/*)
+  set(TEST_FILES
+    test/test_posevec.cpp
+    test/test_optimizer.cpp
+    test/test_jacobian.cpp
+    test/test_edge.cpp
+    test/test_recent_scans.cpp
+    test/test_robust.cpp
+    test/test_kdtree.cpp
+    test/test_degenerate.cpp
+    test/test_odometry.cpp
+    test/test_pointcloud_to_matrix.cpp
+    test/test_stamp_sorted_objects.cpp
+    test/test_filter.cpp
+    test/test_math.cpp
+    test/test_alignment.cpp)
+
   foreach(filepath ${TEST_FILES})
     add_testcase(${filepath})
   endforeach()
