@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <tuple>
 
 #include "lidar_feature_localization/stamp_sorted_objects.hpp"
 
@@ -43,13 +44,15 @@ TEST(StampSortedObjects, GetClosest)
 
   ASSERT_EQ(q.Size(), static_cast<size_t>(4));
 
-  EXPECT_EQ(q.GetClosest(0.0), "a");
+  EXPECT_EQ(q.GetClosest(0.0), std::make_tuple(1.0, "a"));
 
-  EXPECT_EQ(q.GetClosest(2.5), "c");
-  EXPECT_EQ(q.GetClosest(3.0), "c");
+  EXPECT_EQ(q.GetClosest(2.4), std::make_tuple(2.0, "b"));
 
-  EXPECT_EQ(q.GetClosest(4.0), "d");
-  EXPECT_EQ(q.GetClosest(5.0), "d");
+  EXPECT_EQ(q.GetClosest(2.5), std::make_tuple(3.0, "c"));
+  EXPECT_EQ(q.GetClosest(3.0), std::make_tuple(3.0, "c"));
+
+  EXPECT_EQ(q.GetClosest(4.0), std::make_tuple(4.0, "d"));
+  EXPECT_EQ(q.GetClosest(5.0), std::make_tuple(4.0, "d"));
 }
 
 TEST(StampSortedObjects, RemoveOlderThan)
@@ -68,7 +71,7 @@ TEST(StampSortedObjects, RemoveOlderThan)
 
   ASSERT_EQ(q.Size(), static_cast<size_t>(3));
 
-  EXPECT_EQ(q.GetClosest(1.0), "a");
-  EXPECT_EQ(q.GetClosest(2.0), "b");
-  EXPECT_EQ(q.GetClosest(3.0), "c");
+  EXPECT_EQ(q.GetClosest(1.0), std::make_tuple(1.0, "a"));
+  EXPECT_EQ(q.GetClosest(2.0), std::make_tuple(2.0, "b"));
+  EXPECT_EQ(q.GetClosest(3.0), std::make_tuple(3.0, "c"));
 }

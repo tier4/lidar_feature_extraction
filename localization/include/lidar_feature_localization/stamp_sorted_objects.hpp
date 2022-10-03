@@ -31,6 +31,7 @@
 
 #include <map>
 #include <mutex>
+#include <tuple>
 
 
 template<typename Object>
@@ -48,7 +49,7 @@ public:
     objects_[timestamp] = object;
   }
 
-  Object GetClosest(const double timestamp)
+  std::tuple<double, Object> GetClosest(const double timestamp)
   {
     std::lock_guard<std::mutex> guard(mutex_);
 
@@ -57,11 +58,12 @@ public:
 
     if (g1 == objects_.end()) {
       const auto last = std::prev(objects_.end());
-      return last->second;
+      return std::make_tuple(last->first, last->second);
     }
 
     if (g1 == objects_.begin()) {
-      return objects_.begin()->second;
+      const auto first = objects_.begin();
+      return std::make_tuple(first->first, first->second);
     }
 
     const auto g0 = std::prev(g1);
@@ -70,7 +72,9 @@ public:
 
     const double d0 = timestamp - time0;
     const double d1 = time1 - timestamp;
-    return d0 < d1 ? object0 : object1;
+    return d0 < d1 ?
+           std::make_tuple(time0, object0) :
+           std::make_tuple(time1, object1);
   }
 
   size_t Size()
