@@ -25,6 +25,7 @@
 #include <utility>
 
 #include <rclcpp/logging.hpp>
+#include <rclcpp/duration.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "lidar_feature_library/eigen.hpp"
@@ -32,6 +33,7 @@
 #include "rotationlib/quaternion.hpp"
 
 #include "ekf_localizer/check.hpp"
+#include "ekf_localizer/covariance.hpp"
 #include "ekf_localizer/delay.hpp"
 #include "ekf_localizer/mahalanobis.hpp"
 #include "ekf_localizer/matrix_types.hpp"
@@ -60,44 +62,6 @@ Eigen::Isometry3d MakePoseFromXYZRPY(
   pose.translation() = Eigen::Vector3d(x, y, z);
   pose.linear() = rotationlib::RPYToQuaternionXYZ(roll, pitch, yaw).toRotationMatrix();
   return pose;
-}
-
-std::array<double, 36> EKFCovarianceToPoseMessageCovariance(const Matrix6d & P)
-{
-  const double p00 = P(0, 0);
-  const double p01 = P(0, 1);
-  const double p02 = P(0, 2);
-  const double p10 = P(1, 0);
-  const double p11 = P(1, 1);
-  const double p12 = P(1, 2);
-  const double p20 = P(2, 0);
-  const double p21 = P(2, 1);
-  const double p22 = P(2, 2);
-
-  return std::array<double, 36>{
-    p00, p01, 0.0, 0.0, 0.0, p02,
-    p10, p11, 0.0, 0.0, 0.0, p12,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    p20, p21, 0.0, 0.0, 0.0, p22
-  };
-}
-
-std::array<double, 36> EKFCovarianceToTwistMessageCovariance(const Matrix6d & P)
-{
-  const double p44 = P(4, 4);
-  const double p45 = P(4, 5);
-  const double p54 = P(5, 4);
-  const double p55 = P(5, 5);
-
-  return std::array<double, 36>{
-    p44, 0.0, 0.0, 0.0, 0.0, p45,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    p54, 0.0, 0.0, 0.0, 0.0, p55
-  };
 }
 
 void publishEstimateResult(
