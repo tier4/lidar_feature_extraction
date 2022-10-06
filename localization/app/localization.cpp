@@ -44,8 +44,8 @@
 #include "lidar_feature_localization/posevec.hpp"
 #include "lidar_feature_localization/subscriber.hpp"
 
-using PointType = PointXYZCR;
-using PointToVector = PointXYZCRToXYZVector;
+using PointType = pcl::PointXYZ;
+using PointToVector = PointXYZToVector;
 using Subscriber = LocalizationSubscriber<Localizer<PointToVector, PointType>, PointType>;
 
 
