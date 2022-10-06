@@ -189,11 +189,11 @@ TEST(RosMsg, MakeTwistStamped)
   const double lx = 1.;
   const double ly = 2.;
   const double lz = 3.;
-  const double ax = 0.1;
-  const double ay = 0.2;
-  const double az = 0.3;
+  const double vx = 0.1;
+  const double vy = 0.2;
+  const double vz = 0.3;
   const Eigen::Vector3d linear(lx, ly, lz);
-  const Eigen::Vector3d angular(ax, ay, az);
+  const Eigen::Vector3d angular(vx, vy, vz);
 
   const int32_t seconds = 10000;
   const uint32_t nanoseconds = 20000;
@@ -206,9 +206,9 @@ TEST(RosMsg, MakeTwistStamped)
   EXPECT_EQ(msg.twist.linear.y, ly);
   EXPECT_EQ(msg.twist.linear.z, lz);
 
-  EXPECT_EQ(msg.twist.angular.x, ax);
-  EXPECT_EQ(msg.twist.angular.y, ay);
-  EXPECT_EQ(msg.twist.angular.z, az);
+  EXPECT_EQ(msg.twist.angular.x, vx);
+  EXPECT_EQ(msg.twist.angular.y, vy);
+  EXPECT_EQ(msg.twist.angular.z, vz);
 
   EXPECT_EQ(msg.header.stamp.sec, seconds);
   EXPECT_EQ(msg.header.stamp.nanosec, nanoseconds);
