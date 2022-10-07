@@ -115,6 +115,13 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "Pose update called");
 
+    if (prior_poses_.Size() == 0) {
+      RCLCPP_INFO(
+        this->get_logger(),
+        "Received an edge message but there's no pose in the prior queue");
+      return;
+    }
+
     const auto edge = GetPointCloud<PointType>(*edge_msg);
 
     const double msg_stamp_nanosec = Nanoseconds(edge_msg->header.stamp);
