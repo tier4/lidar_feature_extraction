@@ -43,6 +43,7 @@ TEST(EKFCovarianceToPoseMessageCovariance, SmokeTest)
     EXPECT_EQ(covariance(35), 9.);
   }
 
+  // ensure other elements are zero
   {
     Matrix6d P = Matrix6d::Zero();
     std::array<double, 36> covariance = EKFCovarianceToPoseMessageCovariance(P);
@@ -68,6 +69,7 @@ TEST(EKFCovarianceToTwistMessageCovariance, SmokeTest)
     EXPECT_EQ(covariance(35), 4.);
   }
 
+  // ensure other elements are zero
   {
     Matrix6d P = Matrix6d::Zero();
     std::array<double, 36> covariance = EKFCovarianceToTwistMessageCovariance(P);
