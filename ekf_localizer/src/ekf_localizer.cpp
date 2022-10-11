@@ -101,12 +101,6 @@ double InitYawBias(const bool enable_yaw_bias_estimation, const double initial_v
   return 0.;
 }
 
-std::chrono::nanoseconds DoubleToNanoSeconds(const double time)
-{
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<double>(time));
-}
-
 Vector6d InitState(const double x, const double y, const double yaw)
 {
   return (Vector6d() << x, y, yaw, 0.0, 0.0, 0.0).finished();
@@ -150,7 +144,7 @@ EKFLocalizer::EKFLocalizer(const std::string & node_name, const rclcpp::NodeOpti
 {
   const double timer_interval = ComputeInterval(params.default_frequency_);
   timer_control_ = rclcpp::create_timer(
-    this, get_clock(), DoubleToNanoSeconds(timer_interval),
+    this, get_clock(), rclcpp::Duration::from_seconds(timer_interval),
     std::bind(&EKFLocalizer::timerCallback, this));
 
   z_filter_.set_proc_stddev(1.0);
