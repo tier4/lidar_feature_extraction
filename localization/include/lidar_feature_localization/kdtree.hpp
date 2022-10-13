@@ -39,6 +39,9 @@
 
 #include "lidar_feature_library/eigen.hpp"
 
+#include "lidar_feature_localization/pointcloud_to_matrix.hpp"
+
+
 constexpr bool row_major = true;
 constexpr int32_t dimension = -1;
 
@@ -64,5 +67,12 @@ private:
   const Eigen::MatrixXd map_;
   const std::shared_ptr<KDTreeType> kdtree_;
 };
+
+template<typename PointToVector, typename PointType>
+std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
+{
+  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
+  return std::make_shared<KDTreeEigen>(matrix, 10);
+}
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__KDTREE_HPP_

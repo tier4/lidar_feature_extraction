@@ -42,17 +42,17 @@ TEST(Label, InitLabels)
     testing::ElementsAre(PointLabel::Default, PointLabel::Default));
 }
 
-bool equal(const PointXYZCR & p0, const PointXYZCR & p1)
+bool equal(const PointXYZIR & p0, const PointXYZIR & p1)
 {
   return
     p0.x == p1.x &&
     p0.y == p1.y &&
     p0.z == p1.z &&
-    p0.curvature == p1.curvature &&
+    p0.intensity == p1.intensity &&
     p0.ring == p1.ring;
 }
 
-TEST(Extraction, AppendXYZCR)
+TEST(Extraction, AppendXYZIR)
 {
   std::vector<PointXYZIR> points;
   points.push_back(PointXYZIR(0., 1., 2., 10., 0));
@@ -62,15 +62,15 @@ TEST(Extraction, AppendXYZCR)
 
   const std::vector<double> curvature{0., 2., 4., 6.};
 
-  pcl::PointCloud<PointXYZCR>::Ptr output_cloud(new pcl::PointCloud<PointXYZCR>());
+  pcl::PointCloud<PointXYZIR>::Ptr output_cloud(new pcl::PointCloud<PointXYZIR>());
 
-  AppendXYZCR(output_cloud, points, curvature);
+  AppendXYZIR(output_cloud, points, curvature);
 
   EXPECT_EQ(output_cloud->size(), static_cast<size_t>(4));
-  EXPECT_TRUE(equal(output_cloud->at(0), PointXYZCR(0., 1., 2., 0., 0)));
-  EXPECT_TRUE(equal(output_cloud->at(1), PointXYZCR(3., 4., 5., 2., 1)));
-  EXPECT_TRUE(equal(output_cloud->at(2), PointXYZCR(6., 7., 8., 4., 2)));
-  EXPECT_TRUE(equal(output_cloud->at(3), PointXYZCR(2., 4., 6., 6., 3)));
+  EXPECT_TRUE(equal(output_cloud->at(0), PointXYZIR(0., 1., 2., 0., 0)));
+  EXPECT_TRUE(equal(output_cloud->at(1), PointXYZIR(3., 4., 5., 2., 1)));
+  EXPECT_TRUE(equal(output_cloud->at(2), PointXYZIR(6., 7., 8., 4., 2)));
+  EXPECT_TRUE(equal(output_cloud->at(3), PointXYZIR(2., 4., 6., 6., 3)));
 }
 
 TEST(Extraction, EdgeLabel)

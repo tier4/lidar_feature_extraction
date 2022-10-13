@@ -74,14 +74,6 @@ Eigen::MatrixXd GetXYZ(const Eigen::MatrixXd & matrix);
 
 bool PrincipalIsReliable(const Eigen::Vector3d & eigenvalues);
 
-template<typename PointToVector, typename PointType>
-std::shared_ptr<KDTreeEigen> MakeKDTree(const typename pcl::PointCloud<PointType>::Ptr & map)
-{
-  ThrowsIfPointCloudIsEmpty<PointType>(map);
-  const Eigen::MatrixXd matrix = PointCloudToMatrix<PointToVector, PointType>(map);
-  return std::make_shared<KDTreeEigen>(matrix, 10);
-}
-
 template<typename PointToVector>
 class Edge
 {

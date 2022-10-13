@@ -26,19 +26,16 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef LIDAR_FEATURE_EXTRACTION__POINT_LABEL_HPP_
-#define LIDAR_FEATURE_EXTRACTION__POINT_LABEL_HPP_
+#ifndef LIDAR_FEATURE_LOCALIZATION__EDGE_SURFACE_SCAN_HPP_
+#define LIDAR_FEATURE_LOCALIZATION__EDGE_SURFACE_SCAN_HPP_
 
-enum class PointLabel : uint8_t
-{
-  Default,
-  Edge,
-  EdgeNeighbor,
-  Surface,
-  SurfaceNeighbor,
-  OutOfRange,
-  Occluded,
-  ParallelBeam
-};
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
-#endif  // LIDAR_FEATURE_EXTRACTION__POINT_LABEL_HPP_
+#include <tuple>
+
+using EdgeSurfaceScan = std::tuple<
+  pcl::PointCloud<pcl::PointXYZ>::Ptr,
+  pcl::PointCloud<pcl::PointXYZ>::Ptr>;
+
+#endif  // LIDAR_FEATURE_LOCALIZATION__EDGE_SURFACE_SCAN_HPP_

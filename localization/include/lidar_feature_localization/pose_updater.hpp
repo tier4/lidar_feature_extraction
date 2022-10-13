@@ -35,6 +35,7 @@
 #include <tuple>
 
 #include "lidar_feature_localization/edge.hpp"
+#include "lidar_feature_localization/loam_optimization_problem.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 const size_t N_NEIGHBORS = 15;
@@ -46,7 +47,7 @@ public:
   using Problem = Edge<PointToVector>;
   using PointType = typename PointToVector::PointType;
   using PointCloudPtr = typename pcl::PointCloud<PointType>::Ptr;
-  using LOAMOptimizer = Optimizer<Edge<PointToVector>, PointCloudPtr>;
+  using LOAMOptimizer = Optimizer<LOAMOptimizationProblem<PointToVector>, EdgeSurfaceScan>;
 
   explicit LOAMPoseUpdater(const PointCloudPtr & local_map)
   : optimizer_(MakeLOAMOptimizer(local_map))

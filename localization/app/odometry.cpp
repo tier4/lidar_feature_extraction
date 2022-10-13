@@ -1,3 +1,4 @@
+/*
 // Copyright 2022 Tixiao Shan, Takeshi Ishita
 //
 // Redistribution and use in source and binary forms, with or without
@@ -54,3 +55,4 @@ int main(int argc, char * argv[])
   rclcpp::shutdown();
   return 0;
 }
+*/

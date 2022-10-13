@@ -37,6 +37,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "lidar_feature_localization/edge.hpp"
+#include "lidar_feature_localization/loam_optimization_problem.hpp"
 #include "lidar_feature_localization/optimizer.hpp"
 
 #include "lidar_feature_library/convert_point_cloud_type.hpp"
@@ -49,12 +50,16 @@ template<typename PointToVector, typename PointType>
 class Localizer
 {
   using OptimizerType = Optimizer<
-    Edge<PointToVector>,
-    typename pcl::PointCloud<typename PointToVector::PointType>::Ptr>;
+    LOAMOptimizationProblem<PointToVector>,
+    EdgeSurfaceScan>;
 
 public:
-  explicit Localizer(const typename pcl::PointCloud<PointType>::Ptr & edge_map, const int max_iter)
-  : optimizer_(Edge<PointToVector>(edge_map, N_NEIGHBORS), max_iter),
+  explicit Localizer(
+    const typename pcl::PointCloud<PointType>::Ptr & edge_map,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & surface_map,
+    const int max_iter)
+  : problem_(LOAMOptimizationProblem<PointToVector>(edge_map, surface_map, N_NEIGHBORS)),
+    optimizer_(problem_, max_iter),
     is_initialized_(false),
     pose_(Eigen::Isometry3d::Identity())
   {
@@ -66,9 +71,9 @@ public:
     is_initialized_ = true;
   }
 
-  bool Update(const typename pcl::PointCloud<PointType>::Ptr & edge_scan)
+  bool Update(const EdgeSurfaceScan & scan)
   {
-    const OptimizationResult result = optimizer_.Run(edge_scan, pose_);
+    const OptimizationResult result = optimizer_.Run(scan, pose_);
 
     pose_ = result.pose;
     return result.success;
@@ -85,6 +90,7 @@ public:
   }
 
 private:
+  const LOAMOptimizationProblem<PointToVector> problem_;
   const OptimizerType optimizer_;
 
   bool is_initialized_;

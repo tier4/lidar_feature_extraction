@@ -94,7 +94,7 @@ std::tuple<Eigen::Quaterniond, Eigen::Vector3d> CalcUpdate(
   const Vector6d dx = WeightedUpdate(M, weights, jacobians, residuals);
   const Eigen::Quaterniond dq = AngleAxisToQuaternion(dx.head(3));
   const Eigen::Vector3d dt = dx.tail(3);
-  return {dq, dt};
+  return std::make_tuple(dq, dt);
 }
 
 Eigen::VectorXd ComputeErrors(const std::vector<Eigen::VectorXd> & residuals)

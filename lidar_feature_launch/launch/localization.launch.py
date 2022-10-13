@@ -32,10 +32,12 @@ from launch_ros.actions import Node
 
 
 scan_edge_topic = '/scan_edge'
+scan_surface_topic = '/scan_surface'
 colored_scan_topic = '/colored_scan'
 curvature_scan_topic = '/curvature_scan'
 converted_points_topic = '/points_converted'
-map_path = 'maps/edge.pcd'
+edge_map_path = 'maps/edge.pcd'
+surface_map_path = 'maps/surface.pcd'
 
 ekf_initial_pose_topic = LaunchConfiguration(
     'input_initial_pose_topic',
@@ -56,6 +58,10 @@ lidar_feature_pose_topic = LaunchConfiguration(
 edge_map_topic = LaunchConfiguration(
     'edge_map_topic',
     default='/edge_map'
+)
+surface_map_topic = LaunchConfiguration(
+    'surface_map_topic',
+    default='/surface_map'
 )
 estimated_path_topic = LaunchConfiguration(
     'estimated_path_topic',
@@ -90,7 +96,8 @@ def generate_launch_description():
             ('colored_scan', colored_scan_topic),
             ('curvature_scan', curvature_scan_topic),
             ('scan_edge', scan_edge_topic),
-        ]
+            ('scan_surface', scan_surface_topic),
+        ],
     )
 
     localization = Node(
@@ -101,18 +108,30 @@ def generate_launch_description():
             ('scan_edge', scan_edge_topic),
             ('optimization_start_odom', ekf_odometry),
             ('estimated_pose', lidar_feature_pose_topic),
-        ]
+        ],
     )
 
-    map_loader = Node(
+    edge_map_loader = Node(
         package='lidar_feature_map_loader',
         executable='lidar_feature_map_loader',
-        namespace='lidar_feature_map_loader',
+        name='edge_map_loader',
         parameters=[
-            {'pcd_filename': map_path}
+            {'pcd_filename': edge_map_path}
         ],
         remappings=[
             ('map_topic', edge_map_topic)
+        ]
+    )
+
+    surface_map_loader = Node(
+        package='lidar_feature_map_loader',
+        executable='lidar_feature_map_loader',
+        name='surface_map_loader',
+        parameters=[
+            {'pcd_filename': surface_map_path}
+        ],
+        remappings=[
+            ('map_topic', surface_map_topic)
         ]
     )
 
@@ -146,9 +165,9 @@ def generate_launch_description():
 
     return LaunchDescription([
         converter,
-        ekf_localizer,
         extraction,
         localization,
-        map_loader,
-        map_tf_generator,
+        edge_map_loader,
+        surface_map_loader,
+        ekf_localizer,
     ])

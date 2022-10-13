@@ -48,25 +48,41 @@ using PointType = pcl::PointXYZ;
 using PointToVector = PointXYZToVector;
 using Subscriber = LocalizationSubscriber<Localizer<PointToVector, PointType>, PointType>;
 
+const std::string edge_map_path = "maps/edge.pcd";
+const std::string surface_map_path = "maps/surface.pcd";
 
-const std::string map_path = "maps/edge.pcd";
-constexpr int max_iter = 20;
+constexpr int max_iter = 40;
+
+bool CheckMapPathExists(const std::string & map_path)
+{
+  bool exists = rcpputils::fs::exists(map_path);
+  if (!exists) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("lidar_feature_localization"),
+      "Map %s does not exist!", map_path.c_str());
+  }
+  return exists;
+}
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  if (!rcpputils::fs::exists(map_path)) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("lidar_feature_localization"),
-      "Map %s does not exist!", map_path.c_str());
+  if (!CheckMapPathExists(edge_map_path)) {
+    return -1;
+  }
+
+  if (!CheckMapPathExists(surface_map_path)) {
     return -1;
   }
 
   pcl::PointCloud<PointType>::Ptr edge_map(new pcl::PointCloud<PointType>());
-  pcl::io::loadPCDFile(map_path, *edge_map);
+  pcl::io::loadPCDFile(edge_map_path, *edge_map);
 
-  Localizer<PointToVector, PointType> localizer(edge_map, max_iter);
+  pcl::PointCloud<PointType>::Ptr surface_map(new pcl::PointCloud<PointType>());
+  pcl::io::loadPCDFile(surface_map_path, *surface_map);
+
+  Localizer<PointToVector, PointType> localizer(edge_map, surface_map, max_iter);
   rclcpp::spin(std::make_shared<Subscriber>(localizer));
   rclcpp::shutdown();
   return 0;

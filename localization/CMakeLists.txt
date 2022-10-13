@@ -30,7 +30,7 @@ set(SOURCE_FILES
 ament_auto_add_library(lidar_feature_localization_lib SHARED ${SOURCE_FILES})
 target_include_directories(lidar_feature_localization_lib PUBLIC ${INCLUDE_DIRS})
 
-foreach(suffix IN ITEMS "localization" "odometry")
+foreach(suffix IN ITEMS "localization")
   ament_auto_add_executable("lidar_feature_${suffix}" app/${suffix}.cpp)
   target_link_libraries("lidar_feature_${suffix}" fmt lidar_feature_localization_lib)
 endforeach()

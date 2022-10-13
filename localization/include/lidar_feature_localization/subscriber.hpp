@@ -29,8 +29,14 @@
 #ifndef LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
 #define LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
 
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/exact_time.h>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+
+#include <inttypes.h>
 
 #include <memory>
 #include <string>
@@ -63,12 +69,24 @@ double Nanoseconds(const rclcpp::Time & t)
   return static_cast<double>(t.nanoseconds());
 }
 
+using Exact = message_filters::sync_policies::ExactTime<
+  sensor_msgs::msg::PointCloud2,
+  sensor_msgs::msg::PointCloud2>;
+using Synchronizer = message_filters::Synchronizer<Exact>;
+
+const rclcpp::QoS qos_keep_all = rclcpp::SensorDataQoS().keep_all().reliable();
+
 template<typename LocalizerT, typename PointType>
 class LocalizationSubscriber : public rclcpp::Node
 {
 public:
   explicit LocalizationSubscriber(LocalizerT & localizer)
   : Node("lidar_feature_localization"),
+    localizer_(localizer),
+    edge_subscriber_(this, "scan_edge", qos_keep_all.get_rmw_qos_profile()),
+    surface_subscriber_(this, "scan_surface", qos_keep_all.get_rmw_qos_profile()),
+    sync_(std::make_shared<Synchronizer>(Exact(10), edge_subscriber_, surface_subscriber_)),
+    tf_broadcaster_(*this),
     optimization_start_odom_subscriber_(
       this->create_subscription<nav_msgs::msg::Odometry>(
         "optimization_start_odom", QOS_RELIABLE_VOLATILE,
@@ -81,17 +99,13 @@ public:
         std::bind(
           &LocalizationSubscriber::OptimizationStartPoseCallback, this, std::placeholders::_1),
         MutuallyExclusiveOption(*this))),
-    edge_subscriber_(
-      this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "scan_edge", QOS_RELIABLE_VOLATILE,
-        std::bind(&LocalizationSubscriber::PoseUpdateCallback, this, std::placeholders::_1),
-        MutuallyExclusiveOption(*this))),
     pose_publisher_(
-      this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("estimated_pose", 10)),
-    localizer_(localizer),
-    tf_broadcaster_(*this)
+      this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("estimated_pose", 10))
   {
-    RCLCPP_INFO(this->get_logger(), "LocalizationSubscriber created");
+    sync_->registerCallback(
+      std::bind(
+        &LocalizationSubscriber::PoseUpdateCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
   }
 
   void OptimizationStartOdomCallback(
@@ -111,7 +125,9 @@ public:
     prior_poses_.Insert(Nanoseconds(stamp), GetIsometry3d(pose));
   }
 
-  void PoseUpdateCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg)
+  void PoseUpdateCallback(
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg,
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr surface_msg)
   {
     RCLCPP_INFO(this->get_logger(), "Pose update called");
 
@@ -123,6 +139,7 @@ public:
     }
 
     const auto edge = GetPointCloud<PointType>(*edge_msg);
+    const auto surface = GetPointCloud<PointType>(*surface_msg);
 
     const double msg_stamp_nanosec = Nanoseconds(edge_msg->header.stamp);
     const auto [prior_stamp_nanosec, prior] = prior_poses_.GetClosest(msg_stamp_nanosec);
@@ -135,7 +152,7 @@ public:
       this->get_logger(),
       "Obtained a prior pose of time %lf", prior_stamp_nanosec / 1e9);
     localizer_.Init(prior);
-    localizer_.Update(edge);
+    localizer_.Update(std::make_tuple(edge, surface));
 
     const Eigen::Isometry3d pose = localizer_.Get();
     Matrix6d covariance;
@@ -161,15 +178,18 @@ public:
 private:
   using Odometry = nav_msgs::msg::Odometry;
   using PoseStamped = geometry_msgs::msg::PoseStamped;
+  LocalizerT localizer_;
+  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> edge_subscriber_;
+  message_filters::Subscriber<sensor_msgs::msg::PointCloud2> surface_subscriber_;
+  std::shared_ptr<Synchronizer> sync_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
   const rclcpp::Subscription<Odometry>::SharedPtr optimization_start_odom_subscriber_;
   const rclcpp::Subscription<PoseStamped>::SharedPtr optimization_start_pose_subscriber_;
-  const rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr edge_subscriber_;
   const rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
   StampSortedObjects<Eigen::Isometry3d> prior_poses_;
-  LocalizerT localizer_;
-  tf2_ros::TransformBroadcaster tf_broadcaster_;
 };
 
+/*
 template<typename OdometryT, typename PointType>
 class OdometrySubscriber : public rclcpp::Node
 {
@@ -190,15 +210,15 @@ public:
   }
 
   void PoseUpdateCallback(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg)
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr edge_msg,
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr surface_msg)
   {
     RCLCPP_INFO(this->get_logger(), "PoseUpdateCallback called");
-
-    const auto edge_scan = GetPointCloud<PointType>(*edge_msg);
-
     RCLCPP_INFO(this->get_logger(), "Call odometry update");
 
-    odometry_.Update(edge_scan);
+    const auto edge_scan = GetPointCloud<PointType>(*edge_msg);
+    const auto surface_scan = GetPointCloud<PointType>(*surface_msg);
+    odometry_.Update(std::make_tuple(edge_scan, surface_scan));
 
     const Eigen::Isometry3d pose = odometry_.CurrentPose();
     pose_publisher_->publish(MakePoseStamped(pose, edge_msg->header.stamp, "map"));
@@ -216,5 +236,6 @@ private:
   OdometryT odometry_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 };
+*/
 
 #endif  // LIDAR_FEATURE_LOCALIZATION__SUBSCRIBER_HPP_
