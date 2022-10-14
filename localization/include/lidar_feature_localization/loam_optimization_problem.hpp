@@ -68,11 +68,12 @@ public:
     const auto edge = edge_.Make(edge_scan, point_to_map);
     const auto surface = surface_.Make(surface_scan, point_to_map);
 
-    std::vector<Eigen::MatrixXd> edge_jacobian = std::get<0>(edge);
-    std::vector<Eigen::MatrixXd> surface_jacobian = std::get<0>(surface);
-    std::vector<Eigen::VectorXd> edge_residual = std::get<1>(edge);
-    std::vector<Eigen::VectorXd> surface_residual = std::get<1>(surface);
+    const std::vector<Eigen::MatrixXd> edge_jacobian = std::get<0>(edge);
+    const std::vector<Eigen::MatrixXd> surface_jacobian = std::get<0>(surface);
+    const std::vector<Eigen::VectorXd> edge_residual = std::get<1>(edge);
+    const std::vector<Eigen::VectorXd> surface_residual = std::get<1>(surface);
 
+    // TODO(IshitaTakeshi) avoid memory copies
     std::vector<Eigen::MatrixXd> jacobians;
     std::vector<Eigen::VectorXd> residuals;
     jacobians.insert(jacobians.end(), edge_jacobian.begin(), edge_jacobian.end());
