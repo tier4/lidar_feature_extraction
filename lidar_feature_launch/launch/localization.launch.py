@@ -135,21 +135,6 @@ def generate_launch_description():
         ]
     )
 
-    map_tf_generator = Node(
-        package='map_tf_generator',
-        executable='map_tf_generator',
-        name='map_tf_generator',
-        parameters=[
-            {
-                'map_frame': 'map',
-                'viewer_frame': 'viewer',
-            }
-        ],
-        remappings=[
-            ('pointcloud_map', edge_map_topic)
-        ]
-    )
-
     ekf_localizer = Node(
         package='ekf_localizer',
         executable='ekf_localizer',
