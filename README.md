@@ -13,48 +13,29 @@ This package has two functionalities:
 * LOAM-like feature based algorithm enables localization in challenging environments such as tunnels, rice fields, etc.
 * Localization on a pre-built map realizes stable and robust localization in dynamic environments
 
-## Usage
 
-### Building
+## Citation
 
-```bash
-colcon build
+This code makes use of [LIO-SAM](https://github.com/TixiaoShan/LIO-SAM) and [LeGO-LOAM](https://github.com/RobustFieldAutonomyLab/LeGO-LOAM).
+
+```
+@inproceedings{liosam2020shan,
+  title={LIO-SAM: Tightly-coupled Lidar Inertial Odometry via Smoothing and Mapping},
+  author={Shan, Tixiao and Englot, Brendan and Meyers, Drew and Wang, Wei and Ratti, Carlo and Rus Daniela},
+  booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages={5135-5142},
+  year={2020},
+  organization={IEEE}
+}
 ```
 
-### Execution
-
-
-#### Map building
-
-```bash
-source install/setup.bash
-ros2 launch lidar_feature_launch mapping.launch.py
 ```
-
-Open another terminal and play rosbag
-
-```bash
-source install/setup.bash
-ros2 play lidar-feature-dataset.bag
-```
-
-#### Map visualization
-
-```bash
-sudo apt install pcl-tools
-pcl_viewer maps/edge.pcd maps/surface.pcd
-```
-
-#### Localization
-
-```bash
-source install/setup.bash
-ros2 launch lidar_feature_launch localization.launch.py
-```
-
-Open another terminal and play rosbag
-
-```bash
-source install/setup.bash
-ros2 play lidar-feature-dataset.bag
+@inproceedings{legoloam2018shan,
+  title={LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain},
+  author={Shan, Tixiao and Englot, Brendan},
+  booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages={4758-4765},
+  year={2018},
+  organization={IEEE}
+}
 ```
