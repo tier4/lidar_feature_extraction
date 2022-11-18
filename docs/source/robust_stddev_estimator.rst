@@ -15,7 +15,7 @@
 このとき、標準偏差はふつう次のように計算される。
 
 .. math::
-    \hat{\sigma}_{std} = \frac{1}{n-1}\sum_{i=1}^{n}(x_{i} - \bar{x})
+    \hat{\sigma}_{std} = \sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(x_{i} - \bar{x})^{2}}
     :label: sigma_std
 
 外れ値が含まれる場合
