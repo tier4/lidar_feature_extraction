@@ -4,15 +4,14 @@ LOAM誤差最適化法
 問題設定
 --------
 
-| LiDARスキャンから得られたエッジ特徴点群を :math:`\mathbf{s}_{i} \in \mathbb{R}^{3},\;i=1,...,N` とする。 :math:`\mathbf{s}_{i}` はLiDAR座標上で表現される。
-| 地図座標上のエッジ地図点群を :math:`M_{edge} = \{\mathbf{m}_{j}\},\;\mathbf{m}_{j}\in\mathbb{R}^{3}` とする。
-| これらを用いて、地図座標上のLiDAR姿勢、すなわちLiDAR座標から地図座標への変換 :math:`\{\mathbf{q}^{*},\; \mathbf{t}^{*}\},\;\mathbf{q}^{*} \in \mathbb{H},\; \mathbf{t}^{*} \in \mathbb{R}^{3}` を求める。
+| LiDARスキャンから得られたエッジ特徴点群を :math:`\{{\mathbf{x}^{i}} \in \mathbb{R}^{3} \;|\; i=1,...,N\}` とする。LiDARスキャンから得られた平面特徴点群を :math:`\{\mathbf{y}^{j} \in \mathbb{R}^{3} \;|\; j=1,...,M\}` とする。これらはLiDAR座標上で表現される。
+| 地図点群およびスキャンから得られたエッジ特徴と平面特徴を用いて、地図座標上のLiDAR姿勢、すなわちLiDAR座標から地図座標への変換 :math:`\{\mathbf{q}^{*},\; \mathbf{t}^{*}\},\;\mathbf{q}^{*} \in \mathbb{H},\; \mathbf{t}^{*} \in \mathbb{R}^{3}` を求める。
 
 解法の概要
 ----------
 
-1. 事前に得た姿勢を用いてスキャン特徴点群を地図座標に移す
-2. 1で変換したそれぞれのスキャン特徴点について地図内の近傍点を探索する
+1. 事前に得た姿勢を用いてスキャンから得た特徴点群を地図座標に移す
+2. 1で変換した特徴点に対する地図内の近傍点を探索する
 3. 近傍点群の共分散行列の固有ベクトルを計算することで、近傍点群の主成分を得る
 4. 近傍点群の主成分を用いて誤差関数を構成する
 5. 誤差関数を最小化することで推定姿勢を得る
@@ -20,50 +19,156 @@ LOAM誤差最適化法
 解法
 ----
 
-スキャン特徴点群を地図座標に移す
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+スキャン特徴点を地図座標に移す
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-EKFやGNSS等で事前に得た姿勢 :math:`\{\mathbf{q}^{prior},\;\mathbf{t}^{prior}\}` を用いて、LiDAR座標上のスキャン点 :math:`\mathbf{s}_{i}` を地図座標に移す。地図座標に移されたスキャン点を :math:`\mathbf{s}^{\prime}_{i}` とする。
+EKFやGNSS等で事前に得た姿勢 :math:`\{\mathbf{q}^{prior},\;\mathbf{t}^{prior}\}` を用いて、LiDAR座標上のエッジ特徴点 :math:`{\mathbf{x}^{i}}` および平面特徴点 :math:`\mathbf{y}^{j}` を地図座標に移す。地図座標に移されたエッジ特徴点を :math:`\mathbf{x}^{i}_{prior}` 、平面特徴点を :math:`\mathbf{y}^{j}_{prior}`  とする。
 
 .. math::
-    \mathbf{s}^{prior}_{i} = R(\mathbf{q}^{prior}) \mathbf{s}_{i} + \mathbf{t}^{prior}
+    \mathbf{x}^{i}_{prior} &= R(\mathbf{q}^{prior}) {\mathbf{x}^{i}} + \mathbf{t}^{prior} \\
+    \mathbf{y}^{j}_{prior} &= R(\mathbf{q}^{prior}) \mathbf{y}^{j} + \mathbf{t}^{prior} \\
 
-地図内でスキャン特徴点の近傍点を探索する
+エッジ地図内でエッジ特徴点の近傍点を探索する
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:math:`\mathbf{x}^{i}_{prior}` の近傍にある地図点群をK個探索する。これによって得られた点群を :math:`\mathbf{\alpha}^{i}_{k} \in \mathbb{R}^{3},\;k=1,...,K` とする。
+
+近傍点群からエッジ成分を得る
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+近傍点群の共分散行列の固有ベクトルを計算する。近傍点群の平均を :math:`\mathbf{\mu}^{i} = \sum_{k=1}^{K} \mathbf{\alpha}^{i}_{k}` 、共分散行列を :math:`C^{i} = \frac{1}{K-1} \sum_{k=1}^{K} (\mathbf{\alpha}^{i}_{k} - \mathbf{\mu}^{i})(\mathbf{\alpha}^{i}_{k} - \mathbf{\mu}^{i})^{\top}` とする。この固有ベクトルを計算すると近傍点群の主成分を得ることができる。
+
+共分散行列 :math:`C^{i}` の固有ベクトルを、対応する固有値が大きい順に :math:`\mathbf{u}^{i}_{1}, \mathbf{u}^{i}_{2}, \mathbf{u}^{i}_{3}` とする。
+
+エッジ地図は細長い形状の点列を含んでいるはずである。すなわち、 固有ベクトル :math:`\mathbf{u}^{i}_{1}` はエッジの向きを表すはずである。
+
+
+平面地図内で平面特徴点の近傍点を探索する
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:math:`\mathbf{s}^{prior}_{i}` の近傍にある地図点群をK個探索する。これによって得られた点群を :math:`\mathbf{c}_{ik} \in \mathbb{R}^{3},\;k=1,...,K` とする。
+:math:`\mathbf{y}^{j}_{prior}` の近傍にある地図点群をK個探索する。これによって得られた点群を :math:`\mathbf{\beta}^{j}_{k} \in \mathbb{R}^{3},\;k=1,...,K` とする。
 
-近傍点群の主成分を得る
-~~~~~~~~~~~~~~~~~~~~~~
+近傍点群から平面成分を得る
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-近傍点群の共分散行列の固有ベクトルを計算する。近傍点群の平均を :math:`\mathbf{\mu}_{i} = \sum_{k=1}^{K} \mathbf{c}_{ik}` 、共分散行列を :math:`C_{i} = \frac{1}{K-1} \sum_{k=1}^{K} (\mathbf{c}_{ik} - \mathbf{\mu}_{i})(\mathbf{c}_{ik} - \mathbf{\mu}_{i})^{\top}` とする。この固有ベクトルを計算すると近傍点群の主成分を得ることができる。
+近傍点群の共分散行列の固有ベクトルを計算する。近傍点群の平均を :math:`\mathbf{\nu}^{j} = \sum_{k=1}^{K} \mathbf{\beta}^{j}_{k}` 、共分散行列を :math:`D^{j} = \frac{1}{K-1} \sum_{k=1}^{K} (\mathbf{\beta}^{j}_{k} - \mathbf{\nu}^{j})(\mathbf{\beta}^{j}_{k} - \mathbf{\nu}^{j})^{\top}` とする。この固有ベクトルを計算すると近傍点群の主成分を得ることができる。
 
-共分散行列 :math:`C_{i}` の最大固有値 :math:`\lambda_{1}` に対応する固有ベクトルを :math:`\mathbf{u}^{i}_{1}` とする。
-もし近傍点群がエッジのような細長い形状の点列を含んでいるならば、この固有ベクトルはエッジの向きを表しているはずである。
+共分散行列 :math:`D^{j}` の固有ベクトルを、対応する固有値が大きい順に :math:`\mathbf{v}^{j}_{1}, \mathbf{v}^{j}_{2}, \mathbf{v}^{j}_{3}` とする。
 
-近傍点群の主成分を用いて誤差関数を構成する
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+平面地図は平面状に分布する点群を含んでいるはずである。すなわち、 :math:`\mathbf{v}^{j}_{1}` および :math:`\mathbf{v}^{j}_{2}` は平面を張るベクトルとなっているはずである。
+
+エッジ誤差関数を構成する
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 近傍点群の主成分を用いてエッジ誤差関数を定義する。
-近傍点群の平均値 :math:`\mathbf{\mu}_{i}` から :math:`\mathbf{u}^{i}_{1}` および  :math:`-\mathbf{u}^{i}_{1}` 方向にベクトルを伸ばし、2つの位置ベクトルを得る。
+近傍点群の平均値 :math:`\mathbf{\mu}^{i}` から :math:`\mathbf{u}^{i}_{1}` および  :math:`-\mathbf{u}^{i}_{1}` 方向にベクトルを伸ばし、2つの位置ベクトルを得る。
 
 .. math::
-    \mathbf{p}^{i}_{1} &= \mathbf{\mu}_{i} + \mathbf{u}^{i}_{1} \\
-    \mathbf{p}^{i}_{2} &= \mathbf{\mu}_{i} - \mathbf{u}^{i}_{1}
+    \mathbf{p}^{i}_{1} &= \mathbf{\mu}^{i} + \mathbf{u}^{i}_{1} \\
+    \mathbf{p}^{i}_{2} &= \mathbf{\mu}^{i} - \mathbf{u}^{i}_{1}
 
-これらの位置ベクトルと、スキャン点群 :math:`\mathbf{s}_{i}` を用いて残差を定義する。
+これらの位置ベクトルと、エッジ点群 :math:`{\mathbf{x}^{i}}` を用いて残差を定義する。
 
 .. math::
-    \mathbf{r}_{i}(\mathbf{s}_{i}, \mathbf{q}, \mathbf{t}) &= (\mathbf{s}^{\prime}_{i} - \mathbf{p}^{i}_{1}) \times (\mathbf{s}^{\prime}_{i} - \mathbf{p}^{i}_{2}), \\
-    \text{where} \;\; \mathbf{s}^{\prime}_{i} &= R(\mathbf{q}) \mathbf{s}_{i} + \mathbf{t}
+    \mathbf{r}^{i}_{edge}({\mathbf{x}^{i}}, \mathbf{q}, \mathbf{t}) &= ({\mathbf{x}^{i}}^{\prime} - \mathbf{p}^{i}_{1}) \times ({\mathbf{x}^{i}}^{\prime} - \mathbf{p}^{i}_{2}), \\
+    \text{where} \;\; {\mathbf{x}^{i}}^{\prime} &= R(\mathbf{q}) {\mathbf{x}^{i}} + \mathbf{t}
 
-地図座標に移されたスキャン点 :math:`\mathbf{s}^{\prime}_{i}` が近傍点群から得たエッジの上に乗ると、この残差のノルム :math:`||\mathbf{r}_{i}(\mathbf{s}_{i}, \mathbf{q}, \mathbf{t})||` はゼロになる。
+地図座標に移されたエッジ点 :math:`{\mathbf{x}^{i}}^{\prime}` が近傍点群から得たエッジの上に乗ると、この残差のノルム :math:`||\mathbf{r}^{i}_{edge}({\mathbf{x}^{i}}, \mathbf{q}, \mathbf{t})||` はゼロになる。
 
 したがってエッジ特徴の誤差関数は
 
 .. math::
-    E^{edge}(\mathbf{q}, \mathbf{t}) = \sum_{i=1}^{N} ||\mathbf{r}_{i}(\mathbf{s}_{i}, \mathbf{q}, \mathbf{t})||
+    E_{edge}(\mathbf{q}, \mathbf{t}) = \frac{1}{2} \sum_{i=1}^{N} ||\mathbf{r}^{i}_{edge}({\mathbf{x}^{i}}, \mathbf{q}, \mathbf{t})||^{2}
 
 と定義できる。
 
+平面誤差関数を構成する
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+平面誤差関数を構成するためには平面を表現する垂線ベクトルを求める必要があるが、じつはこれは :math:`\mathbf{v}^{j}_{3}` そのものである。
+
+点と平面の距離は、単位長さの垂線と点との内積で計算できる。これを残差としよう。
+
+.. math::
+    r^{j}_{surface}(\mathbf{y}^{j}, \mathbf{q}, \mathbf{t}) &= (\frac{\mathbf{v}^{j}_{3}}{||\mathbf{v}^{j}_{3}||})^{\top}{\mathbf{y}^{j}}^{\prime}, \\
+    \text{where} \;\; {\mathbf{y}^{j}}^{\prime} &= R(\mathbf{q}) \mathbf{y}^{j} + \mathbf{t}
+
+したがって平面特徴の誤差関数は
+
+.. math::
+    E_{surface}(\mathbf{q}, \mathbf{t}) = \frac{1}{2} \sum_{j=1}^{M} [r^{j}_{surface}(\mathbf{y}^{j}, \mathbf{q}, \mathbf{t})]^{2}
+
+と定義できる。
+
+誤差最適化
+----------
+
+エッジ特徴と平面特徴の誤差関数を同時に最適化し、姿勢を求める。
+
+.. math::
+    E(\mathbf{q}, \mathbf{t}) = E_{edge}(\mathbf{q}, \mathbf{t}) + E_{surface}(\mathbf{q}, \mathbf{t})
+
+姿勢の最適化には Gauss-Newton を用いる。
+
+エッジ誤差関数の微分
+~~~~~~~~~~~~~~~~~~~~
+
+:math:`{\mathbf{x}_{i}}^{\prime}` でエッジ誤差関数を微分すると次のようになる。
+
+.. math::
+    \frac{\partial E_{edge}}{\partial {\mathbf{x}^{i}}^{\prime}}
+    &= \frac{\partial ||\mathbf{r}^{i}_{edge}||^2}{\partial {\mathbf{x}^{i}}^{\prime}} \\
+    &= \frac{\partial \mathbf{r}^{i}_{edge}}{\partial {\mathbf{x}^{i}}^{\prime}} \cdot \mathbf{r}^{i}_{edge} \\
+    &= \frac{\partial \mathbf{r}^{i}_{edge}}{\partial {\mathbf{x}^{i}}^{\prime}} \cdot
+    (\mathbf{x}^{\prime}_{i} - \mathbf{p}^{i}_{1}) \times (\mathbf{x}^{\prime}_{i} - \mathbf{p}^{i}_{2}),
+
+ここで :math:`\partial \mathbf{r}^{i}_{edge} / \partial {\mathbf{x}^{i}}^{\prime}` は次のようになる。
+
+.. math::
+    \frac{\partial \mathbf{r}^{i}_{edge}}{\partial {\mathbf{x}^{i}}^{\prime}}
+    &=
+    \frac{\partial}{\partial {\mathbf{x}^{i}}^{\prime}}
+    \left\{
+    \begin{bmatrix}
+    {x^{i}_{1}}^{\prime} - p^{i}_{11} \\
+    {x^{i}_{2}}^{\prime} - p^{i}_{12} \\
+    {x^{i}_{3}}^{\prime} - p^{i}_{13} \\
+    \end{bmatrix}
+    \times
+    \begin{bmatrix}
+    {x^{i}_{1}}^{\prime} - p^{i}_{21} \\
+    {x^{i}_{2}}^{\prime} - p^{i}_{22} \\
+    {x^{i}_{3}}^{\prime} - p^{i}_{23} \\
+    \end{bmatrix}
+    \right\} \\
+    &=
+    \frac{\partial}{\partial {\mathbf{x}^{i}}^{\prime}}
+    \begin{bmatrix}
+    ({x^{i}_{2}}^{\prime} - p^{i}_{12}) ({x^{i}_{3}}^{\prime} - p^{i}_{23}) - ({x^{i}_{3}}^{\prime} - p^{i}_{13}) ({x^{i}_{2}}^{\prime} - p^{i}_{22}) \\
+    ({x^{i}_{3}}^{\prime} - p^{i}_{13}) ({x^{i}_{1}}^{\prime} - p^{i}_{21}) - ({x^{i}_{1}}^{\prime} - p^{i}_{11}) ({x^{i}_{3}}^{\prime} - p^{i}_{23}) \\
+    ({x^{i}_{1}}^{\prime} - p^{i}_{11}) ({x^{i}_{2}}^{\prime} - p^{i}_{22}) - ({x^{i}_{2}}^{\prime} - p^{i}_{12}) ({x^{i}_{1}}^{\prime} - p^{i}_{21}) \\
+    \end{bmatrix} \\
+    &=
+    \begin{bmatrix}
+    0 & -(p^{i}_{23} - p^{i}_{13}) & p^{i}_{22} - p^{i}_{12} \\
+    p^{i}_{23} - p^{i}_{13} & 0 & -(p^{i}_{21} - p^{i}_{11}) \\
+    -(p^{i}_{22} - p^{i}_{12}) & p^{i}_{21} - p^{i}_{11} & 0 \\
+    \end{bmatrix}
+
+したがってエッジ誤差関数の微分は
+
+.. math::
+    \frac{\partial E_{edge}}{\partial {\mathbf{x}^{i}}^{\prime}}
+    &= \frac{\partial \mathbf{r}^{i}_{edge}}{\partial {\mathbf{x}^{i}}^{\prime}} \cdot \mathbf{r}^{i}_{edge} \\
+    &= (\mathbf{p}^{i}_{2} - \mathbf{p}^{i}_{1}) \times (\mathbf{x}^{\prime}_{i} - \mathbf{p}^{i}_{1}) \times (\mathbf{x}^{\prime}_{i} - \mathbf{p}^{i}_{2})
+
+となる。
+
+平面誤差関数の微分
+~~~~~~~~~~~~~~~~~~
+
+平面誤差関数の微分は次のようになる。
+
+.. math::
+    \frac{E_{surface}(\mathbf{q}, \mathbf{t})}{\partial {\mathbf{y}^{j}}^{\prime}}
+    = r^{j}_{surface} \cdot \frac{\mathbf{v}^{j}_{3}}{||\mathbf{v}^{j}_{3}||}

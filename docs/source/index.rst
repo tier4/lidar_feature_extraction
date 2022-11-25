@@ -13,6 +13,7 @@ Localization documentation
    weighted_gauss_newton
    robust_stddev_estimator
    covariance_estimation
+   loam
 
 Indices and tables
 ==================
