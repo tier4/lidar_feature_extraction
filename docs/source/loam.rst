@@ -85,21 +85,31 @@ EKFやGNSS等で事前に得た姿勢 :math:`\{\mathbf{q}^{prior},\;\mathbf{t}^{
 近傍点群から平面成分を得る
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-近傍点群の共分散行列の固有ベクトルを計算する。近傍点群の平均を :math:`\mathbf{\nu}^{j} = \sum_{k=1}^{K} \mathbf{\beta}^{j}_{k}` 、共分散行列を :math:`D^{j} = \frac{1}{K-1} \sum_{k=1}^{K} (\mathbf{\beta}^{j}_{k} - \mathbf{\nu}^{j})(\mathbf{\beta}^{j}_{k} - \mathbf{\nu}^{j})^{\top}` とする。この固有ベクトルを計算すると近傍点群の主成分を得ることができる。
+近傍点群を平面として表現するためには、近傍点群がなす平面を方程式で表現し、その係数 :math:`\mathbf{w}^{j}` を求めればよい。具体的には切片の値を1と設定して次の式を解けば良い。
 
-共分散行列 :math:`D^{j}` の固有ベクトルを、対応する固有値が大きい順に :math:`\mathbf{v}^{j}_{1}, \mathbf{v}^{j}_{2}, \mathbf{v}^{j}_{3}` とする。
+.. math::
+    \begin{bmatrix}
+    {\mathbf{\beta}^{j}_{1}}^{\top} \\
+    \vdots \\
+    {\mathbf{\beta}^{j}_{K}}^{\top} \\
+    \end{bmatrix}
+    \mathbf{w}^{j} =
+    \begin{bmatrix}
+    -1 \\
+    \vdots \\
+    -1 \\
+    \end{bmatrix}
 
-平面地図は平面状に分布する点群を含んでいるはずである。すなわち、 :math:`\mathbf{v}^{j}_{1}` および :math:`\mathbf{v}^{j}_{2}` は平面を張るベクトルとなっているはずである。
+
+これを解くことで :math:`\sum_{i=1}^{K} ||{\mathbf{\beta}^{j}_{i}}^{\top}\mathbf{w}^{j} + 1||^{2}` を最小化する :math:`\mathbf{w}^{j}` を求めることができる。
 
 平面誤差関数を構成する
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-平面誤差関数を構成するためには平面を表現する垂線ベクトルを求める必要があるが、じつはこれは :math:`\mathbf{v}^{j}_{3}` そのものである。
-
-点と平面の距離は、単位長さの垂線と点との内積で計算できる。これを残差としよう。
+点と平面の距離は、単位長さの垂線 :math:`\mathbf{w}^{j} / || \mathbf{w}^{j} ||` と点との内積で計算できる。これを残差としよう。
 
 .. math::
-    r^{j}_{surface}(\mathbf{y}^{j}, \mathbf{q}, \mathbf{t}) &= (\frac{\mathbf{v}^{j}_{3}}{||\mathbf{v}^{j}_{3}||})^{\top}{\mathbf{y}^{j}}^{\prime}, \\
+    r^{j}_{surface}(\mathbf{y}^{j}, \mathbf{q}, \mathbf{t}) &= (\frac{\mathbf{w}^{j}}{||\mathbf{w}^{j}||})^{\top}{\mathbf{y}^{j}}^{\prime}, \\
     \text{where} \;\; {\mathbf{y}^{j}}^{\prime} &= R(\mathbf{q}) \mathbf{y}^{j} + \mathbf{t}
 
 したがって平面特徴の誤差関数は
@@ -180,4 +190,4 @@ EKFやGNSS等で事前に得た姿勢 :math:`\{\mathbf{q}^{prior},\;\mathbf{t}^{
 
 .. math::
     \frac{E_{surface}(\mathbf{q}, \mathbf{t})}{\partial {\mathbf{y}^{j}}^{\prime}}
-    = r^{j}_{surface} \cdot \frac{\mathbf{v}^{j}_{3}}{||\mathbf{v}^{j}_{3}||}
+    = r^{j}_{surface} \cdot \frac{\mathbf{w}^{j}}{||\mathbf{w}^{j}||}
